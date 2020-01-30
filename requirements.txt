@@ -6,3 +6,4 @@ ariadne
 aiodataloader
 collections
 ijson
+uvicorn
