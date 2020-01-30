@@ -1,0 +1,8 @@
+pytest
+configparser
+mysql.connector
+pymongo
+ariadne
+aiodataloader
+collections
+ijson
