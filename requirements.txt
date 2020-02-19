@@ -4,6 +4,7 @@ mysql.connector
 pymongo
 ariadne
 aiodataloader
-collections
 ijson
 uvicorn
+mongomock
+python-dotenv

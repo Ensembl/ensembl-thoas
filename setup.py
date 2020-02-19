@@ -17,6 +17,10 @@ from setuptools import setup, find_packages
 setup(
     name='ensembl-graphql',
     description='GraphQL Ariadne-based prototype for Ensembl',
-    version="0.0.1",
-    packages=find_packages()
+    version="0.1.0",
+    packages=find_packages(),
+    package_data={
+        # Make sure schema makes it to distro
+        "common": ["*.sdl"]
+    }
 )
