@@ -14,7 +14,7 @@ Set up Python 3
 pip install -r /requirements.txt
 
 ## Running the service directly
-uvicorn metadata_service.server:app
+uvicorn graphql_service.server:app
 
 ## Testing
 
@@ -27,6 +27,6 @@ Designed to be run in a Kubernetes-like environment, so configuration is externa
 
 This can be emulated at great effort using docker run's --mount command
 
-docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION uvicorn --workers 5 --host=0.0.0.0 metadata_service.server:app
+docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION uvicorn --workers 5 --host=0.0.0.0 graphql_service.server:app
 
 --publish above is exposing the container's ports to the host network
