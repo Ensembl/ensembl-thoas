@@ -1,12 +1,13 @@
 import mongomock
-
+import asyncio
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 
-def test_gene_transcript_dataloader():
+def test_batch_transcript_load():
     """
-    Test that the dataloader correctly caches and queries in bulk
+    Try the batch loader outside of the async event process
     """
+
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {'type': 'Transcript', 'gene': 'ENSG001'},
@@ -16,18 +17,32 @@ def test_gene_transcript_dataloader():
         {'type': 'Transcript', 'gene': 'ENSG002'},
     ])
 
-    loaders = DataLoaderCollection(collection)
-    gt_loader = loaders.gene_transcript_dataloader(max_batch_size=1)
+    loader = DataLoaderCollection(collection)
+    response = loader.batch_transcript_load(
+        ['ENSG001']
+    )
+    data = asyncio.get_event_loop().run_until_complete(response)
 
-    # Test effective 0 batch size
-    docs = gt_loader.load(key='ENSG001')
+    assert len(data) == 1
+    assert len(data[0]) == 2
 
-    assert len(docs) == 2
+    response = loader.batch_transcript_load(
+        ['ENSG001', 'ENSG002']
+    )
+    data = asyncio.get_event_loop().run_until_complete(response)
 
-    # Test large batch size
-    gt_loader = loaders.gene_transcript_dataloader(max_batch_size=1000)
-    docs = gt_loader.load(key='ENSG002')
-    assert len(docs) == 3
+    # This broadly proves that data emerges in lists ordered
+    # by the input IDs
+    assert len(data) == 2
+    assert len(data[0]) == 2
+    assert len(data[1]) == 3
+    assert data[1][0]["gene"] == "ENSG002"
 
-    # Test bad request
-    docs = gt_loader.load(key='ENSG999')
+    # Try for absent data
+    response = loader.batch_transcript_load(
+        ['nonsense']
+    )
+    data = asyncio.get_event_loop().run_until_complete(response)
+
+    # No results in the structure that is returned
+    assert not data[0]
