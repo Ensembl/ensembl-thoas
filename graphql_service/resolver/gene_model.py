@@ -84,6 +84,9 @@ def resolve_gene_transcripts(gene, info):
     return result
 
 
+# Note that this kind of hard boundary search is not often appropriate for
+# genomics. Most usefully we will want any entities overlapping this range
+# rather than entities entirely within the range
 @query.field('slice')
 def resolve_slice(_, info, region, start, end, feature_type):
     collection = info.context['mongo_db']

@@ -37,7 +37,7 @@ class DataLoaderCollection():
             }
         }
 
-        data = list(self.collection.find(query))
+        data = await self.query_mongo(query)
         # Now the results must be returned in the order requested by 'keys'
         # Unpack the bulk query results into a list of lists
         grouped_docs = defaultdict(list)
@@ -52,3 +52,6 @@ class DataLoaderCollection():
             batch_load_fn=self.batch_transcript_load,
             max_batch_size=max_batch_size
         )
+
+    async def query_mongo(self, query):
+        return list(self.collection.find(query))

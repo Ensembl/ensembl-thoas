@@ -14,14 +14,13 @@
 
 import ijson.backends.python as ijson
 import gzip
-from jsonslicer import JsonSlicer
+# from jsonslicer import JsonSlicer
 
 with gzip.open('../human_genes.json.gz') as file:
     for transcript in ijson.items(file, 'item'):
         print(transcript)
         if int(transcript['start']) > 1000:
             pass
-
 
 
 with gzip.open('../human_genes.json.gz') as file:
