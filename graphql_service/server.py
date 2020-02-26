@@ -18,8 +18,8 @@ import ariadne
 from common.utils import load_config
 import common.mongo as mongo
 import os
-from resolver.gene_model import query, gene, transcript, locus
-from resolver.data_loaders import DataLoaderCollection
+from graphql_service.resolver.gene_model import query, gene, transcript, locus
+from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 config = load_config(os.environ['GQL_CONF'])
 schema_file = config.get('MONGO DB', 'schema')
