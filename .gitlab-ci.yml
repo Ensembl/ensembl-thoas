@@ -35,7 +35,7 @@ variables:
 build:
   extends: .build
   only:
-    - deploy/k8s
+    - master
 
 # deploy application to k8s cluster for k8s-deploy branch
 deploy:
@@ -43,4 +43,4 @@ deploy:
   environment:
     name : thoas-graphql
   only:
-    - deploy/k8s
+    - master
