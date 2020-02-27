@@ -55,7 +55,7 @@ def resolve_transcripts(_, info):
 
     collection = info.context['mongo_db']
     result = collection.find({
-        "type": "Transcript"
+        'type': 'Transcript'
     })
     return result
 
@@ -65,15 +65,15 @@ def resolve_transcript(root, info, stable_id):
 
     collection = info.context['mongo_db']
     result = collection.find_one({
-        "type": "Transcript",
-        "stable_id": stable_id
+        'type': 'Transcript',
+        'stable_id': stable_id
     })
     return result
 
 
 @gene.field('transcripts')
 def resolve_gene_transcripts(gene, info):
-    gene_stable_id = gene["stable_id"]
+    gene_stable_id = gene['stable_id']
 
     # Get a dataloader from info
     loader = info.context['data_loader'].gene_transcript_dataloader()
@@ -91,10 +91,10 @@ def resolve_gene_transcripts(gene, info):
 def resolve_slice(_, info, region, start, end, feature_type):
     collection = info.context['mongo_db']
     result = collection.find({
-        "type": feature_type,
-        "slice.region.name": region,
-        "slice.location.start": {'$gt': start},
-        "slice.location.end": {'$lt': end}
+        'type': feature_type,
+        'slice.region.name': region,
+        'slice.location.start': {'$gt': start},
+        'slice.location.end': {'$lt': end}
     })
     return result
 

@@ -23,7 +23,7 @@ class mongo_db_thing():
         print('MongoDB default collection:' + self.default_collection)
 
     def connect_mongo(self, config):
-        "Get a MongoDB connection"
+        'Get a MongoDB connection'
 
         host = config.get('MONGO DB', "host")
         port = config.getint('MONGO DB', "port")

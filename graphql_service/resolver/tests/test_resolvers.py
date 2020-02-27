@@ -1,3 +1,17 @@
+"""
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
+
 import mongomock
 import graphql_service.resolver.gene_model as model
 import pytest
@@ -13,9 +27,9 @@ class Info(object):
     def __init__(self, collection):
         self.collection = collection
         self.context = {
-            "stuff": "Nonsense",
-            "mongo_db": self.collection,
-            "data_loader": data_loader.DataLoaderCollection(self.collection)
+            'stuff': 'Nonsense',
+            'mongo_db': self.collection,
+            'data_loader': data_loader.DataLoaderCollection(self.collection)
         }
 
 
@@ -83,7 +97,7 @@ def test_resolve_gene(basic_data):
         basic_data,
         name='banana'
     )
-    assert result["name"] == 'banana'
+    assert result['name'] == 'banana'
 
     result = model.resolve_gene(
         None,
@@ -99,7 +113,7 @@ def test_resolve_gene(basic_data):
         stable_id='ENSG001'
     )
 
-    assert result["name"] == "banana"
+    assert result['name'] == 'banana'
 
     result = model.resolve_gene(
         None,
@@ -115,24 +129,24 @@ def test_resolve_genes(basic_data):
     result = model.resolve_genes(None, basic_data)
 
     for hit in result:
-        assert hit["type"] == 'Gene'
-        assert hit["name"] == 'banana' or hit["name"] == 'durian'
+        assert hit['type'] == 'Gene'
+        assert hit['name'] == 'banana' or hit['name'] == 'durian'
 
 
 def test_resolve_transcripts(transcript_data):
 
     result = model.resolve_transcripts(None, transcript_data)
     for hit in result:
-        assert hit["type"] == 'Transcript'
-        assert hit["name"] == 'kumquat' or hit["name"] == 'grape'
+        assert hit['type'] == 'Transcript'
+        assert hit['name'] == 'kumquat' or hit['name'] == 'grape'
 
 
 def test_resolve_transcript(transcript_data):
 
     result = model.resolve_transcript(None, transcript_data, 'ENST001')
 
-    assert result["name"] == 'kumquat'
-    assert result["stable_id"] == 'ENST001'
+    assert result['name'] == 'kumquat'
+    assert result['stable_id'] == 'ENST001'
 
     result = model.resolve_transcript(None, transcript_data, 'HUH?')
     assert not result
@@ -140,12 +154,12 @@ def test_resolve_transcript(transcript_data):
 
 def test_resolve_gene_transcripts(transcript_data):
 
-    result = model.resolve_gene_transcripts({"stable_id": "ENSG001"}, transcript_data)
+    result = model.resolve_gene_transcripts({'stable_id': 'ENSG001'}, transcript_data)
     data = asyncio.get_event_loop().run_until_complete(result)
 
     for hit in data:
-        assert hit["type"] == 'Transcript'
-        assert hit["name"] in ['kumquat', 'grape']
+        assert hit['type'] == 'Transcript'
+        assert hit['name'] in ['kumquat', 'grape']
 
 
 def test_resolve_slice(slice_data):
@@ -155,11 +169,11 @@ def test_resolve_slice(slice_data):
 
     result = model.resolve_slice(None, slice_data, 'chr1', 5, 105, 'Gene')
     for hit in result:
-        assert hit["stable_id"] == 'ENSG001'
+        assert hit['stable_id'] == 'ENSG001'
 
     result = model.resolve_slice(None, slice_data, 'chr1', 5, 205, 'Gene')
     for hit in result:
-        assert hit["stable_id"] in ['ENSG001', 'ENSG002']
+        assert hit['stable_id'] in ['ENSG001', 'ENSG002']
 
 
 def test_locus_resolver():

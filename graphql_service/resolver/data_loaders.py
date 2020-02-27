@@ -24,15 +24,15 @@ class DataLoaderCollection():
     """
 
     def __init__(self, db_collection):
-        "Accepts a MongoDB collection object to provide data"
+        'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
 
     async def batch_transcript_load(self, keys):
 
         # DataLoader will aggregate many single ID requests into 'keys'
         query = {
-            "type": "Transcript",
-            "gene": {
+            'type': 'Transcript',
+            'gene': {
                 '$in': sorted(keys)
             }
         }
@@ -43,7 +43,7 @@ class DataLoaderCollection():
         grouped_docs = defaultdict(list)
 
         for doc in data:
-            grouped_docs[doc["gene"]].append(doc)
+            grouped_docs[doc['gene']].append(doc)
 
         return [grouped_docs[feature_id] for feature_id in keys]
 

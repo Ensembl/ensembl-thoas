@@ -51,6 +51,12 @@ def load_gene_info(db):
         'type': 'assembly',
         'name': 'GRCh38'
     })
+
+    genome = db.collection().find_one({
+        'type': 'Genome',
+        'name': 'GRCh38'
+    })
+
     print('Loaded assembly ' + assembly['name'])
     required_keys = ('name', 'description')
     with gzip.open('../homo_sapiens_genes.json.gz') as file:
@@ -91,7 +97,8 @@ def load_gene_info(db):
                 },
                 'transcripts': [
                     [transcript['id'] for transcript in gene['transcripts']]
-                ]
+                ],
+                'genome_id': genome['id']
             })
 
             # Sort out some transcripts while we can see them
@@ -133,7 +140,8 @@ def load_gene_info(db):
                     },
                     'exons': [
                         exon for exon in exon_list
-                    ]
+                    ],
+                    'genome_id': genome['id']
                 })
 
             if len(gene_buffer) > 1000:

@@ -19,13 +19,13 @@ ens_config = {
 
 
 def connect(config):
-    "Fill MongoDB with goodness(?)"
+    'Fill MongoDB with goodness(?)'
 
-    host = config.get("host")
-    port = config.get("port")
-    user = config.get("user")
-    password = config.get("password")
-    db = config.get("db")
+    host = config.get('host')
+    port = config.get('port')
+    user = config.get('user')
+    password = config.get('password')
+    db = config.get('db')
 
     client = pymongo.MongoClient(
         host,
@@ -37,7 +37,7 @@ def connect(config):
 
 
 def connect_mysql(config):
-    "Get features from MySQL"
+    'Get features from MySQL'
 
     connection = mysql.connector.connect(
         host=config['host'],

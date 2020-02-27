@@ -49,9 +49,9 @@ def context_function(request):
     to talk to databases
     """
     return {
-        "request": request,
-        "mongo_db": mongo_object.collection(),
-        "data_loader": data_loader
+        'request': request,
+        'mongo_db': mongo_object.collection(),
+        'data_loader': data_loader
     }
 
 
