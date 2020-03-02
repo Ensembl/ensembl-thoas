@@ -13,9 +13,9 @@
 """
 
 import mongomock
-import graphql_service.resolver.gene_model as model
+import resolver.gene_model as model
 import pytest
-import graphql_service.resolver.data_loaders as data_loader
+import resolver.data_loaders as data_loader
 import asyncio
 
 
@@ -37,8 +37,8 @@ class Info(object):
 def basic_data():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'},
-        {'type': 'Gene', 'name': 'durian', 'stable_id': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'durian', 'stable_id': 'ENSG002'},
     ])
     return Info(collection)
 
@@ -47,9 +47,9 @@ def basic_data():
 def transcript_data():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001', 'gene': 'ENSG001'},
-        {'type': 'Transcript', 'name': 'grape', 'stable_id': 'ENST002', 'gene': 'ENSG001'},
-        {'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'}
+        {'genome_id': 1, 'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001', 'gene': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Transcript', 'name': 'grape', 'stable_id': 'ENST002', 'gene': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'}
     ])
     return Info(collection)
 
@@ -59,6 +59,7 @@ def slice_data():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {
+            'genome_id': 1,
             'type': 'Gene',
             'name': 'banana',
             'stable_id': 'ENSG001',
@@ -73,6 +74,7 @@ def slice_data():
             }
         },
         {
+            'genome_id': 1,
             'type': 'Gene',
             'name': 'durian',
             'stable_id': 'ENSG002',
@@ -95,14 +97,14 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        name='banana'
+        bySymbol={'symbol': 'banana', 'genome_id': 1}
     )
     assert result['name'] == 'banana'
 
     result = model.resolve_gene(
         None,
         basic_data,
-        name='very not here'
+        bySymbol={'symbol': 'very not here', 'genome_id': 1}
     )
 
     assert not result
@@ -110,7 +112,7 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        stable_id='ENSG001'
+        byId={'stable_id': 'ENSG001', 'genome_id': 1}
     )
 
     assert result['name'] == 'banana'
@@ -118,7 +120,7 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        stable_id='ENSG99999'
+        byId={'stable_id': 'ENSG999', 'genome_id': 1}
     )
 
     assert not result
@@ -126,7 +128,7 @@ def test_resolve_gene(basic_data):
 
 def test_resolve_genes(basic_data):
 
-    result = model.resolve_genes(None, basic_data)
+    result = model.resolve_genes(None, basic_data, genome_id=1)
 
     for hit in result:
         assert hit['type'] == 'Gene'
@@ -135,7 +137,7 @@ def test_resolve_genes(basic_data):
 
 def test_resolve_transcripts(transcript_data):
 
-    result = model.resolve_transcripts(None, transcript_data)
+    result = model.resolve_transcripts(None, transcript_data, genome_id=1)
     for hit in result:
         assert hit['type'] == 'Transcript'
         assert hit['name'] == 'kumquat' or hit['name'] == 'grape'
@@ -143,18 +145,29 @@ def test_resolve_transcripts(transcript_data):
 
 def test_resolve_transcript(transcript_data):
 
-    result = model.resolve_transcript(None, transcript_data, 'ENST001')
+    result = model.resolve_transcript(
+        None,
+        transcript_data,
+        byId={'stable_id': 'ENST001', 'genome_id': 1}
+    )
 
     assert result['name'] == 'kumquat'
     assert result['stable_id'] == 'ENST001'
 
-    result = model.resolve_transcript(None, transcript_data, 'HUH?')
+    result = model.resolve_transcript(
+        None,
+        transcript_data,
+        byId={'stable_id': 'FAKEYFAKEYFAKEY', 'genome_id': 1}
+    )
     assert not result
 
 
 def test_resolve_gene_transcripts(transcript_data):
 
-    result = model.resolve_gene_transcripts({'stable_id': 'ENSG001'}, transcript_data)
+    result = model.resolve_gene_transcripts(
+        {'stable_id': 'ENSG001', 'genome_id': 1},
+        transcript_data
+    )
     data = asyncio.get_event_loop().run_until_complete(result)
 
     for hit in data:
@@ -164,14 +177,40 @@ def test_resolve_gene_transcripts(transcript_data):
 
 def test_resolve_slice(slice_data):
 
-    result = model.resolve_slice(None, slice_data, 'chr1', 10, 11, 'Gene')
-    assert result
+    result = model.resolve_slice(
+        None,
+        slice_data,
+        genome_id=1,
+        region='chr1',
+        start=10,
+        end=11,
+    )
+    assert not result
 
-    result = model.resolve_slice(None, slice_data, 'chr1', 5, 105, 'Gene')
-    for hit in result:
-        assert hit['stable_id'] == 'ENSG001'
+    context = slice_data.context
+    result = model.query_region(
+        {
+            'slice.genome_id': 1,
+            'slice.region.name': 'chr1',
+            'slice.location.start': 1,
+            'slice.location.end': 120,
+            'mongo_db': context["mongo_db"]
+        },
+        'Gene'
+    )
+    hit = result.next()
+    assert hit['stable_id'] == 'ENSG001'
 
-    result = model.resolve_slice(None, slice_data, 'chr1', 5, 205, 'Gene')
+    result = model.query_region(
+        {
+            'slice.genome_id': 1,
+            'slice.region.name': 'chr1',
+            'slice.location.start': 5,
+            'slice.location.end': 205,
+            'mongo_db': context["mongo_db"]
+        },
+        'Gene'
+    )
     for hit in result:
         assert hit['stable_id'] in ['ENSG001', 'ENSG002']
 

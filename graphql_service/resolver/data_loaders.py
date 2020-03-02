@@ -16,7 +16,7 @@ from aiodataloader import DataLoader
 from collections import defaultdict
 
 
-class DataLoaderCollection():
+class DataLoaderCollection(object):
     """
     A collection of bulk data aggregators for "joins" in GraphQL
     They're part of a class so they can be initialised in one go
@@ -32,6 +32,7 @@ class DataLoaderCollection():
         # DataLoader will aggregate many single ID requests into 'keys'
         query = {
             'type': 'Transcript',
+            'genome_id': self.genome_id,
             'gene': {
                 '$in': sorted(keys)
             }
@@ -47,7 +48,8 @@ class DataLoaderCollection():
 
         return [grouped_docs[feature_id] for feature_id in keys]
 
-    def gene_transcript_dataloader(self, max_batch_size=1000):
+    def gene_transcript_dataloader(self, genome_id, max_batch_size=1000):
+        self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_transcript_load,
             max_batch_size=max_batch_size

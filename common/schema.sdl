@@ -1,9 +1,19 @@
 type Query {
-  gene(name: String, stable_id: String): Gene!
-  genes: [Gene!]!
-  transcripts: [Transcript!]!
-  transcript(stable_id: String!): Transcript
-  slice(region: String!, start: Int!, end: Int!, feature_type: String!): [RegionResult!]
+  gene(bySymbol: SymbolInput, byId: IdInput): Gene!
+  genes(genome_id: String!): [Gene!]!
+  transcripts(genome_id: String!): [Transcript!]!
+  transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
+  slice(genome_id: String!, region: String!, start: Int!, end: Int!): Locus
+}
+
+input SymbolInput {
+  symbol: String!
+  genome_id: String!
+}
+
+input IdInput {
+  genome_id: String!
+  stable_id: String!
 }
 
 type Gene {
@@ -30,7 +40,11 @@ type Exon {
 }
 
 type Slice {
-  #The container that combines Region and Location together to define a precise locus. The 'default' key defines whether this is the definitive locus for the parent feature. default:False implies there is another locus which is considered more definitive
+  """
+  The container that combines Region and Location together to define a precise locus.
+  The 'default' key defines whether this is the definitive locus for the parent feature.
+  default:False implies there is another locus which is considered more definitive
+  """
   region: Region!
   location: Location!
   default: Boolean
@@ -57,4 +71,8 @@ type Strand {
   value: Int
 }
 
-union RegionResult = Gene | Transcript | Exon
+type Locus {
+  # A dynamically defined part of a Region
+  genes: [Gene]!
+  transcripts: [Transcript]!
+}

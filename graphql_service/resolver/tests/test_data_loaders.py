@@ -14,7 +14,7 @@
 
 import mongomock
 import asyncio
-from graphql_service.resolver.data_loaders import DataLoaderCollection
+from resolver.data_loaders import DataLoaderCollection
 
 
 def test_batch_transcript_load():
@@ -24,14 +24,17 @@ def test_batch_transcript_load():
 
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'type': 'Transcript', 'gene': 'ENSG001'},
-        {'type': 'Transcript', 'gene': 'ENSG001'},
-        {'type': 'Transcript', 'gene': 'ENSG002'},
-        {'type': 'Transcript', 'gene': 'ENSG002'},
-        {'type': 'Transcript', 'gene': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
     ])
 
     loader = DataLoaderCollection(collection)
+    # This is normally set by calling gene_transcript_dataloader()
+    loader.genome_id = 1
+
     response = loader.batch_transcript_load(
         ['ENSG001']
     )
