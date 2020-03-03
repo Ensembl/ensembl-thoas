@@ -20,22 +20,22 @@ from common.mongo import mongo_db_thing
 
 def create_index(db):
     db.collection().create_index([
-        ('name')
+        ('name', 'genome_id')
     ], name='names_of_things')
     db.collection().create_index([
-        ('stable_id', 'type')
+        ('genome_id', 'stable_id', 'type')
     ], name='stable_id')
     db.collection().create_index([
-        ('type')
+        ('genome_id', 'type')
     ], name='feature_type')
     db.collection().create_index([
-        ('slice.region.name', 'slice.location.start', 'slice.location.end')
+        ('genome_id', 'slice.region.name', 'slice.location.start', 'slice.location.end')
     ], name='location_index')
     db.collection().create_index([
-        ('gene')
+        ('genome_id', 'gene')
     ], name='gene_foreign_key')
     db.collection().create_index([
-        ('transcript')
+        ('genome_id', 'transcript')
     ], name='transcript_foreign_key')
 
 
@@ -48,7 +48,7 @@ def load_gene_info(db):
     transcript_buffer = []
 
     assembly = db.collection().find_one({
-        'type': 'assembly',
+        'type': 'Assembly',
         'name': 'GRCh38'
     })
 
@@ -59,7 +59,7 @@ def load_gene_info(db):
 
     print('Loaded assembly ' + assembly['name'])
     required_keys = ('name', 'description')
-    with gzip.open('../homo_sapiens_genes.json.gz') as file:
+    with gzip.open('../../graphql-source-data/homo_sapiens_genes.json.gz') as file:
         print('Chunk')
         for gene in ijson.items(file, 'item'):
             # if gene['source'] != 'ensembl':

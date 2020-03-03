@@ -45,7 +45,7 @@ def load_genome_info(db, source_file):
         # remember less between interactions, and ask shorter queries
         db.collection().insert_one({
             'type': 'Genome',
-            'id': doc['organism']['name'] + '_' + doc['assembly']['accession'],
+            'id': doc['organism']['name'] + '_' + doc['assembly']['accession'].replace('.', '_'),
             'name': 'GRCh38',
             'assembly': doc['assembly']['name'],
             'species': doc['organism']['name'],
