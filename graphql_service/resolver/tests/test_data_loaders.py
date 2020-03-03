@@ -14,7 +14,7 @@
 
 import mongomock
 import asyncio
-from resolver.data_loaders import DataLoaderCollection
+from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 
 def test_batch_transcript_load():

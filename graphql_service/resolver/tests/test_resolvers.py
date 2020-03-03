@@ -13,9 +13,9 @@
 """
 
 import mongomock
-import resolver.gene_model as model
+import graphql_service.resolver.gene_model as model
 import pytest
-import resolver.data_loaders as data_loader
+import graphql_service.resolver.data_loaders as data_loader
 import asyncio
 
 
