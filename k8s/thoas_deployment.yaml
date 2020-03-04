@@ -1,6 +1,6 @@
 apiVersion: apps/v1beta1
 kind: Deployment
-metadata: 
+metadata:
   name: thoas-server-deployment
 spec:
   replicas: 1
@@ -12,13 +12,13 @@ spec:
       imagePullSecrets:
         - name: thoas-server-pull-secret
       containers:
-      - name: thoas-server
-        image: <DOCKER_IMAGE>
-        ports:
-        - containerPort: 8000
-        imagePullPolicy: Always
-        command: ["uvicorn"]
-        args: ["--host", "0.0.0.0", "--port", "8000", "graphql_service.server:app"]
-        envFrom:
-        - configMapRef:
-            name: thoas-configmap
+        - name: thoas-server
+          image: <DOCKER_IMAGE>
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          command: ["uvicorn"]
+          args: ["--host", "0.0.0.0", "--port", "8000", "graphql_service.server:app"]
+          envFrom:
+            - configMapRef:
+              name: thoas-configmap
