@@ -213,9 +213,3 @@ def test_resolve_slice(slice_data):
     )
     for hit in result:
         assert hit['stable_id'] in ['ENSG001', 'ENSG002']
-
-
-def test_locus_resolver():
-
-    result = model.resolve_feature_slice({'type': 'herb'})
-    assert result == 'herb'

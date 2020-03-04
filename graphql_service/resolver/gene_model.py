@@ -129,8 +129,3 @@ def query_region(context, feature_type):
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
     return context["mongo_db"].find(query)
-
-
-@locus.field('slice')
-def resolve_feature_slice(obj, *_):
-    return obj['type']
