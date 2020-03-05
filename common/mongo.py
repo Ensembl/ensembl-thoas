@@ -19,17 +19,17 @@ class mongo_db_thing():
 
     def __init__(self, config):
         self.mongo_db = self.connect_mongo(config)
-        self.default_collection = config.get('MONGO DB', 'collection')
+        self.default_collection = config.get('collection')
         print('MongoDB default collection:' + self.default_collection)
 
     def connect_mongo(self, config):
         'Get a MongoDB connection'
 
-        host = config.get('MONGO DB', "host")
-        port = config.getint('MONGO DB', "port")
-        user = config.get('MONGO DB', "user")
-        password = config.get('MONGO DB', "password")
-        db = config.get('MONGO DB', "db")
+        host = config.get('host')
+        port = config.getint('port')
+        user = config.get('user')
+        password = config.get('password')
+        db = config.get('db')
 
         client = pymongo.MongoClient(
             host,
