@@ -21,4 +21,4 @@ spec:
           args: ["--host", "0.0.0.0", "--port", "8000", "graphql_service.server:app"]
           envFrom:
             - configMapRef:
-              name: thoas-configmap
+                name: thoas-configmap
