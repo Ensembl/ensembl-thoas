@@ -16,6 +16,7 @@ import ijson
 import gzip
 from common.utils import load_config
 from common.mongo import mongo_db_thing
+import csv
 
 
 def create_index(db):
@@ -62,8 +63,7 @@ def load_gene_info(db):
     with gzip.open('../../graphql-source-data/homo_sapiens_genes.json.gz') as file:
         print('Chunk')
         for gene in ijson.items(file, 'item'):
-            # if gene['source'] != 'ensembl':
-                # pass
+
             for key in required_keys:
                 if key not in gene:
                     gene[key] = None
@@ -92,7 +92,7 @@ def load_gene_info(db):
                         'strand': {
                             'code': 'forward' if int(gene['strand']) > 0 else 'reverse',
                             'value': gene['strand']
-                        },
+                        }
                     }
                 },
                 'transcripts': [
@@ -103,46 +103,14 @@ def load_gene_info(db):
 
             # Sort out some transcripts while we can see them
             for transcript in gene['transcripts']:
-                exon_list = []
-                for exon in transcript['exons']:
-                    exon_list.append(
-                        format_exon(
-                            exon['id'],
-                            exon['seq_region_name'],
-                            int(exon['strand']),
-                            int(exon['start']),
-                            int(exon['end'])
-                        )
-                    )
-                transcript_buffer.append({
-                    'type': 'Transcript',
-                    'gene': gene['id'],
-                    'stable_id': transcript['id'],
-                    'so_term': transcript['biotype'],
-                    'name': transcript['name'] if 'name' in transcript else None,
-                    'description': transcript['description'] if 'description' in transcript else None,
-                    'slice': {
-                        'type': 'Slice',
-                        'location': {
-                            'start': int(transcript['start']),
-                            'end': int(transcript['end']),
-                            'length': int(transcript['end']) - int(transcript['start']) + 1,
-                            'location_type': gene['coord_system']['name']
-                        },
-                        'region': {
-                            'name': gene['seq_region_name'],
-                            'assembly': assembly['id'],
-                            'strand': {
-                                'code': 'forward' if int(gene['strand']) > 0 else 'reverse',
-                                'value': gene['strand']
-                            }
-                        }
-                    },
-                    'exons': [
-                        exon for exon in exon_list
-                    ],
-                    'genome_id': genome['id']
-                })
+                transcript_buffer.append(format_transcript(
+                    transcript,
+                    gene['id'],
+                    gene['coord_system']['name'],
+                    gene['strand'],
+                    assembly['id'],
+                    genome['id']
+                ))
 
             if len(gene_buffer) > 1000:
                 print('Pushing 1000 genes into Mongo')
@@ -154,6 +122,54 @@ def load_gene_info(db):
                 print('Loading 1000 transcripts into Mongo')
                 db.collection().insert_many(transcript_buffer)
                 transcript_buffer = []
+
+
+def format_transcript(
+    transcript, gene_id, region_type, region_name, region_strand, assembly_id,
+    genome_id
+):
+    'Transform and supplement transcript information'
+
+    exon_list = []
+    for exon in transcript['exons']:
+        exon_list.append(
+            format_exon(
+                exon['id'],
+                exon['seq_region_name'],
+                int(exon['strand']),
+                int(exon['start']),
+                int(exon['end'])
+            )
+        )
+
+    new_transcript = {
+        'type': 'Transcript',
+        'gene': gene_id,
+        'stable_id': transcript['id'],
+        'so_term': transcript['biotype'],
+        'name': transcript['name'] if 'name' in transcript else None,
+        'description': transcript['description'] if 'description' in transcript else None,
+        'slice': {
+            'type': 'Slice',
+            'location': {
+                'start': int(transcript['start']),
+                'end': int(transcript['end']),
+                'length': int(transcript['end']) - int(transcript['start']) + 1,
+                'location_type': region_type
+            },
+            'region': {
+                'name': region_name,
+                'assembly': assembly_id,
+                'strand': {
+                    'code': 'forward' if int(region_strand) > 0 else 'reverse',
+                    'value': region_strand
+                }
+            }
+        },
+        'exons': exon_list,
+        'genome_id': genome_id
+    }
+    return new_transcript
 
 
 def format_exon(exon_stable_id, region_name, region_strand, exon_start,
@@ -180,6 +196,28 @@ def format_exon(exon_stable_id, region_name, region_strand, exon_start,
             'default': True
         }
     }
+
+
+def format_metadata():
+    '"metadata" is all the things that we do not want to model better'
+    pass
+
+
+def preload_CDS_coords(production_name):
+    '''
+    CDS coords will be pre-loaded into a file from the Perl API. Otherwise
+    hideous calculation required to get the relative coordinates
+    '''
+    cds_buffer = {}
+
+    with open(production_name + '.csv') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            cds_buffer[row[0]] = {
+                'start': row[1],
+                'end': row[2]
+            }
+    return cds_buffer
 
 
 if __name__ == '__main__':
