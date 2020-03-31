@@ -267,7 +267,7 @@ if __name__ == '__main__':
     json_file = args.data_path + args.species + '/' + args.species + '_genes.json'
     print("Loading CDS data")
     cds_info = preload_CDS_coords(args.species)
-    print(f'Propagated {len(cds_info)} CDS elements'
+    print(f'Propagated {len(cds_info)} CDS elements')
     print("Loading gene info into Mongo")
     load_gene_info(db, json_file, cds_info)
     create_index(db)
