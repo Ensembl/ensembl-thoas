@@ -174,7 +174,7 @@ def format_transcript(
         'genome_id': genome_id,
     }
 
-    if (transcript['id'] in cds_info)
+    if (transcript['id'] in cds_info):
         new_transcript['cds'] = {
             'relative_slice': {
                 'location': {
