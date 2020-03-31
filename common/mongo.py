@@ -18,6 +18,9 @@ import pymongo
 class mongo_db_thing():
 
     def __init__(self, config):
+        '''
+        Note that config here is a configparser object
+        '''
         self.mongo_db = self.connect_mongo(config)
         self.default_collection = config.get('collection')
         print('MongoDB default collection:' + self.default_collection)
@@ -25,11 +28,11 @@ class mongo_db_thing():
     def connect_mongo(self, config):
         'Get a MongoDB connection'
 
-        host = config.get('host')
-        port = config.getint('port')
-        user = config.get('user')
-        password = config.get('password')
-        db = config.get('db')
+        host = config.get('MONGO_DB','host')
+        port = config.getint('MONGO_DB','port')
+        user = config.get('MONGO_DB','user')
+        password = config.get('MONGO_DB','password')
+        db = config.get('MONGO_DB','db')
 
         client = pymongo.MongoClient(
             host,
