@@ -105,13 +105,14 @@ def load_gene_info(db, json_file, cds_info):
             # Sort out some transcripts while we can see them
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
-                    transcript,
-                    gene['id'],
-                    gene['coord_system']['name'],
-                    gene['strand'],
-                    assembly['id'],
-                    genome['id'],
-                    cds_info
+                    transcript=transcript,
+                    gene_id=gene['id'],
+                    region_type=gene['coord_system']['name'],
+                    region_name=,gene['seq_region_name']
+                    region_strand=gene['strand'],
+                    assembly_id=assembly['id'],
+                    genome_id=genome['id'],
+                    cds_info=cds_info
                 ))
 
             if len(gene_buffer) > 1000:
@@ -136,11 +137,12 @@ def format_transcript(
     for exon in transcript['exons']:
         exon_list.append(
             format_exon(
-                exon['id'],
-                exon['seq_region_name'],
-                int(exon['strand']),
-                int(exon['start']),
-                int(exon['end'])
+                exon_stable_id=exon['id'],
+                region_name=exon['seq_region_name'],
+                region_strand=int(exon['strand']),
+                exon_start=int(exon['start']),
+                exon_end=int(exon['end']),
+                location_type=region_type
             )
         )
 
@@ -186,7 +188,7 @@ def format_transcript(
 
 
 def format_exon(exon_stable_id, region_name, region_strand, exon_start,
-                exon_end):
+                exon_end, location_type):
     'Turn transcript-borne information into an Exon entity'
     return {
         'type': 'Exon',
@@ -265,6 +267,7 @@ if __name__ == '__main__':
     json_file = args.data_path + args.species + '.csv'
     print("Loading CDS data")
     cds_info = preload_CDS_coords(args.species)
+    print(f'Propagated {len(cds_info)} CDS elements'
     print("Loading gene info into Mongo")
     load_gene_info(db, json_file, cds_info)
     create_index(db)
