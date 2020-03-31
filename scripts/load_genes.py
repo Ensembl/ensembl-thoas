@@ -108,7 +108,7 @@ def load_gene_info(db, json_file, cds_info):
                     transcript=transcript,
                     gene_id=gene['id'],
                     region_type=gene['coord_system']['name'],
-                    region_name=,gene['seq_region_name']
+                    region_name=gene['seq_region_name'],
                     region_strand=gene['strand'],
                     assembly_id=assembly['id'],
                     genome_id=genome['id'],
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     db = mongo_db_thing(load_config(args.config_file))
-    json_file = args.data_path + args.species + '/' + args.species + '_genes.csv'
+    json_file = args.data_path + args.species + '/' + args.species + '_genes.json'
     print("Loading CDS data")
     cds_info = preload_CDS_coords(args.species)
     print(f'Propagated {len(cds_info)} CDS elements'
