@@ -172,7 +172,10 @@ def format_transcript(
         },
         'exons': exon_list,
         'genome_id': genome_id,
-        'cds': {
+    }
+
+    if (transcript['id'] in cds_info)
+        new_transcript['cds'] = {
             'relative_slice': {
                 'location': {
                     'start': cds_info[transcript['id']]['relative_start'],
@@ -183,7 +186,6 @@ def format_transcript(
                 }
             }
         }
-    }
     return new_transcript
 
 
