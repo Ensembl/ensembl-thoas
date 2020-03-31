@@ -40,7 +40,7 @@ def create_index(db):
     ], name='transcript_foreign_key')
 
 
-def load_gene_info(db):
+def load_gene_info(db, json_file, cds_info):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -60,7 +60,7 @@ def load_gene_info(db):
 
     print('Loaded assembly ' + assembly['name'])
     required_keys = ('name', 'description')
-    with gzip.open('../../graphql-source-data/homo_sapiens_genes.json.gz') as file:
+    with gzip.open(json_file) as file:
         print('Chunk')
         for gene in ijson.items(file, 'item'):
 
@@ -109,7 +109,8 @@ def load_gene_info(db):
                     gene['coord_system']['name'],
                     gene['strand'],
                     assembly['id'],
-                    genome['id']
+                    genome['id'],
+                    cds_info
                 ))
 
             if len(gene_buffer) > 1000:
@@ -126,7 +127,7 @@ def load_gene_info(db):
 
 def format_transcript(
     transcript, gene_id, region_type, region_name, region_strand, assembly_id,
-    genome_id
+    genome_id, cds_info
 ):
     'Transform and supplement transcript information'
 
@@ -167,7 +168,18 @@ def format_transcript(
             }
         },
         'exons': exon_list,
-        'genome_id': genome_id
+        'genome_id': genome_id,
+        'cds': {
+            'relative_slice': {
+                'location': {
+                    'start': cds_info[transcript['id']]['relative_start'],
+                    'end': cds_info[transcript['id']]['relative_end'],
+                    'length': (
+                        cds_info[transcript['id']]['spliced_length']
+                    )
+                }
+            }
+        }
     }
     return new_transcript
 
@@ -215,12 +227,17 @@ def preload_CDS_coords(production_name):
         for row in reader:
             cds_buffer[row[0]] = {
                 'start': row[1],
-                'end': row[2]
+                'end': row[2],
+                'relative_start': row[3],
+                'relative_end': row[4],
+                'spliced_length': row[5]
             }
     return cds_buffer
 
 
 if __name__ == '__main__':
     db = mongo_db_thing(load_config('../mongo.conf'))
-    load_gene_info(db)
+    json_file = '../../graphql-source-data/homo_sapiens_genes.json.gz'
+    cds_info = preload_CDS_coords('homo_sapiens')
+    load_gene_info(db, json_file, cds_info)
     create_index(db)
