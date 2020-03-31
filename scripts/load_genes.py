@@ -61,7 +61,7 @@ def load_gene_info(db, json_file, cds_info):
 
     print('Loaded assembly ' + assembly['name'])
     required_keys = ('name', 'description')
-    with gzip.open(json_file) as file:
+    with open(json_file) as file:
         print('Chunk')
         for gene in ijson.items(file, 'item'):
 
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     db = mongo_db_thing(load_config(args.config_file))
-    json_file = args.data_path + args.species + '.csv'
+    json_file = args.data_path + args.species + '/' + args.species + '_genes.csv'
     print("Loading CDS data")
     cds_info = preload_CDS_coords(args.species)
     print(f'Propagated {len(cds_info)} CDS elements'
