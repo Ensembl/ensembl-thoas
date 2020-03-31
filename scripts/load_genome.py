@@ -19,7 +19,7 @@ from common.mongo import mongo_db_thing
 
 
 def load_genome_info(db, source_file):
-    with gzip.open(source_file) as file:
+    with open(source_file) as file:
         content = next(file)
         doc = json.loads(content)
 
