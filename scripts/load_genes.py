@@ -17,6 +17,7 @@ import gzip
 from common.utils import load_config
 from common.mongo import mongo_db_thing
 import csv
+import argparse
 
 
 def create_index(db):
@@ -235,9 +236,35 @@ def preload_CDS_coords(production_name):
     return cds_buffer
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Load JSON Search dumps into MongoDB for GraphQL'
+    )
+    parser.add_argument(
+        '--config_file',
+        help='File path containing MongoDB credentials',
+        default='../mongo.conf'
+    )
+    parser.add_argument(
+        '--data_path',
+        help='Path to JSON files from the "Gene search" dumps',
+        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-99/vertebrates/json/'
+    )
+    parser.add_argument(
+        '--species',
+        help='The production name for a (sic) Ensembl species',
+        default='homo_sapiens'
+    )
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    db = mongo_db_thing(load_config('../mongo.conf'))
-    json_file = '../../graphql-source-data/homo_sapiens_genes.json.gz'
-    cds_info = preload_CDS_coords('homo_sapiens')
+
+    args = parse_args()
+
+    db = mongo_db_thing(load_config(args.config_file))
+    json_file = args.data_path + args.species + '.csv'
+    print("Loading CDS data")
+    cds_info = preload_CDS_coords(args.species)
+    print("Loading gene info into Mongo")
     load_gene_info(db, json_file, cds_info)
     create_index(db)
