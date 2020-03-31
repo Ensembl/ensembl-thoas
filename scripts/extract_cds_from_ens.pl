@@ -5,21 +5,40 @@ use strict;
 use warnings;
 use Bio::EnsEMBL::Registry;
 use IO::File;
+use List::Util 'sum';
+use Getopt::Long;
+use Pod::Usage;
 
 my $registry = 'Bio::EnsEMBL::Registry';
 
-my $species = shift;
+my $species = 'homo_sapiens'; # Needs to be a production name
+my $host = 'ensembldb.ensembl.org'; # Very slow!
+my $user = 'anonymous';
+my $port = 3306;
+my $help;
+
+GetOptions(
+  "species=s" => \$species,
+  "host=s" => \$host,
+  "user=s" => \$user,
+  "port=i" => \$port,
+  "h|?" => \$help
+);
+
+
 die 'Specify a species production name at command line' unless $species;
 $registry->load_registry_from_db(
-  -host => 'ensembldb.ensembl.org',
-  -user => 'anonymous',
-  -species => $species
+  -host => $host,
+  -user => $user,
+  -species => $species,
+  -port => $port
 );
 
 my $fh = IO::File->new($species. '.csv', 'w');
-print $fh '"transcript ID", "cds start", "cds end"'."\n";
+print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
+  '"cds relative end", "spliced_length"'."\n";
 
-my $transcript_adaptor = $registry->get_adaptor('human', 'core', 'Transcript');
+my $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
 
 
 my $transcripts = $transcript_adaptor->fetch_all;
@@ -40,13 +59,25 @@ while (my $transcript = shift @$transcripts) {
   # rendering purposes.
 
   if (@$cds_feats > 1) {
-    my ($start_seg) = $cds_feats->[0]->transfer($transcript_slice);
-    my ($end_seg) = $cds_feats->[-1]->transfer($transcript_slice);
-    printf $fh "%s,%s,%s\n", $transcript->stable_id, $start_seg->start, $end_seg->end;
+    my ($relative_first_cds) = $cds_feats->[0]->transfer($transcript_slice);
+    my ($relative_last_cds) = $cds_feats->[-1]->transfer($transcript_slice);
+    printf $fh "%s,%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $cds_feats->[0]->start,
+      $cds_feats->[-1]->end,
+      $relative_first_cds->start,
+      $relative_last_cds->end,
+      sum map {$_->length} @$cds_feats;
   } else {
-    my ($seg) = $cds_feats->[0]->transfer($transcript_slice);
-    printf $fh "%s,%s,%s\n", $transcript->stable_id, $seg->start, $seg->end;
+    my ($relative_cds) = $cds_feats->[0]->transfer($transcript_slice);
+    printf $fh "%s,%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $cds_feats->[0]->start,
+      $cds_feats->[0]->end,
+      $relative_cds->start,
+      $relative_cds->end,
+      $cds_feats->[0]->length;
   }
 
 }
-print "Dumping completed";
+print "Dumping completed of $x of coding transcripts\n";
