@@ -22,7 +22,7 @@ from graphql_service.resolver.gene_model import query, gene, transcript, locus
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 config = load_config(os.environ['GQL_CONF'])
-schema_file = config.get('schema')
+schema_file = config.get('MONGO DB','schema')
 
 mongo_object = mongo.mongo_db_thing(config)
 

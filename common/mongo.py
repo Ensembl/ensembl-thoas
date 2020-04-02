@@ -22,7 +22,7 @@ class mongo_db_thing():
         Note that config here is a configparser object
         '''
         self.mongo_db = self.connect_mongo(config)
-        self.default_collection = config.get('collection')
+        self.default_collection = config.get('MONGO DB','collection')
         print('MongoDB default collection:' + self.default_collection)
 
     def connect_mongo(self, config):
