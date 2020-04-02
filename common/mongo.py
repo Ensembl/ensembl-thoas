@@ -28,11 +28,11 @@ class mongo_db_thing():
     def connect_mongo(self, config):
         'Get a MongoDB connection'
 
-        host = config.get('MONGO_DB','host')
-        port = config.getint('MONGO_DB','port')
-        user = config.get('MONGO_DB','user')
-        password = config.get('MONGO_DB','password')
-        db = config.get('MONGO_DB','db')
+        host = config.get('MONGO DB','host')
+        port = config.getint('MONGO DB','port')
+        user = config.get('MONGO DB','user')
+        password = config.get('MONGO DB','password')
+        db = config.get('MONGO DB','db')
 
         client = pymongo.MongoClient(
             host,

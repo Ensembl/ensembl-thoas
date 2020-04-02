@@ -31,6 +31,6 @@ def connect_mysql(config):
 def load_config(filename):
     'Load a config, return a ConfigParser object'
 
-    cp = ConfigParser(default_section='MONGO_DB')
+    cp = ConfigParser(default_section='MONGO DB')
     cp.read(filename)
     return cp
