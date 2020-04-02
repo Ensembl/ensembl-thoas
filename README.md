@@ -27,6 +27,8 @@ Designed to be run in a Kubernetes-like environment, so configuration is externa
 
 This can be emulated at great effort using docker run's --mount command
 
-docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION uvicorn --workers 5 --host=0.0.0.0 graphql_service.server:app
+docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION uvicorn --workers 5 --host=0.0.0.0 graphql_service.server:app --env-file /app/$FILE_MOUNT
 
 --publish above is exposing the container's ports to the host network
+
+--env-file is the only apparent way to get any non-uvicorn environment variables into the application. It can point to the file mount of a k8s configmap, but in just a container, this would have to be created manually
