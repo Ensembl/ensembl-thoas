@@ -69,6 +69,8 @@ def load_gene_info(db, json_file, cds_info):
                 if key not in gene:
                     gene[key] = None
 
+            
+
             gene_buffer.append({
                 'type': 'Gene',
                 'stable_id': gene['id'],
@@ -77,7 +79,16 @@ def load_gene_info(db, json_file, cds_info):
                 # Note that the description comes the long way via xref pipeline
                 # and includes a [source: string]
                 'description': gene['description'],
-                'slice': {
+                'slice': format_slice(
+                    region_name=gene['seq_region_name'],
+                    region_type=geme['coord_system']['name'],
+                    default_region=default_region,
+                strand=region_strand,
+                assembly=assembly,
+                start=int(transcript['start']),
+                end=int(transcript['end'])
+            )
+                {
                     'type': 'Slice',
                     'location': {
                         # For some reason, positions are strings in the file
@@ -129,7 +140,7 @@ def load_gene_info(db, json_file, cds_info):
 
 def format_transcript(
     transcript, gene_id, region_type, region_name, region_strand, assembly_id,
-    genome_id, cds_info
+    genome_id, cds_info, default_region, assembly
 ):
     'Transform and supplement transcript information'
 
@@ -142,7 +153,9 @@ def format_transcript(
                 region_strand=int(exon['strand']),
                 exon_start=int(exon['start']),
                 exon_end=int(exon['end']),
-                location_type=region_type
+                location_type=region_type,
+                default_region=default_region,
+                assembly=assembly
             )
         )
 
@@ -154,21 +167,15 @@ def format_transcript(
         'name': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
         'slice': {
-            'type': 'Slice',
-            'location': {
-                'start': int(transcript['start']),
-                'end': int(transcript['end']),
-                'length': int(transcript['end']) - int(transcript['start']) + 1,
-                'location_type': region_type
-            },
-            'region': {
-                'name': region_name,
-                'assembly': assembly_id,
-                'strand': {
-                    'code': 'forward' if int(region_strand) > 0 else 'reverse',
-                    'value': region_strand
-                }
-            }
+            format_slice(
+                region_name=region_name,
+                region_type=location_type,
+                default_region=default_region,
+                strand=region_strand,
+                assembly=assembly,
+                start=int(transcript['start']),
+                end=int(transcript['end'])
+            )
         },
         'exons': exon_list,
         'genome_id': genome_id,
@@ -178,42 +185,57 @@ def format_transcript(
         new_transcript['cds'] = {
             'relative_slice': {
                 'location': {
-                    'start': cds_info[transcript['id']]['relative_start'],
-                    'end': cds_info[transcript['id']]['relative_end'],
+                    'start': int(cds_info[transcript['id']]['relative_start']),
+                    'end': int(cds_info[transcript['id']]['relative_end']),
                     'length': (
-                        cds_info[transcript['id']]['spliced_length']
+                        int(cds_info[transcript['id']]['spliced_length'])
                     )
                 }
-            }
+            },
+            format_slice(
+                region_name=region_name,
+                region_type=location_type,
+                default_region=default_region,
+                strand=region_strand,
+                assembly=assembly,
+                start=cds_info[transcript['id']]['start'],
+                end=cds_info[transcript['id']]['end']
+            )
         }
     return new_transcript
 
 
 def format_exon(exon_stable_id, region_name, region_strand, exon_start,
-                exon_end, location_type):
+                exon_end, location_type, default_region, assembly):
     'Turn transcript-borne information into an Exon entity'
     return {
         'type': 'Exon',
         'stable_id': exon_stable_id,
-        'slice': {
-            'region': {
-                'name': region_name,
-                'strand': {
-                    'code': 'forward' if region_strand > 0 else 'reverse',
-                    'value': region_strand
-                },
-                'assembly': 'GRCh38'
-            },
-            'location': {
-                'start': exon_start,
-                'end': exon_end,
-                'length': exon_end - exon_start + 1,
-                'location_type': 'chromosome'
-            },
-            'default': True
-        }
+        'slice': format_slice(region_name, location_type, default_region,
+                              region_strand, assembly, exon_start, exon_end)
     }
 
+
+def format_slice(region_name, region_type, default_region, strand, assembly,
+                 start, end):
+    'Creates regular slices with locations and regions'
+    return {
+        'region': {
+            'name': region_name,
+            'strand': {
+                'code': 'forward' if strand > 0 else 'reverse',
+                'value': strand
+            },
+            'assembly': assembly
+        },
+        'location': {
+            'start': start,
+            'end': end,
+            'length': end - start + 1,
+            'location_type': region_type
+        },
+        'default': default_region
+    }
 
 def format_metadata():
     '"metadata" is all the things that we do not want to model better'
