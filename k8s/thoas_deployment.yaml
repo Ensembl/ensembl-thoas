@@ -24,13 +24,13 @@ spec:
             "--port",
             "8000",
             "--env-file",
-            "/conf/.env",
+            "/env/.env",
             "graphql_service.server:app"
           ]
           volumeMounts:
-            - mountPath: /conf/mongo.conf
+            - mountPath: /conf/
               name: thoas-configmap
-            - mountPath: /conf/.env
+            - mountPath: /env/.env
               name: thoas-config-location
       volumes:
         - name: thoas-configmap

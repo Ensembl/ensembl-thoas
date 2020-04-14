@@ -1,6 +1,7 @@
 apiVersion: v1
 data:
-  GQL_CONF: /conf/mongo.conf
+  .env: >
+    GQL_CONF: /conf/mongo.conf
 kind: ConfigMap
 metadata:
   name: thoas-config-location

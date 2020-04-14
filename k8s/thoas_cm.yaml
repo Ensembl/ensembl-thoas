@@ -1,13 +1,14 @@
 apiVersion: v1
 data:
-  host: thoas-mongodb-svc
-  port: "27017"
-  user: admin
-  password: password
-  db: apps_data
-  collection: graphql-test-4
-  schema: ./common/schema.sdl
-  GQL_CONF: /conf/mongo.conf
+  mongo.conf: >
+    [MONGO DB]
+    host = thoas-mongodb-svc
+    port = "27017"
+    user = admin
+    password = password
+    db = apps_data
+    collection = graphql-test-4
+    schema = ./common/schema.sdl
 kind: ConfigMap
 metadata:
   name: thoas-configmap
