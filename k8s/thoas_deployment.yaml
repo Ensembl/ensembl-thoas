@@ -18,14 +18,24 @@ spec:
             - containerPort: 8000
           imagePullPolicy: Always
           command: ["uvicorn"]
-          args: ["--host",
-                 "0.0.0.0",
-                 "--port",
-                 "8000",
-                 "--env-file",
-                 "/app/k8s/k8s-mongo.conf",
-                 "graphql_service.server:app"
+          args: [
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--env-file",
+            "/conf/.env",
+            "graphql_service.server:app"
           ]
-          envFrom:
-            - configMapRef:
-                name: thoas-configmap
+          volumeMounts:
+            - mountPath: /conf/mongo.conf
+              name: thoas-configmap
+            - mountPath: /conf/.env
+              name: thoas-config-location
+      volumes:
+        - name: thoas-configmap
+          configMap:
+            name: thoas-configmap
+        - name: thoas-config-location
+          configMap:
+            name: thoas-config-location

@@ -7,7 +7,7 @@ data:
   db: apps_data
   collection: graphql-test-4
   schema: ./common/schema.sdl
-  GQL_CONF: /app/k8s/k8s-mongo.conf
+  GQL_CONF: /conf/mongo.conf
 kind: ConfigMap
 metadata:
   name: thoas-configmap
