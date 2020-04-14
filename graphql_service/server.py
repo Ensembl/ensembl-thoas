@@ -21,6 +21,8 @@ import os
 from graphql_service.resolver.gene_model import query, gene, transcript, locus
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
+print(os.environ)
+
 config = load_config(os.environ['GQL_CONF'])
 schema_file = config.get('MONGO DB','schema')
 
