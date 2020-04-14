@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  mongo.conf: >
+  mongo.conf: |
     [MONGO DB]
     host = thoas-mongodb-svc
     port = "27017"
