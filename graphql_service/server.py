@@ -23,7 +23,7 @@ from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 print(os.environ)
 
-config = load_config(os.environ['GQL_CONF'])
+config = load_config(os.getenv('GQL_CONF'))
 schema_file = config.get('MONGO DB','schema')
 
 mongo_object = mongo.mongo_db_thing(config)
