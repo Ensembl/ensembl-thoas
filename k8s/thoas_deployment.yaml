@@ -22,7 +22,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: thoas-config-location
-                  key: .env
+                  key: .env.GQL_CONF
           command: ["uvicorn"]
           args: [
             "--host",
