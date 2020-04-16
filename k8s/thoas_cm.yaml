@@ -1,11 +1,12 @@
 apiVersion: v1
+# host refers to a Service that routes traffic outside k8s
 data:
   mongo.conf: |
     [MONGO DB]
-    host = thoas-mongodb-svc
-    port = "27017"
     user = admin
     password = password
+    host = mongo
+    port = 27017
     db = apps_data
     collection = graphql-test-4
     schema = ./common/schema.sdl

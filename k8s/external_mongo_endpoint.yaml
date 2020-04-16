@@ -1,5 +1,7 @@
 apiVersion: v1
 kind: Endpoints
+# Target for MongoDB traffic from inside k8s
+# Note the name matches the Service
 metadata:
   name: mongo
   namespace: ensembl-apps
