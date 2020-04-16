@@ -69,11 +69,13 @@ def load_gene_info(db, json_file, cds_info):
                 if key not in gene:
                     gene[key] = None
 
-            
+
 
             gene_buffer.append({
                 'type': 'Gene',
-                'stable_id': gene['id'],
+                'stable_id': gene['id'] + gene['version'],
+                'unversioned_stable_id': gene['id'],
+                'version': gene['version']
                 'so_term': gene['biotype'],
                 'name': gene['name'],
                 # Note that the description comes the long way via xref pipeline
@@ -149,6 +151,7 @@ def format_transcript(
         exon_list.append(
             format_exon(
                 exon_stable_id=exon['id'],
+                version=exon['version'],
                 region_name=exon['seq_region_name'],
                 region_strand=int(exon['strand']),
                 exon_start=int(exon['start']),
@@ -162,7 +165,9 @@ def format_transcript(
     new_transcript = {
         'type': 'Transcript',
         'gene': gene_id,
-        'stable_id': transcript['id'],
+        'stable_id': transcript['id'] + transcript['version'],
+        'unversioned_stable_id': transcript['id'],
+        'version': transcript['version'],
         'so_term': transcript['biotype'],
         'name': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
@@ -205,12 +210,14 @@ def format_transcript(
     return new_transcript
 
 
-def format_exon(exon_stable_id, region_name, region_strand, exon_start,
+def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
                 exon_end, location_type, default_region, assembly):
     'Turn transcript-borne information into an Exon entity'
     return {
         'type': 'Exon',
-        'stable_id': exon_stable_id,
+        'stable_id': exon_stable_id + version,
+        'unversioned_stable_id': exon_stable_id,
+        'version': version
         'slice': format_slice(region_name, location_type, default_region,
                               region_strand, assembly, exon_start, exon_end)
     }
