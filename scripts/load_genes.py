@@ -69,9 +69,8 @@ def load_gene_info(db, json_file, cds_info):
                 if key not in gene:
                     gene[key] = None
 
+            json_gene = {
 
-
-            gene_buffer.append({
                 'type': 'Gene',
                 'stable_id': gene['id'] + gene['version'],
                 'unversioned_stable_id': gene['id'],
@@ -85,35 +84,17 @@ def load_gene_info(db, json_file, cds_info):
                     region_name=gene['seq_region_name'],
                     region_type=geme['coord_system']['name'],
                     default_region=default_region,
-                strand=region_strand,
-                assembly=assembly,
-                start=int(transcript['start']),
-                end=int(transcript['end'])
-            )
-                {
-                    'type': 'Slice',
-                    'location': {
-                        # For some reason, positions are strings in the file
-                        'start': int(gene['start']),
-                        'end': int(gene['end']),
-                        # more complex when circular!
-                        'length': int(gene['end']) - int(gene['start']) + 1,
-                        'location_type': gene['coord_system']['name']
-                    },
-                    'region': {
-                        'name': gene['seq_region_name'],
-                        'assembly': assembly['id'],
-                        'strand': {
-                            'code': 'forward' if int(gene['strand']) > 0 else 'reverse',
-                            'value': gene['strand']
-                        }
-                    }
-                },
+                    strand=region_strand,
+                    assembly=assembly,
+                    start=int(transcript['start']),
+                    end=int(transcript['end'])
+                )
                 'transcripts': [
                     [transcript['id'] for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id']
-            })
+            }
+            gene_buffer.append(json_gene)
 
             # Sort out some transcripts while we can see them
             for transcript in gene['transcripts']:
@@ -244,9 +225,27 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
         'default': default_region
     }
 
-def format_metadata():
+
+def format_metadata(xrefs):
     '"metadata" is all the things that we do not want to model better'
-    pass
+    
+    json_xrefs = []
+    for x in xrefs:
+        doc = {
+            'id': x['primary_id'],
+            'name': x['display_id'],
+            'description': x['description'],
+            'url': url_generator()
+            'source': {
+                'name': x['db_display'],
+                'url': url_generator()
+            }
+        }
+    return json_xrefs
+
+
+def url_generator():
+    return None
 
 
 def preload_CDS_coords(production_name):
