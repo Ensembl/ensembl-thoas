@@ -1,0 +1,80 @@
+{
+  "apiVersion":null,
+  "errorMessage":null,
+  "payload":{
+    "namespaces":[
+      {
+        "id":1,
+        "prefix":"chebi",
+        "mirId":"MIR:00000002",
+        "name":"ChEBI",
+        "pattern":"^CHEBI:\\d+$",
+        "description":"Chemical Entities of Biological Interest (ChEBI) is a freely available dictionary of molecular entities focused on 'small' chemical compounds.",
+        "created":"2019-06-11T14:15:26.925+0000",
+        "modified":"2019-06-11T14:15:26.925+0000",
+        "sampleId":"36927",
+        "namespaceEmbeddedInLui":true,
+        "deprecated":false,
+        "deprecationDate":null,
+        "resources":[
+          {
+            "id":3,
+            "mirId":"MIR:00100009",
+            "urlPattern":"https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:{$id}",
+            "name":"ChEBI (Chemical Entities of Biological Interest)",
+            "description":"ChEBI (Chemical Entities of Biological Interest)",
+            "official":true,
+            "providerCode":"ebi",
+            "sampleId":"36927",
+            "resourceHomeUrl":"https://www.ebi.ac.uk/chebi/",
+            "institution":{
+              "id":2,
+              "name":"European Bioinformatics Institute",
+              "homeUrl":"https://www.ebi.ac.uk",
+              "description":"At EMBL-EBI, we make the world’s public biological data freely available to the scientific community via a range of services and tools, perform basic research and provide professional training in bioinformatics. \nWe are part of the European Molecular Biology Laboratory (EMBL), an international, innovative and interdisciplinary research organisation funded by 26 member states and two associate member states.",
+              "rorId":"https://ror.org/02catss52",
+              "location":{
+                "countryCode":"GB",
+                "countryName":"United Kingdom"
+              }
+            },
+            "location":{
+              "countryCode":"GB",
+              "countryName":"United Kingdom"
+            },
+            "deprecated":false,
+            "deprecationDate":null
+          },
+          {
+            "id":4,
+            "mirId":"MIR:00100158",
+            "urlPattern":"https://www.ebi.ac.uk/ols/ontologies/chebi/terms?obo_id=CHEBI:{$id}",
+            "name":"ChEBI through OLS",
+            "description":"ChEBI through OLS",
+            "official":false,
+            "providerCode":"ols",
+            "sampleId":"36927",
+            "resourceHomeUrl":"https://www.ebi.ac.uk/ols/ontologies/chebi",
+            "institution":{
+              "id":2,
+              "name":"European Bioinformatics Institute",
+              "homeUrl":"https://www.ebi.ac.uk",
+              "description":"At EMBL-EBI, we make the world’s public biological data freely available to the scientific community via a range of services and tools, perform basic research and provide professional training in bioinformatics. \nWe are part of the European Molecular Biology Laboratory (EMBL), an international, innovative and interdisciplinary research organisation funded by 26 member states and two associate member states.",
+              "rorId":"https://ror.org/02catss52",
+              "location":{
+                "countryCode":"GB",
+                "countryName":"United Kingdom"
+              }
+            },
+            "location":{
+              "countryCode":"GB",
+              "countryName":"United Kingdom"
+            },
+            "deprecated":false,
+            "deprecationDate":null
+          }
+        ]
+      }
+    ]
+  }
+}
