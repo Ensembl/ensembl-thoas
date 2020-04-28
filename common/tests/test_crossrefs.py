@@ -66,3 +66,21 @@ def test_crossref_url(resolver):
 
     response = resolver.url_generator('17790', 'place_of_quiet_reflection')
     assert response is None
+
+
+def test_identifier_resolution(resolver):
+    '''
+    Verify data being loaded from file, and resolves Ensembl xref dbnames
+    '''
+
+    response = resolver.translate_dbname('ChEMBL')
+    assert response == 'chembl.target'
+
+
+def test_combined_resolution(resolver):
+    '''
+    Perform combined Ensembl dbname mapping and xref resolution
+    '''
+
+    response = resolver.url_from_ens_dbname('17790', 'CHEBI')
+    assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'

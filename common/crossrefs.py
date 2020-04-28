@@ -24,10 +24,20 @@ class xref_resolver(object):
 
     Setting from_file to a JSON result from identifiers.org will prevent
     network load, and thus demand less traffic
+
+    A secondary load is required to link Ensembl DB names to identifiers.org
+    namespace prefixes
+
+    You probably want to use url_from_ens_dbname() to turn Ensembl cross-refs
+    into real URLs to the original
     '''
 
-    def __init__(self, from_file=None):
+    def __init__(self, from_file=None, mapping_file=None):
         self.api_url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
+        if mapping_file:
+            self.mapping_file = mapping_file
+        else:
+            self.mapping_file = 'docs/xref_LOD_mapping.json'
 
         if from_file:
             self.id_data = self._load_from_file(from_file)
@@ -37,7 +47,21 @@ class xref_resolver(object):
         self.namespace = {}
         self._index_namespaces()
 
-        self.id_substitution = re.compile('\{\$id\}')
+        self.id_substitution = re.compile(r'{\$id}')
+
+        self.identifiers_mapping = {}
+        # Load LOD mappings from file
+        with open(self.mapping_file) as mapping_file:
+            mapping = json.loads(mapping_file.read())
+            for source in mapping['mappings']:
+                if 'ensembl_db_name' in source:
+                    self.identifiers_mapping[
+                        source['ensembl_db_name'].lower()
+                    ] = source
+                else:
+                    self.identifiers_mapping[
+                        source['db_name'].lower()
+                    ] = source
 
     def _load_from_file(self, file):
         'Constructor helper to get JSON from file instead of URL'
@@ -91,3 +115,16 @@ class xref_resolver(object):
                     return i['resourceHomeUrl']
         else:
             return None
+
+    def translate_dbname(self, dbname):
+        '''
+        Turn Ensembl DB names into identifiers.org prefixes where possible
+        '''
+        return self.identifiers_mapping[dbname.lower()]['id_namespace']
+
+    def url_from_ens_dbname(self, xref, dbname):
+        '''
+        Convert Ensembl dbnames and generate a URL
+        '''
+        namespace = self.translate_dbname(dbname)
+        return self.url_generator(xref, namespace)
