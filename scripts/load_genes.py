@@ -39,6 +39,9 @@ def create_index(db):
     db.collection().create_index([
         ('genome_id', 'transcript')
     ], name='transcript_foreign_key')
+    db.collection().create_index([
+        ('cross_references.name', 'cross_references.source.id')
+    ], name='cross_refs')
 
 
 def load_gene_info(db, json_file, cds_info):
@@ -74,11 +77,11 @@ def load_gene_info(db, json_file, cds_info):
                 'type': 'Gene',
                 'stable_id': gene['id'] + gene['version'],
                 'unversioned_stable_id': gene['id'],
-                'version': gene['version']
+                'version': gene['version'],
                 'so_term': gene['biotype'],
                 'name': gene['name'],
-                # Note that the description comes the long way via xref pipeline
-                # and includes a [source: string]
+                # Note that the description comes the long way via xref
+                # pipeline and includes a [source: string]
                 'description': gene['description'],
                 'slice': format_slice(
                     region_name=gene['seq_region_name'],
@@ -88,11 +91,12 @@ def load_gene_info(db, json_file, cds_info):
                     assembly=assembly,
                     start=int(transcript['start']),
                     end=int(transcript['end'])
-                )
+                ),
                 'transcripts': [
                     [transcript['id'] for transcript in gene['transcripts']]
                 ],
-                'genome_id': genome['id']
+                'genome_id': genome['id'],
+                'cross_references': format_metadata(gene['xrefs'])
             }
             gene_buffer.append(json_gene)
 
@@ -165,6 +169,7 @@ def format_transcript(
         },
         'exons': exon_list,
         'genome_id': genome_id,
+        'cross_references': format_metadata(transcript['xrefs'])
     }
 
     if (transcript['id'] in cds_info):
@@ -178,7 +183,7 @@ def format_transcript(
                     )
                 }
             },
-            format_slice(
+            'slice': format_slice(
                 region_name=region_name,
                 region_type=location_type,
                 default_region=default_region,
@@ -198,7 +203,7 @@ def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
         'type': 'Exon',
         'stable_id': exon_stable_id + version,
         'unversioned_stable_id': exon_stable_id,
-        'version': version
+        'version': version,
         'slice': format_slice(region_name, location_type, default_region,
                               region_strand, assembly, exon_start, exon_end)
     }
@@ -228,24 +233,20 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
 
 def format_metadata(xrefs):
     '"metadata" is all the things that we do not want to model better'
-    
+
     json_xrefs = []
     for x in xrefs:
         doc = {
             'id': x['primary_id'],
             'name': x['display_id'],
             'description': x['description'],
-            'url': url_generator()
+            'url': url_generator(x),
             'source': {
                 'name': x['db_display'],
-                'url': url_generator()
+                'id': x['dbname']
             }
         }
     return json_xrefs
-
-
-def url_generator():
-    return None
 
 
 def preload_CDS_coords(production_name):
@@ -288,6 +289,7 @@ def parse_args():
         default='homo_sapiens'
     )
     return parser.parse_args()
+
 
 if __name__ == '__main__':
 
