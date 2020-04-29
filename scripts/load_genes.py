@@ -81,7 +81,7 @@ def load_gene_info(db, json_file, cds_info):
             json_gene = {
 
                 'type': 'Gene',
-                'stable_id': gene['id'] + gene['version'],
+                'stable_id': gene['id'] + str(gene['version']),
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
@@ -110,7 +110,7 @@ def load_gene_info(db, json_file, cds_info):
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
-                    gene_id=gene['id'],
+                    gene_id=gene['id'] + str(gene['version']),
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     region_strand=gene['strand'],
@@ -207,7 +207,7 @@ def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
     'Turn transcript-borne information into an Exon entity'
     return {
         'type': 'Exon',
-        'stable_id': exon_stable_id + version,
+        'stable_id': exon_stable_id + str(version),
         'unversioned_stable_id': exon_stable_id,
         'version': version,
         'slice': format_slice(region_name, location_type, default_region,
