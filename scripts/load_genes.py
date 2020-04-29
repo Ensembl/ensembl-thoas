@@ -96,7 +96,7 @@ def load_gene_info(db, json_file, cds_info):
                     region_type=gene['coord_system']['name'],
                     default_region=default_region,
                     strand=int(gene['strand']),
-                    assembly=assembly,
+                    assembly=assembly['id'],
                     start=int(gene['start']),
                     end=int(gene['end'])
                 ),
@@ -118,7 +118,9 @@ def load_gene_info(db, json_file, cds_info):
                     region_strand=int(gene['strand']),
                     assembly_id=assembly['id'],
                     genome_id=genome['id'],
-                    cds_info=cds_info
+                    cds_info=cds_info,
+                    default_region=default_region,
+                    assembly=assembly['id']
                 ))
 
             if len(gene_buffer) > 1000:
