@@ -246,6 +246,8 @@ def format_metadata(xrefs):
 
     json_xrefs = []
     for x in xrefs:
+        if 'db_display' not in x:
+            print(x)
         doc = {
             'id': x['primary_id'],
             'name': x['display_id'],
