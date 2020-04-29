@@ -12,21 +12,8 @@
    limitations under the License.
 """
 
-import mysql.connector
 from configparser import ConfigParser
 import argparse
-
-
-def connect_mysql(config):
-    'Get a MySQL connection'
-
-    connection = mysql.connector.connect(
-        host=config['host'],
-        port=config['port'],
-        user=config['user'],
-        database=config['db']
-    )
-    return connection
 
 
 def load_config(filename):
