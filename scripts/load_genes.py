@@ -170,7 +170,7 @@ def format_transcript(
         'slice': {
             format_slice(
                 region_name=region_name,
-                region_type=location_type,
+                region_type=region_type,
                 default_region=default_region,
                 strand=int(transcript['strand']),
                 assembly=assembly,
@@ -196,7 +196,7 @@ def format_transcript(
             },
             'slice': format_slice(
                 region_name=region_name,
-                region_type=location_type,
+                region_type=region_type,
                 default_region=default_region,
                 strand=int(transcript['strand']),
                 assembly=assembly,
