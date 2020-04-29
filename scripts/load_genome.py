@@ -13,8 +13,7 @@
 '''
 
 import json
-import gzip
-from common.utils import load_config
+from common.utils import load_config, parse_args
 from common.mongo import mongo_db_thing
 
 
@@ -52,6 +51,24 @@ def load_genome_info(db, source_file):
         })
 
 
+def create_index(db):
+    db.collection().create_index([
+        ('type', 'id', 'default')
+    ], name='assemblies')
+    db.collection().create_index([
+        ('scientific_name')
+    ], name='species_by_name')
+    db.collection().create_index([
+        ('taxon_id')
+    ], name='species_by_taxon')
+
+
 if __name__ == '__main__':
-    db = mongo_db_thing(load_config('../mongo.conf'))
-    load_genome_info(db, '../../graphql-source-data/human_genome.json.gz')
+
+    args = parse_args()
+
+    db = mongo_db_thing(load_config(args.config_file))
+    json_file = args.data_path + args.species + '/' + args.species + '_genome.json'
+
+    load_genome_info(db, json_file)
+    create_index(db)

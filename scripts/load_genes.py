@@ -14,7 +14,7 @@
 
 import ijson
 import gzip
-from common.utils import load_config
+from common.utils import load_config, parse_args
 from common.mongo import mongo_db_thing
 import csv
 import argparse
@@ -266,28 +266,6 @@ def preload_CDS_coords(production_name):
                 'spliced_length': row[5]
             }
     return cds_buffer
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Load JSON Search dumps into MongoDB for GraphQL'
-    )
-    parser.add_argument(
-        '--config_file',
-        help='File path containing MongoDB credentials',
-        default='../mongo.conf'
-    )
-    parser.add_argument(
-        '--data_path',
-        help='Path to JSON files from the "Gene search" dumps',
-        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-99/vertebrates/json/'
-    )
-    parser.add_argument(
-        '--species',
-        help='The production name for a (sic) Ensembl species',
-        default='homo_sapiens'
-    )
-    return parser.parse_args()
 
 
 if __name__ == '__main__':
