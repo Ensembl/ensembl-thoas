@@ -97,8 +97,8 @@ def load_gene_info(db, json_file, cds_info):
                     default_region=default_region,
                     strand=int(gene['strand']),
                     assembly=assembly,
-                    start=int(transcript['start']),
-                    end=int(transcript['end'])
+                    start=int(gene['start']),
+                    end=int(gene['end'])
                 ),
                 'transcripts': [
                     [transcript['id'] for transcript in gene['transcripts']]
