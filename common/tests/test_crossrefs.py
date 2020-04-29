@@ -84,3 +84,16 @@ def test_combined_resolution(resolver):
 
     response = resolver.url_from_ens_dbname('17790', 'CHEBI')
     assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'
+
+
+def test_annotate_function(resolver):
+    response = resolver.annotate_crossref({
+        'id': '1',
+        'source': {
+            'id': 'CHEBI'
+        }
+    })
+    assert response['id'] == '1'
+    assert response['source']['id'] == 'CHEBI'
+    assert response['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:1'
+    assert response['source']['url'] == 'https://www.ebi.ac.uk/chebi/'

@@ -17,6 +17,7 @@ import graphql_service.resolver.gene_model as model
 import pytest
 import graphql_service.resolver.data_loaders as data_loader
 import asyncio
+from common.crossrefs import xref_resolver
 
 
 class Info(object):
@@ -29,7 +30,8 @@ class Info(object):
         self.context = {
             'stuff': 'Nonsense',
             'mongo_db': self.collection,
-            'data_loader': data_loader.DataLoaderCollection(self.collection)
+            'data_loader': data_loader.DataLoaderCollection(self.collection),
+            'xref_resolver': xref_resolver(from_file='common/tests/mini_identifiers.json')
         }
 
 
@@ -213,3 +215,30 @@ def test_resolve_slice(slice_data):
     )
     for hit in result:
         assert hit['stable_id'] in ['ENSG001', 'ENSG002']
+
+
+def test_url_generation(basic_data):
+    xref = {
+        'id': 'some_molecule',
+        'name': 'Chemsitry rocks',
+        'description': 'Chemistry is the best',
+        'source': {
+            'id': 'ChEBI',
+            'name': 'Chemical Entities of Biological Interest'
+        }
+    }
+
+    result = model.insert_urls(
+        {
+            'cross_references': [
+                xref
+            ]
+        },
+        basic_data
+    )
+
+    for key in xref.keys():
+        assert result[0][key] == xref[key], 'Original structure retained'
+
+    assert result[0]['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:some_molecule'
+    assert result[0]['source']['url'] == 'https://www.ebi.ac.uk/chebi/'

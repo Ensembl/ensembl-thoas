@@ -240,7 +240,6 @@ def format_metadata(xrefs):
             'id': x['primary_id'],
             'name': x['display_id'],
             'description': x['description'],
-            'url': url_generator(x),
             'source': {
                 'name': x['db_display'],
                 'id': x['dbname']

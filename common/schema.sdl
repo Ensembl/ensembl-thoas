@@ -23,6 +23,7 @@ type Gene {
   so_term: String
   transcripts: [Transcript!]!
   slice: Slice!
+  cross_references: [CrossReference]!
 }
 
 type Transcript {
@@ -31,6 +32,7 @@ type Transcript {
   so_term: String
   slice: Slice!
   exons: [Exon!]!
+  cross_references: [CrossReferences]!
 }
 
 type Exon {
@@ -75,4 +77,20 @@ type Locus {
   # A dynamically defined part of a Region
   genes: [Gene]!
   transcripts: [Transcript]!
+}
+
+type CrossReference {
+  # A reference to a database outside of Ensembl
+  id: String!
+  name: String!
+  description: String
+  url: String
+  source: ExternalDB!
+}
+
+type ExternalDB {
+  # Some metadata about databases outside of Ensembl
+  id: String!
+  name: String!
+  url: String
 }

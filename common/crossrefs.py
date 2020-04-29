@@ -128,3 +128,15 @@ class xref_resolver(object):
         '''
         namespace = self.translate_dbname(dbname)
         return self.url_generator(xref, namespace)
+
+    def annotate_crossref(self, xref):
+        '''
+        Called in map functions, to mutate an xref into a better xref
+        '''
+
+        xref['url'] = self.url_from_ens_dbname(xref['id'], xref['source']['id'])
+        url = self.source_url_generator(
+            self.translate_dbname(xref['source']['id'])
+        )
+        xref['source']['url'] = url
+        return xref

@@ -20,6 +20,7 @@ import common.mongo as mongo
 import os
 from graphql_service.resolver.gene_model import query, gene, transcript, locus
 from graphql_service.resolver.data_loaders import DataLoaderCollection
+from common.crossrefs import xref_resolver
 
 print(os.environ)
 
@@ -42,6 +43,8 @@ schema = ariadne.make_executable_schema(
 # Initialise all data loaders
 data_loader = DataLoaderCollection(mongo_object.collection())
 
+resolver = xref_resolver(mapping_file='docs/xref_LOD_mapping.json')
+
 
 def context_function(request):
     """
@@ -53,7 +56,8 @@ def context_function(request):
     return {
         'request': request,
         'mongo_db': mongo_object.collection(),
-        'data_loader': data_loader
+        'data_loader': data_loader,
+        'xref_resolver': resolver
     }
 
 
