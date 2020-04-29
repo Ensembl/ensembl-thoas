@@ -22,25 +22,25 @@ import argparse
 
 def create_index(db):
     db.collection().create_index([
-        ('name', 'genome_id')
+        ('name'), ('genome_id')
     ], name='names_of_things')
     db.collection().create_index([
-        ('genome_id', 'stable_id', 'type')
+        ('genome_id'), ('stable_id'), ('type')
     ], name='stable_id')
     db.collection().create_index([
-        ('genome_id', 'type')
+        ('genome_id'), ('type')
     ], name='feature_type')
     db.collection().create_index([
-        ('genome_id', 'slice.region.name', 'slice.location.start', 'slice.location.end')
+        ('genome_id'), ('slice.region.name'), ('slice.location.start'), ('slice.location.end')
     ], name='location_index')
     db.collection().create_index([
-        ('genome_id', 'gene')
+        ('genome_id'), ('gene')
     ], name='gene_foreign_key')
     db.collection().create_index([
-        ('genome_id', 'transcript')
+        ('genome_id'), ('transcript')
     ], name='transcript_foreign_key')
     db.collection().create_index([
-        ('cross_references.name', 'cross_references.source.id')
+        ('cross_references.name'), ('cross_references.source.id')
     ], name='cross_refs')
 
 

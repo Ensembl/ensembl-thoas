@@ -53,7 +53,7 @@ def load_genome_info(db, source_file):
 
 def create_index(db):
     db.collection().create_index([
-        ('type', 'id', 'default')
+        ('type'), ('id'), ('default')
     ], name='assemblies')
     db.collection().create_index([
         ('scientific_name')
