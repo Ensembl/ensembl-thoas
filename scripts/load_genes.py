@@ -161,7 +161,7 @@ def format_transcript(
     new_transcript = {
         'type': 'Transcript',
         'gene': gene_id,
-        'stable_id': transcript['id'] + transcript['version'],
+        'stable_id': transcript['id'] + str(transcript['version']),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
