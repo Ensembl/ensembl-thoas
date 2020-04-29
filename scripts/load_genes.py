@@ -91,7 +91,7 @@ def load_gene_info(db, json_file, cds_info):
                 'description': gene['description'],
                 'slice': format_slice(
                     region_name=gene['seq_region_name'],
-                    region_type=geme['coord_system']['name'],
+                    region_type=gene['coord_system']['name'],
                     default_region=default_region,
                     strand=region_strand,
                     assembly=assembly,
