@@ -67,6 +67,8 @@ def load_gene_info(db, json_file, cds_info):
         'type': 'Genome',
         'name': 'GRCh38'
     })
+    # at least until there's a process for alt-alleles etc.
+    default_region = True
 
     print('Loaded assembly ' + assembly['name'])
     required_keys = ('name', 'description')
@@ -137,6 +139,7 @@ def format_transcript(
 ):
     'Transform and supplement transcript information'
 
+    default_region = True
     exon_list = []
     for exon in transcript['exons']:
         exon_list.append(
@@ -205,6 +208,7 @@ def format_transcript(
 def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
                 exon_end, location_type, default_region, assembly):
     'Turn transcript-borne information into an Exon entity'
+    default_region = True
     return {
         'type': 'Exon',
         'stable_id': exon_stable_id + str(version),
