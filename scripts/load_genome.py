@@ -15,6 +15,7 @@
 import json
 from common.utils import load_config, parse_args
 from common.mongo import mongo_db_thing
+import pymongo
 
 
 def load_genome_info(db, source_file):
@@ -53,13 +54,13 @@ def load_genome_info(db, source_file):
 
 def create_index(db):
     db.collection().create_index([
-        ('type'), ('id'), ('default')
+        ('type', pymongo.ASCENDING), ('id', pymongo.ASCENDING), ('default', pymongo.ASCENDING)
     ], name='assemblies')
     db.collection().create_index([
-        ('scientific_name')
+        ('scientific_name', pymongo.ASCENDING)
     ], name='species_by_name')
     db.collection().create_index([
-        ('taxon_id')
+        ('taxon_id', pymongo.ASCENDING)
     ], name='species_by_taxon')
 
 
