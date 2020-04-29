@@ -95,7 +95,7 @@ def load_gene_info(db, json_file, cds_info):
                     region_name=gene['seq_region_name'],
                     region_type=gene['coord_system']['name'],
                     default_region=default_region,
-                    strand=region_strand,
+                    strand=int(gene['strand']),
                     assembly=assembly,
                     start=int(transcript['start']),
                     end=int(transcript['end'])
@@ -115,7 +115,7 @@ def load_gene_info(db, json_file, cds_info):
                     gene_id=gene['id'] + str(gene['version']),
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
-                    region_strand=gene['strand'],
+                    region_strand=int(gene['strand']),
                     assembly_id=assembly['id'],
                     genome_id=genome['id'],
                     cds_info=cds_info
@@ -170,7 +170,7 @@ def format_transcript(
                 region_name=region_name,
                 region_type=location_type,
                 default_region=default_region,
-                strand=region_strand,
+                strand=int(transcript['strand']),
                 assembly=assembly,
                 start=int(transcript['start']),
                 end=int(transcript['end'])
@@ -196,7 +196,7 @@ def format_transcript(
                 region_name=region_name,
                 region_type=location_type,
                 default_region=default_region,
-                strand=region_strand,
+                strand=int(transcript['strand']),
                 assembly=assembly,
                 start=cds_info[transcript['id']]['start'],
                 end=cds_info[transcript['id']]['end']
