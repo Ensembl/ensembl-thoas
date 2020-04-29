@@ -232,9 +232,9 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
             'assembly': assembly
         },
         'location': {
-            'start': start,
-            'end': end,
-            'length': end - start + 1,
+            'start': int(start),
+            'end': int(end),
+            'length': int(end) - int(start) + 1,
             'location_type': region_type
         },
         'default': default_region
