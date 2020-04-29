@@ -167,17 +167,15 @@ def format_transcript(
         'so_term': transcript['biotype'],
         'name': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
-        'slice': {
-            format_slice(
-                region_name=region_name,
-                region_type=region_type,
-                default_region=default_region,
-                strand=int(transcript['strand']),
-                assembly=assembly,
-                start=int(transcript['start']),
-                end=int(transcript['end'])
-            )
-        },
+        'slice': format_slice(
+            region_name=region_name,
+            region_type=region_type,
+            default_region=default_region,
+            strand=int(transcript['strand']),
+            assembly=assembly,
+            start=int(transcript['start']),
+            end=int(transcript['end'])
+        ),
         'exons': exon_list,
         'genome_id': genome_id,
         'cross_references': format_metadata(transcript['xrefs'])
