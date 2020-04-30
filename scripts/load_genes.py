@@ -244,19 +244,30 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
 def format_metadata(xrefs):
     '"metadata" is all the things that we do not want to model better'
 
+    # GO xrefs (or associated xrefs) are a different format inline
     json_xrefs = []
     for x in xrefs:
         if 'db_display' not in x:
-            print(x)
-        doc = {
-            'id': x['primary_id'],
-            'name': x['display_id'],
-            'description': x['description'],
-            'source': {
-                'name': x['db_display'],
-                'id': x['dbname']
+            # This may be a GO xref
+            doc = {
+                'id': x['primary_id'],
+                'name': x['display_id'],
+                'description': '',
+                'source': {
+                    'name': x['dbname'],
+                    'id': x['dbname']
+                }
             }
-        }
+        else:
+            doc = {
+                'id': x['primary_id'],
+                'name': x['display_id'],
+                'description': x['description'],
+                'source': {
+                    'name': x['db_display'],
+                    'id': x['dbname']
+                }
+            }
     return json_xrefs
 
 
