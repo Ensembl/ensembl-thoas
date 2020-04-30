@@ -32,7 +32,7 @@ type Transcript {
   so_term: String
   slice: Slice!
   exons: [Exon!]!
-  cross_references: [CrossReferences]!
+  cross_references: [CrossReference]!
 }
 
 type Exon {
