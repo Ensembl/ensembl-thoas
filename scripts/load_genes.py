@@ -134,8 +134,10 @@ def load_gene_info(db, json_file, cds_info):
                 db.collection().insert_many(transcript_buffer)
                 transcript_buffer = []
 
-    db.collection().insert_many(gene_buffer) if len(gene_buffer > 0)
-    db.collection().insert_many(transcript_buffer) if len(transcript_buffer > 0)
+    if len(gene_buffer) > 0:
+        db.collection().insert_many(gene_buffer)
+    if len(transcript_buffer) > 0:
+        db.collection().insert_many(transcript_buffer)
 
 
 def format_transcript(
