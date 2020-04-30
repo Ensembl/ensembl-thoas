@@ -47,3 +47,38 @@ def parse_args():
         default='homo_sapiens'
     )
     return parser.parse_args()
+
+
+def format_cross_refs(xrefs):
+    '''
+    "metadata" is all the things that we do not want to model better
+    Convert a list of xrefs into schema-compliant sub-documents
+    '''
+
+    # GO xrefs (or associated xrefs) are a different format inline
+    json_xrefs = []
+    for x in xrefs:
+        doc = None
+        if 'db_display' not in x:
+            # This may be a GO xref
+            doc = {
+                'id': x['primary_id'],
+                'name': x['display_id'],
+                'description': '',
+                'source': {
+                    'name': x['dbname'],
+                    'id': x['dbname']
+                }
+            }
+        else:
+            doc = {
+                'id': x['primary_id'],
+                'name': x['display_id'],
+                'description': x['description'],
+                'source': {
+                    'name': x['db_display'],
+                    'id': x['dbname']
+                }
+            }
+        json_xrefs.add(doc)
+    return json_xrefs

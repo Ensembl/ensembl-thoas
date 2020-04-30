@@ -14,7 +14,7 @@
 
 import ijson
 import gzip
-from common.utils import load_config, parse_args
+from common.utils import load_config, parse_args, format_cross_refs
 from common.mongo import mongo_db_thing
 import csv
 import argparse
@@ -104,7 +104,7 @@ def load_gene_info(db, json_file, cds_info):
                     [transcript['id'] for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
-                'cross_references': format_metadata(gene['xrefs'])
+                'cross_references': format_cross_refs(gene['xrefs'])
             }
             gene_buffer.append(json_gene)
 
@@ -183,7 +183,7 @@ def format_transcript(
         ),
         'exons': exon_list,
         'genome_id': genome_id,
-        'cross_references': format_metadata(transcript['xrefs'])
+        'cross_references': format_cross_refs(transcript['xrefs'])
     }
 
     if (transcript['id'] in cds_info):
@@ -245,35 +245,6 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
         'default': default_region
     }
 
-
-def format_metadata(xrefs):
-    '"metadata" is all the things that we do not want to model better'
-
-    # GO xrefs (or associated xrefs) are a different format inline
-    json_xrefs = []
-    for x in xrefs:
-        if 'db_display' not in x:
-            # This may be a GO xref
-            doc = {
-                'id': x['primary_id'],
-                'name': x['display_id'],
-                'description': '',
-                'source': {
-                    'name': x['dbname'],
-                    'id': x['dbname']
-                }
-            }
-        else:
-            doc = {
-                'id': x['primary_id'],
-                'name': x['display_id'],
-                'description': x['description'],
-                'source': {
-                    'name': x['db_display'],
-                    'id': x['dbname']
-                }
-            }
-    return json_xrefs
 
 
 def preload_CDS_coords(production_name):
