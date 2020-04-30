@@ -14,7 +14,7 @@
 
 import ijson
 import gzip
-from common.utils import load_config, parse_args, format_cross_refs
+from common.utils import load_config, parse_args, format_cross_refs, format_slice
 from common.mongo import mongo_db_thing
 import csv
 import argparse
@@ -222,29 +222,6 @@ def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
         'slice': format_slice(region_name, location_type, default_region,
                               region_strand, assembly, exon_start, exon_end)
     }
-
-
-def format_slice(region_name, region_type, default_region, strand, assembly,
-                 start, end):
-    'Creates regular slices with locations and regions'
-    return {
-        'region': {
-            'name': region_name,
-            'strand': {
-                'code': 'forward' if strand > 0 else 'reverse',
-                'value': strand
-            },
-            'assembly': assembly
-        },
-        'location': {
-            'start': int(start),
-            'end': int(end),
-            'length': int(end) - int(start) + 1,
-            'location_type': region_type
-        },
-        'default': default_region
-    }
-
 
 
 def preload_CDS_coords(production_name):

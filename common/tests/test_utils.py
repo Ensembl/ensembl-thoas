@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-from commmon.utils import format_cross_refs
+from commmon.utils import format_cross_refs, format_slice
 
 
 def test_xref_formatting():
@@ -49,3 +49,27 @@ def test_xref_formatting():
     assert doc_list[0]['id'] == 'GO:0098781'
     assert doc_list[0]['source']['name'] == 'GO'
     assert doc_list[0]['source']['id'] == 'GO'
+
+
+def test_slice_formatting():
+    Slice = format_slice('test', 'test place', True, 1, 'GRCh38', 100, 200)
+
+    assert Slice['region']['name'] == 'test'
+    assert Slice['region']['strand']['code'] == 'forward'
+    assert Slice['region']['strand']['value'] == 1
+    assert Slice['region']['assembly']['GRCh38']
+    assert Slice['location']['start'] == 100
+    assert Slice['location']['end'] == 200
+    assert Slice['default'] is True
+    assert Slice['location']['location_type'] == 'test place'
+
+    Slice = format_slice('test', 'test place', False, -1, 'GRCh38', 100, 200)
+
+    assert Slice['region']['name'] == 'test'
+    assert Slice['region']['strand']['code'] == 'reverse'
+    assert Slice['region']['strand']['value'] == -1
+    assert Slice['region']['assembly']['GRCh38']
+    assert Slice['location']['start'] == 100
+    assert Slice['location']['end'] == 200
+    assert Slice['default'] is False
+    assert Slice['location']['location_type'] == 'test place'
