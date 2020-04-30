@@ -43,6 +43,7 @@ class xref_resolver(object):
             self.id_data = self._load_from_file(from_file)
         else:
             self.id_data = self._load_from_url(self.api_url)
+            print('Loaded identifiers.org data via web service')
 
         self.namespace = {}
         self._index_namespaces()
@@ -74,9 +75,9 @@ class xref_resolver(object):
     def _load_from_url(self, url):
         'Get JSON from identifiers.org'
 
-        request = requests.get(url, headers={'Accepts': 'application/json'})
-        if request.headers['Content-Type'] == 'application/json':
-            return request.json
+        response = requests.get(url, headers={'Accepts': 'application/json'})
+        if (response.status_code == 200):
+            return response.json()
 
     def _index_namespaces(self):
         '''
@@ -134,7 +135,10 @@ class xref_resolver(object):
         Called in map functions, to mutate an xref into a better xref
         '''
 
-        xref['url'] = self.url_from_ens_dbname(xref['id'], xref['source']['id'])
+        xref['url'] = self.url_from_ens_dbname(
+            xref['id'],
+            xref['source']['id']
+        )
         url = self.source_url_generator(
             self.translate_dbname(xref['source']['id'])
         )
