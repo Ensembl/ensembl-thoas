@@ -1,0 +1,15 @@
+type CrossReference {
+  # A reference to a database outside of Ensembl
+  id: String!
+  name: String!
+  description: String
+  url: String
+  source: ExternalDB!
+}
+
+type ExternalDB {
+  # Some metadata about databases outside of Ensembl
+  id: String!
+  name: String!
+  url: String
+}
