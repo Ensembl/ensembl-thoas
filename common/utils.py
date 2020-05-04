@@ -80,7 +80,7 @@ def format_cross_refs(xrefs):
                     'id': x['dbname']
                 }
             }
-        json_xrefs.add(doc)
+        json_xrefs.append(doc)
     return json_xrefs
 
 
@@ -113,4 +113,30 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
             'location_type': region_type
         },
         'default': default_region
+    }
+
+
+def format_exon(exon_stable_id, version, region_name, region_strand,
+                exon_start, exon_end, region_type, default_region, assembly):
+    '''
+    Turn transcript-borne information into an Exon entity
+
+    exon_stable_id: Unversioned stable ID
+    version: Version of exon
+    region_name: The string representing a region (perhaps "1")
+    region_strand: Forward = 1, Reverse = -1, 0 = No idea or not relevant
+    exon_start: Start coordinate, usually low to high except when circular
+    exon_end: End coordinate
+    region_type: What kind of thing is the region? e.g. chromosome, plasmid
+    default_region: Is this a good default region, i.e. not a patch
+    assembly: A string naming the assembly the region is from
+    '''
+    default_region = True
+    return {
+        'type': 'Exon',
+        'stable_id': f'{exon_stable_id}.{str(version)}',
+        'unversioned_stable_id': exon_stable_id,
+        'version': version,
+        'slice': format_slice(region_name, region_type, default_region,
+                              region_strand, assembly, exon_start, exon_end)
     }

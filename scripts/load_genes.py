@@ -14,7 +14,7 @@
 
 import ijson
 import gzip
-from common.utils import load_config, parse_args, format_cross_refs, format_slice
+from common.utils import load_config, parse_args, format_cross_refs, format_slice, format_exon
 from common.mongo import mongo_db_thing
 import csv
 import argparse
@@ -208,20 +208,6 @@ def format_transcript(
             )
         }
     return new_transcript
-
-
-def format_exon(exon_stable_id, version, region_name, region_strand, exon_start,
-                exon_end, location_type, default_region, assembly):
-    'Turn transcript-borne information into an Exon entity'
-    default_region = True
-    return {
-        'type': 'Exon',
-        'stable_id': exon_stable_id + str(version),
-        'unversioned_stable_id': exon_stable_id,
-        'version': version,
-        'slice': format_slice(region_name, location_type, default_region,
-                              region_strand, assembly, exon_start, exon_end)
-    }
 
 
 def preload_CDS_coords(production_name):
