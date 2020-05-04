@@ -157,7 +157,7 @@ def format_transcript(
                 region_strand=int(exon['strand']),
                 exon_start=int(exon['start']),
                 exon_end=int(exon['end']),
-                location_type=region_type,
+                region_type=region_type,
                 default_region=default_region,
                 assembly=assembly
             )
