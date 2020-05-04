@@ -83,7 +83,7 @@ def load_gene_info(db, json_file, cds_info):
             json_gene = {
 
                 'type': 'Gene',
-                'stable_id': gene['id'] + str(gene['version']),
+                'stable_id': f'{gene['id']}.{str(gene['version'])}',
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
@@ -112,7 +112,7 @@ def load_gene_info(db, json_file, cds_info):
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
-                    gene_id=gene['id'] + str(gene['version']),
+                    gene_id=f'{gene['id']}.{str(gene['version'])}',
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     region_strand=int(gene['strand']),
@@ -166,7 +166,7 @@ def format_transcript(
     new_transcript = {
         'type': 'Transcript',
         'gene': gene_id,
-        'stable_id': transcript['id'] + str(transcript['version']),
+        'stable_id': f'{transcript['id']}.{str(transcript['version'])}',
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
