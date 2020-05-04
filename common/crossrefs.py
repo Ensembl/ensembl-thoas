@@ -121,7 +121,11 @@ class xref_resolver(object):
         '''
         Turn Ensembl DB names into identifiers.org prefixes where possible
         '''
-        return self.identifiers_mapping[dbname.lower()]['id_namespace']
+        namespace = self.identifiers_mapping[dbname.lower()]
+        if 'id_namespace' in namespace:
+            return namespace['id_namespace']
+        else:
+            return None
 
     def url_from_ens_dbname(self, xref, dbname):
         '''

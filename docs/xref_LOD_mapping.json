@@ -5,7 +5,8 @@
       "example_id": "ENSG00000265094",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "ArrayExpress"
+      "ensembl_db_name": "ArrayExpress",
+      "id_namespace": "arrayexpress"
     },
     {
       "db_name": "Allergome",
@@ -22,7 +23,7 @@
     },
     {
       "db_name": "BindingDB",
-      "id_namespace": "bindindDB",
+      "id_namespace": "bindingdb",
       "feature_type": "annotation",
       "ensembl_db_name": "BindingDB"
     },
@@ -985,6 +986,13 @@
       "ensembl_db_name": "Reactome"
     },
     {
+      "db_name": "Reactome_gene",
+      "example_id": "R-HSA-201451",
+      "id_namespace": "reactome",
+      "feature_type": "annotation",
+      "ensembl_db_name": "Reactome_gene"
+    },
+    {
       "db_name": "Rebase",
       "description": "Restriction enzyme database",
       "id_namespace": "rebase",
@@ -1124,7 +1132,8 @@
       "description": "Manually annotated reaction database",
       "ignore": "rhea",
       "feature_type": "annotation",
-      "ensembl_db_name": "Rhea"
+      "ensembl_db_name": "Rhea",
+      "id_namespace": "rhea"
     },
     {
       "db_name": "RNAMMER",
@@ -1223,14 +1232,16 @@
       "example_id": "ATA7",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "TAIR_SYMBOL"
+      "ensembl_db_name": "TAIR_SYMBOL",
+      "id_namespace": "tair.gene"
     },
     {
       "db_name": "TAIR_TRANSLATION",
       "example_id": "AT3G18710",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "TAIR_TRANSLATION"
+      "ensembl_db_name": "TAIR_TRANSLATION",
+      "id_namespace": "tair.protein"
     },
     {
       "db_name": "TCDB",
