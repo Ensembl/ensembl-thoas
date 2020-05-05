@@ -39,20 +39,6 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
     result = collection.find_one(query)
     return(result)
 
-
-# Open ended high cardinality queries are a bad idea, here is one
-@query.field('genes')
-def resolve_genes(_, info, genome_id):
-
-    collection = info.context['mongo_db']
-
-    result = collection.find({
-        'type': 'Gene',
-        'genome_id': genome_id
-    })
-    return result
-
-
 @gene.field('cross_references')
 def insert_urls(root, info):
     '''
@@ -63,18 +49,6 @@ def insert_urls(root, info):
     resolver = info.context['xref_resolver']
     xrefs = root['cross_references']
     return list(map(resolver.annotate_crossref, xrefs))
-
-
-@query.field('transcripts')
-def resolve_transcripts(_, info, genome_id):
-
-    collection = info.context['mongo_db']
-    result = collection.find({
-        'type': 'Transcript',
-        'genome_id': genome_id
-    })
-    return result
-
 
 @query.field('transcript')
 def resolve_transcript(root, info, bySymbol=None, byId=None):

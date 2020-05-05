@@ -21,6 +21,6 @@ setup(
     packages=find_packages(),
     package_data={
         # Make sure schema makes it to distro
-        "common": ["*.sdl"]
+        "common": ["*.graphql"]
     }
 )

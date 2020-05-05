@@ -9,7 +9,6 @@ data:
     port = 27017
     db = apps_data
     collection = graphql-test-6
-    schema = ./common/schema.sdl
 kind: ConfigMap
 metadata:
   name: thoas-configmap
