@@ -129,10 +129,18 @@ class xref_resolver(object):
 
     def url_from_ens_dbname(self, xref, dbname):
         '''
-        Convert Ensembl dbnames and generate a URL
+        Convert Ensembl dbnames and generate an xref URL
         '''
         namespace = self.translate_dbname(dbname)
-        return self.url_generator(xref, namespace)
+        if (
+            namespace is None and
+            'manual_xref_url' in self.identifiers_mapping[dbname.lower()]
+        ):
+            # Some sources are not in identifiers.org URLs Ensembl needs a URL
+            xref_base =  self.identifiers_mapping[dbname.lower()]['manual_xref_url']
+            return xref_base + xref
+        else:
+            return self.url_generator(xref, namespace)
 
     def annotate_crossref(self, xref):
         '''
@@ -143,8 +151,7 @@ class xref_resolver(object):
             xref['id'],
             xref['source']['id']
         )
-        url = self.source_url_generator(
+        xref['source']['url'] = self.source_url_generator(
             self.translate_dbname(xref['source']['id'])
         )
-        xref['source']['url'] = url
         return xref

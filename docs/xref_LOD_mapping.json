@@ -155,14 +155,18 @@
       "example_id": "80",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "DBASS3"
+      "ensembl_db_name": "DBASS3",
+      "manual_source_url": "http://www.dbass.soton.ac.uk/",
+      "manual_xref_url": "http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id="
     },
     {
       "db_name": "DBASS",
       "example_id": "80",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "DBASS5"
+      "ensembl_db_name": "DBASS5",
+      "manual_source_url": "http://www.dbass.soton.ac.uk/",
+      "manual_xref_url": "http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id="
     },
     {
       "db_name": "Drugbank",
@@ -634,7 +638,9 @@
       "example_id": "cytoskel/lethl2g1.htm",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "InteractiveFly"
+      "ensembl_db_name": "InteractiveFly",
+      "manual_source_url": "http://www.sdbonline.org/",
+      "manual_xref_url": "http://www.sdbonline.org/fly"
     },
     {
       "db_name": "Interpro",
@@ -666,7 +672,9 @@
     {
       "db_name": "JGI",
       "description": "Joint Genome Institute, describing Ciona Intestinalis protein sequences",
-      "feature_type": "protein"
+      "feature_type": "protein",
+      "manual_source_url": "http://genome.jgi-psf.org",
+      "manual_xref_url": "http://genome.jgi-psf.org/cgi-bin/dispGeneModel?db=ciona4;id="
     },
     {
       "db_name": "KEGG",
@@ -695,7 +703,9 @@
       "example_id": "PWY-7248",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "MetaCyc"
+      "ensembl_db_name": "MetaCyc",
+      "manual_source_url": "http://metacyc.org/",
+      "manual_xref_url": "http://metacyc.org/META/NEW-IMAGE?type=PATHWAY&object="
     },
     {
       "db_name": "MGI",
@@ -1278,7 +1288,9 @@
       "example_id": "T01396",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "TransFac"
+      "ensembl_db_name": "TransFac",
+      "manual_source_url": "http://transfac.gbf.de/",
+      "manual_xref_url": "http://transfac.gbf.de/cgi-bin/qt/getEntry.pl?"
     },
     {
       "db_name": "TreeFam",

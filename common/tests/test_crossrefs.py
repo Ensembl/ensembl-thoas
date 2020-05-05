@@ -85,6 +85,10 @@ def test_combined_resolution(resolver):
     response = resolver.url_from_ens_dbname('17790', 'CHEBI')
     assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'
 
+    # Check manual override works for sources with overrides
+    response = resolver.url_from_ens_dbname('80', 'DBASS3')
+    assert response == 'http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id=80'
+
 
 def test_annotate_function(resolver):
     response = resolver.annotate_crossref({
