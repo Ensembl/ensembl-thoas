@@ -354,6 +354,7 @@
     {
       "db_name": "EntrezGene_trans_name",
       "example_id": "CTD-2297D10.2-001",
+      "id_namespace": "ncbiprotein",
       "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "EntrezGene_trans_name"
@@ -379,41 +380,41 @@
       "db_name": "flybase_annotation_id",
       "example_id": "FBan0011023",
       "ignore": true,
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "annotation",
       "ensembl_db_name": "flybase_annotation_id"
     },
     {
       "db_name": "flybase",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "annotation",
       "ensembl_db_name": "flybase_symbol"
     },
     {
       "db_name": "flybase_gene_id",
       "example_id": "FBgn0031208",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "gene",
       "ensembl_db_name": "flybase_gene_id"
     },
     {
       "db_name": "flybase_transcript_id",
       "example_id": "FBtr0300689",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "transcript",
       "ensembl_db_name": "flybase_transcript_id"
     },
     {
       "db_name": "flybase_translation_id",
       "example_id": "FBpp0289913",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "translation",
       "ensembl_db_name": "flybase_translation_id"
     },
     {
       "db_name": "FlyBaseCGID_gene",
       "example_id": "CG11023",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "FlyBaseCGID_gene"
@@ -421,7 +422,7 @@
     {
       "db_name": "FlyBaseCGID_transcript",
       "example_id": "CG11023-RB",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "FlyBaseCGID_transcript"
@@ -429,7 +430,7 @@
     {
       "db_name": "FlyBaseCGID_translation",
       "example_id": "CG11023-PB",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "FlyBaseCGID_translation"
@@ -437,21 +438,21 @@
     {
       "db_name": "FlyBaseName_gene",
       "example_id": "FBgn0031208",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "gene",
       "ensembl_db_name": "FlyBaseName_gene"
     },
     {
       "db_name": "FlyBaseName_transcript",
       "example_id": "FBtr0300689",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "transcript",
       "ensembl_db_name": "FlyBaseName_transcript"
     },
     {
       "db_name": "FlyBaseName_translation",
       "example_id": "FBpp0289913",
-      "id_namespace": "flybase",
+      "id_namespace": "fb",
       "feature_type": "translation",
       "ensembl_db_name": "FlyBaseName_translation"
     },
@@ -521,7 +522,7 @@
     {
       "db_name": "GO_to_gene",
       "example_id": "GO:0016246",
-      "id_namespace": "go",
+      "id_namespace": "goa",
       "URI_type": "http://purl.obolibrary.org/obo/",
       "regex": "/GO:/GO_/",
       "feature_type": "annotation",
@@ -530,7 +531,7 @@
     {
       "db_name": "goslim_goa",
       "example_id": "GO:0003674",
-      "id_namespace": "go",
+      "id_namespace": "goa",
       "URI_type": "http://purl.obolibrary.org/obo/",
       "regex": "/GO:/GO_/",
       "feature_type": "annotation",
@@ -709,13 +710,14 @@
       "db_name": "MGI_trans_name",
       "ignore": true,
       "feature_type": "transcript",
+      "id_namespace": "mgi",
       "ensembl_db_name": "MGI_trans_name"
     },
     {
       "db_name": "MIM",
       "example_id": "602349",
       "ignore": true,
-      "id_namespace": "omim",
+      "id_namespace": "mim",
       "feature_type": "annotation",
       "ensembl_db_name": "MIM_GENE"
     },
@@ -723,7 +725,7 @@
       "db_name": "MIM_GENE",
       "example_id": "602349",
       "ignore": true,
-      "id_namespace": "omim",
+      "id_namespace": "mim",
       "feature_type": "gene",
       "ensembl_db_name": "MIM_GENE"
     },
@@ -731,7 +733,7 @@
       "db_name": "MIM_MORBID",
       "example_id": "615122",
       "ignore": true,
-      "id_namespace": "omim",
+      "id_namespace": "mim",
       "feature_type": "annotation",
       "ensembl_db_name": "MIM_MORBID"
     },
@@ -739,7 +741,7 @@
       "db_name": "mim2gene",
       "description": "MIM data describing the MIM gene entries and their relationships with other resources",
       "example_id": "615122",
-      "id_namespace": "omim",
+      "id_namespace": "mim",
       "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "MIM_GENE"
@@ -770,6 +772,7 @@
     {
       "db_name": "miRBase_gene_name",
       "example_id": "dre-let-7a-1.1",
+      "id_namespace": "mirbase.mature",
       "ignore": true,
       "feature_type": "gene",
       "priority": 100
@@ -1401,6 +1404,7 @@
       "db_name": "VGNC",
       "description": "Chimp naming consortium",
       "feature_type": "gene",
+      "id_namespace": "vgnc",
       "ensembl_db_name": "VGNC"
     },
     {
