@@ -157,7 +157,7 @@
       "feature_type": "gene",
       "ensembl_db_name": "DBASS3",
       "manual_source_url": "http://www.dbass.soton.ac.uk/",
-      "manual_xref_url": "http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id="
+      "manual_xref_url": "http://www.dbass.soton.ac.uk/DBASS3/viewlist.aspx?filter=gene&id="
     },
     {
       "db_name": "DBASS",
@@ -166,7 +166,7 @@
       "feature_type": "gene",
       "ensembl_db_name": "DBASS5",
       "manual_source_url": "http://www.dbass.soton.ac.uk/",
-      "manual_xref_url": "http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id="
+      "manual_xref_url": "http://www.dbass.soton.ac.uk/DBASS5/viewlist.aspx?filter=gene&id="
     },
     {
       "db_name": "Drugbank",

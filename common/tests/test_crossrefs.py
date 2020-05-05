@@ -67,6 +67,9 @@ def test_crossref_url(resolver):
     response = resolver.url_generator('17790', 'place_of_quiet_reflection')
     assert response is None
 
+    response = resolver.url_generator('LRG_357', 'lrg')
+    assert response == 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/LRG_357.xml'
+
 
 def test_identifier_resolution(resolver):
     '''
@@ -87,7 +90,7 @@ def test_combined_resolution(resolver):
 
     # Check manual override works for sources with overrides
     response = resolver.url_from_ens_dbname('80', 'DBASS3')
-    assert response == 'http://www.dbass.soton.ac.uk/viewlist.aspx?filter=gene&id=80'
+    assert response == 'http://www.dbass.soton.ac.uk/DBASS3/viewlist.aspx?filter=gene&id=80'
 
 
 def test_annotate_function(resolver):

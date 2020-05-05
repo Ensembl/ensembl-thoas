@@ -92,15 +92,22 @@ class xref_resolver(object):
         Given an xref ID and a dbname, generate a url that resolves to the
         original site page for that xref (fingers crossed)
         '''
+        url = None
         if dbname in self.namespace:
             resources = self.namespace[dbname]['resources']
             for i in resources:
                 if i['official'] is True:
                     url_base = i['urlPattern']
                     (url, count) = self.id_substitution.subn(xref, url_base)
-                    return url
+
         else:
             return None
+        # some sources seemingly have no official entry.
+        # Take the first arbitrarily
+        if url is None:
+            url_base = resources[0]['urlPattern']
+            (url, count) = self.id_substitution.subn(xref, url_base)
+        return url
 
     def source_url_generator(self, dbname):
         '''
@@ -109,13 +116,19 @@ class xref_resolver(object):
         Sources have multiple resources in them, which may have
         different URLs. Unhelpful to us but useful generally.
         '''
+        url = None
         if dbname in self.namespace:
             resources = self.namespace[dbname]['resources']
             for i in resources:
                 if i['official'] is True:
-                    return i['resourceHomeUrl']
+                    url = i['resourceHomeUrl']
         else:
             return None
+
+        # Handle the lack of an official source
+        if url is None:
+            url = resources[0]['resourceHomeUrl']
+        return url
 
     def translate_dbname(self, dbname):
         '''

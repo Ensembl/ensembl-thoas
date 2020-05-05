@@ -74,6 +74,162 @@
             "deprecationDate":null
           }
         ]
+      },
+      {
+        "id": 1078,
+        "prefix": "lrg",
+        "mirId": "MIR:00000376",
+        "name": "Locus Reference Genomic",
+        "pattern": "^LRG_\\d+$",
+        "description": "Locus Reference Genomic (LRG) provides identifiers to stable genomic DNA sequences for regions of the human genome, providing a recognized reference-sequence standard for reporting sequence variants. LRG is maintained by the NCBI and the European Bioinformatics Institute (EBI).",
+        "created": "2019-06-11T14:17:05.115+0000",
+        "modified": "2019-06-11T14:17:05.115+0000",
+        "resources": [
+            {
+                "id": 1080,
+                "mirId": "MIR:00100478",
+                "urlPattern": "ftp://ftp.ebi.ac.uk/pub/databases/lrgex/{$id}.xml",
+                "name": "Locus Reference Genomic at University of Leicester",
+                "description": "Locus Reference Genomic at University of Leicester",
+                "official": false,
+                "providerCode": "CURATOR_REVIEW",
+                "sampleId": "LRG_1",
+                "resourceHomeUrl": "http://www.lrg-sequence.org/",
+                "institution": {
+                    "id": 1079,
+                    "name": "Department of Genetics, University of Leicester, Leicester",
+                    "homeUrl": "CURATOR_REVIEW",
+                    "description": "CURATOR_REVIEW",
+                    "rorId": null,
+                    "location": {
+                        "countryCode": "GB",
+                        "countryName": "United Kingdom"
+                    }
+                },
+                "location": {
+                    "countryCode": "GB",
+                    "countryName": "United Kingdom"
+                },
+                "deprecated": false,
+                "deprecationDate": null
+            },
+            {
+                "id": 1082,
+                "mirId": "MIR:00100627",
+                "urlPattern": "http://www.ensembl.org/Homo_sapiens/LRG/Summary?lrg={$id}",
+                "name": "Locus Reference Genomic through Ensembl",
+                "description": "Locus Reference Genomic through Ensembl",
+                "official": false,
+                "providerCode": "CURATOR_REVIEW",
+                "sampleId": "LRG_1",
+                "resourceHomeUrl": "http://www.ensembl.org/",
+                "institution": {
+                    "id": 1081,
+                    "name": "EnSembl, Sanger Institute and European Bioinformatics Institute, Hinxton, Cambridge",
+                    "homeUrl": "CURATOR_REVIEW",
+                    "description": "CURATOR_REVIEW",
+                    "rorId": null,
+                    "location": {
+                        "countryCode": "GB",
+                        "countryName": "United Kingdom"
+                    }
+                },
+                "location": {
+                    "countryCode": "GB",
+                    "countryName": "United Kingdom"
+                },
+                "deprecated": false,
+                "deprecationDate": null
+            },
+            {
+                "id": 1083,
+                "mirId": "MIR:00100629",
+                "urlPattern": "http://asia.ensembl.org/Homo_sapiens/LRG/Summary?lrg={$id}",
+                "name": "Locus Reference Genomic through Ensembl mirror (asia)",
+                "description": "Locus Reference Genomic through Ensembl mirror (asia)",
+                "official": false,
+                "providerCode": "CURATOR_REVIEW",
+                "sampleId": "LRG_1",
+                "resourceHomeUrl": "http://asia.ensembl.org/",
+                "institution": {
+                    "id": 1081,
+                    "name": "EnSembl, Sanger Institute and European Bioinformatics Institute, Hinxton, Cambridge",
+                    "homeUrl": "CURATOR_REVIEW",
+                    "description": "CURATOR_REVIEW",
+                    "rorId": null,
+                    "location": {
+                        "countryCode": "GB",
+                        "countryName": "United Kingdom"
+                    }
+                },
+                "location": {
+                    "countryCode": "SG",
+                    "countryName": "Singapore"
+                },
+                "deprecated": false,
+                "deprecationDate": null
+            },
+            {
+                "id": 1084,
+                "mirId": "MIR:00100630",
+                "urlPattern": "http://uswest.ensembl.org/Homo_sapiens/LRG/Summary?lrg={$id}",
+                "name": "Locus Reference Genomic through Ensembl mirror (US west)",
+                "description": "Locus Reference Genomic through Ensembl mirror (US west)",
+                "official": false,
+                "providerCode": "CURATOR_REVIEW",
+                "sampleId": "LRG_1",
+                "resourceHomeUrl": "http://uswest.ensembl.org/",
+                "institution": {
+                    "id": 1081,
+                    "name": "EnSembl, Sanger Institute and European Bioinformatics Institute, Hinxton, Cambridge",
+                    "homeUrl": "CURATOR_REVIEW",
+                    "description": "CURATOR_REVIEW",
+                    "rorId": null,
+                    "location": {
+                        "countryCode": "GB",
+                        "countryName": "United Kingdom"
+                    }
+                },
+                "location": {
+                    "countryCode": "US",
+                    "countryName": "United States"
+                },
+                "deprecated": false,
+                "deprecationDate": null
+            },
+            {
+                "id": 1085,
+                "mirId": "MIR:00100631",
+                "urlPattern": "http://useast.ensembl.org/Homo_sapiens/LRG/Summary?lrg={$id}",
+                "name": "Locus Reference Genomic through Ensembl mirror (US east)",
+                "description": "Locus Reference Genomic through Ensembl mirror (US east)",
+                "official": false,
+                "providerCode": "CURATOR_REVIEW",
+                "sampleId": "LRG_1",
+                "resourceHomeUrl": "http://useast.ensembl.org/",
+                "institution": {
+                    "id": 1081,
+                    "name": "EnSembl, Sanger Institute and European Bioinformatics Institute, Hinxton, Cambridge",
+                    "homeUrl": "CURATOR_REVIEW",
+                    "description": "CURATOR_REVIEW",
+                    "rorId": null,
+                    "location": {
+                        "countryCode": "GB",
+                        "countryName": "United Kingdom"
+                    }
+                },
+                "location": {
+                    "countryCode": "US",
+                    "countryName": "United States"
+                },
+                "deprecated": false,
+                "deprecationDate": null
+            }
+        ],
+        "sampleId": "LRG_1",
+        "namespaceEmbeddedInLui": false,
+        "deprecated": false,
+        "deprecationDate": null
       }
     ]
   }
