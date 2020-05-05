@@ -7,4 +7,4 @@ ijson
 uvicorn
 mongomock
 requests
-dotenv
+python-dotenv
