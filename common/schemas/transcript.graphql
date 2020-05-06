@@ -1,0 +1,14 @@
+type Transcript {
+  # A Transcript of a Gene. Exons are listed in sequence order
+  stable_id: String!
+  so_term: String
+  slice: Slice!
+  exons: [Exon!]!
+  cross_references: [CrossReference]!
+}
+
+type Exon {
+  # An Exon that is part of a Transcript
+  stable_id: String!
+  slice: Slice!
+}

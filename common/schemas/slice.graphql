@@ -1,0 +1,31 @@
+type Slice {
+  """
+  The container that combines Region and Location together to define a precise locus.
+  The 'default' key defines whether this is the definitive locus for the parent feature.
+  default:False implies there is another locus which is considered more definitive
+  """
+  region: Region!
+  location: Location!
+  default: Boolean
+}
+
+type Location {
+  # A locus associated with a Region. It defines a locality within the Region perhaps corresponding to genomic feature
+  start: Int!
+  end: Int!
+  length: Int!
+  location_type: String!
+}
+
+type Region {
+  # A large contiguous block of assembled sequence, such as a whole chromosome.
+  name: String!
+  strand: Strand
+  assembly: String!
+}
+
+type Strand {
+  # The direction of reading sense w.r.t. the assembly. 1 = 5'->3', -1 = 3'-5'
+  code: String
+  value: Int
+}

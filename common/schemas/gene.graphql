@@ -1,0 +1,9 @@
+type Gene {
+  # The commonly understood concept of gene, with its various transcriptions.
+  stable_id: String!
+  name: String!
+  so_term: String
+  transcripts: [Transcript!]!
+  slice: Slice!
+  cross_references: [CrossReference]!
+}

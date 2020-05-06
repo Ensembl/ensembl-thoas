@@ -1,0 +1,21 @@
+type Query {
+  gene(bySymbol: SymbolInput, byId: IdInput): Gene
+  transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
+  slice(genome_id: String!, region: String!, start: Int!, end: Int!): Locus
+}
+
+input SymbolInput {
+  symbol: String!
+  genome_id: String!
+}
+
+input IdInput {
+  genome_id: String!
+  stable_id: String!
+}
+
+type Locus {
+  # A dynamically defined part of a Region
+  genes: [Gene]!
+  transcripts: [Transcript]!
+}

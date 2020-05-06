@@ -25,12 +25,11 @@ from common.crossrefs import xref_resolver
 print(os.environ)
 
 config = load_config(os.getenv('GQL_CONF'))
-schema_file = config.get('MONGO DB','schema')
 
 mongo_object = mongo.mongo_db_thing(config)
 
 
-schema_data = ariadne.load_schema_from_path(schema_file)
+schema_data = ariadne.load_schema_from_path('common/schemas')
 
 schema = ariadne.make_executable_schema(
     schema_data,
