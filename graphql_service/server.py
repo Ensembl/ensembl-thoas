@@ -13,20 +13,21 @@
    limitations under the License.
 """
 
+import os
+
 from ariadne.asgi import GraphQL
 import ariadne
 from common.utils import load_config
+from common.crossrefs import XrefResolver
 import common.mongo as mongo
-import os
 from graphql_service.resolver.gene_model import query, gene, transcript, locus
 from graphql_service.resolver.data_loaders import DataLoaderCollection
-from common.crossrefs import xref_resolver
 
 print(os.environ)
 
 config = load_config(os.getenv('GQL_CONF'))
 
-mongo_object = mongo.mongo_db_thing(config)
+mongo_client = mongo.MongoDbClient(config)
 
 
 schema_data = ariadne.load_schema_from_path('common/schemas')
@@ -40,9 +41,9 @@ schema = ariadne.make_executable_schema(
 )
 
 # Initialise all data loaders
-data_loader = DataLoaderCollection(mongo_object.collection())
+data_loader = DataLoaderCollection(mongo_client.collection())
 
-resolver = xref_resolver(mapping_file='docs/xref_LOD_mapping.json')
+resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
 
 
 def context_function(request):
@@ -54,9 +55,9 @@ def context_function(request):
     """
     return {
         'request': request,
-        'mongo_db': mongo_object.collection(),
+        'mongo_db': mongo_client.collection(),
         'data_loader': data_loader,
-        'xref_resolver': resolver
+        'XrefResolver': resolver
     }
 
 

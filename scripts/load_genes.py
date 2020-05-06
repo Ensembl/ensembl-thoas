@@ -12,45 +12,48 @@
    limitations under the License.
 """
 
-import ijson
-import gzip
-from common.utils import load_config, parse_args, format_cross_refs, format_slice, format_exon
-from common.mongo import mongo_db_thing
 import csv
-import argparse
+import ijson
+import pymongo
+
+from common.utils import load_config, parse_args, format_cross_refs, format_slice, format_exon
+from common.mongo import MongoDbClient
 
 
-def create_index(db):
-    db.collection().create_index([
+def create_index(mongo_client):
+    '''
+    Create indexes for searching useful things on genes, transcripts etc.
+    '''
+    mongo_client.collection().create_index([
         ('name', pymongo.ASCENDING), ('genome_id', pymongo.ASCENDING)
     ], name='names_of_things')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('genome_id', pymongo.ASCENDING),
         ('stable_id', pymongo.ASCENDING),
         ('type', pymongo.ASCENDING)
     ], name='stable_id')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('genome_id', pymongo.ASCENDING), ('type', pymongo.ASCENDING)
     ], name='feature_type')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('genome_id', pymongo.ASCENDING),
         ('slice.region.name', pymongo.ASCENDING),
         ('slice.location.start', pymongo.ASCENDING),
         ('slice.location.end', pymongo.ASCENDING)
     ], name='location_index')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('genome_id', pymongo.ASCENDING), ('gene', pymongo.ASCENDING)
     ], name='gene_foreign_key')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('genome_id', pymongo.ASCENDING), ('transcript', pymongo.ASCENDING)
     ], name='transcript_foreign_key')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('cross_references.name', pymongo.ASCENDING),
         ('cross_references.source.id', pymongo.ASCENDING)
     ], name='cross_refs')
 
 
-def load_gene_info(db, json_file, cds_info):
+def load_gene_info(mongo_client, json_file, cds_info):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -58,12 +61,12 @@ def load_gene_info(db, json_file, cds_info):
     gene_buffer = []
     transcript_buffer = []
 
-    assembly = db.collection().find_one({
+    assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
         'name': 'GRCh38'
     })
 
-    genome = db.collection().find_one({
+    genome = mongo_client.collection().find_one({
         'type': 'Genome',
         'name': 'GRCh38'
     })
@@ -115,8 +118,6 @@ def load_gene_info(db, json_file, cds_info):
                     gene_id=f'{gene["id"]}.{str(gene["version"])}',
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
-                    region_strand=int(gene['strand']),
-                    assembly_id=assembly['id'],
                     genome_id=genome['id'],
                     cds_info=cds_info,
                     default_region=default_region,
@@ -125,24 +126,24 @@ def load_gene_info(db, json_file, cds_info):
 
             if len(gene_buffer) > 1000:
                 print('Pushing 1000 genes into Mongo')
-                db.collection().insert_many(gene_buffer)
+                mongo_client.collection().insert_many(gene_buffer)
                 print('Done')
                 gene_buffer = []
 
             if len(transcript_buffer) > 1000:
                 print('Loading 1000 transcripts into Mongo')
-                db.collection().insert_many(transcript_buffer)
+                mongo_client.collection().insert_many(transcript_buffer)
                 transcript_buffer = []
 
     if len(gene_buffer) > 0:
-        db.collection().insert_many(gene_buffer)
+        mongo_client.collection().insert_many(gene_buffer)
     if len(transcript_buffer) > 0:
-        db.collection().insert_many(transcript_buffer)
+        mongo_client.collection().insert_many(transcript_buffer)
 
 
 def format_transcript(
-    transcript, gene_id, region_type, region_name, region_strand, assembly_id,
-    genome_id, cds_info, default_region, assembly
+        transcript, gene_id, region_type, region_name, genome_id,
+        cds_info, default_region, assembly
 ):
     'Transform and supplement transcript information'
 
@@ -186,7 +187,7 @@ def format_transcript(
         'cross_references': format_cross_refs(transcript['xrefs'])
     }
 
-    if (transcript['id'] in cds_info):
+    if transcript['id'] in cds_info:
         new_transcript['cds'] = {
             'relative_slice': {
                 'location': {
@@ -210,7 +211,7 @@ def format_transcript(
     return new_transcript
 
 
-def preload_CDS_coords(production_name):
+def preload_cds_coords(production_name):
     '''
     CDS coords will be pre-loaded into a file from the Perl API. Otherwise
     hideous calculation required to get the relative coordinates
@@ -232,13 +233,13 @@ def preload_CDS_coords(production_name):
 
 if __name__ == '__main__':
 
-    args = parse_args()
+    ARGS = parse_args()
 
-    db = mongo_db_thing(load_config(args.config_file))
-    json_file = args.data_path + args.species + '/' + args.species + '_genes.json'
+    MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
+    JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
     print("Loading CDS data")
-    cds_info = preload_CDS_coords(args.species)
-    print(f'Propagated {len(cds_info)} CDS elements')
+    CDS_INFO = preload_cds_coords(ARGS.species)
+    print(f'Propagated {len(CDS_INFO)} CDS elements')
     print("Loading gene info into Mongo")
-    load_gene_info(db, json_file, cds_info)
-    create_index(db)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO)
+    create_index(MONGO_CLIENT)

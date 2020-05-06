@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-from common.crossrefs import xref_resolver
+from common.crossrefs import XrefResolver
 import os
 import pytest
 
@@ -26,7 +26,7 @@ def resolver():
     data_folder = 'common/tests'
     test_data = data_folder + '/mini_identifiers.json'
 
-    resolver = xref_resolver(
+    resolver = XrefResolver(
         from_file=os.path.normpath(test_data)
     )
     return resolver
@@ -34,7 +34,7 @@ def resolver():
 
 def test_populate_crossrefs(resolver):
     '''
-    Test instantiation of xref_resolver with a small subset of realistic
+    Test instantiation of XrefResolver with a small subset of realistic
     data
     '''
 

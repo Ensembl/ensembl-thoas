@@ -17,7 +17,7 @@ import graphql_service.resolver.gene_model as model
 import pytest
 import graphql_service.resolver.data_loaders as data_loader
 import asyncio
-from common.crossrefs import xref_resolver
+from common.crossrefs import XrefResolver
 
 
 class Info(object):
@@ -31,7 +31,7 @@ class Info(object):
             'stuff': 'Nonsense',
             'mongo_db': self.collection,
             'data_loader': data_loader.DataLoaderCollection(self.collection),
-            'xref_resolver': xref_resolver(from_file='common/tests/mini_identifiers.json')
+            'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json')
         }
 
 

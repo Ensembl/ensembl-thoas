@@ -13,17 +13,22 @@
 '''
 
 import json
-from common.utils import load_config, parse_args
-from common.mongo import mongo_db_thing
 import pymongo
 
+from common.utils import load_config, parse_args
+from common.mongo import MongoDbClient
 
-def load_genome_info(db, source_file):
+
+def load_genome_info(mongo_client, source_file):
+    '''
+    Load assembly, species and organism information from a JSON file
+    and create a new collection to put them in. Run before load_genes.py
+    '''
     with open(source_file) as file:
         content = next(file)
         doc = json.loads(content)
 
-        db.collection().insert_one({
+        mongo_client.collection().insert_one({
             'type': 'Assembly',
             'default': True,
             'id': doc['assembly']['name'],
@@ -33,7 +38,7 @@ def load_genome_info(db, source_file):
             'species': doc['organism']['name']
         })
 
-        db.collection().insert_one({
+        mongo_client.collection().insert_one({
             'type': 'Species',
             'id': doc['organism']['name'],
             'scientific_name': doc['organism']['scientific_name'],
@@ -43,7 +48,7 @@ def load_genome_info(db, source_file):
         # "Genome" (name to be used quietly), represents the sum of related
         # information that people will want to use together. It allows users
         # remember less between interactions, and ask shorter queries
-        db.collection().insert_one({
+        mongo_client.collection().insert_one({
             'type': 'Genome',
             'id': doc['organism']['name'] + '_' + doc['assembly']['accession'].replace('.', '_'),
             'name': 'GRCh38',
@@ -52,24 +57,27 @@ def load_genome_info(db, source_file):
         })
 
 
-def create_index(db):
-    db.collection().create_index([
+def create_index(mongo_client):
+    '''
+    Add indexes to MongoDB
+    '''
+    mongo_client.collection().create_index([
         ('type', pymongo.ASCENDING), ('id', pymongo.ASCENDING), ('default', pymongo.ASCENDING)
     ], name='assemblies')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('scientific_name', pymongo.ASCENDING)
     ], name='species_by_name')
-    db.collection().create_index([
+    mongo_client.collection().create_index([
         ('taxon_id', pymongo.ASCENDING)
     ], name='species_by_taxon')
 
 
 if __name__ == '__main__':
 
-    args = parse_args()
+    ARGS = parse_args()
 
-    db = mongo_db_thing(load_config(args.config_file))
-    json_file = args.data_path + args.species + '/' + args.species + '_genome.json'
+    MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
+    JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genome.json'
 
-    load_genome_info(db, json_file)
-    create_index(db)
+    load_genome_info(MONGO_CLIENT, JSON_FILE)
+    create_index(MONGO_CLIENT)

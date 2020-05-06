@@ -13,11 +13,12 @@
 """
 
 import json
-import requests
 import re
 
+import requests
 
-class xref_resolver(object):
+
+class XrefResolver():
     '''
     Takes Ensembl Xref sources and IDs and supplies URL routes to the
     original data source, example Uniprot Q1242 -> purl.uniprot.org/Q1242
@@ -52,8 +53,8 @@ class xref_resolver(object):
 
         self.identifiers_mapping = {}
         # Load LOD mappings from file
-        with open(self.mapping_file) as mapping_file:
-            mapping = json.loads(mapping_file.read())
+        with open(self.mapping_file) as file:
+            mapping = json.loads(file.read())
             for source in mapping['mappings']:
                 if 'ensembl_db_name' in source:
                     self.identifiers_mapping[
@@ -76,8 +77,10 @@ class xref_resolver(object):
         'Get JSON from identifiers.org'
 
         response = requests.get(url, headers={'Accepts': 'application/json'})
-        if (response.status_code == 200):
-            return response.json()
+        if response.status_code != 200:
+            raise Exception(f'Unable to load data from Identifiers.org. HTTP response code: {response.status_code}')
+
+        return response.json()
 
     def _index_namespaces(self):
         '''
@@ -98,7 +101,7 @@ class xref_resolver(object):
             for i in resources:
                 if i['official'] is True:
                     url_base = i['urlPattern']
-                    (url, count) = self.id_substitution.subn(xref, url_base)
+                    (url, _) = self.id_substitution.subn(xref, url_base)
 
         else:
             return None
@@ -106,7 +109,7 @@ class xref_resolver(object):
         # Take the first arbitrarily
         if url is None:
             url_base = resources[0]['urlPattern']
-            (url, count) = self.id_substitution.subn(xref, url_base)
+            (url, _) = self.id_substitution.subn(xref, url_base)
         return url
 
     def source_url_generator(self, dbname):
@@ -137,8 +140,8 @@ class xref_resolver(object):
         namespace = self.identifiers_mapping[dbname.lower()]
         if 'id_namespace' in namespace:
             return namespace['id_namespace']
-        else:
-            return None
+
+        return None
 
     def url_from_ens_dbname(self, xref, dbname):
         '''
@@ -146,14 +149,14 @@ class xref_resolver(object):
         '''
         namespace = self.translate_dbname(dbname)
         if (
-            namespace is None and
-            'manual_xref_url' in self.identifiers_mapping[dbname.lower()]
+                namespace is None and
+                'manual_xref_url' in self.identifiers_mapping[dbname.lower()]
         ):
             # Some sources are not in identifiers.org URLs Ensembl needs a URL
-            xref_base =  self.identifiers_mapping[dbname.lower()]['manual_xref_url']
+            xref_base = self.identifiers_mapping[dbname.lower()]['manual_xref_url']
             return xref_base + xref
-        else:
-            return self.url_generator(xref, namespace)
+
+        return self.url_generator(xref, namespace)
 
     def annotate_crossref(self, xref):
         '''

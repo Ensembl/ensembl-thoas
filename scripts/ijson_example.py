@@ -12,8 +12,9 @@
    limitations under the License.
 """
 
-import ijson.backends.python as ijson
 import gzip
+
+import ijson.backends.python as ijson
 # from jsonslicer import JsonSlicer
 
 with gzip.open('../human_genes.json.gz') as file:

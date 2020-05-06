@@ -46,7 +46,7 @@ def insert_urls(root, info):
     model. Using the crossrefs package we can infer URLs to those resources
     and inject them into the response
     '''
-    resolver = info.context['xref_resolver']
+    resolver = info.context['XrefResolver']
     xrefs = root['cross_references']
     return list(map(resolver.annotate_crossref, xrefs))
 
