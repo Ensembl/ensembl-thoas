@@ -128,23 +128,6 @@ def test_resolve_gene(basic_data):
     assert not result
 
 
-def test_resolve_genes(basic_data):
-
-    result = model.resolve_genes(None, basic_data, genome_id=1)
-
-    for hit in result:
-        assert hit['type'] == 'Gene'
-        assert hit['name'] == 'banana' or hit['name'] == 'durian'
-
-
-def test_resolve_transcripts(transcript_data):
-
-    result = model.resolve_transcripts(None, transcript_data, genome_id=1)
-    for hit in result:
-        assert hit['type'] == 'Transcript'
-        assert hit['name'] == 'kumquat' or hit['name'] == 'grape'
-
-
 def test_resolve_transcript(transcript_data):
 
     result = model.resolve_transcript(
