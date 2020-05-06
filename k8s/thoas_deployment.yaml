@@ -23,6 +23,11 @@ spec:
                 configMapKeyRef:
                   name: thoas-config-location
                   key: GQL_CONF
+            - name: HTTPS_PROXY
+              valueFrom:
+                configMapKeyRef:
+                  name: thoas-config-location
+                  key: HTTPS_PROXY
           command: ["uvicorn"]
           args: [
             "--host",
