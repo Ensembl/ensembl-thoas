@@ -1,4 +1,3 @@
-
 """
 .. See the NOTICE file distributed with this work for additional information
    regarding copyright ownership.
@@ -16,11 +15,10 @@
 import os
 
 from ariadne.asgi import GraphQL
-import ariadne
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 import common.mongo as mongo
-from graphql_service.resolver.gene_model import query, gene, transcript, locus
+from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 print(os.environ)
@@ -29,36 +27,17 @@ config = load_config(os.getenv('GQL_CONF'))
 
 mongo_client = mongo.MongoDbClient(config)
 
-
-schema_data = ariadne.load_schema_from_path('common/schemas')
-
-schema = ariadne.make_executable_schema(
-    schema_data,
-    query,
-    gene,
-    transcript,
-    locus
-)
+executable_schema = prepare_executable_schema()
 
 # Initialise all data loaders
 data_loader = DataLoaderCollection(mongo_client.collection())
 
 resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
 
+context_provider = prepare_context_provider({
+    'mongo_db': mongo_client.collection(),
+    'data_loader': data_loader,
+    'XrefResolver': resolver
+})
 
-def context_function(request):
-    """
-    Inject a pre-configured DB client into the request context for
-    static resolvers to find.
-    Friends don't let friends write static methods that are supposed
-    to talk to databases
-    """
-    return {
-        'request': request,
-        'mongo_db': mongo_client.collection(),
-        'data_loader': data_loader,
-        'XrefResolver': resolver
-    }
-
-
-app = GraphQL(schema, debug=True, context_value=context_function)
+app = GraphQL(executable_schema, debug=True, context_value=context_provider)
