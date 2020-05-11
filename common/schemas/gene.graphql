@@ -1,7 +1,10 @@
 type Gene {
   # The commonly understood concept of gene, with its various transcriptions.
   stable_id: String!
+  unversioned_stable_id: String!
+  version: Int!
   name: String!
+  description: String
   so_term: String
   transcripts: [Transcript!]!
   slice: Slice!
