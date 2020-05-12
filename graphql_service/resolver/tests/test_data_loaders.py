@@ -24,11 +24,11 @@ def test_batch_transcript_load():
 
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
+        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
     ])
 
     loader = DataLoaderCollection(collection)
@@ -36,7 +36,7 @@ def test_batch_transcript_load():
     loader.genome_id = 1
 
     response = loader.batch_transcript_load(
-        ['ENSG001']
+        ['ENSG001.1']
     )
     data = asyncio.get_event_loop().run_until_complete(response)
 
@@ -44,7 +44,7 @@ def test_batch_transcript_load():
     assert len(data[0]) == 2
 
     response = loader.batch_transcript_load(
-        ['ENSG001', 'ENSG002']
+        ['ENSG001.1', 'ENSG002.2']
     )
     data = asyncio.get_event_loop().run_until_complete(response)
 
@@ -53,7 +53,7 @@ def test_batch_transcript_load():
     assert len(data) == 2
     assert len(data[0]) == 2
     assert len(data[1]) == 3
-    assert data[1][0]["gene"] == "ENSG002"
+    assert data[1][0]["gene"] == "ENSG002.2"
 
     # Try for absent data
     response = loader.batch_transcript_load(
