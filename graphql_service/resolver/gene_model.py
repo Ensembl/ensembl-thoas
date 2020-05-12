@@ -21,8 +21,9 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 
 
-@query.field('gene')
+@QUERY_TYPE.field('gene')
 def resolve_gene(_, info, bySymbol=None, byId=None):
+    'Load Genes via symbol or stable_id'
 
     query = {
         'type': 'Gene',
@@ -37,9 +38,9 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
     collection = info.context['mongo_db']
 
     result = collection.find_one(query)
-    return(result)
+    return result
 
-@gene.field('cross_references')
+@GENE_TYPE.field('cross_references')
 def insert_urls(root, info):
     '''
     root here is a transcript/gene/protein with cross references in the data
@@ -50,9 +51,9 @@ def insert_urls(root, info):
     xrefs = root['cross_references']
     return list(map(resolver.annotate_crossref, xrefs))
 
-@query.field('transcript')
-def resolve_transcript(root, info, bySymbol=None, byId=None):
-
+@QUERY_TYPE.field('transcript')
+def resolve_transcript(_, info, bySymbol=None, byId=None):
+    'Load Transcripts by symbol or stable_id'
     query = {
         'type': 'Transcript'
     }
@@ -68,8 +69,9 @@ def resolve_transcript(root, info, bySymbol=None, byId=None):
     return result
 
 
-@gene.field('transcripts')
+@GENE_TYPE.field('transcripts')
 def resolve_gene_transcripts(gene, info):
+    'Use a DataLoader to get transcripts for the parent gene'
     gene_stable_id = gene['stable_id']
 
     # Get a dataloader from info
@@ -84,9 +86,12 @@ def resolve_gene_transcripts(gene, info):
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
 # rather than entities entirely within the range
-@query.field('slice')
+@QUERY_TYPE.field('slice')
 def resolve_slice(_, info, genome_id, region, start, end):
-
+    '''
+    Slice on its own only defines parameters for searching for different
+    types. Stash the parameters for nested calls
+    '''
     # Caution team, this is global, and might contaminate a second slice
     # in the same query, depending on the graph descent method
     info.context['slice.genome_id'] = genome_id
@@ -96,17 +101,26 @@ def resolve_slice(_, info, genome_id, region, start, end):
     return None
 
 
-@locus.field('genes')
+@LOCUS_TYPE.field('genes')
 def resolve_slice_genes(_, info):
+    'Pass the resolved slice parameters to a query'
     return query_region(info.context, 'Gene')
 
 
-@locus.field('transcripts')
+@LOCUS_TYPE.field('transcripts')
 def resolve_slice_transcripts(_, info):
+    'Pass the resolved slice parameters to a query'
     return query_region(info.context, 'Transcript')
 
 
 def query_region(context, feature_type):
+    '''
+    Query backend for a feature type using slice parameters:
+    genome_id
+    region name
+    start coordinate
+    end coordinate
+    '''
     query = {
         'genome_id': context['slice.genome_id'],
         'type': feature_type,
