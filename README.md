@@ -25,7 +25,6 @@ user =
 password = 
 db = 
 collection = 
-schema = ./common/schemas
 ```
 
 GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP
