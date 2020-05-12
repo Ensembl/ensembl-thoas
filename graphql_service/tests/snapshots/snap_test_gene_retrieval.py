@@ -38,13 +38,6 @@ snapshots['test_gene_retrieval_by_id 1'] = {
     }
 }
 
-snapshots['test_transcript_retrieval 1'] = {
-    'transcript': {
-        'so_term': 'nonsense_mediated_decay',
-        'stable_id': 'ENST00000528762.1'
-    }
-}
-
 snapshots['test_gene_retrieval_by_symbol 1'] = {
     'gene': {
         'name': 'BRCA2',

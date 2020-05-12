@@ -71,22 +71,25 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         query['genome_id'] = byId['genome_id']
 
     collection = info.context['mongo_db']
-    result = collection.find_one(query)
-    return result
+    transcript = collection.find_one(query)
+    transcript['splicing'] = [prepare_splicing_data(transcript)]
+    return transcript
 
 
 @GENE_TYPE.field('transcripts')
-def resolve_gene_transcripts(gene, info):
+async def resolve_gene_transcripts(gene, info):
     'Use a DataLoader to get transcripts for the parent gene'
     gene_stable_id = gene['stable_id']
 
     # Get a dataloader from info
     loader = info.context['data_loader'].gene_transcript_dataloader(gene['genome_id'])
     # Tell DataLoader to get this request done when it feels like it
-    result = loader.load(
+    transcripts = await loader.load(
         key=gene_stable_id
     )
-    return result
+    for transcript in transcripts:
+        transcript['splicing'] = [prepare_splicing_data(transcript)]
+    return transcripts
 
 
 # Note that this kind of hard boundary search is not often appropriate for
@@ -104,7 +107,6 @@ def resolve_slice(_, info, genome_id, region, start, end):
     info.context['slice.region.name'] = region
     info.context['slice.start'] = start
     info.context['slice.end'] = end
-    return None
 
 
 @LOCUS_TYPE.field('genes')
@@ -135,3 +137,36 @@ def query_region(context, feature_type):
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
     return context["mongo_db"].find(query)
+
+def prepare_splicing_data(transcript):
+    def exon_sorter(exon):
+        return exon['slice']['location']['start']
+    def build_spliced_exon(pair):
+        (index, exon) = pair
+        return {
+            'start_phase': 0, # FIXME
+            'end_phase': 0, # FIXME
+            'index': index,
+            'exon': exon
+        }
+    sorted_exons = sorted(transcript['exons'], key=exon_sorter)
+    spliced_exons = [build_spliced_exon(tuple) for tuple in list(enumerate(sorted_exons))]
+    return {
+        'product_type': 'protein' if 'cds' in transcript else 'no_idea',
+        'default': True,
+        'cds': transcript.get('cds'),
+        'spliced_exons': spliced_exons,
+        'product': build_dummy_product()
+    }
+
+def build_dummy_product():
+    return {
+        'stable_id': 'CAK10225',
+        'type': "protein",
+        'length': 343,
+        'splice_junction_positions': [],
+        'sequence': "MSDTGRKIMRVLSGESLSPPPLWLMRQAGRYLPEYRETRAKAGSFLDLCYTPEHAVEVTLQPIRRYGFDAAILFSDILVIPDAMKRNVRFTEGHGPEMDPIDEAGIGSLNGEEVVDYLRPVLETVRRLREELPAETTLLGFCGAPWTVATYMIAGHGTPDQAPARLFAYKHARAFEHLLMLLADVSADYLVAQIDAGADAVQIFDSWAGVLGEKEFEAFAIRPVARMIASVKSRRPHARIIAFAKGAGYQLKTYRQKTGADAIGLDWSVPLAFAAELQKDGPVQGNLDPMRVVAGGRALEEGIDDILQHLGNGPLIFNLGHGITPQADPEHVRLLVDRVRGGA",
+        'sequence_checksum': "truncatedsha512",
+        'external_references': [],
+        'protein_domains': []
+    }

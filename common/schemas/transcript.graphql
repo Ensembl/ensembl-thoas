@@ -1,14 +1,85 @@
 type Transcript {
   # A Transcript of a Gene. Exons are listed in sequence order
   stable_id: String!
+  unversioned_stable_id: String!
+  version: Int!
   so_term: String
   slice: Slice!
   exons: [Exon!]!
   cross_references: [CrossReference]!
+  splicing: [ProteinProductSplicing!]!
+}
+
+type CDS {
+  start: Int!
+  end: Int!
+  relative_start: Int!
+  relative_end: Int!
+  protein_length: Int!
+  nucleotide_length: Int!
 }
 
 type Exon {
   # An Exon that is part of a Transcript
   stable_id: String!
+  relative_slice: RelativeSlice!
   slice: Slice!
+}
+
+type RelativeSlice {
+  location: RelativeSliceLocation
+}
+
+type RelativeSliceLocation {
+  start: Int!
+  end: Int!
+  length: Int!
+}
+
+union Splicing = ProteinProductSplicing
+
+type ProteinProductSplicing {
+  """
+  product type of this splicing event is 'protein'
+  """
+  product_type: String!
+  default: Boolean!
+  cds: CDS!
+  spliced_exons: [SplicedExon!]!
+  product: Product!
+}
+
+type SplicedExon {
+  start_phase: Int!
+  end_phase: Int!
+  index: Int!
+  exon: Exon!
+}
+
+type Product {
+  stable_id: String!
+  """
+  the value of the type field is "protein"
+  """
+  type: String!
+
+  """
+  length in amino acids if product is a protein
+  """
+  length: Int!
+  splice_junction_positions: [Int!]!
+  sequence: String!
+  """
+  The value of sequence checksum can be used to retrieve the sequence from RefGet
+  """
+  sequence_checksum: String!
+  external_references: [CrossReference]!
+  protein_domains: [ProteinDomain!]!
+}
+
+"""
+we haven't decided on their fields
+"""
+type ProteinDomain {
+  foo: String!
 }

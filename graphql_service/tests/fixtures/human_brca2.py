@@ -40,6 +40,15 @@ def build_transcripts():
         'version': 7,
         'so_term': 'protein_coding',
         'genome_id': 'homo_sapiens_GCA_000001405_28',
+        'exons': build_exons(),
+        'cds': {
+            'start': 32316461,
+            'end': 32398770,
+            'relative_start': 988,
+            'relative_end': 83297,
+            'protein_length': 27436,
+            'nucleotide_length': 82309
+        },
         'slice': {
             'region': {
                 'name': '13',
@@ -47,14 +56,14 @@ def build_transcripts():
                     'code': 'forward',
                     'value': 1
                 },
-                'location': {
-                    'start': 32315474,
-                    'end': 32400266,
-                    'length': 84793,
-                    'location_type': 'chromosome'
-                },
-                'default': True
-            }
+            },
+            'location': {
+                'start': 32315474,
+                'end': 32400266,
+                'length': 84793,
+                'location_type': 'chromosome'
+            },
+            'default': True
         }
     }
     brca2_203 = {
@@ -67,21 +76,69 @@ def build_transcripts():
         'version': 1,
         'so_term': 'nonsense_mediated_decay',
         'genome_id': 'homo_sapiens_GCA_000001405_28',
+        'exons': build_exons(),
         'slice': {
             'region': {
                 'name': '13',
                 'strand': {
                     'code': 'forward',
                     'value': 1
-                },
-                'location': {
-                    'start': 32370971,
-                    'end': 32379495,
-                    'length': 8525,
-                    'location_type': 'chromosome'
-                },
-                'default': True
-            }
+                }
+            },
+            'location': {
+                'start': 32370971,
+                'end': 32379495,
+                'length': 8525,
+                'location_type': 'chromosome'
+            },
+            'default': True
         }
     }
     return [brca2_201, brca2_203]
+
+def build_exons():
+    'Build some exons'
+    return [
+        {
+            'type': 'Exon',
+            'stable_id': 'ENSE00002145385.1',
+            'unversioned_stable_id': 'ENSE00002145385',
+            'version': 1,
+            'slice': {
+                'region': {
+                    'name': '13',
+                    'strand': {
+                        'code': 'forward',
+                        'value': 1
+                    }
+                },
+                'location': {
+                    'start': 32370971,
+                    'end': 32371100,
+                    'length': 130,
+                    'location_type': 'chromosome'
+                }
+            }
+        },
+        {
+            'type': 'Exon',
+            'stable_id': 'ENSE00002167182.1',
+            'unversioned_stable_id': 'ENSE00002167182',
+            'version': 1,
+            'slice': {
+                'region': {
+                    'name': '13',
+                    'strand': {
+                        'code': 'forward',
+                        'value': 1
+                    }
+                },
+                'location': {
+                    'start': 32375343,
+                    'end': 32375406,
+                    'length': 64,
+                    'location_type': 'chromosome'
+                }
+            }
+        },
+    ]

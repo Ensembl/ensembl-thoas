@@ -92,17 +92,3 @@ async def test_gene_retrieval_by_symbol(snapshot):
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
     snapshot.assert_match(result['data'])
-
-@pytest.mark.asyncio
-async def test_transcript_retrieval(snapshot):
-    """Test retrieval of a transcript from the grapqhl api by id"""
-    query = """{
-      transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000528762.1" }) {
-        stable_id
-        so_term
-      }
-    }"""
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
-    assert success
-    snapshot.assert_match(result['data'])
