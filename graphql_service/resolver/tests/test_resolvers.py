@@ -130,7 +130,7 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        byId={'stable_id': 'ENSG999', 'genome_id': 1}
+        byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
     )
 
     assert not result
