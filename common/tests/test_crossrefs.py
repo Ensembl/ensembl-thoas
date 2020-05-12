@@ -12,13 +12,13 @@
    limitations under the License.
 """
 
-from common.crossrefs import XrefResolver
 import os
 import pytest
+from common.crossrefs import XrefResolver
 
 
-@pytest.fixture
-def resolver():
+@pytest.fixture(name='resolver')
+def fixture_resolver():
     '''
     Pre-load data from file
     '''
@@ -94,6 +94,9 @@ def test_combined_resolution(resolver):
 
 
 def test_annotate_function(resolver):
+    '''
+    Test the addition of URLs to cross references
+    '''
     response = resolver.annotate_crossref({
         'id': '1',
         'source': {

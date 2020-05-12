@@ -16,6 +16,9 @@ from common.utils import format_cross_refs, format_slice, format_exon
 
 
 def test_xref_formatting():
+    '''
+    Ensure that cross refs documents are appropriately converted to CDM standard
+    '''
     doc_list = format_cross_refs([])
 
     assert len(doc_list) == 0
@@ -51,30 +54,36 @@ def test_xref_formatting():
 
 
 def test_slice_formatting():
-    Slice = format_slice('test', 'test place', True, 1, 'GRCh38', 100, 200)
+    '''
+    Ensure slices are correctly generated from parameters
+    '''
+    slice_dict = format_slice('test', 'test place', True, 1, 'GRCh38', 100, 200)
 
-    assert Slice['region']['name'] == 'test'
-    assert Slice['region']['strand']['code'] == 'forward'
-    assert Slice['region']['strand']['value'] == 1
-    assert Slice['region']['assembly'] == 'GRCh38'
-    assert Slice['location']['start'] == 100
-    assert Slice['location']['end'] == 200
-    assert Slice['default'] is True
-    assert Slice['location']['location_type'] == 'test place'
+    assert slice_dict['region']['name'] == 'test'
+    assert slice_dict['region']['strand']['code'] == 'forward'
+    assert slice_dict['region']['strand']['value'] == 1
+    assert slice_dict['region']['assembly'] == 'GRCh38'
+    assert slice_dict['location']['start'] == 100
+    assert slice_dict['location']['end'] == 200
+    assert slice_dict['default'] is True
+    assert slice_dict['location']['location_type'] == 'test place'
 
-    Slice = format_slice('test', 'test place', False, -1, 'GRCh38', 100, 200)
+    slice_dict = format_slice('test', 'test place', False, -1, 'GRCh38', 100, 200)
 
-    assert Slice['region']['name'] == 'test'
-    assert Slice['region']['strand']['code'] == 'reverse'
-    assert Slice['region']['strand']['value'] == -1
-    assert Slice['region']['assembly'] == 'GRCh38'
-    assert Slice['location']['start'] == 100
-    assert Slice['location']['end'] == 200
-    assert Slice['default'] is False
-    assert Slice['location']['location_type'] == 'test place'
+    assert slice_dict['region']['name'] == 'test'
+    assert slice_dict['region']['strand']['code'] == 'reverse'
+    assert slice_dict['region']['strand']['value'] == -1
+    assert slice_dict['region']['assembly'] == 'GRCh38'
+    assert slice_dict['location']['start'] == 100
+    assert slice_dict['location']['end'] == 200
+    assert slice_dict['default'] is False
+    assert slice_dict['location']['location_type'] == 'test place'
 
 
 def test_exon_formatting():
+    '''
+    Verify exon structure from input variables
+    '''
     exon = format_exon(
         exon_stable_id='ENSE123',
         version=1,

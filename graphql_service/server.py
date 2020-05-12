@@ -23,21 +23,21 @@ from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 print(os.environ)
 
-config = load_config(os.getenv('GQL_CONF'))
+CONFIG = load_config(os.getenv('GQL_CONF'))
 
-mongo_client = mongo.MongoDbClient(config)
+MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
-executable_schema = prepare_executable_schema()
+EXECUTABLE_SCHEMA = prepare_executable_schema()
 
 # Initialise all data loaders
-data_loader = DataLoaderCollection(mongo_client.collection())
+DATA_LOADER = DataLoaderCollection(MONGO_CLIENT.collection())
 
-resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+RESOLVER = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
 
-context_provider = prepare_context_provider({
-    'mongo_db': mongo_client.collection(),
-    'data_loader': data_loader,
-    'XrefResolver': resolver
+CONTEXT_PROVIDER = prepare_context_provider({
+    'mongo_db': MONGO_CLIENT.collection(),
+    'data_loader': DATA_LOADER,
+    'XrefResolver': RESOLVER
 })
 
-app = GraphQL(executable_schema, debug=True, context_value=context_provider)
+APP = GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER)

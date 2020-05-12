@@ -12,18 +12,19 @@
    limitations under the License.
 """
 
-import mongomock
-import graphql_service.resolver.gene_model as model
-import pytest
-import graphql_service.resolver.data_loaders as data_loader
 import asyncio
+import pytest
+import mongomock
+
+import graphql_service.resolver.gene_model as model
+import graphql_service.resolver.data_loaders as data_loader
 from common.crossrefs import XrefResolver
 
 
-class Info(object):
-    """
+class Info():
+    '''
     Proxy for the Info objects produced by graphql
-    """
+    '''
 
     def __init__(self, collection):
         self.collection = collection
@@ -35,8 +36,9 @@ class Info(object):
         }
 
 
-@pytest.fixture
-def basic_data():
+@pytest.fixture(name='basic_data')
+def fixture_basic_data():
+    'Some fake genes'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'},
@@ -45,8 +47,9 @@ def basic_data():
     return Info(collection)
 
 
-@pytest.fixture
-def transcript_data():
+@pytest.fixture(name='transcript_data')
+def fixture_transcript_data():
+    'Some fake transcripts'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {'genome_id': 1, 'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001', 'gene': 'ENSG001'},
@@ -56,8 +59,11 @@ def transcript_data():
     return Info(collection)
 
 
-@pytest.fixture
-def slice_data():
+@pytest.fixture(name='slice_data')
+def fixture_slice_data():
+    '''
+    Test genes with slices
+    '''
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {
@@ -95,7 +101,7 @@ def slice_data():
 
 
 def test_resolve_gene(basic_data):
-
+    'Test the querying of Mongo by gene symbol'
     result = model.resolve_gene(
         None,
         basic_data,
@@ -129,7 +135,7 @@ def test_resolve_gene(basic_data):
 
 
 def test_resolve_transcript(transcript_data):
-
+    'Test fetching of transcripts by stable ID'
     result = model.resolve_transcript(
         None,
         transcript_data,
@@ -148,7 +154,7 @@ def test_resolve_transcript(transcript_data):
 
 
 def test_resolve_gene_transcripts(transcript_data):
-
+    'Check the DataLoader for transcripts is working via gene'
     result = model.resolve_gene_transcripts(
         {'stable_id': 'ENSG001', 'genome_id': 1},
         transcript_data
@@ -161,7 +167,7 @@ def test_resolve_gene_transcripts(transcript_data):
 
 
 def test_resolve_slice(slice_data):
-
+    'Check features can be found via coordinates'
     result = model.resolve_slice(
         None,
         slice_data,
@@ -201,6 +207,7 @@ def test_resolve_slice(slice_data):
 
 
 def test_url_generation(basic_data):
+    'Check URLs are attached to cross references'
     xref = {
         'id': 'some_molecule',
         'name': 'Chemsitry rocks',
@@ -220,8 +227,8 @@ def test_url_generation(basic_data):
         basic_data
     )
 
-    for key in xref.keys():
-        assert result[0][key] == xref[key], 'Original structure retained'
+    for key, value in xref.items():
+        assert result[0][key] == value, 'Original structure retained'
 
     assert result[0]['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:some_molecule'
     assert result[0]['source']['url'] == 'https://www.ebi.ac.uk/chebi/'

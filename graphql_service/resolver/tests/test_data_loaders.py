@@ -12,8 +12,8 @@
    limitations under the License.
 """
 
-import mongomock
 import asyncio
+import mongomock
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 

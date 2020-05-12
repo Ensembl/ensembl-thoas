@@ -13,7 +13,9 @@
 """
 
 import ariadne
-from graphql_service.resolver.gene_model import query, gene, transcript, locus
+from graphql_service.resolver.gene_model import (
+    QUERY_TYPE, GENE_TYPE, TRANSCRIPT_TYPE, LOCUS_TYPE
+)
 
 def prepare_executable_schema():
     """
@@ -22,10 +24,10 @@ def prepare_executable_schema():
     schema = ariadne.load_schema_from_path('common/schemas')
     return ariadne.make_executable_schema(
         schema,
-        query,
-        gene,
-        transcript,
-        locus
+        QUERY_TYPE,
+        GENE_TYPE,
+        TRANSCRIPT_TYPE,
+        LOCUS_TYPE
     )
 
 def prepare_context_provider(context):

@@ -15,10 +15,10 @@
 from ariadne import QueryType, ObjectType
 
 # Define Query types for GraphQL
-query = QueryType()
-gene = ObjectType('Gene')
-transcript = ObjectType('Transcript')
-locus = ObjectType('Locus')
+QUERY_TYPE = QueryType()
+GENE_TYPE = ObjectType('Gene')
+TRANSCRIPT_TYPE = ObjectType('Transcript')
+LOCUS_TYPE = ObjectType('Locus')
 
 
 @query.field('gene')

@@ -28,8 +28,11 @@ class DataLoaderCollection(object):
         self.collection = db_collection
 
     async def batch_transcript_load(self, keys):
-
-        # DataLoader will aggregate many single ID requests into 'keys'
+        '''
+        Load many transcripts to satisfy a bunch of `await`s
+        DataLoader will aggregate many single ID requests into 'keys' so we can
+        perform bulk fetches
+        '''
         query = {
             'type': 'Transcript',
             'genome_id': self.genome_id,
@@ -49,6 +52,11 @@ class DataLoaderCollection(object):
         return [grouped_docs[feature_id] for feature_id in keys]
 
     def gene_transcript_dataloader(self, genome_id, max_batch_size=1000):
+        'Factory for DataLoaders for Transcripts fetched via Genes'
+        # How do we get temporary state into class methods with a fixed signature?
+        # I didn't want to fork DataLoader in order to add arbitrary arguments
+        # There is a danger of cross-contamination here if genome_id changes in
+        # the same thread, but I'm not sure how to do this better.
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_transcript_load,
@@ -56,4 +64,9 @@ class DataLoaderCollection(object):
         )
 
     async def query_mongo(self, query):
+        '''
+        Query function that exists solely to satisfy the vagueries of Python async.
+        batch_transcript_load expects a list of results, and *must* call a single
+        function in order to be valid.
+        '''
         return list(self.collection.find(query))
