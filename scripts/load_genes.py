@@ -104,7 +104,7 @@ def load_gene_info(mongo_client, json_file, cds_info):
                     end=int(gene['end'])
                 ),
                 'transcripts': [
-                    [transcript['id'] for transcript in gene['transcripts']]
+                    [f'{transcript["id"]}.{str(transcript["version"])}' for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
                 'cross_references': format_cross_refs(gene['xrefs'])
