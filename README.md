@@ -11,14 +11,28 @@ GraphQL requires a schema (in /common) and implementation of resolver functions 
 ## Installation
 
 Set up Python 3
-pip install -r /requirements.txt
+pip install -r .
 
 ## Running the service directly
-uvicorn graphql_service.server:app
+Put configuration MongoDB configuration in a file e.g. mongo.conf
 
-## Testing
+The file follows the following template:
+```
+[MONGO DB]
+host = 
+port = 
+user = 
+password = 
+db = 
+collection = 
+```
 
+GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP
 
+## Testing and development
+
+If changes are expected, run pip install -e
+pytest
 
 ## Containerisation
 docker build -t $NAME:$VERSION .

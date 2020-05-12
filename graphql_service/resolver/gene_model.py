@@ -32,7 +32,10 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
         query['name'] = bySymbol['symbol']
         query['genome_id'] = bySymbol['genome_id']
     if byId:
-        query['stable_id'] = byId['stable_id']
+        query['$or'] = [
+            {'stable_id': byId['stable_id']},
+            {'unversioned_stable_id': byId['stable_id']}
+        ]
         query['genome_id'] = byId['genome_id']
 
     collection = info.context['mongo_db']
@@ -61,7 +64,10 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         query['name'] = bySymbol['symbol']
         query['genome_id'] = bySymbol['genome_id']
     if byId:
-        query['stable_id'] = byId['stable_id']
+        query['$or'] = [
+            {'stable_id': byId['stable_id']},
+            {'unversioned_stable_id': byId['stable_id']}
+        ]
         query['genome_id'] = byId['genome_id']
 
     collection = info.context['mongo_db']

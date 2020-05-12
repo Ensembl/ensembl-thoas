@@ -41,8 +41,8 @@ def fixture_basic_data():
     'Some fake genes'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Gene', 'name': 'durian', 'stable_id': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'durian', 'stable_id': 'ENSG002.2', 'unversioned_stable_id': 'ENSG002'},
     ])
     return Info(collection)
 
@@ -52,9 +52,9 @@ def fixture_transcript_data():
     'Some fake transcripts'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001', 'gene': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Transcript', 'name': 'grape', 'stable_id': 'ENST002', 'gene': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001'}
+        {'genome_id': 1, 'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001.1', 'unversioned_stable_id': 'ENST001', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Transcript', 'name': 'grape', 'stable_id': 'ENST002.2', 'unversioned_stable_id': 'ENST002', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'}
     ])
     return Info(collection)
 
@@ -70,7 +70,8 @@ def fixture_slice_data():
             'genome_id': 1,
             'type': 'Gene',
             'name': 'banana',
-            'stable_id': 'ENSG001',
+            'stable_id': 'ENSG001.1',
+            'unversioned_stable_id': 'ENSG001',
             'slice': {
                 'region': {
                     'name': 'chr1'
@@ -85,7 +86,8 @@ def fixture_slice_data():
             'genome_id': 1,
             'type': 'Gene',
             'name': 'durian',
-            'stable_id': 'ENSG002',
+            'stable_id': 'ENSG002.2',
+            'unversioned_stable_id': 'ENSG002',
             'slice': {
                 'region': {
                     'name': 'chr1'
@@ -120,7 +122,7 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        byId={'stable_id': 'ENSG001', 'genome_id': 1}
+        byId={'stable_id': 'ENSG001.1', 'genome_id': 1}
     )
 
     assert result['name'] == 'banana'
@@ -128,10 +130,19 @@ def test_resolve_gene(basic_data):
     result = model.resolve_gene(
         None,
         basic_data,
-        byId={'stable_id': 'ENSG999', 'genome_id': 1}
+        byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
     )
 
     assert not result
+
+    # Check unversioned query resolves as well
+    result = model.resolve_gene(
+        None,
+        basic_data,
+        byId={'stable_id': 'ENSG001', 'genome_id': 1}
+    )
+
+    assert result['name'] == 'banana'
 
 
 def test_resolve_transcript(transcript_data):
@@ -139,11 +150,11 @@ def test_resolve_transcript(transcript_data):
     result = model.resolve_transcript(
         None,
         transcript_data,
-        byId={'stable_id': 'ENST001', 'genome_id': 1}
+        byId={'stable_id': 'ENST001.1', 'genome_id': 1}
     )
 
     assert result['name'] == 'kumquat'
-    assert result['stable_id'] == 'ENST001'
+    assert result['stable_id'] == 'ENST001.1'
 
     result = model.resolve_transcript(
         None,
@@ -156,7 +167,7 @@ def test_resolve_transcript(transcript_data):
 def test_resolve_gene_transcripts(transcript_data):
     'Check the DataLoader for transcripts is working via gene'
     result = model.resolve_gene_transcripts(
-        {'stable_id': 'ENSG001', 'genome_id': 1},
+        {'stable_id': 'ENSG001.1', 'genome_id': 1},
         transcript_data
     )
     data = asyncio.get_event_loop().run_until_complete(result)
@@ -190,7 +201,7 @@ def test_resolve_slice(slice_data):
         'Gene'
     )
     hit = result.next()
-    assert hit['stable_id'] == 'ENSG001'
+    assert hit['stable_id'] == 'ENSG001.1'
 
     result = model.query_region(
         {
@@ -203,7 +214,7 @@ def test_resolve_slice(slice_data):
         'Gene'
     )
     for hit in result:
-        assert hit['stable_id'] in ['ENSG001', 'ENSG002']
+        assert hit['stable_id'] in ['ENSG001.1', 'ENSG002.2']
 
 
 def test_url_generation(basic_data):
