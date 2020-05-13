@@ -97,6 +97,13 @@ async def test_transcript_retrieval(snapshot):
                                     length
                                 }
                             }
+                            relative_slice {
+                                location {
+                                    start
+                                    end
+                                    length
+                                }
+                            }
                         }
                     }
                 }

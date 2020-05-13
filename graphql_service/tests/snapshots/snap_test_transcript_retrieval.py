@@ -38,6 +38,13 @@ snapshots['test_transcript_retrieval 1'] = {
                     {
                         'end_phase': 0,
                         'exon': {
+                            'relative_slice': {
+                                'location': {
+                                    'end': 55627,
+                                    'length': 130,
+                                    'start': 55498
+                                }
+                            },
                             'slice': {
                                 'location': {
                                     'end': 32371100,
@@ -59,6 +66,13 @@ snapshots['test_transcript_retrieval 1'] = {
                     {
                         'end_phase': 0,
                         'exon': {
+                            'relative_slice': {
+                                'location': {
+                                    'end': 59933,
+                                    'length': 64,
+                                    'start': 59870
+                                }
+                            },
                             'slice': {
                                 'location': {
                                     'end': 32375406,

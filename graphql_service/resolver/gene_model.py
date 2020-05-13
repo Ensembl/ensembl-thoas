@@ -141,8 +141,20 @@ def query_region(context, feature_type):
 def prepare_splicing_data(transcript):
     def exon_sorter(exon):
         return exon['slice']['location']['start']
+    def build_exon_relative_slice(exon, transcript):
+        transcript_start = transcript['slice']['location']['start']
+        exon_start = exon['slice']['location']['start']
+        exon_end = exon['slice']['location']['end']
+        return {
+            'location': {
+                'start': exon_start - transcript_start + 1,
+                'end': exon_end - transcript_start + 1,
+                'length': exon['slice']['location']['length']
+            }
+        }
     def build_spliced_exon(pair):
         (index, exon) = pair
+        exon['relative_slice'] = build_exon_relative_slice(exon, transcript)
         return {
             'start_phase': 0, # FIXME
             'end_phase': 0, # FIXME
