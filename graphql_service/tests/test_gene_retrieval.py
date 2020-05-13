@@ -37,9 +37,7 @@ def prepare_db():
     transcripts = build_transcripts()
     gene = build_gene()
     mocked_mongo_collection.insert_one(gene)
-    for transcript in transcripts:
-        mocked_mongo_collection.insert_one(transcript)
-    # mocked_mongo_collection.insert_many(transcripts)
+    mocked_mongo_collection.insert_many(transcripts)
 
 def setup_module():
     'Run setup scripts once per module'
