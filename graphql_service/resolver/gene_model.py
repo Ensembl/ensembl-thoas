@@ -20,7 +20,6 @@ GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 
-
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, bySymbol=None, byId=None):
     'Load Genes via symbol or stable_id'
@@ -90,7 +89,6 @@ async def resolve_gene_transcripts(gene, info):
     for transcript in transcripts:
         transcript['splicing'] = [prepare_splicing_data(transcript)]
     return transcripts
-
 
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
@@ -164,6 +162,7 @@ def prepare_splicing_data(transcript):
     sorted_exons = sorted(transcript['exons'], key=exon_sorter)
     spliced_exons = [build_spliced_exon(tuple) for tuple in list(enumerate(sorted_exons))]
     return {
+        '__typename': 'ProteinProductSplicing' if 'cds' in transcript else 'NonCodingProductSplicing',
         'product_type': 'protein' if 'cds' in transcript else 'no_idea',
         'default': True,
         'cds': transcript.get('cds'),

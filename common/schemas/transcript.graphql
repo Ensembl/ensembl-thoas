@@ -7,7 +7,7 @@ type Transcript {
   slice: Slice!
   exons: [Exon!]!
   cross_references: [CrossReference]!
-  splicing: [ProteinProductSplicing!]!
+  splicing: [Splicing!]!
 }
 
 type CDS {
@@ -36,7 +36,7 @@ type RelativeSliceLocation {
   length: Int!
 }
 
-union Splicing = ProteinProductSplicing
+union Splicing = ProteinProductSplicing | NonCodingProductSplicing
 
 type ProteinProductSplicing {
   """
@@ -48,6 +48,14 @@ type ProteinProductSplicing {
   spliced_exons: [SplicedExon!]!
   product: Product!
 }
+
+
+type NonCodingProductSplicing {
+  """
+  product type of this splicing event is 'protein'
+  """
+  product_type: String!
+ }
 
 type SplicedExon {
   start_phase: Int!
