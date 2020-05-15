@@ -13,4 +13,4 @@ ENV PYTHONPATH=\$PYTHONPATH:/app
 ENV GQL_CONF=/app/mongo.conf
 
 ENV WORKER_COUNT=10
-CMD uvicorn --workers $WORKER_COUNT --env GQL_CONF --host=0.0.0.0 graphql_service.server:app
+CMD uvicorn --workers $WORKER_COUNT --env GQL_CONF --host=0.0.0.0 graphql_service.server:APP
