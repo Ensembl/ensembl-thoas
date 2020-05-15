@@ -36,7 +36,7 @@ spec:
             "8000",
             "--env-file",
             "/env/.env",
-            "graphql_service.server:app"
+            "graphql_service.server:APP"
           ]
           volumeMounts:
             - mountPath: /conf/
