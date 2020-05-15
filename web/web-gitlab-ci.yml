@@ -1,0 +1,40 @@
+# Stages for the CI/CD job
+stages:
+  - build
+#  - deploy
+
+# Default variables available across all the jobs
+variables:
+  DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  DOCKER_TLS_CERTDIR: ""
+
+# Template to build docker image
+.build:
+  stage: build
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t ${DOCKER_IMAGE} --no-cache -f k8s/Dockerfile .
+    - docker push ${DOCKER_IMAGE}
+    # remove local image from shared runner
+    - docker rmi ${DOCKER_IMAGE}
+    - docker logout $CI_REGISTRY
+
+# Template to deploy application to k8s cluster
+#.deploy:
+#  stage: deploy
+#  image: dockerhub.ebi.ac.uk/wp/deploy-tools/master:latest
+
+#  script:
+#    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/thoas_deployment.yaml
+#    - kubectl apply -f k8s/thoas_deployment.yaml
+
+# Build docker image
+build:
+  extends: .build
+  only:
+    - master
+
