@@ -8,5 +8,6 @@ pytest
 pytest-asyncio
 python-dotenv
 snapshottest
+starlette
 requests
 uvicorn
