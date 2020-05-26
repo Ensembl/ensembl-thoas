@@ -34,7 +34,7 @@ variables:
     - kubectl apply -f k8s/thoas_deployment.yaml
 
 # Run a suite of unit and integration tests
-Test:
+test:
   image: python:3.8.1-slim
   stage: test
   before_script:
