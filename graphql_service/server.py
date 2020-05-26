@@ -15,6 +15,9 @@
 import os
 
 from ariadne.asgi import GraphQL
+from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 import common.mongo as mongo
@@ -40,4 +43,9 @@ CONTEXT_PROVIDER = prepare_context_provider({
     'XrefResolver': RESOLVER
 })
 
-APP = GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER)
+starlette_middleware = [
+    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST'])
+]
+
+APP = Starlette(debug=True, middleware=starlette_middleware)
+APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
