@@ -44,14 +44,24 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
     return result
 
 @GENE_TYPE.field('cross_references')
-def insert_urls(root, info):
+def insert_urls(gene, info):
     '''
-    root here is a transcript/gene/protein with cross references in the data
-    model. Using the crossrefs package we can infer URLs to those resources
+    A gene with cross references in the data model is given as argument.
+    Using the crossrefs package we can infer URLs to those resources
     and inject them into the response
     '''
     resolver = info.context['XrefResolver']
-    xrefs = root['cross_references']
+    xrefs = gene['cross_references']
+    return list(map(resolver.annotate_crossref, xrefs))
+
+@TRANSCRIPT_TYPE.field('cross_references')
+def insert_urls(transcript, info):
+    '''
+    As per the cross_references resolver for gene, we infer URLs
+    for xrefs on the provided transcript
+    '''
+    resolver = info.context['XrefResolver']
+    xrefs = transcript['cross_references']
     return list(map(resolver.annotate_crossref, xrefs))
 
 @QUERY_TYPE.field('transcript')
