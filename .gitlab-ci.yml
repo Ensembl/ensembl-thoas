@@ -38,7 +38,7 @@ test:
   image: python:3.8.1-slim
   stage: test
   before_script:
-    - pip3 install -r
+    - pip3 install -r requirements.txt
   script:
     - pytest
 
