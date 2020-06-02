@@ -1,0 +1,14 @@
+apiVersion: v1
+# host refers to a Service that routes traffic outside k8s
+data:
+  mongo.conf: |
+    [MONGO DB]
+    user = wpk8s_ro
+    password = BonlYBniKG8
+    host = ensweb-thoas-mongo-svc
+    port = 27017
+    db = ensthoaspro
+    collection = enswebthoas
+kind: ConfigMap
+metadata:
+  name: thoas-configmap
