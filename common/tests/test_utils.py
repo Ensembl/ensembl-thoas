@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-from common.utils import format_cross_refs, format_slice, format_exon
+from common.utils import format_cross_refs, format_slice, format_exon, splicify_exons
 
 
 def test_xref_formatting():
@@ -102,3 +102,33 @@ def test_exon_formatting():
     assert exon['version'] == 1
     assert exon['slice']['region']['name'] == 'chr1'
     # forego further enumeration of slice properties
+
+
+def test_splicifying():
+    '''
+    Check that phases and rank are calculated correctly for a given ordered
+    list of exons.
+    '''
+    exon_list = [
+        {'start': 1, 'end': 10, 'stable_id': 'ENSE01'},
+        {'start': 21, 'end': 30, 'stable_id': 'ENSE02'}
+    ]
+
+    phase_lookup = {
+        'ENST01': {
+            'ENSE01': (-1, 0),
+            'ENSE02': (0, -1)
+        }
+    }
+
+    splicing = splicify_exons(exon_list, 'ENST01', phase_lookup)
+    for i in range(0, len(splicing)):
+        assert splicing[i]['index'] == i
+        stable_id = exon_list[i]['stable_id']
+        assert splicing[i]['exon']['stable_id'] == stable_id
+
+        assert (
+            splicing[i]['start_phase'], splicing[i]['end_phase']
+        ) == (
+            phase_lookup['ENST01'][stable_id]
+        )

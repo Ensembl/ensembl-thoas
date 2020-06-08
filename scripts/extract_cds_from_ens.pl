@@ -1,5 +1,6 @@
 # Perl script to extract Transcript IDs and their CDS start and end
 # coords w.r.t. Transcript coordinates, i.e. CDS_start = 1 (not a big number)
+# Dumps a second file containing phase information on a per transcript basis
 
 use strict;
 use warnings;
@@ -38,6 +39,11 @@ my $fh = IO::File->new($species. '.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";
 
+# Time to run a second file relating to phase of each exon in each transcript
+# Don't want to jam it into a single line of the CDS file
+my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
+print $phase_fh '"transcript ID", "exon ID", "rank", "start_phase", "end_phase"'."\n";
+
 my $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
 
 
@@ -49,8 +55,6 @@ while (my $transcript = shift @$transcripts) {
   next unless $translation;
   my $start = $translation->start;
   my $end = $translation->end;
-  my $start_exon = $translation->start_Exon;
-  my $end_exon = $translation->end_Exon;
 
   my $transcript_slice = $transcript->feature_Slice;
   my $cds_feats = $transcript->get_all_CDS();
@@ -79,5 +83,17 @@ while (my $transcript = shift @$transcripts) {
       $cds_feats->[0]->length;
   }
 
+  foreach my $et (@{$transcript->get_all_ExonTranscripts}) {
+    my $exon = $et->exon;
+    printf $phase_fh "%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $exon->stable_id,
+      $et->rank,
+      $exon->phase,
+      $exon->end_phase;
+  }
 }
 print "Dumping completed of $x of coding transcripts\n";
+
+close $fh;
+close $phase_fh;

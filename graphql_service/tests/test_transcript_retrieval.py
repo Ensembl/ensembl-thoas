@@ -45,7 +45,10 @@ def setup_module():
 
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
-    """Test retrieval of a transcript from the grapqhl api by id"""
+    """
+    Test retrieval of a transcript from the grapqhl api by id
+    Acquires snapshot from snapshottest by fixture injection
+    """
     query = """{
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
             stable_id
