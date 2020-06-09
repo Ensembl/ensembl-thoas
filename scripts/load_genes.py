@@ -261,11 +261,11 @@ def preload_cds_coords(production_name):
         reader = csv.reader(file)
         for row in reader:
             cds_buffer[row[0]] = {
-                'start': row[1],
-                'end': row[2],
-                'relative_start': row[3],
-                'relative_end': row[4],
-                'spliced_length': row[5]
+                'start': int(row[1]),
+                'end': int(row[2]),
+                'relative_start': int(row[3]),
+                'relative_end': int(row[4]),
+                'spliced_length': int(row[5])
             }
     return cds_buffer
 
@@ -283,7 +283,7 @@ def preload_exon_phases(production_name):
         reader = csv.DictReader(file)
         for row in reader:
             phase_lookup[row['transcript ID']] = {
-                row['exon ID']: (row['start_phase'], row['end_phase'])
+                row['exon ID']: (int(row['start_phase']), int(row['end_phase']))
             }
 
     return phase_lookup
