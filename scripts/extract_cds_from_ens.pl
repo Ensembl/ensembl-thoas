@@ -38,11 +38,10 @@ $registry->load_registry_from_db(
 my $fh = IO::File->new($species. '.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";
-
 # Time to run a second file relating to phase of each exon in each transcript
 # Don't want to jam it into a single line of the CDS file
 my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
-print $phase_fh '"transcript ID", "exon ID", "rank", "start_phase", "end_phase"'."\n";
+print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
 
