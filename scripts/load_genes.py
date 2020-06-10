@@ -289,9 +289,9 @@ def preload_exon_phases(production_name):
                     row['exon ID']: (int(row['start_phase']), int(row['end_phase']))
                 }
             else:
-                phase_lookup[transcript][row['exon ID']] = (
-                    int(row['start_phase']), int(row['end_phase'])
-                )
+                phase_lookup[transcript].update({
+                    row['exon ID']: (int(row['start_phase']), int(row['end_phase']))
+                })
 
     return phase_lookup
 
