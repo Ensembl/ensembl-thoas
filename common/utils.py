@@ -151,7 +151,7 @@ def splicify_exons(exons, transcript_id, phase_lookup):
     splicing = []
     i = 0
     for exon in exons:
-        (start_phase, end_phase) = phase_lookup[transcript_id][exon['stable_id']]
+        (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
         splicing.append({
             'start_phase': start_phase,
             'end_phase': end_phase,
