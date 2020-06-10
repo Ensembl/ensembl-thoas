@@ -213,13 +213,13 @@ def format_cdna(transcript):
     '''
     strand = transcript['strand']
 
-    if strand == 1:
-        start = transcript['start']
-        end = transcript['end']
-        relative_start = 1
-        relative_end = 0
-        for exon in transcript['exons']:
-            relative_end += exon['end'] - exon['start'] + 1
+    start = transcript['start']
+    end = transcript['start'],
+
+    relative_start = 1
+    relative_end = 0 # temporarily
+    for exon in transcript['exons']:
+        relative_end += exon['end'] - exon['start'] + 1
 
     # Needs sequence too. Add it soon!
     return {
