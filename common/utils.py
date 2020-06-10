@@ -214,7 +214,7 @@ def format_cdna(transcript):
     strand = transcript['strand']
 
     start = transcript['start']
-    end = transcript['start'],
+    end = transcript['start']
 
     relative_start = 1
     relative_end = 0 # temporarily
