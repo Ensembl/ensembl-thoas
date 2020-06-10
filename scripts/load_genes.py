@@ -283,9 +283,15 @@ def preload_exon_phases(production_name):
     with open(production_name + '_phase.csv') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            phase_lookup[row['transcript ID']] = {
-                row['exon ID']: (int(row['start_phase']), int(row['end_phase']))
-            }
+            transcript = row['transcript ID']
+            if transcript not in phase_lookup:
+                phase_lookup[transcript] = {
+                    row['exon ID']: (int(row['start_phase']), int(row['end_phase']))
+                }
+            else:
+                phase_lookup[transcript][row['exon ID']] = (
+                    int(row['start_phase']), int(row['end_phase'])
+                )
 
     return phase_lookup
 
