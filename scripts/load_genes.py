@@ -259,6 +259,7 @@ def preload_cds_coords(production_name):
 
     with open(production_name + '.csv') as file:
         reader = csv.reader(file)
+        next(reader, None) # skip header line
         for row in reader:
             cds_buffer[row[0]] = {
                 'start': int(row[1]),
