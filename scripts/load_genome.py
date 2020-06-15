@@ -51,7 +51,7 @@ def load_genome_info(mongo_client, source_file):
         mongo_client.collection().insert_one({
             'type': 'Genome',
             'id': doc['organism']['name'] + '_' + doc['assembly']['accession'].replace('.', '_'),
-            'name': 'GRCh38',
+            'name': doc['assembly']['default'],
             'assembly': doc['assembly']['name'],
             'species': doc['organism']['name'],
         })
@@ -78,6 +78,5 @@ if __name__ == '__main__':
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
     JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genome.json'
-
     load_genome_info(MONGO_CLIENT, JSON_FILE)
     create_index(MONGO_CLIENT)
