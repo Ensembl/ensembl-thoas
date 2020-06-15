@@ -222,6 +222,7 @@ def format_transcript(
         relative_cds_end = cds_info[transcript['id']]['relative_end']
         cds_start = cds_info[transcript['id']]['start']
         cds_end = cds_info[transcript['id']]['end']
+        spliced_length = cds_info[transcript['id']['spliced_length']]
 
         new_transcript['splicing'] = {
             '__typename': 'ProteinCodingSplicing',
@@ -239,8 +240,8 @@ def format_transcript(
                 'end': cds_end,
                 'relative_start': relative_cds_start,
                 'relative_end': relative_cds_end,
-                'nucleotide_length': cds_info[transcript['id']]['spliced_length'],
-                'protein_length': cds_info[transcript['id']]['spliced_length'] // 3
+                'nucleotide_length': spliced_length,
+                'protein_length': spliced_length // 3
             },
             'cdna': format_cdna(transcript),
             'protein_ids': [translation['id'] for translation in transcript['translations']],

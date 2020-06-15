@@ -169,6 +169,7 @@ def format_utr(
     '''
     From one transcript's exons generate an inferred UTR
     downstream  - Boolean, False = 5', True = 3'
+    Relative start and end here is relative to the parent transcript
     '''
     # Presumably broken crossing ori in circular case,
     if (downstream and transcript['strand'] == 1):
@@ -182,6 +183,8 @@ def format_utr(
         start = absolute_cds_end - 1
         end = transcript['start']
         relative_start = relative_cds_end - 1
+        # i.e. first base of transcript in e! coords is the end of a reverse
+        # stranded 3' UTR
         relative_end = 1
     elif (downstream is False and transcript['strand'] == 1):
         utr_type = '5_prime_utr'
@@ -194,7 +197,7 @@ def format_utr(
         utr_type = '5_prime_utr'
         start = transcript['end']
         end = absolute_cds_start + 1
-        relative_start = 1
+        relative_start = transcript['end'] - transcript['start'] + 1
         relative_end = relative_cds_start + 1
 
     return {
@@ -208,10 +211,9 @@ def format_utr(
 
 def format_cdna(transcript):
     '''
-    With the transcript and exon coordinates, and strand, compute the CDNA
+    With the transcript and exon coordinates, compute the CDNA
     length and so on.
     '''
-    strand = transcript['strand']
 
     start = transcript['start']
     end = transcript['start']
