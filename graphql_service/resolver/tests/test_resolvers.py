@@ -229,7 +229,7 @@ def test_url_generation(basic_data):
         }
     }
 
-    result = model.insert_urls(
+    result = model.insert_crossref_urls(
         {
             'cross_references': [
                 xref
