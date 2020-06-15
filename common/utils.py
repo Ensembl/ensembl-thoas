@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument(
         '--assembly',
         help='The assembly name for an Ensembl species',
-        default='homo_sapiens'
+        default='GRCh38'
     )
     return parser.parse_args()
 
