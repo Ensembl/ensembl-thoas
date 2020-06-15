@@ -46,6 +46,11 @@ def parse_args():
         help='The production name for a (sic) Ensembl species',
         default='homo_sapiens'
     )
+    parser.add_argument(
+        '--assembly',
+        help='The assembly name for an Ensembl species',
+        default='homo_sapiens'
+    )
     return parser.parse_args()
 
 def get_stable_id(iid,version):

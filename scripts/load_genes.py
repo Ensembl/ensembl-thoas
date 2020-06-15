@@ -52,7 +52,7 @@ def create_index(mongo_client):
     ], name='cross_refs')
 
 
-def load_gene_info(mongo_client, json_file, cds_info):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -62,12 +62,12 @@ def load_gene_info(mongo_client, json_file, cds_info):
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
-        'name': 'GRCh38'
+        'name': assembly_name
     })
 
     genome = mongo_client.collection().find_one({
         'type': 'Genome',
-        'name': 'GRCh38'
+        'name': assembly_name
     })
     # at least until there's a process for alt-alleles etc.
     default_region = True
@@ -236,9 +236,10 @@ if __name__ == '__main__':
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
     JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
+    ASSEMBLY = ARGS.assembly
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY)
     create_index(MONGO_CLIENT)
