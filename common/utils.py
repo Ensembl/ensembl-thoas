@@ -54,7 +54,7 @@ def parse_args():
     return parser.parse_args()
 
 def get_stable_id(iid,version):
-    stable_id = f'{iid}.{str(version)} if version is not None else iid
+    stable_id = f'{iid}.{str(version)}' if version is not None else iid
     return stable_id
 
 def format_cross_refs(xrefs):
