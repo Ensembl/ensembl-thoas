@@ -1,8 +1,10 @@
 type Transcript {
-  # A Transcript of a Gene. Exons are listed in sequence order
+  """
+  A Transcript of a Gene. Exons are listed in sequence order
+  """
   stable_id: String!
   unversioned_stable_id: String!
-  version: Int!
+  version: Int
   so_term: String
   slice: Slice!
   exons: [Exon!]!
