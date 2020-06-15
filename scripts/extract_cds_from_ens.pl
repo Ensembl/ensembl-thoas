@@ -16,6 +16,10 @@ my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
 my $help;
+# Set Ensembl/EnsemblGenomes release version.
+# Needed for bacteria/fungi (for collection databases)
+my $ENS_VERSION = 100;
+my $EG_VERSION = 47;
 
 GetOptions(
   "species=s" => \$species,
@@ -27,19 +31,31 @@ GetOptions(
 
 
 die 'Specify a species production name at command line' unless $species;
-$registry->load_registry_from_db(
-  -host => $host,
-  -user => $user,
-  -species => $species,
-  -port => $port
-);
 
 my $fh = IO::File->new($species. '.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";
 
-my $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
+my $transcript_adaptor;
+if ($host =~ /mysql-ens-mirror-4/) {
+  my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(-USER => 'ensro', -DBNAME=>'ensembl_metadata', -HOST=>'mysql-ens-meta-prod-1.ebi.ac.uk', -PORT=>4483);
+  my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
+  $gdba->set_ensembl_genomes_release($EG_VERSION);
+  $gdba->set_ensembl_release($ENS_VERSION);
+
+  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(-user => 'ensro', -port => 4495  , -PORT => 4495, -host => 'mysql-ens-mirror-4.ebi.ac.uk', -adaptor=>$gdba);
+  my $dbas = $lookup->get_by_name_exact($species);
+  $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
+} else {
+  $registry->load_registry_from_db(
+    -host => $host,
+    -user => $user,
+    -species => $species,
+    -port => $port
+  );
+  $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
+}
 
 my $transcripts = $transcript_adaptor->fetch_all;
 my $x = 0;
