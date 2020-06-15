@@ -82,6 +82,11 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name):
                 if key not in gene:
                     gene[key] = None
 
+            try:
+                gene_xrefs = format_cross_refs(gene['xrefs'])
+            except KeyError as ke:
+                gene_xrefs = []
+
             json_gene = {
 
                 'type': 'Gene',
@@ -106,7 +111,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name):
                     [ get_stable_id(transcript["id"], transcript["version"]) for transcript in gene['transcripts'] ]
                 ],
                 'genome_id': genome['id'],
-                'cross_references': format_cross_refs(gene['xrefs'])
+                'cross_references': gene_xrefs
             }
             gene_buffer.append(json_gene)
 
@@ -162,6 +167,11 @@ def format_transcript(
                 assembly=assembly
             )
         )
+ 
+    try:
+        transcript_xrefs = format_cross_refs(transcript['xrefs'])
+    except KeyError as ke:
+        transcript_xrefs = []
 
     new_transcript = {
         'type': 'Transcript',
@@ -183,7 +193,7 @@ def format_transcript(
         ),
         'exons': exon_list,
         'genome_id': genome_id,
-        'cross_references': format_cross_refs(transcript['xrefs'])
+        'cross_references': transcript_xrefs
     }
 
     if transcript['id'] in cds_info:
