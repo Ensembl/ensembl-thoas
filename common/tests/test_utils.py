@@ -110,8 +110,8 @@ def test_splicifying():
     list of exons.
     '''
     exon_list = [
-        {'start': 1, 'end': 10, 'stable_id': 'ENSE01'},
-        {'start': 21, 'end': 30, 'stable_id': 'ENSE02'}
+        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
+        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
     ]
 
     phase_lookup = {
