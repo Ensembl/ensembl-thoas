@@ -37,9 +37,7 @@ def prepare_db():
     transcripts = build_transcripts()
     gene = build_gene()
     mocked_mongo_collection.insert_one(gene)
-    for transcript in transcripts:
-        mocked_mongo_collection.insert_one(transcript)
-    # mocked_mongo_collection.insert_many(transcripts)
+    mocked_mongo_collection.insert_many(transcripts)
 
 def setup_module():
     'Run setup scripts once per module'
@@ -86,20 +84,6 @@ async def test_gene_retrieval_by_symbol(snapshot):
       gene(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
         name
         stable_id
-      }
-    }"""
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
-    assert success
-    snapshot.assert_match(result['data'])
-
-@pytest.mark.asyncio
-async def test_transcript_retrieval(snapshot):
-    """Test retrieval of a transcript from the grapqhl api by id"""
-    query = """{
-      transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000528762.1" }) {
-        stable_id
-        so_term
       }
     }"""
     query_data = {'query': query}
