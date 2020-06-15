@@ -16,9 +16,8 @@ import csv
 import ijson
 import pymongo
 
-from common.utils import load_config, parse_args, format_cross_refs, format_slice, format_exon
+from common.utils import load_config, parse_args, format_cross_refs, format_slice, format_exon, get_stable_id
 from common.mongo import MongoDbClient
-
 
 def create_index(mongo_client):
     '''
@@ -86,7 +85,7 @@ def load_gene_info(mongo_client, json_file, cds_info):
             json_gene = {
 
                 'type': 'Gene',
-                'stable_id': f'{gene["id"]}.{str(gene["version"])}',
+                'stable_id': get_stable_id(gene["id"], gene["version"]),
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
@@ -104,7 +103,7 @@ def load_gene_info(mongo_client, json_file, cds_info):
                     end=int(gene['end'])
                 ),
                 'transcripts': [
-                    [f'{transcript["id"]}.{str(transcript["version"])}' for transcript in gene['transcripts']]
+                    [ get_stable_id(transcript["id"], transcript["version"]) for transcript in gene['transcripts'] ]
                 ],
                 'genome_id': genome['id'],
                 'cross_references': format_cross_refs(gene['xrefs'])
@@ -115,7 +114,7 @@ def load_gene_info(mongo_client, json_file, cds_info):
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
-                    gene_id=f'{gene["id"]}.{str(gene["version"])}',
+                    gene_id= get_stable_id(gene["id"],gene["version"]),
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     genome_id=genome['id'],
@@ -167,7 +166,7 @@ def format_transcript(
     new_transcript = {
         'type': 'Transcript',
         'gene': gene_id,
-        'stable_id': f'{transcript["id"]}.{str(transcript["version"])}',
+        'stable_id': get_stable_id(transcript["id"], transcript["version"]),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
