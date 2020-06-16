@@ -8,6 +8,7 @@ use IO::File;
 use List::Util 'sum';
 use Getopt::Long;
 use Pod::Usage;
+use Bio::EnsEMBL::ApiVersion 'software_version';
 
 my $registry = 'Bio::EnsEMBL::Registry';
 
@@ -18,8 +19,8 @@ my $port = 3306;
 my $help;
 # Set Ensembl/EnsemblGenomes release version.
 # Needed for bacteria/fungi (for collection databases)
-my $ENS_VERSION = 100;
-my $EG_VERSION = 47;
+my $ENS_VERSION = software_version;
+my $EG_VERSION = software_version - 53;
 
 GetOptions(
   "species=s" => \$species,
@@ -38,13 +39,21 @@ print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
 
 my $transcript_adaptor;
 if ($host =~ /mysql-ens-mirror-4/) {
-  my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(-USER => 'ensro', -DBNAME=>'ensembl_metadata', -HOST=>'mysql-ens-meta-prod-1.ebi.ac.uk', -PORT=>4483);
+  my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
+			-USER => 'ensro',
+			-DBNAME=>'ensembl_metadata',
+			-HOST=>'mysql-ens-meta-prod-1.ebi.ac.uk',
+			-PORT=>4483);
   my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
   $gdba->set_ensembl_genomes_release($EG_VERSION);
   $gdba->set_ensembl_release($ENS_VERSION);
-
-  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(-user => 'ensro', -port => 4495  , -PORT => 4495, -host => 'mysql-ens-mirror-4.ebi.ac.uk', -adaptor=>$gdba);
+  # Database host, port, user needs to be changed based on where the data is for species/division
+  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
+			-user => 'ensro',
+			-port => 4495,
+			-host => 'mysql-ens-mirror-4.ebi.ac.uk',
+			-adaptor=>$gdba);
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
 } else {
