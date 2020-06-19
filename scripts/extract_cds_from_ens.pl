@@ -17,6 +17,10 @@ my $species = 'homo_sapiens'; # Needs to be a production name
 my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
+my $meta_host = 'mysql-ens-meta-prod-1.ebi.ac.uk';
+my $meta_port = 4483;
+my $meta_dbname = 'ensembl_metadata';
+my $meta_user = 'ensro';
 my $help;
 # Set Ensembl/EnsemblGenomes release version.
 # Needed for bacteria/fungi (for collection databases)
@@ -28,6 +32,10 @@ GetOptions(
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
+  "meta_host=s" => \$meta_host,
+  "meta_port=i" => \$meta_port,
+  "meta_dbname=s" => \$meta_dbname,
+  "meta_user=s" => \$meta_user,
   "h|?" => \$help
 );
 
@@ -45,10 +53,10 @@ print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n
 my $transcript_adaptor;
 if ($host =~ /mysql-ens-mirror-4/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
-			-USER => 'ensro',
-			-DBNAME=>'ensembl_metadata',
-			-HOST=>'mysql-ens-meta-prod-1.ebi.ac.uk',
-			-PORT=>4483);
+                       -USER => $meta_user,
+                       -DBNAME => $meta_dbname,
+                       -HOST => $meta_host,
+                       -PORT => $meta_port);
   my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
   $gdba->set_ensembl_genomes_release($EG_VERSION);
