@@ -96,7 +96,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
             try:
                 gene_xrefs = format_cross_refs(gene['xrefs'])
-            except KeyError as no_xrefs_ke:
+            except KeyError:
                 gene_xrefs = []
 
             json_gene = {
@@ -120,7 +120,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                     end=int(gene['end'])
                 ),
                 'transcripts': [
-                    [get_stable_id(transcript["id"], transcript["version"]) for transcript in gene['transcripts']]
+                    [get_stable_id(transcript["id"], transcript["version"]) \
+				for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
                 'cross_references': gene_xrefs
@@ -196,10 +197,10 @@ def format_transcript(
                 assembly=assembly
             )
         )
- 
+
     try:
         transcript_xrefs = format_cross_refs(transcript['xrefs'])
-    except KeyError as no_xrefs_ke:
+    except KeyError:
         transcript_xrefs = []
 
     new_transcript = {
