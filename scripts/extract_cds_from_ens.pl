@@ -63,9 +63,9 @@ if ($host =~ /mysql-ens-mirror-4/) {
   $gdba->set_ensembl_release($ENS_VERSION);
   # Database host, port, user needs to be changed based on where the data is for species/division
   my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
-			-user => 'ensro',
-			-port => 4495,
-			-host => 'mysql-ens-mirror-4.ebi.ac.uk',
+			-user => $user,
+			-port => $port,
+			-host => $host,
 			-adaptor=>$gdba);
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
