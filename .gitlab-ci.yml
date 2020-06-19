@@ -1,5 +1,6 @@
 # Stages for the CI/CD job
 stages:
+  - test
   - build
   - deploy
 
@@ -31,6 +32,15 @@ variables:
   script:
     - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/thoas_deployment.yaml
     - kubectl apply -f k8s/thoas_deployment.yaml
+
+# Run a suite of unit and integration tests
+test:
+  image: python:3.8.1-slim
+  stage: test
+  before_script:
+    - pip3 install -r requirements.txt
+  script:
+    - pytest
 
 # Build docker image for k8s-deploy branch
 build:

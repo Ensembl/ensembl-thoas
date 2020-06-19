@@ -20,7 +20,6 @@ GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 
-
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, bySymbol=None, byId=None):
     'Load Genes via symbol or stable_id'
@@ -44,14 +43,15 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
     return result
 
 @GENE_TYPE.field('cross_references')
-def insert_urls(root, info):
+@TRANSCRIPT_TYPE.field('cross_references')
+def insert_crossref_urls(feature, info):
     '''
-    root here is a transcript/gene/protein with cross references in the data
-    model. Using the crossrefs package we can infer URLs to those resources
+    A gene/transcript with cross references in the data model is given as
+    argument. Using the crossrefs package we can infer URLs to those resources
     and inject them into the response
     '''
     resolver = info.context['XrefResolver']
-    xrefs = root['cross_references']
+    xrefs = feature['cross_references']
     return list(map(resolver.annotate_crossref, xrefs))
 
 @QUERY_TYPE.field('transcript')
@@ -71,23 +71,22 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         query['genome_id'] = byId['genome_id']
 
     collection = info.context['mongo_db']
-    result = collection.find_one(query)
-    return result
-
+    transcript = collection.find_one(query)
+    return transcript
 
 @GENE_TYPE.field('transcripts')
-def resolve_gene_transcripts(gene, info):
+async def resolve_gene_transcripts(gene, info):
     'Use a DataLoader to get transcripts for the parent gene'
     gene_stable_id = gene['stable_id']
 
     # Get a dataloader from info
     loader = info.context['data_loader'].gene_transcript_dataloader(gene['genome_id'])
     # Tell DataLoader to get this request done when it feels like it
-    result = loader.load(
+    transcripts = await loader.load(
         key=gene_stable_id
     )
-    return result
 
+    return transcripts
 
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
@@ -104,7 +103,6 @@ def resolve_slice(_, info, genome_id, region, start, end):
     info.context['slice.region.name'] = region
     info.context['slice.start'] = start
     info.context['slice.end'] = end
-    return None
 
 
 @LOCUS_TYPE.field('genes')

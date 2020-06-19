@@ -15,7 +15,6 @@
 from configparser import ConfigParser
 import argparse
 
-
 def load_config(filename):
     'Load a config, return a ConfigParser object'
 
@@ -148,3 +147,120 @@ def format_exon(exon_stable_id, version, region_name, region_strand,
         'slice': format_slice(region_name, region_type, default_region,
                               region_strand, assembly, exon_start, exon_end)
     }
+
+
+def splicify_exons(exons, transcript_id, phase_lookup):
+    '''
+    Given formatted exon data, and a phase lookup, return a spliced exon
+    wrapper for each element with start and end phases. Exons MUST be in
+    coding order
+    '''
+
+    splicing = []
+    i = 0
+    for exon in exons:
+        (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
+        splicing.append({
+            'start_phase': start_phase,
+            'end_phase': end_phase,
+            'index': i,
+            'exon': exon
+        })
+        i += 1
+    return splicing
+
+
+def format_utr(
+        transcript, relative_cds_start, relative_cds_end, absolute_cds_start,
+        absolute_cds_end, downstream
+):
+    '''
+    From one transcript's exons generate an inferred UTR
+    downstream  - Boolean, False = 5', True = 3'
+    Relative start and end here is relative to the parent transcript
+    '''
+    # Presumably broken crossing ori in circular case,
+    if (downstream and transcript['strand'] == 1):
+        utr_type = '3_prime_utr'
+        start = absolute_cds_end + 1
+        end = transcript['end']
+        relative_start = relative_cds_end + 1
+        relative_end = transcript['end'] - transcript['start'] + 1
+    elif (downstream and transcript['strand'] == -1):
+        utr_type = '3_prime_utr'
+        start = absolute_cds_end - 1
+        end = transcript['start']
+        relative_start = relative_cds_end - 1
+        # i.e. first base of transcript in e! coords is the end of a reverse
+        # stranded 3' UTR
+        relative_end = 1
+    elif (downstream is False and transcript['strand'] == 1):
+        utr_type = '5_prime_utr'
+        start = transcript['start']
+        end = absolute_cds_start - 1
+        relative_start = 1
+        relative_end = relative_cds_start -1
+    else:
+        # reverse stranded 5'
+        utr_type = '5_prime_utr'
+        start = transcript['end']
+        end = absolute_cds_start + 1
+        relative_start = transcript['end'] - transcript['start'] + 1
+        relative_end = relative_cds_start + 1
+
+    return {
+        'type': utr_type,
+        'start': start,
+        'end': end,
+        'relative_start': relative_start,
+        'relative_end':  relative_end
+    }
+
+
+def format_cdna(transcript):
+    '''
+    With the transcript and exon coordinates, compute the CDNA
+    length and so on.
+    '''
+
+    start = transcript['start']
+    end = transcript['start']
+
+    relative_start = 1
+    relative_end = 0 # temporarily
+    for exon in transcript['exons']:
+        relative_end += exon['end'] - exon['start'] + 1
+
+    # Needs sequence too. Add it soon!
+    return {
+        'start': start,
+        'end': end,
+        'relative_start': relative_start,
+        'relative_end': relative_end,
+    }
+
+
+def format_protein(protein):
+    '''
+    Create a protein representation from limited data
+    '''
+
+    return {
+        'type': 'protein',
+        'stable_id': protein['id'],
+        'unversioned_stable_id': protein['id'] + '.' + protein['version'],
+        'version': protein['version'],
+        # for foreign key behaviour
+        'transcript_id': protein['transcript_id'],
+        'so_term': 'polypeptide' # aka SO:0000104
+    }
+
+
+def flush_buffer(mongo_client, buffer):
+    'Check if a buffer needs flushing, and insert documents when it does'
+    if len(buffer) > 1000:
+        print('Pushing 1000 documents into Mongo')
+        mongo_client.collection().insert_many(buffer)
+        print('Done')
+        buffer = []
+    return buffer
