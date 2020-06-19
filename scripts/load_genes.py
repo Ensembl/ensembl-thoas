@@ -18,9 +18,8 @@ import pymongo
 
 from common.utils import load_config, parse_args, format_cross_refs, \
     format_slice, format_exon, format_utr, format_cdna, format_protein, \
-    flush_buffer, splicify_exons
+    flush_buffer, splicify_exons, get_stable_id
 from common.mongo import MongoDbClient
-
 
 def create_index(mongo_client):
     '''
@@ -60,7 +59,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, phase_info):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -75,12 +74,12 @@ def load_gene_info(mongo_client, json_file, cds_info, phase_info):
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
-        'name': 'GRCh38'
+        'name': assembly_name
     })
 
     genome = mongo_client.collection().find_one({
         'type': 'Genome',
-        'name': 'GRCh38'
+        'name': assembly_name
     })
     # at least until there's a process for alt-alleles etc.
     default_region = True
@@ -95,10 +94,15 @@ def load_gene_info(mongo_client, json_file, cds_info, phase_info):
                 if key not in gene:
                     gene[key] = None
 
+            try:
+                gene_xrefs = format_cross_refs(gene['xrefs'])
+            except KeyError:
+                gene_xrefs = []
+
             json_gene = {
 
                 'type': 'Gene',
-                'stable_id': f'{gene["id"]}.{str(gene["version"])}',
+                'stable_id': get_stable_id(gene["id"], gene["version"]),
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
@@ -116,10 +120,11 @@ def load_gene_info(mongo_client, json_file, cds_info, phase_info):
                     end=int(gene['end'])
                 ),
                 'transcripts': [
-                    [f'{transcript["id"]}.{str(transcript["version"])}' for transcript in gene['transcripts']]
+                    [get_stable_id(transcript["id"], transcript["version"]) \
+				for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
-                'cross_references': format_cross_refs(gene['xrefs'])
+                'cross_references': gene_xrefs
             }
             gene_buffer.append(json_gene)
 
@@ -127,7 +132,7 @@ def load_gene_info(mongo_client, json_file, cds_info, phase_info):
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
-                    gene_id=f'{gene["id"]}.{str(gene["version"])}',
+                    gene_id=get_stable_id(gene["id"], gene["version"]),
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     genome_id=genome['id'],
@@ -193,10 +198,15 @@ def format_transcript(
             )
         )
 
+    try:
+        transcript_xrefs = format_cross_refs(transcript['xrefs'])
+    except KeyError:
+        transcript_xrefs = []
+
     new_transcript = {
         'type': 'Transcript',
         'gene': gene_id,
-        'stable_id': f'{transcript["id"]}.{str(transcript["version"])}',
+        'stable_id': get_stable_id(transcript["id"], transcript["version"]),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
@@ -213,7 +223,7 @@ def format_transcript(
         ),
         'exons': exon_list,
         'genome_id': genome_id,
-        'cross_references': format_cross_refs(transcript['xrefs'])
+        'cross_references': transcript_xrefs
     }
 
     # Now for the tricky stuff around CDS
@@ -303,10 +313,11 @@ if __name__ == '__main__':
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
     JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
+    ASSEMBLY = ARGS.assembly
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
     PHASE_INFO = preload_exon_phases(ARGS.species)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, PHASE_INFO)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO)
     create_index(MONGO_CLIENT)

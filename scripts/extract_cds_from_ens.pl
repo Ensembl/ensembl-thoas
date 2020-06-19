@@ -9,6 +9,7 @@ use IO::File;
 use List::Util 'sum';
 use Getopt::Long;
 use Pod::Usage;
+use Bio::EnsEMBL::ApiVersion 'software_version';
 
 my $registry = 'Bio::EnsEMBL::Registry';
 
@@ -16,24 +17,30 @@ my $species = 'homo_sapiens'; # Needs to be a production name
 my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
+my $meta_host = 'mysql-ens-meta-prod-1.ebi.ac.uk';
+my $meta_port = 4483;
+my $meta_dbname = 'ensembl_metadata';
+my $meta_user = 'ensro';
 my $help;
+# Set Ensembl/EnsemblGenomes release version.
+# Needed for bacteria/fungi (for collection databases)
+my $ENS_VERSION = software_version;
+my $EG_VERSION = software_version - 53;
 
 GetOptions(
   "species=s" => \$species,
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
+  "meta_host=s" => \$meta_host,
+  "meta_port=i" => \$meta_port,
+  "meta_dbname=s" => \$meta_dbname,
+  "meta_user=s" => \$meta_user,
   "h|?" => \$help
 );
 
 
 die 'Specify a species production name at command line' unless $species;
-$registry->load_registry_from_db(
-  -host => $host,
-  -user => $user,
-  -species => $species,
-  -port => $port
-);
 
 my $fh = IO::File->new($species. '.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
@@ -43,8 +50,34 @@ print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
 my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
-my $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
+my $transcript_adaptor;
+if ($host =~ /mysql-ens-mirror-4/) {
+  my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
+                       -USER => $meta_user,
+                       -DBNAME => $meta_dbname,
+                       -HOST => $meta_host,
+                       -PORT => $meta_port);
+  my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
+  $gdba->set_ensembl_genomes_release($EG_VERSION);
+  $gdba->set_ensembl_release($ENS_VERSION);
+  # Database host, port, user needs to be changed based on where the data is for species/division
+  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
+			-user => $user,
+			-port => $port,
+			-host => $host,
+			-adaptor=>$gdba);
+  my $dbas = $lookup->get_by_name_exact($species);
+  $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
+} else {
+  $registry->load_registry_from_db(
+    -host => $host,
+    -user => $user,
+    -species => $species,
+    -port => $port
+  );
+  $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
+}
 
 my $transcripts = $transcript_adaptor->fetch_all;
 my $x = 0;

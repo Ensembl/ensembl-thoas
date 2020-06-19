@@ -45,8 +45,16 @@ def parse_args():
         help='The production name for a (sic) Ensembl species',
         default='homo_sapiens'
     )
+    parser.add_argument(
+        '--assembly',
+        help='The assembly name for an Ensembl species',
+        default='GRCh38'
+    )
     return parser.parse_args()
 
+def get_stable_id(iid, version):
+    stable_id = f'{iid}.{str(version)}' if version else iid
+    return stable_id
 
 def format_cross_refs(xrefs):
     '''
