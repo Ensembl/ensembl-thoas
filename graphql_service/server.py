@@ -16,13 +16,16 @@ import os
 
 from ariadne.asgi import GraphQL
 from starlette.applications import Starlette
+from starlette.routing import Route
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 import common.mongo as mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 from graphql_service.resolver.data_loaders import DataLoaderCollection
+import graphql_service.site
 
 print(os.environ)
 
@@ -43,9 +46,14 @@ CONTEXT_PROVIDER = prepare_context_provider({
     'XrefResolver': RESOLVER
 })
 
-starlette_middleware = [
+STARLETTE_MIDDLEWARE = [
     Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST'])
 ]
 
-APP = Starlette(debug=True, middleware=starlette_middleware)
-APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
+ROUTES = [
+    Route('/', endpoint=graphql_service.site.doc_page, name='docs')
+]
+
+APP = Starlette(debug=True, routes=ROUTES, middleware=STARLETTE_MIDDLEWARE)
+APP.mount('/graphql', GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
+APP.mount('/static', app=StaticFiles(directory='static'), name='static_content')

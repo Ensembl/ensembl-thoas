@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ensembl GraphQL service</title>
+    </head>
+    <body>
+        <h1>Ensembl GraphQL</h1>
+        <h2>Understanding the data</h2>
+            Two methods of exploration are available:
+            <ul>
+                <li><a href="/graphql">Graphiql</a> - a common interactive query builder</li>
+                <li><a href="{{ url_for('static_content', path='voyager.html') }}">GraphQL Voyager</a> - a visual schema explorer</li>
+            </ul>
+        <h2>Running queries</h2>
+            <p>
+                Queries can be issued through the Graphiql query buttons, but you can also POST your queries to /graphql with header content-type: application/json and the following request format:<br/>
+                <code>
+                {
+                    "query": $graphql_string,
+                    "variables": { "$var_name": $var_value, ... }
+                }
+                </code>
+            </p>
+            <p>
+            The response will have content-type: application/json and take the format:
+                <code>
+                {
+                    "data": { ... },
+                    "errors": [ ... ]
+                }
+                </code>
+            </p>
+    </body>
+    <footer>
+        Software version: {{ thoas_release }}
+    </footer>
+</html>
