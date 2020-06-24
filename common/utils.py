@@ -27,6 +27,17 @@ def parse_args():
     '''
     Common parameter parsing for data loading scripts
     '''
+    parser = base_parse_args()
+    parser.add_argument(
+        '--data_path',
+        help='Path to JSON files from the "Gene search" dumps',
+        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/vertebrates/json/'
+    )
+    return parser.parse_args()
+
+
+def base_parse_args():
+    'Base argument setup'
     parser = argparse.ArgumentParser(
         description='Load JSON Search dumps into MongoDB for GraphQL'
     )
@@ -34,11 +45,6 @@ def parse_args():
         '--config_file',
         help='File path containing MongoDB credentials',
         default='../mongo.conf'
-    )
-    parser.add_argument(
-        '--data_path',
-        help='Path to JSON files from the "Gene search" dumps',
-        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/vertebrates/json/'
     )
     parser.add_argument(
         '--species',
@@ -50,11 +56,32 @@ def parse_args():
         help='The assembly name for an Ensembl species',
         default='GRCh38'
     )
+    return parser
+
+
+def wrapper_parse_args():
+    '''
+    Very common parameter parsing for data loading scripts
+    '''
+    parser = base_parse_args()
+    parser.add_argument(
+        '--base_data_path',
+        help='Path to JSON files, excluding release and division folders',
+        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/'
+    )
+    parser.add_argument(
+        '--release',
+        help='The current release of Ensembl. Not the EG release',
+        default='100'
+    )
     return parser.parse_args()
 
+
 def get_stable_id(iid, version):
+    'Get a stable_id with or without a version'
     stable_id = f'{iid}.{str(version)}' if version else iid
     return stable_id
+
 
 def format_cross_refs(xrefs):
     '''
