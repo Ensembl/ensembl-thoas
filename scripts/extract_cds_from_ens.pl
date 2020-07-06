@@ -24,8 +24,8 @@ my $meta_user = 'ensro';
 my $help;
 # Set Ensembl/EnsemblGenomes release version.
 # Needed for bacteria/fungi (for collection databases)
-my $ENS_VERSION = software_version;
-my $EG_VERSION = software_version - 53;
+my $ENS_VERSION = software_version();
+my $EG_VERSION = software_version() - 53;
 
 GetOptions(
   "species=s" => \$species,
@@ -51,7 +51,7 @@ my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $transcript_adaptor;
-if ($host =~ /mysql-ens-mirror-4/) {
+if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                        -USER => $meta_user,
                        -DBNAME => $meta_dbname,
@@ -63,10 +63,11 @@ if ($host =~ /mysql-ens-mirror-4/) {
   $gdba->set_ensembl_release($ENS_VERSION);
   # Database host, port, user needs to be changed based on where the data is for species/division
   my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
-			-user => $user,
-			-port => $port,
-			-host => $host,
-			-adaptor=>$gdba);
+    -user => $user,
+    -port => $port,
+    -host => $host,
+    -adaptor=>$gdba
+  );
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
 } else {
