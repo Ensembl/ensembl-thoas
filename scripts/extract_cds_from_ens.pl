@@ -10,6 +10,8 @@ use List::Util 'sum';
 use Getopt::Long;
 use Pod::Usage;
 use Bio::EnsEMBL::ApiVersion 'software_version';
+use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
+use Bio::EnsEMBL::LookUp::RemoteLookUp;
 
 my $registry = 'Bio::EnsEMBL::Registry';
 
