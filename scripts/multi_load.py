@@ -18,26 +18,6 @@ import asyncio.subprocess
 import configparser
 import os
 
-# python load_genes.py --config_file mongo.conf --data_path /hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/protists/json/ --species plasmodium_falciparum --assembly ASM276v2
-# python scripts/load_genome.py --config_file scripts/mongo.conf --data_path /hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/protists/json/ --species  plasmodium_falciparum
-# saccharomyces_cerevisiae  R64-1-1
-# homo_sapiens  GRCh38
-# caenorhabditis_elegans  WBcel235
-# plasmodium_falciparum  ASM276v2
-# triticum_aestivum  IWGSC
-# escherichia_coli_str_k_12_substr_mg1655 ASM584v2
-
-ASSEMBLIES = (
-    ('homo_sapiens', 'GRCh38', 'vertebrates'),
-    ('homo_sapiens', 'GRCh37', 'vertebrates'),
-    ('saccharomyces_cerevisiae', 'R64-1-1', 'vertebrates'),
-    ('caenorhabditis_elegans', 'WBcel235', 'vertebrates'),
-    ('plasmodium_falciaparum', 'ASM276v2', 'protists'),
-    ('triticum_aestivum', 'IWGSC', 'plants'),
-    ('escherichia_coli_str_k_12_substr_mg1655', 'ASM584v2', 'bacteria')
-)
-
-
 async def run_assembly(args):
     '''
     Successively run each of the three scripts
@@ -46,16 +26,13 @@ async def run_assembly(args):
     if args['assembly'] == 'GRCh37':
         data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/homo_sapiens'
     else:
-        data = f'{args.base_data_path}/{args.release}/{args.division}/json/'
-    await asyncio.create_subprocess_shell(
-        f'''
-        perl {code}/extract_cds_from_ens.pl --host={args.host} --user={args.user} --port={args.port} --species={args.production_name};\
-        python {code}/scripts/load_genome.py --data_path {data} --species{args.production_name} --config_file {args.config_file};\
-        python {code}/scripts/load_genes.py --data_path {data} --species{args.production_name} --config_file {args.config_file}
-        ''',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
+        data = f'{args["base_data_path"]}/{args["release"]}/{args["division"]}/json/'
+    shell_command = f'''
+        perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]};\
+        python {code}/scripts/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]};\
+        python {code}/scripts/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]}
+    '''
+    await asyncio.create_subprocess_shell(shell_command)
 
 
 if __name__ == '__main__':
@@ -63,8 +40,12 @@ if __name__ == '__main__':
     ARG_PARSER = argparse.ArgumentParser()
     ARG_PARSER.add_argument(
         '--config',
-        help='Specify a config file containing the database and division info for the seven species',
+        help='Config file containing the database and division info for species and MongoDB',
         default='load.conf'
+    )
+    ARG_PARSER.add_argument(
+        '--base_data_path',
+        help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps/'
     )
     CONF_PARSER = configparser.ConfigParser()
 
@@ -75,7 +56,10 @@ if __name__ == '__main__':
     # each section of the file dictates a particular assembly to work on
     for section in CONF_PARSER.sections():
         # one section is MongoDB config, the rest are species info
-        if section['collection']:
+        if section == 'MONGO DB':
             continue
-        section['config_file'] = CLI_ARGS.config
+        # Insert extra inferred parameters
+        CONF_PARSER[section]['config_file'] = CLI_ARGS.config
+        CONF_PARSER[section]['base_data_path'] = CLI_ARGS.base_data_path
+        CONF_PARSER[section]['release'] = CLI_ARGS.release
         asyncio.run(run_assembly(args=CONF_PARSER[section]))
