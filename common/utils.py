@@ -33,6 +33,10 @@ def parse_args():
         help='Path to JSON files from the "Gene search" dumps',
         default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/vertebrates/json/'
     )
+    parser.add_argument(
+        '--collection',
+        help='If the assembly is kept in a collection by Ensembl, specify the collection name'
+    )
     return parser.parse_args()
 
 

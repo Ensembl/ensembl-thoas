@@ -312,7 +312,10 @@ if __name__ == '__main__':
     ARGS = parse_args()
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
-    JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
+    if ARGS.collection:
+        JSON_FILE = ARGS.data_path + ARGS.collection + '/' + ARGS.species + '/' + ARGS.species + '_genes.json'
+    else:
+        JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
     ASSEMBLY = ARGS.assembly
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species)
