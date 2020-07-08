@@ -29,8 +29,8 @@ async def run_assembly(args):
         data = f'{args["base_data_path"]}/{args["release"]}/{args["division"]}/json/'
     shell_command = f'''
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]};\
-        python {code}/scripts/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]};\
-        python {code}/scripts/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]}
+        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]};\
+        python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]}
     '''
     await asyncio.create_subprocess_shell(shell_command)
 
