@@ -47,6 +47,11 @@ if __name__ == '__main__':
         '--base_data_path',
         help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps/'
     )
+    ARG_PARSER.add_argument(
+        '--release',
+        help='Ensembl release number, 100',
+        default=100
+    )
     CONF_PARSER = configparser.ConfigParser()
 
     CLI_ARGS = ARG_PARSER.parse_args()
