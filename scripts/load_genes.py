@@ -232,7 +232,7 @@ def format_transcript(
         relative_cds_end = cds_info[transcript['id']]['relative_end']
         cds_start = cds_info[transcript['id']]['start']
         cds_end = cds_info[transcript['id']]['end']
-        spliced_length = cds_info[transcript['id']['spliced_length']]
+        spliced_length = cds_info[transcript['id']]['spliced_length']
 
         new_transcript['splicing'] = {
             '__typename': 'ProteinCodingSplicing',
