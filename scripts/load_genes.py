@@ -261,14 +261,14 @@ def format_transcript(
     return new_transcript
 
 
-def preload_cds_coords(production_name):
+def preload_cds_coords(production_name, assembly):
     '''
     CDS coords will be pre-loaded into a file from the Perl API. Otherwise
     hideous calculation required to get the relative coordinates
     '''
     cds_buffer = {}
 
-    with open(production_name + '.csv') as file:
+    with open(production_name + '_' + assembly + '.csv') as file:
         reader = csv.reader(file)
         next(reader, None) # skip header line
         for row in reader:
@@ -282,7 +282,7 @@ def preload_cds_coords(production_name):
     return cds_buffer
 
 
-def preload_exon_phases(production_name):
+def preload_exon_phases(production_name, assembly):
     '''
     Phases are hard to calculate on the fly. They are instead dumped into a
     pile of splicing information. Turn it into a lookup structure.
@@ -291,7 +291,7 @@ def preload_exon_phases(production_name):
 
     phase_lookup = {}
 
-    with open(production_name + '_phase.csv') as file:
+    with open(production_name + '_' + assembly + '_phase.csv') as file:
         reader = csv.DictReader(file)
         for row in reader:
             transcript = row['transcript ID']
@@ -318,9 +318,9 @@ if __name__ == '__main__':
         JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genes.json'
     ASSEMBLY = ARGS.assembly
     print("Loading CDS data")
-    CDS_INFO = preload_cds_coords(ARGS.species)
+    CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
-    PHASE_INFO = preload_exon_phases(ARGS.species)
+    PHASE_INFO = preload_exon_phases(ARGS.species, ARGS.assembly)
     print("Loading gene info into Mongo")
     load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO)
     create_index(MONGO_CLIENT)

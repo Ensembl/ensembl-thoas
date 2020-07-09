@@ -16,6 +16,7 @@ use Bio::EnsEMBL::LookUp::RemoteLookUp;
 my $registry = 'Bio::EnsEMBL::Registry';
 
 my $species = 'homo_sapiens'; # Needs to be a production name
+my $assembly; # Required to differentiate between assemblies of the same species
 my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
@@ -31,6 +32,7 @@ my $EG_VERSION = software_version() - 53;
 
 GetOptions(
   "species=s" => \$species,
+  "assembly=s" => \$assembly
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
@@ -42,14 +44,14 @@ GetOptions(
 );
 
 
-die 'Specify a species production name at command line' unless $species;
+die 'Specify a species production name and assembly at command line' unless $species && $assembly;
 
-my $fh = IO::File->new($species. '.csv', 'w');
+my $fh = IO::File->new($species.'_'.$assembly.'.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";
 # Time to run a second file relating to phase of each exon in each transcript
 # Don't want to jam it into a single line of the CDS file
-my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
+my $phase_fh = IO::File->new($species.'_'.$assembly.'_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $transcript_adaptor;
