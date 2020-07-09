@@ -24,7 +24,7 @@ async def run_assembly(args):
     '''
     code = os.path.dirname(os.path.realpath(__file__))
     if args['assembly'] == 'GRCh37':
-        data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/homo_sapiens'
+        data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
     
