@@ -79,9 +79,9 @@ if __name__ == '__main__':
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
 
     if ARGS.collection:
-        JSON_FILE = ARGS.data_path + ARGS.collection + '/' + ARGS.species + '/' + ARGS.species + '_genome.json'
+        JSON_FILE = ARGS.data_path + ARGS.collection + '/' + ARGS.species + '/' + ARGS.species + '/' + ARGS.assembly + '_genome.json'
     else:
-        JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genome.json'
+        JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '/'+ ARGS.assembly + '_genome.json'
 
     load_genome_info(MONGO_CLIENT, JSON_FILE)
     create_index(MONGO_CLIENT)
