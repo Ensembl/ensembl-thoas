@@ -294,11 +294,31 @@
       "ensembl_db_name": "EMBL_predicted"
     },
     {
+      "db_name": "ENA_FEATURE_GENE",
+      "example_id": "BN000065",
+      "ignore": true,
+      "feature_type": "gene",
+      "ensembl_db_name": "ENA_FEATURE_GENE"
+    },
+    {
       "db_name": "ENA_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
       "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "ENA_TRANSCRIPT"
+    },
+    {
+      "db_name": "ENA_FEATURE_TRANSCRIPT",
+      "example_id": "AFUA_3G01196",
+      "ignore": true,
+      "feature_type": "annotation",
+      "ensembl_db_name": "ENA_FEATURE_TRANSCRIPT"
+    },
+    {
+      "db_name": "ENA_FEATURE_PROTEIN",
+      "example_id": "BN000065",
+      "feature_type": "protein",
+      "ensembl_db_name": "ENA_FEATURE_PROTEIN"
     },
     {
       "db_name": "Ens_Hs_transcript",
@@ -1118,6 +1138,13 @@
       "feature_type": "gene",
       "ensembl_db_name": "RFAM_gene_name"
     },
+    {
+      "db_name": "RFAM_GENE",
+      "example_id": "5S_rRNA.420",
+      "ignore": true,
+      "feature_type": "gene",
+      "ensembl_db_name": "RFAM_GENE"
+    }
     {
       "db_name": "RFAM_trans_name",
       "ignore": true,
