@@ -1599,6 +1599,29 @@
       "URI_type": "http://www.york.ac.uk/res/thomas/Gene.cfm?recordID=",
       "feature_type": "gene",
       "ensembl_db_name": "EchoBASE"
+    },
+    {
+      "db_name": "IntEnz",
+      "manual_source_url" : "https://www.ebi.ac.uk/intenz/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/intenz/query?q=",
+      "ensembl_db_name": "IntEnz"
+    },
+    {
+      "db_name": "SWISS_MODEL",
+      "manual_source_url" : "https://swissmodel.expasy.org",
+      "manual_xref_url" : "https://swissmodel.expasy.org/repository?query=",
+      "ensembl_db_name": "SWISS_MODEL"
+    },
+    {
+      "db_name": "SWISS_MODEL",
+      "manual_source_url" : "https://swissmodel.expasy.org",
+      "manual_xref_url" : "https://swissmodel.expasy.org/repository?query=",
+      "ensembl_db_name": "SWISS_MODEL"
+    },
+    {
+      "db_name": "LegioList",
+      "manual_source_url" : "http://genolist.pasteur.fr/LegioList",
+      "ensembl_db_name": "LegioList"
     }
   ]
 }
