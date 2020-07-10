@@ -46,12 +46,44 @@ test:
 build:
   extends: .build
   only:
-    - cicd-web
+    - master
 
-# deploy application to k8s cluster for k8s-deploy branch
+# deploy to dev at WP-HX
 deploy:
   extends: .deploy
   environment:
-    name: thoas-graphql
+    name: wp-hx-dev-grp
   only:
-    - cicd-web
+    - master
+
+# deploy to staging at WP-HX
+staging:wp-hx:
+  extends: .deploy
+  environment:
+    name: wp-hx-stage-grp
+  only:
+    - master
+
+# deploy to staging at WP-HH
+staging:wp-hh:
+  extends: .deploy
+  environment:
+    name: wp-hh-stage-grp
+  only:
+    - master
+
+# deploy to internal at WP-HX
+internal:wp-hx:
+  extends: .deploy
+  environment:
+    name: wp-hx-internal-grp
+  only:
+    - master
+
+# deploy to internal at WP-HH
+internal:wp-hh:
+  extends: .deploy
+  environment:
+    name: wp-hh-internal-grp
+  only:
+    - master
