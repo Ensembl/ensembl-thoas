@@ -1506,6 +1506,60 @@
       "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "ZFIN_ID_trans_name"
+    },
+    {
+        "db_name": "KEGG_Enzyme",
+        "ensembl_db_name": "KEGG_Enzyme",
+        "feature_type": "annotation",
+        "manual_source_url": "https://www.genome.jp",
+        "manual_xref_url" : "https://www.kegg.jp/entry/"
+    },
+    {
+        "db_name": "external_wheat_gene_names",
+        "ensembl_db_name": "external_wheat_gene_names",
+        "feature_type": "gene"
+    },
+    {
+        "db_name": "Plant_Reactome_Pathway",
+        "ensembl_db_name": "Plant_Reactome_Pathway",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://plantreactome.gramene.org/",
+        "manual_xref_url" : "https://plantreactome.gramene.org/PathwayBrowser"
+    },
+    {
+        "db_name": "Plant_Reactome_Reaction",
+        "ensembl_db_name": "Plant_Reactome_Reaction",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://plantreactome.gramene.org/",
+        "manual_xref_url" : "https://plantreactome.gramene.org/PathwayBrowser"
+    },
+    {
+        "db_name": "KNETMINER_WHEAT",
+        "ensembl_db_name": "KNETMINER_WHEAT",
+        "feature_type": "gene",
+        "manual_source_url" : "https://knetminer.com",
+        "manual_xref_url" : "https://knetminer.com/Triticum_aestivum/"
+    },
+    {
+        "db_name": "WHEATEXP_GENE",
+        "ensembl_db_name": "WHEATEXP_GENE",
+        "feature_type": "gene",
+        "manual_source_url" : "https://wheat.pw.usda.gov",
+        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+    },
+    {
+        "db_name": "WHEATEXP_TRANS",
+        "ensembl_db_name": "WHEATEXP_TRANS",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://wheat.pw.usda.gov",
+        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+    },
+    {
+        "db_name": "TRNASCAN_SE",
+        "ensembl_db_name": "TRNASCAN_SE",
+        "feature_type": "gene",
+        "manual_source_url" : "http://lowelab.ucsc.edu",
+        "manual_xref_url" : "http://lowelab.ucsc.edu/tRNAscan-SE/"
     }
   ]
 }
