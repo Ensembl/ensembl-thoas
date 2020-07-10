@@ -47,6 +47,7 @@ build:
   extends: .build
   only:
     - cicd-web
+    - nv-xrefs
 
 # deploy application to k8s cluster for k8s-deploy branch
 deploy:
