@@ -1567,6 +1567,38 @@
         "feature_type": "gene",
         "manual_source_url" : "http://lowelab.ucsc.edu",
         "manual_xref_url" : "http://lowelab.ucsc.edu/tRNAscan-SE/"
+    },
+    {
+      "db_name": "EcoGene",
+      "example_id": "EG10173",
+      "id_namespace": "ecogene",
+      "URI_type": "http://www.ecogene.org/gene/",
+      "feature_type": "gene",
+      "ensembl_db_name": "EcoGene"
+    },
+    {
+      "db_name": "GOA",
+      "example_id": "P12345",
+      "id_namespace": "goa",
+      "URI_type": "https://www.ebi.ac.uk/QuickGO/GProtein?ac=",
+      "feature_type": "gene",
+      "ensembl_db_name": "GOA"
+    },
+    {
+      "db_name": "SubtiList",
+      "example_id": "BG11523",
+      "id_namespace": "subtilist",
+      "URI_type": "http://genolist.pasteur.fr/SubtiList/genome.cgi?external_query+",
+      "feature_type": "gene",
+      "ensembl_db_name": "SubtiList"
+    },
+    {
+      "db_name": "EchoBASE",
+      "example_id": "EB0170",
+      "id_namespace": "echobase",
+      "URI_type": "http://www.york.ac.uk/res/thomas/Gene.cfm?recordID=",
+      "feature_type": "gene",
+      "ensembl_db_name": "EchoBASE"
     }
   ]
 }
