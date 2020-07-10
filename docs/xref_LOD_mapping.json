@@ -1463,6 +1463,13 @@
       "ensembl_db_name": "wormbase_transcript"
     },
     {
+      "db_name": "wormbase_cds",
+      "example_id": "WBGene00022613",
+      "id_namespace": "wormbase",
+      "feature_type": "cds",
+      "ensembl_db_name": "wormbase_cds"
+    },
+    {
       "db_name": "wormpep_id",
       "example_id": "CE29622",
       "id_namespace": "wormbase",
