@@ -298,21 +298,27 @@
       "example_id": "BN000065",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "ENA_FEATURE_GENE"
+      "ensembl_db_name": "ENA_FEATURE_GENE",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
     },
     {
       "db_name": "ENA_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "ENA_TRANSCRIPT"
+      "ensembl_db_name": "ENA_TRANSCRIPT",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
     },
     {
       "db_name": "ENA_FEATURE_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "ENA_FEATURE_TRANSCRIPT"
+      "ensembl_db_name": "ENA_FEATURE_TRANSCRIPT",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
     },
     {
       "db_name": "ENA_FEATURE_PROTEIN",
@@ -1143,7 +1149,8 @@
       "example_id": "5S_rRNA.420",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "RFAM_GENE"
+      "ensembl_db_name": "RFAM_GENE",
+      "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RFAM_trans_name",
