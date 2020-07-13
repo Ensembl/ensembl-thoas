@@ -1144,7 +1144,8 @@
       "example_id": "5S_rRNA.420",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "RFAM_gene_name"
+      "ensembl_db_name": "RFAM_gene_name",
+      "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RFAM_GENE",
@@ -1158,7 +1159,8 @@
       "db_name": "RFAM_trans_name",
       "ignore": true,
       "feature_type": "transcript",
-      "ensembl_db_name": "RFAM_trans_name"
+      "ensembl_db_name": "RFAM_trans_name",
+      "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RGD",
