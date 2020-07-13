@@ -324,7 +324,9 @@
       "db_name": "ENA_FEATURE_PROTEIN",
       "example_id": "BN000065",
       "feature_type": "protein",
-      "ensembl_db_name": "ENA_FEATURE_PROTEIN"
+      "ensembl_db_name": "ENA_FEATURE_PROTEIN",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
     },
     {
       "db_name": "Ens_Hs_transcript",
