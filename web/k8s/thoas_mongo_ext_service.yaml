@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ensweb-thoas-mongo-svc
+spec:
+  type: ExternalName
+  externalName: <MONGO_DB_URL>
