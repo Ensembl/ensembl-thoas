@@ -25,7 +25,7 @@ def load_genome_info(mongo_client, source_file):
     and create a new collection to put them in. Run before load_genes.py
     '''
     with open(source_file) as file:
-        content = next(file)
+        content = file.read()
         try:
             doc = json.loads(content)
         except json.decoder.JSONDecodeError as error:
