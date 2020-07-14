@@ -45,7 +45,7 @@ GetOptions(
 
 
 die 'Specify a species production name and assembly at command line' unless $species && $assembly;
-
+# Assembly is needed in the file name to make it unique when more than one assembly is dumped
 my $fh = IO::File->new($species.'_'.$assembly.'.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";

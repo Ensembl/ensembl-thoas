@@ -77,11 +77,12 @@ if __name__ == '__main__':
     ARGS = parse_args()
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
-
+    # Combine arguments to give the path to the relevant $species_genome.json file
+    # Directory structure differs if a collection is involved
     if ARGS.collection:
-        JSON_FILE = ARGS.data_path + ARGS.collection + '/' + ARGS.species + '/' + ARGS.assembly + '_genome.json'
+        JSON_FILE = f'{ARGS.data_path}/{ARGS.collection}/{ARGS.species}/{ARGS.species}_genome.json'
     else:
-        JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.assembly + '_genome.json'
+        JSON_FILE = f'{ARGS.data_path}/{ARGS.species}/{ARGS.species}_genome.json'
 
     load_genome_info(MONGO_CLIENT, JSON_FILE)
     create_index(MONGO_CLIENT)

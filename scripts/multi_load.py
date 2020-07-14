@@ -23,11 +23,13 @@ async def run_assembly(args):
     Successively run each of the three scripts
     '''
     code = os.path.dirname(os.path.realpath(__file__))
+    # Append the correct release number, division, and override the base path for GRCh37
     if args['assembly'] == 'GRCh37':
         data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
+    # Add arguments if the invocation includes a collection.
     if 'collection' in args:
         shell_command = f'''
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
@@ -53,7 +55,7 @@ if __name__ == '__main__':
     )
     ARG_PARSER.add_argument(
         '--base_data_path',
-        help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps/'
+        help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps'
     )
     ARG_PARSER.add_argument(
         '--release',
