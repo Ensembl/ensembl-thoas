@@ -3,12 +3,12 @@ apiVersion: v1
 data:
   mongo.conf: |
     [MONGO DB]
-    user = wpk8s_ro
-    password = BonlYBniKG8
-    host = ensweb-thoas-mongo-svc
-    port = 27017
-    db = ensthoaspro
-    collection = enswebthoas
+    user = <USERNAME>
+    password = <PASS>
+    host = <MONGO_HOST/SVC>
+    port = <MONGO_PORT>
+    db = <DATABASE_NAME>
+    collection = <COLLECTION>
 kind: ConfigMap
 metadata:
   name: thoas-configmap
