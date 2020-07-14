@@ -72,6 +72,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
     transcript_buffer = []
     protein_buffer = []
 
+
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
         'name': assembly_name
@@ -81,10 +82,13 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
         'type': 'Genome',
         'name': assembly_name
     })
+    if not genome or not assembly:
+        raise IOError(f'Failed to fetch {assembly_name} assembly and genome info from MongoDB')
     # at least until there's a process for alt-alleles etc.
     default_region = True
-
     print('Loaded assembly ' + assembly['name'])
+
+    
     required_keys = ('name', 'description')
     with open(json_file) as file:
         print('Chunk')

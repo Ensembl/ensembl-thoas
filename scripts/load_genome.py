@@ -26,7 +26,10 @@ def load_genome_info(mongo_client, source_file):
     '''
     with open(source_file) as file:
         content = next(file)
-        doc = json.loads(content)
+        try:
+            doc = json.loads(content)
+        except json.decoder.JSONDecodeError as error:
+            raise IOError(f'Failed to parse genome file at {source_file} with error {error}')
 
         mongo_client.collection().insert_one({
             'type': 'Assembly',
