@@ -27,18 +27,18 @@ async def run_assembly(args):
         data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
-    
+
     if 'collection' in args:
         shell_command = f'''
-            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]};\
-            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]};\
-            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]}
+            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]};\
+            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]}
         '''
     else:
         shell_command = f'''
-            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]};\
-            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]};\
-            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]}
+            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]};\
+            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]}
         '''
     await asyncio.create_subprocess_shell(shell_command)
 
