@@ -294,11 +294,39 @@
       "ensembl_db_name": "EMBL_predicted"
     },
     {
+      "db_name": "ENA_FEATURE_GENE",
+      "example_id": "BN000065",
+      "ignore": true,
+      "feature_type": "gene",
+      "ensembl_db_name": "ENA_FEATURE_GENE",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
+    },
+    {
       "db_name": "ENA_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
       "ignore": true,
       "feature_type": "annotation",
-      "ensembl_db_name": "ENA_TRANSCRIPT"
+      "ensembl_db_name": "ENA_TRANSCRIPT",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
+    },
+    {
+      "db_name": "ENA_FEATURE_TRANSCRIPT",
+      "example_id": "AFUA_3G01196",
+      "ignore": true,
+      "feature_type": "annotation",
+      "ensembl_db_name": "ENA_FEATURE_TRANSCRIPT",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
+    },
+    {
+      "db_name": "ENA_FEATURE_PROTEIN",
+      "example_id": "BN000065",
+      "feature_type": "protein",
+      "ensembl_db_name": "ENA_FEATURE_PROTEIN",
+      "manual_source_url" : "https://www.ebi.ac.uk/ena/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/ena/browser/view/"
     },
     {
       "db_name": "Ens_Hs_transcript",
@@ -1116,13 +1144,23 @@
       "example_id": "5S_rRNA.420",
       "ignore": true,
       "feature_type": "gene",
-      "ensembl_db_name": "RFAM_gene_name"
+      "ensembl_db_name": "RFAM_gene_name",
+      "manual_source_url" : "https://rfam.xfam.org/"
+    },
+    {
+      "db_name": "RFAM_GENE",
+      "example_id": "5S_rRNA.420",
+      "ignore": true,
+      "feature_type": "gene",
+      "ensembl_db_name": "RFAM_GENE",
+      "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RFAM_trans_name",
       "ignore": true,
       "feature_type": "transcript",
-      "ensembl_db_name": "RFAM_trans_name"
+      "ensembl_db_name": "RFAM_trans_name",
+      "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RGD",
@@ -1463,6 +1501,13 @@
       "ensembl_db_name": "wormbase_transcript"
     },
     {
+      "db_name": "wormbase_cds",
+      "example_id": "WBGene00022613",
+      "id_namespace": "wormbase",
+      "feature_type": "cds",
+      "ensembl_db_name": "wormbase_cds"
+    },
+    {
       "db_name": "wormpep_id",
       "example_id": "CE29622",
       "id_namespace": "wormbase",
@@ -1506,6 +1551,115 @@
       "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "ZFIN_ID_trans_name"
+    },
+    {
+        "db_name": "KEGG_Enzyme",
+        "ensembl_db_name": "KEGG_Enzyme",
+        "feature_type": "annotation",
+        "manual_source_url": "https://www.genome.jp",
+        "manual_xref_url" : "https://www.kegg.jp/entry/"
+    },
+    {
+        "db_name": "external_wheat_gene_names",
+        "ensembl_db_name": "external_wheat_gene_names",
+        "feature_type": "gene"
+    },
+    {
+        "db_name": "Plant_Reactome_Pathway",
+        "ensembl_db_name": "Plant_Reactome_Pathway",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://plantreactome.gramene.org/",
+        "manual_xref_url" : "https://plantreactome.gramene.org/PathwayBrowser"
+    },
+    {
+        "db_name": "Plant_Reactome_Reaction",
+        "ensembl_db_name": "Plant_Reactome_Reaction",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://plantreactome.gramene.org/",
+        "manual_xref_url" : "https://plantreactome.gramene.org/PathwayBrowser"
+    },
+    {
+        "db_name": "KNETMINER_WHEAT",
+        "ensembl_db_name": "KNETMINER_WHEAT",
+        "feature_type": "gene",
+        "manual_source_url" : "https://knetminer.com",
+        "manual_xref_url" : "https://knetminer.com/Triticum_aestivum/"
+    },
+    {
+        "db_name": "WHEATEXP_GENE",
+        "ensembl_db_name": "WHEATEXP_GENE",
+        "feature_type": "gene",
+        "manual_source_url" : "https://wheat.pw.usda.gov",
+        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+    },
+    {
+        "db_name": "WHEATEXP_TRANS",
+        "ensembl_db_name": "WHEATEXP_TRANS",
+        "feature_type": "transcript",
+        "manual_source_url" : "https://wheat.pw.usda.gov",
+        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+    },
+    {
+        "db_name": "TRNASCAN_SE",
+        "ensembl_db_name": "TRNASCAN_SE",
+        "feature_type": "gene",
+        "manual_source_url" : "http://lowelab.ucsc.edu",
+        "manual_xref_url" : "http://lowelab.ucsc.edu/tRNAscan-SE/"
+    },
+    {
+      "db_name": "EcoGene",
+      "example_id": "EG10173",
+      "id_namespace": "ecogene",
+      "URI_type": "http://www.ecogene.org/gene/",
+      "feature_type": "gene",
+      "ensembl_db_name": "EcoGene"
+    },
+    {
+      "db_name": "GOA",
+      "example_id": "P12345",
+      "id_namespace": "goa",
+      "URI_type": "https://www.ebi.ac.uk/QuickGO/GProtein?ac=",
+      "feature_type": "gene",
+      "ensembl_db_name": "GOA"
+    },
+    {
+      "db_name": "SubtiList",
+      "example_id": "BG11523",
+      "id_namespace": "subtilist",
+      "URI_type": "http://genolist.pasteur.fr/SubtiList/genome.cgi?external_query+",
+      "feature_type": "gene",
+      "ensembl_db_name": "SubtiList"
+    },
+    {
+      "db_name": "EchoBASE",
+      "example_id": "EB0170",
+      "id_namespace": "echobase",
+      "URI_type": "http://www.york.ac.uk/res/thomas/Gene.cfm?recordID=",
+      "feature_type": "gene",
+      "ensembl_db_name": "EchoBASE"
+    },
+    {
+      "db_name": "IntEnz",
+      "manual_source_url" : "https://www.ebi.ac.uk/intenz/",
+      "manual_xref_url" : "https://www.ebi.ac.uk/intenz/query?q=",
+      "ensembl_db_name": "IntEnz"
+    },
+    {
+      "db_name": "SWISS_MODEL",
+      "manual_source_url" : "https://swissmodel.expasy.org",
+      "manual_xref_url" : "https://swissmodel.expasy.org/repository?query=",
+      "ensembl_db_name": "SWISS_MODEL"
+    },
+    {
+      "db_name": "SWISS_MODEL",
+      "manual_source_url" : "https://swissmodel.expasy.org",
+      "manual_xref_url" : "https://swissmodel.expasy.org/repository?query=",
+      "ensembl_db_name": "SWISS_MODEL"
+    },
+    {
+      "db_name": "LegioList",
+      "manual_source_url" : "http://genolist.pasteur.fr/LegioList",
+      "ensembl_db_name": "LegioList"
     }
   ]
 }
