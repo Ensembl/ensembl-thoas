@@ -4,4 +4,4 @@ metadata:
   name: ensweb-thoas-mongo-svc
 spec:
   type: ExternalName
-  externalName: mongos-hx-ensthoasprors-001.ebi.ac.uk
+  externalName: <MONGO_DB_URL>
