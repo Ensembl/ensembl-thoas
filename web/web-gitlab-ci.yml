@@ -60,7 +60,7 @@ deploy:
 staging:wp-hx:
   extends: .deploy
   environment:
-    name: wp-hx-stage-grp
+    name: wp-hx-staging
   only:
     - master
 
@@ -68,7 +68,7 @@ staging:wp-hx:
 staging:wp-hh:
   extends: .deploy
   environment:
-    name: wp-hh-stage-grp
+    name: wp-hh-staging
   only:
     - master
 
@@ -76,7 +76,7 @@ staging:wp-hh:
 internal:wp-hx:
   extends: .deploy
   environment:
-    name: wp-hx-internal-grp
+    name: wp-hx-internal
   only:
     - master
 
@@ -84,6 +84,6 @@ internal:wp-hx:
 internal:wp-hh:
   extends: .deploy
   environment:
-    name: wp-hh-internal-grp
+    name: wp-hh-internal
   only:
     - master
