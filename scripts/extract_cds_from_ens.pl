@@ -32,7 +32,7 @@ my $EG_VERSION = software_version() - 53;
 
 GetOptions(
   "species=s" => \$species,
-  "assembly=s" => \$assembly
+  "assembly=s" => \$assembly,
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
