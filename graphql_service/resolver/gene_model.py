@@ -13,6 +13,7 @@
 """
 
 from ariadne import QueryType, ObjectType
+from graphql import GraphQLError
 
 # Define Query types for GraphQL
 QUERY_TYPE = QueryType()
@@ -40,6 +41,8 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
     collection = info.context['mongo_db']
 
     result = collection.find_one(query)
+    if not result:
+        raise GeneNotFoundError(bySymbol, byId)
     return result
 
 @GENE_TYPE.field('cross_references')
@@ -133,3 +136,18 @@ def query_region(context, feature_type):
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
     return context["mongo_db"].find(query)
+
+class GeneNotFoundError(GraphQLError):
+    '''
+    Custom error to be raised if gene is not found
+    '''
+    extensions = {"code": "GENE_NOT_FOUND"}
+    def __init__(self, bySymbol=None, byId=None):
+        message = None
+        if bySymbol:
+            message = 'Failed to find gene with symbol '\
+                     f"'{bySymbol['symbol']}' for genome '{bySymbol['genome_id']}'"
+        if byId:
+            message = 'Failed to find gene with stable id '\
+                f"'{byId['stable_id']}' for genome '{byId['genome_id']}'"
+        super().__init__(message, extensions=self.extensions)
