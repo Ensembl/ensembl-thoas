@@ -52,9 +52,11 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def get_stable_id(iid, version):
     stable_id = f'{iid}.{str(version)}' if version else iid
     return stable_id
+
 
 def format_cross_refs(xrefs):
     '''
@@ -123,29 +125,38 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     }
 
 
-def format_exon(exon_stable_id, version, region_name, region_strand,
-                exon_start, exon_end, region_type, default_region, assembly):
+def format_exon(exon, region_name, region_strand, region_type, default_region, assembly, transcript):
     '''
     Turn transcript-borne information into an Exon entity
 
-    exon_stable_id: Unversioned stable ID
-    version: Version of exon
+    exon: The exon to format, containing start, end, version, stable_id
     region_name: The string representing a region (perhaps "1")
     region_strand: Forward = 1, Reverse = -1, 0 = No idea or not relevant
-    exon_start: Start coordinate, usually low to high except when circular
-    exon_end: End coordinate
     region_type: What kind of thing is the region? e.g. chromosome, plasmid
     default_region: Is this a good default region, i.e. not a patch
     assembly: A string naming the assembly the region is from
+    transcript: The transcript that contains this exon
     '''
-    default_region = True
+
+    relative_location = calculate_relative_coords(
+        parent_params={
+            'start': transcript['start'],
+            'end': transcript['end'],
+            'strand': transcript['strand']
+        },
+        child_params={
+            'start': exon['start'],
+            'end': exon['end']
+        }
+    )
     return {
         'type': 'Exon',
-        'stable_id': f'{exon_stable_id}.{str(version)}',
-        'unversioned_stable_id': exon_stable_id,
-        'version': version,
+        'stable_id': f"{exon['stable_id']}.{str(exon['version'])}",
+        'unversioned_stable_id': exon['stable_id'],
+        'version': exon['version'],
         'slice': format_slice(region_name, region_type, default_region,
-                              region_strand, assembly, exon_start, exon_end)
+                              region_strand, assembly, exon['start'], exon['end']),
+        'relative_location': relative_location
     }
 
 
@@ -171,42 +182,64 @@ def splicify_exons(exons, transcript_id, phase_lookup):
 
 
 def format_utr(
-        transcript, relative_cds_start, relative_cds_end, absolute_cds_start,
-        absolute_cds_end, downstream
+        transcript, absolute_cds_start, absolute_cds_end, downstream
 ):
     '''
     From one transcript's exons generate an inferred UTR
     downstream  - Boolean, False = 5', True = 3'
-    Relative start and end here is relative to the parent transcript
+    Note the arguments are CDS coords, not UTR coords, lots of offsets needed
     '''
+    if (
+            downstream
+            and transcript['end'] == absolute_cds_end
+            and transcript['strand'] == 1
+            or (
+                downstream is False
+                and transcript['start'] == absolute_cds_start
+                and transcript['strand'] == 1
+            )
+            or (
+                downstream
+                and transcript['start'] == absolute_cds_start
+                and transcript['strand'] == -1
+            )
+            or (
+                downstream is False
+                and transcript['end'] == absolute_cds_end
+                and transcript['strand'] == -1
+            )
+        ):
+        # No UTR here: Move along.
+        return None
+
     # Presumably broken crossing ori in circular case,
     if (downstream and transcript['strand'] == 1):
         utr_type = '3_prime_utr'
         start = absolute_cds_end + 1
         end = transcript['end']
-        relative_start = relative_cds_end + 1
+        relative_start = absolute_cds_end - transcript['start'] + 2
         relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream and transcript['strand'] == -1):
         utr_type = '3_prime_utr'
-        start = absolute_cds_end - 1
-        end = transcript['start']
-        relative_start = relative_cds_end - 1
+        start = transcript['start']
+        end = absolute_cds_start - 1
+        relative_start = transcript['end'] - absolute_cds_start + 2
         # i.e. first base of transcript in e! coords is the end of a reverse
         # stranded 3' UTR
-        relative_end = 1
+        relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream is False and transcript['strand'] == 1):
         utr_type = '5_prime_utr'
         start = transcript['start']
         end = absolute_cds_start - 1
         relative_start = 1
-        relative_end = relative_cds_start -1
+        relative_end = absolute_cds_start - transcript['start']
     else:
         # reverse stranded 5'
         utr_type = '5_prime_utr'
-        start = transcript['end']
-        end = absolute_cds_start + 1
-        relative_start = transcript['end'] - transcript['start'] + 1
-        relative_end = relative_cds_start + 1
+        start = absolute_cds_end + 1
+        end = transcript['end']
+        relative_start = 1
+        relative_end = transcript['end'] - absolute_cds_end
 
     return {
         'type': utr_type,
@@ -246,7 +279,7 @@ def format_protein(protein):
     '''
 
     return {
-        'type': 'protein',
+        'type': 'Protein',
         'stable_id': protein['id'],
         'unversioned_stable_id': protein['id'] + '.' + protein['version'],
         'version': protein['version'],
@@ -264,3 +297,39 @@ def flush_buffer(mongo_client, buffer):
         print('Done')
         buffer = []
     return buffer
+
+
+def calculate_relative_coords(parent_params, child_params):
+    '''
+    Calculates a tuple of relative start, relative end and length from genomic coords
+    of the parent feature and its child. Coords respect reading frame, i.e. a reverse
+    stranded feature will have relative coords going from low to high.
+    The input coordinates are always low-to-high in the forward stranded sense
+
+    parent_params = {
+        'start': ...,
+        'end': ...,
+        'strand': ...
+    }
+
+    child_params = {
+        'start': ...,
+        'end': ...
+    }
+    '''
+
+    relative_location = {
+        'length': child_params['end'] - child_params['start'] + 1
+    }
+
+    if parent_params['strand'] == 1:
+        # i.e. 5' offset
+        relative_start = child_params['start'] - parent_params['start'] + 1
+        relative_end = child_params['end'] - parent_params['start'] + 1
+    else:
+        relative_start = parent_params['end'] - child_params['end'] + 1
+        relative_end = parent_params['end'] - child_params['start'] + 1
+
+    relative_location['start'] = relative_start
+    relative_location['end'] = relative_end
+    return relative_location

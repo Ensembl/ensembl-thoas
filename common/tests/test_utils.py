@@ -12,7 +12,16 @@
    limitations under the License.
 """
 
-from common.utils import format_cross_refs, format_slice, format_exon, splicify_exons
+from common.utils import *
+
+
+def test_stable_id():
+    '''
+    Ensure correct formatting depending on arguments
+    '''
+    assert get_stable_id(iid='Test', version=None) == 'Test'
+    assert get_stable_id(iid='Test', version=10) == 'Test.10'
+    assert get_stable_id(iid='Test', version='10') == 'Test.10'
 
 
 def test_xref_formatting():
@@ -85,15 +94,22 @@ def test_exon_formatting():
     Verify exon structure from input variables
     '''
     exon = format_exon(
-        exon_stable_id='ENSE123',
-        version=1,
+        exon={
+            'stable_id': 'ENSE123',
+            'version': 1,
+            'start': 100,
+            'end': 200,
+        },
         region_name='chr1',
         region_strand=1,
-        exon_start=100,
-        exon_end=200,
         region_type='chromosome',
         default_region=True,
-        assembly='GRCh38'
+        assembly='GRCh38',
+        transcript={
+            'start': 1,
+            'end': 200,
+            'strand': 1
+        }
     )
 
     assert exon['type'] == 'Exon'
@@ -101,6 +117,9 @@ def test_exon_formatting():
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
     assert exon['slice']['region']['name'] == 'chr1'
+    assert exon['relative_location']['start'] == 100
+    assert exon['relative_location']['end'] == 200
+    assert exon['relative_location']['length'] == 101
     # forego further enumeration of slice properties
 
 
@@ -132,3 +151,211 @@ def test_splicifying():
         ) == (
             phase_lookup['ENST01'][stable_id]
         )
+
+
+def test_utr_formatting():
+    '''
+    Verify UTRs are correctly formatted depending on up/down/reverse/forward settings
+    '''
+
+    # remember that regular start and end apply to the CDS in genomic coordinates, i.e.
+    # low to high irrespective of reading frame. Relative coords are relative to the
+    # parent object, in this case the transcript. It conveniently starts at 1 to make
+    # data creation easier
+    forward_cds = {
+        'start': 2,
+        'end': 10,
+        'relative_start': 2,
+        'relative_end': 10,
+        'transcript': {
+            'strand': 1,
+            'start': 1,
+            'end': 10
+        },
+        'downstream': False
+    }
+    utr = format_utr(
+        transcript=forward_cds['transcript'],
+        absolute_cds_start=forward_cds['start'],
+        absolute_cds_end=forward_cds['end'],
+        downstream=forward_cds['downstream']
+    )
+
+    assert utr['type'] == '5_prime_utr'
+    assert utr['start'] == 1
+    assert utr['end'] == 1
+    assert utr['relative_start'] == 1
+    assert utr['relative_end'] == 1
+
+    forward_end_cds = {
+        'start': 1,
+        'end': 9,
+        'relative_start': 1,
+        'relative_end': 9,
+        'transcript': {
+            'strand': 1,
+            'start': 1,
+            'end': 10
+        },
+        'downstream': True
+    }
+
+    utr = format_utr(
+        transcript=forward_end_cds['transcript'],
+        absolute_cds_start=forward_end_cds['start'],
+        absolute_cds_end=forward_end_cds['end'],
+        downstream=forward_end_cds['downstream']
+    )
+    print(utr)
+    assert utr['type'] == '3_prime_utr'
+    assert utr['start'] == 10
+    assert utr['end'] == 10
+    assert utr['relative_start'] == 10
+    assert utr['relative_end'] == 10
+
+    forward_non_utr = {
+        'start': 1,
+        'end': 10,
+        'relative_start': 1,
+        'relative_end': 10,
+        'transcript': {
+            'strand': 1,
+            'start': 1,
+            'end': 10
+        },
+        'downstream': False
+    }
+
+    utr = format_utr(
+        transcript=forward_non_utr['transcript'],
+        absolute_cds_start=forward_non_utr['start'],
+        absolute_cds_end=forward_non_utr['end'],
+        downstream=forward_non_utr['downstream']
+    )
+
+    assert utr is None
+
+    utr = format_utr(
+        transcript=forward_non_utr['transcript'],
+        absolute_cds_start=forward_non_utr['start'],
+        absolute_cds_end=forward_non_utr['end'],
+        downstream=True
+    )
+    assert utr is None
+
+    reverse_cds = {
+        'start': 1,
+        'end': 8,
+        'relative_start': 1,
+        'relative_end': 8,
+        'transcript': {
+            'strand': -1,
+            'start': 1,
+            'end': 10
+        },
+        'downstream': False
+    }
+
+    utr = format_utr(
+        transcript=reverse_cds['transcript'],
+        absolute_cds_start=reverse_cds['start'],
+        absolute_cds_end=reverse_cds['end'],
+        downstream=reverse_cds['downstream']
+    )
+    assert utr['type'] == '5_prime_utr'
+    assert utr['start'] == 9
+    assert utr['end'] == 10
+    assert utr['relative_start'] == 1
+    assert utr['relative_end'] == 2
+
+    reverse_cds_downstream = {
+        'start': 8,
+        'end': 10,
+        'relative_start': 3,
+        'relative_end': 10,
+        'transcript': {
+            'strand': -1,
+            'start': 1,
+            'end': 10
+        },
+        'downstream': True
+    }
+
+    utr = format_utr(
+        transcript=reverse_cds_downstream['transcript'],
+        absolute_cds_start=reverse_cds_downstream['start'],
+        absolute_cds_end=reverse_cds_downstream['end'],
+        downstream=reverse_cds_downstream['downstream']
+    )
+    assert utr['type'] == '3_prime_utr'
+    assert utr['start'] == 1
+    assert utr['end'] == 7
+    assert utr['relative_start'] == 4
+    assert utr['relative_end'] == 10
+
+
+def test_cdna_formatting():
+    '''
+    cDNA representation
+    '''
+    pass
+
+
+def test_protein_formatting():
+    '''
+    Verify protein document structure
+    '''
+    pass
+
+def test_relative_coords():
+    '''
+    Test relative coords function w.r.t. parent feature
+    Inputs are Ensembl-style always assending values irrespective of strand
+    '''
+    
+    rel_coords = calculate_relative_coords(
+        parent_params={
+            'start': 10,
+            'end': 30,
+            'strand': 1
+        },
+        child_params={
+            'start': 15,
+            'end': 26
+        }
+    )
+
+    assert rel_coords['start'] == 6
+    assert rel_coords['end'] == 17
+    assert rel_coords['length'] == 12
+
+    rel_coords_reverse = calculate_relative_coords(
+        parent_params={
+            'start': 10,
+            'end': 30,
+            'strand': -1
+        },
+        child_params={
+            'start': 15,
+            'end': 26
+        }
+    )
+
+    assert rel_coords_reverse['start'] == 5
+    assert rel_coords_reverse['end'] == 16
+    assert rel_coords_reverse['length'] == 12
+
+    rel_coords = calculate_relative_coords(
+        parent_params={
+            'start': 1,
+            'end': 10,
+            'strand': -1
+        },
+        child_params={
+            'start': 1,
+            'end': 10
+        }
+    )
+
+    assert rel_coords['start'] == 1
+    assert rel_coords['end'] == 10
