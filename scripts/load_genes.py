@@ -186,12 +186,9 @@ def format_transcript(
     for exon in transcript['exons']:
         exon_list.append(
             format_exon(
-                exon_stable_id=exon['id'],
-                version=exon['version'],
-                region_name=exon['seq_region_name'],
+                exon,
+                region_name=region_name,
                 region_strand=int(exon['strand']),
-                exon_start=int(exon['start']),
-                exon_end=int(exon['end']),
                 region_type=region_type,
                 default_region=default_region,
                 assembly=assembly,
@@ -251,12 +248,10 @@ def format_transcript(
             '__typename': 'ProteinCodingSplicing',
             'product_type': 'Protein',
             '5_prime_utr': format_utr(
-                transcript, relative_cds_start, relative_cds_end, cds_start,
-                cds_end, downstream=False
+                transcript, cds_start, cds_end, downstream=False
             ),
             '3_prime_utr': format_utr(
-                transcript, relative_cds_start, relative_cds_end, cds_start,
-                cds_end, downstream=True
+                transcript, cds_start, cds_end, downstream=True
             ),
             'cds': {
                 'start': cds_start,
