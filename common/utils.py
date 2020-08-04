@@ -74,8 +74,7 @@ def wrapper_parse_args():
     )
     parser.add_argument(
         '--release',
-        help='The current release of Ensembl. Not the EG release',
-        default='100'
+        help='The current release of Ensembl. Not the EG release'
     )
     return parser.parse_args()
 
