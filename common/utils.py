@@ -30,8 +30,7 @@ def parse_args():
     parser = base_parse_args()
     parser.add_argument(
         '--data_path',
-        help='Path to JSON files from the "Gene search" dumps',
-        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/release-100/vertebrates/json/'
+        help='Path to JSON files from the "Gene search" dumps'
     )
     parser.add_argument(
         '--collection',

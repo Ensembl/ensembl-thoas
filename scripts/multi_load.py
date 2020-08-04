@@ -59,8 +59,7 @@ if __name__ == '__main__':
     )
     ARG_PARSER.add_argument(
         '--release',
-        help='Ensembl release number, 100',
-        default=100
+        help='Ensembl release number, 100'
     )
     CONF_PARSER = configparser.ConfigParser()
 
