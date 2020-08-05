@@ -218,8 +218,7 @@ def format_transcript(
             },
             child_params={
                 'start': transcript['start'],
-                'end': transcript['end'],
-                'length': transcript['end'] - transcript['start'] + 1
+                'end': transcript['end']
             }
         ),
         'slice': format_slice(

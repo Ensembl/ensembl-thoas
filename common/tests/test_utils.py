@@ -206,7 +206,6 @@ def test_utr_formatting():
         absolute_cds_end=forward_end_cds['end'],
         downstream=forward_end_cds['downstream']
     )
-    print(utr)
     assert utr['type'] == '3_prime_utr'
     assert utr['start'] == 10
     assert utr['end'] == 10
@@ -310,7 +309,7 @@ def test_protein_formatting():
 def test_relative_coords():
     '''
     Test relative coords function w.r.t. parent feature
-    Inputs are Ensembl-style always assending values irrespective of strand
+    Inputs are Ensembl-style always ascending values irrespective of strand
     '''
     
     rel_coords = calculate_relative_coords(

@@ -151,7 +151,7 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     )
     return {
         'type': 'Exon',
-        'stable_id': f"{exon['stable_id']}.{str(exon['version'])}",
+        'stable_id': get_stable_id(exon['stable_id'], exon['version']),
         'unversioned_stable_id': exon['stable_id'],
         'version': exon['version'],
         'slice': format_slice(region_name, region_type, default_region,
@@ -280,8 +280,8 @@ def format_protein(protein):
 
     return {
         'type': 'Protein',
-        'stable_id': protein['id'],
-        'unversioned_stable_id': protein['id'] + '.' + protein['version'],
+        'unversioned_stable_id': protein['id'],
+        'stable_id': get_stable_id(protein['id'], protein['version']),
         'version': protein['version'],
         # for foreign key behaviour
         'transcript_id': protein['transcript_id'],
