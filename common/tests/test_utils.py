@@ -95,7 +95,7 @@ def test_exon_formatting():
     '''
     exon = format_exon(
         exon={
-            'stable_id': 'ENSE123',
+            'id': 'ENSE123',
             'version': 1,
             'start': 100,
             'end': 200,

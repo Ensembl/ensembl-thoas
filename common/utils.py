@@ -156,7 +156,7 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     '''
     Turn transcript-borne information into an Exon entity
 
-    exon: The exon to format, containing start, end, version, stable_id
+    exon: The exon to format, containing start, end, version, id
     region_name: The string representing a region (perhaps "1")
     region_strand: Forward = 1, Reverse = -1, 0 = No idea or not relevant
     region_type: What kind of thing is the region? e.g. chromosome, plasmid
@@ -178,8 +178,8 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     )
     return {
         'type': 'Exon',
-        'stable_id': get_stable_id(exon['stable_id'], exon['version']),
-        'unversioned_stable_id': exon['stable_id'],
+        'stable_id': get_stable_id(exon['id'], exon['version']),
+        'unversioned_stable_id': exon['id'],
         'version': exon['version'],
         'slice': format_slice(region_name, region_type, default_region,
                               region_strand, assembly, exon['start'], exon['end']),
