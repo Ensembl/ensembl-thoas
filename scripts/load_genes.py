@@ -18,7 +18,7 @@ import pymongo
 
 from common.utils import load_config, parse_args, format_cross_refs, \
     format_slice, format_exon, format_utr, format_cdna, format_protein, \
-    flush_buffer, splicify_exons, get_stable_id
+    flush_buffer, splicify_exons, get_stable_id, calculate_relative_coords
 from common.mongo import MongoDbClient
 
 def create_index(mongo_client):
@@ -125,7 +125,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 ),
                 'transcripts': [
                     [get_stable_id(transcript["id"], transcript["version"]) \
-				for transcript in gene['transcripts']]
+                        for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
                 'cross_references': gene_xrefs
@@ -136,7 +136,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
             for transcript in gene['transcripts']:
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
-                    gene_id=get_stable_id(gene["id"], gene["version"]),
+                    gene=gene,
                     region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     genome_id=genome['id'],
@@ -166,14 +166,14 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
 
 def format_transcript(
-        transcript, gene_id, region_type, region_name, genome_id,
+        transcript, gene, region_type, region_name, genome_id,
         cds_info, phase_info, default_region, assembly
 ):
     '''
     Transform and supplement transcript information
     Args:
     transcript - directly from JSON file
-    gene_id - the parent gene stable_id
+    gene - the parent gene data
     region_type - a shortcut to having to look up the region again
     region_name - like 'chr1' or '1'
     genome_id - the assembly/species/data release combo for this data
@@ -190,15 +190,13 @@ def format_transcript(
     for exon in transcript['exons']:
         exon_list.append(
             format_exon(
-                exon_stable_id=exon['id'],
-                version=exon['version'],
-                region_name=exon['seq_region_name'],
+                exon,
+                region_name=region_name,
                 region_strand=int(exon['strand']),
-                exon_start=int(exon['start']),
-                exon_end=int(exon['end']),
                 region_type=region_type,
                 default_region=default_region,
-                assembly=assembly
+                assembly=assembly,
+                transcript=transcript
             )
         )
 
@@ -209,13 +207,24 @@ def format_transcript(
 
     new_transcript = {
         'type': 'Transcript',
-        'gene': gene_id,
+        'gene': get_stable_id(gene["id"], gene["version"]),
         'stable_id': get_stable_id(transcript["id"], transcript["version"]),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
         'name': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
+        'relative_location': calculate_relative_coords(
+            parent_params={
+                'start': gene['start'],
+                'end':gene['end'],
+                'strand':gene['strand']
+            },
+            child_params={
+                'start': transcript['start'],
+                'end': transcript['end']
+            }
+        ),
         'slice': format_slice(
             region_name=region_name,
             region_type=region_type,
@@ -242,12 +251,10 @@ def format_transcript(
             '__typename': 'ProteinCodingSplicing',
             'product_type': 'Protein',
             '5_prime_utr': format_utr(
-                transcript, relative_cds_start, relative_cds_end, cds_start,
-                cds_end, downstream=False
+                transcript, cds_start, cds_end, downstream=False
             ),
             '3_prime_utr': format_utr(
-                transcript, relative_cds_start, relative_cds_end, cds_start,
-                cds_end, downstream=True
+                transcript, cds_start, cds_end, downstream=True
             ),
             'cds': {
                 'start': cds_start,

@@ -10,6 +10,7 @@ type Transcript {
   exons: [Exon!]!
   cross_references: [CrossReference]!
   splicing: [Splicing!]!
+  relative_location: RelativeLocation!
 }
 
 type CDS {
@@ -24,15 +25,11 @@ type CDS {
 type Exon {
   # An Exon that is part of a Transcript
   stable_id: String!
-  relative_slice: RelativeSlice!
+  relative_location: RelativeLocation!
   slice: Slice!
 }
 
-type RelativeSlice {
-  location: RelativeSliceLocation
-}
-
-type RelativeSliceLocation {
+type RelativeLocation {
   start: Int!
   end: Int!
   length: Int!
