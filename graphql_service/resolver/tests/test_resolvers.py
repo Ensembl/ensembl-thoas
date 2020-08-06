@@ -15,6 +15,7 @@
 import asyncio
 import pytest
 import mongomock
+from graphql import GraphQLError
 
 import graphql_service.resolver.gene_model as model
 import graphql_service.resolver.data_loaders as data_loader
@@ -110,14 +111,17 @@ def test_resolve_gene(basic_data):
         bySymbol={'symbol': 'banana', 'genome_id': 1}
     )
     assert result['name'] == 'banana'
+    result = None
 
-    result = model.resolve_gene(
-        None,
-        basic_data,
-        bySymbol={'symbol': 'very not here', 'genome_id': 1}
-    )
-
+    with pytest.raises(GraphQLError) as graphql_error:
+        result = model.resolve_gene(
+            None,
+            basic_data,
+            bySymbol={'symbol': 'very not here', 'genome_id': 1}
+        )
     assert not result
+    assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    graphql_error = None
 
     result = model.resolve_gene(
         None,
@@ -126,14 +130,17 @@ def test_resolve_gene(basic_data):
     )
 
     assert result['name'] == 'banana'
+    result = None
 
-    result = model.resolve_gene(
-        None,
-        basic_data,
-        byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
-    )
-
+    with pytest.raises(GraphQLError) as graphql_error:
+        result = model.resolve_gene(
+            None,
+            basic_data,
+            byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
+        )
     assert not result
+    assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    graphql_error = None
 
     # Check unversioned query resolves as well
     result = model.resolve_gene(

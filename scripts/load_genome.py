@@ -25,8 +25,11 @@ def load_genome_info(mongo_client, source_file):
     and create a new collection to put them in. Run before load_genes.py
     '''
     with open(source_file) as file:
-        content = next(file)
-        doc = json.loads(content)
+        content = file.read()
+        try:
+            doc = json.loads(content)
+        except json.decoder.JSONDecodeError as error:
+            raise IOError(f'Failed to parse genome file at {source_file} with error {error}')
 
         mongo_client.collection().insert_one({
             'type': 'Assembly',
@@ -77,6 +80,12 @@ if __name__ == '__main__':
     ARGS = parse_args()
 
     MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
-    JSON_FILE = ARGS.data_path + ARGS.species + '/' + ARGS.species + '_genome.json'
+    # Combine arguments to give the path to the relevant $species_genome.json file
+    # Directory structure differs if a collection is involved
+    if ARGS.collection:
+        JSON_FILE = f'{ARGS.data_path}/{ARGS.collection}/{ARGS.species}/{ARGS.species}_genome.json'
+    else:
+        JSON_FILE = f'{ARGS.data_path}/{ARGS.species}/{ARGS.species}_genome.json'
+
     load_genome_info(MONGO_CLIENT, JSON_FILE)
     create_index(MONGO_CLIENT)
