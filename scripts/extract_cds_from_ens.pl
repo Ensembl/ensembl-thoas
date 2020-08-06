@@ -10,10 +10,13 @@ use List::Util 'sum';
 use Getopt::Long;
 use Pod::Usage;
 use Bio::EnsEMBL::ApiVersion 'software_version';
+use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
+use Bio::EnsEMBL::LookUp::RemoteLookUp;
 
 my $registry = 'Bio::EnsEMBL::Registry';
 
 my $species = 'homo_sapiens'; # Needs to be a production name
+my $assembly; # Required to differentiate between assemblies of the same species
 my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
@@ -24,11 +27,12 @@ my $meta_user = 'ensro';
 my $help;
 # Set Ensembl/EnsemblGenomes release version.
 # Needed for bacteria/fungi (for collection databases)
-my $ENS_VERSION = software_version;
-my $EG_VERSION = software_version - 53;
+my $ENS_VERSION = software_version();
+my $EG_VERSION = software_version() - 53;
 
 GetOptions(
   "species=s" => \$species,
+  "assembly=s" => \$assembly,
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
@@ -40,18 +44,18 @@ GetOptions(
 );
 
 
-die 'Specify a species production name at command line' unless $species;
-
-my $fh = IO::File->new($species. '.csv', 'w');
+die 'Specify a species production name and assembly at command line' unless $species && $assembly;
+# Assembly is needed in the file name to make it unique when more than one assembly is dumped
+my $fh = IO::File->new($species.'_'.$assembly.'.csv', 'w');
 print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
   '"cds relative end", "spliced_length"'."\n";
 # Time to run a second file relating to phase of each exon in each transcript
 # Don't want to jam it into a single line of the CDS file
-my $phase_fh = IO::File->new($species. '_phase.csv', 'w');
+my $phase_fh = IO::File->new($species.'_'.$assembly.'_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $transcript_adaptor;
-if ($host =~ /mysql-ens-mirror-4/) {
+if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                        -USER => $meta_user,
                        -DBNAME => $meta_dbname,
@@ -63,10 +67,11 @@ if ($host =~ /mysql-ens-mirror-4/) {
   $gdba->set_ensembl_release($ENS_VERSION);
   # Database host, port, user needs to be changed based on where the data is for species/division
   my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
-			-user => $user,
-			-port => $port,
-			-host => $host,
-			-adaptor=>$gdba);
+    -user => $user,
+    -port => $port,
+    -host => $host,
+    -adaptor=>$gdba
+  );
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
 } else {
