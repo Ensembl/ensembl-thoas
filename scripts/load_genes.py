@@ -149,7 +149,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
             # Add products
             for transcript in gene['transcripts']:
                 for product in transcript['translations']:
-                    if product['ensembl_object_type'] == 'Translation':
+                    if product['ensembl_object_type'] == 'translation':
                         protein_buffer.append(format_protein(product))
 
             gene_buffer = flush_buffer(mongo_client, gene_buffer)
