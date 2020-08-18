@@ -145,9 +145,17 @@ class GeneNotFoundError(GraphQLError):
     def __init__(self, bySymbol=None, byId=None):
         message = None
         if bySymbol:
+            symbol = bySymbol['symbol']
+            genome_id = bySymbol['genome_id']
             message = 'Failed to find gene with symbol '\
-                     f"'{bySymbol['symbol']}' for genome '{bySymbol['genome_id']}'"
+                     f"'{symbol}' for genome '{genome_id}'"
+            self.extensions['symbol'] = symbol
+            self.extensions['genome_id'] = genome_id
         if byId:
+            stable_id = byId['stable_id']
+            genome_id = byId['genome_id']
             message = 'Failed to find gene with stable id '\
-                f"'{byId['stable_id']}' for genome '{byId['genome_id']}'"
+                f"'{stable_id}' for genome '{genome_id}'"
+            self.extensions['stable_id'] = stable_id
+            self.extensions['genome_id'] = genome_id
         super().__init__(message, extensions=self.extensions)

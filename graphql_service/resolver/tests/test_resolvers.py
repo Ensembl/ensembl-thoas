@@ -121,6 +121,9 @@ def test_resolve_gene(basic_data):
         )
     assert not result
     assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    assert graphql_error.value.extensions['symbol'] == 'very not here'
+    assert graphql_error.value.extensions['genome_id'] == 1
+
     graphql_error = None
 
     result = model.resolve_gene(
@@ -140,6 +143,8 @@ def test_resolve_gene(basic_data):
         )
     assert not result
     assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    assert graphql_error.value.extensions['stable_id'] == 'BROKEN BROKEN BROKEN'
+    assert graphql_error.value.extensions['genome_id'] == 1
     graphql_error = None
 
     # Check unversioned query resolves as well
