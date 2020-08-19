@@ -87,3 +87,12 @@ we haven't decided on their fields
 type ProteinDomain {
   foo: String!
 }
+
+type UTR {
+  start: Int!
+  end: Int!
+  relative_start: Int!
+  relative_end: Int!
+  length: Int!
+  # Ignoring checksums until we have a way to get them
+}
