@@ -11,6 +11,8 @@ type Transcript {
   cross_references: [CrossReference]!
   splicing: [Splicing!]!
   relative_location: RelativeLocation!
+  product_generating_contexts: [ProductGeneratingContext]!
+  spliced_exon: [SplicedExon!]!
 }
 
 type CDS {
@@ -35,28 +37,23 @@ type RelativeLocation {
   length: Int!
 }
 
-union Splicing = ProteinProductSplicing | NonCodingProductSplicing
+type SplicedExon {
+  index: Int!
+  relative_location: RelativeLocation!
+  exon: Exon!
+}
 
-type ProteinProductSplicing {
-  """
-  product type of this splicing event is 'protein'
-  """
+type ProductGeneratingContext {
   product_type: String!
   default: Boolean!
   cds: CDS!
-  spliced_exons: [SplicedExon!]!
-  product: Product!
+  5_prime_utr: UTR
+  3_prime_utr: UTR
+  product: Product
+  phased_exons: [PhasedExon!]!
 }
 
-
-type NonCodingProductSplicing {
-  """
-  product type of this splicing event is 'protein'
-  """
-  product_type: String!
- }
-
-type SplicedExon {
+type PhasedExon {
   start_phase: Int!
   end_phase: Int!
   index: Int!
