@@ -9,7 +9,7 @@ type Transcript {
   slice: Slice!
   exons: [Exon!]!
   cross_references: [CrossReference]!
-  splicing: [Splicing!]!
+  splicing: [SplicedExon!]!
   relative_location: RelativeLocation!
   product_generating_contexts: [ProductGeneratingContext]!
   spliced_exon: [SplicedExon!]!
@@ -47,8 +47,8 @@ type ProductGeneratingContext {
   product_type: String!
   default: Boolean!
   cds: CDS!
-  5_prime_utr: UTR
-  3_prime_utr: UTR
+  five_prime_utr: UTR
+  three_prime_utr: UTR
   product: Product
   phased_exons: [PhasedExon!]!
 }
