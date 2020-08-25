@@ -79,10 +79,9 @@ def build_transcripts():
             },
             'default': True
         },
-        'splicing': [
+        'product_generating_contexts': [
             {
-                '__typename': 'ProteinProductSplicing',
-                'type': 'Protein',
+                'product_type': 'protein',
                 'cds': {
                     'end': 32398770,
                     'nucleotide_length': 82309,
@@ -91,8 +90,7 @@ def build_transcripts():
                     'relative_start': 988,
                     'start': 32316461
                 },
-                'product_type': 'protein',
-                'spliced_exons': [
+                'phased_exons': [
                     {
                         'end_phase': 0,
                         'exon': {

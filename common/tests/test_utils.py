@@ -123,7 +123,7 @@ def test_exon_formatting():
     # forego further enumeration of slice properties
 
 
-def test_splicifying():
+def test_phase_calculation():
     '''
     Check that phases and rank are calculated correctly for a given ordered
     list of exons.
@@ -140,7 +140,7 @@ def test_splicifying():
         }
     }
 
-    splicing = splicify_exons(exon_list, 'ENST01', phase_lookup)
+    splicing = phase_exons(exon_list, 'ENST01', phase_lookup)
     for i in range(0, len(splicing)):
         assert splicing[i]['index'] == i
         stable_id = exon_list[i]['stable_id']

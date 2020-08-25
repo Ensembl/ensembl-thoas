@@ -12,7 +12,7 @@ type Transcript {
   splicing: [SplicedExon!]!
   relative_location: RelativeLocation!
   product_generating_contexts: [ProductGeneratingContext]!
-  spliced_exon: [SplicedExon!]!
+  spliced_exons: [SplicedExon!]!
 }
 
 type CDS {
@@ -46,7 +46,7 @@ type SplicedExon {
 type ProductGeneratingContext {
   product_type: String!
   default: Boolean!
-  cds: CDS!
+  cds: CDS
   five_prime_utr: UTR
   three_prime_utr: UTR
   product: Product

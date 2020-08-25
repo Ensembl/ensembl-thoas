@@ -68,41 +68,39 @@ async def test_transcript_retrieval(snapshot):
                     length
                 }
             }
-            splicing {
-                ... on ProteinProductSplicing {
-                    product_type
-                    cds {
-                        start
-                        end
-                        relative_start
-                        relative_end
-                        protein_length
-                        nucleotide_length
-                    }
-                    spliced_exons {
-                        start_phase
-                        end_phase
-                        index
-                        exon {
-                            stable_id
-                            slice {
-                                region {
-                                    name
-                                    strand {
-                                        code
-                                    }
-                                }
-                                location {
-                                    start
-                                    end
-                                    length
+            product_generating_contexts {
+                product_type
+                cds {
+                    start
+                    end
+                    relative_start
+                    relative_end
+                    protein_length
+                    nucleotide_length
+                }
+                phased_exons {
+                    start_phase
+                    end_phase
+                    index
+                    exon {
+                        stable_id
+                        slice {
+                            region {
+                                name
+                                strand {
+                                    code
                                 }
                             }
-                            relative_location {
+                            location {
                                 start
                                 end
                                 length
                             }
+                        }
+                        relative_location {
+                            start
+                            end
+                            length
                         }
                     }
                 }

@@ -35,8 +35,9 @@ snapshots['test_transcript_retrieval 1'] = {
             }
         },
         'so_term': 'protein_coding',
-        'splicing': [
+        'product_generating_contexts': [
             {
+                'product_type': 'protein',
                 'cds': {
                     'end': 32398770,
                     'nucleotide_length': 82309,
@@ -45,21 +46,44 @@ snapshots['test_transcript_retrieval 1'] = {
                     'relative_start': 988,
                     'start': 32316461
                 },
-                'product_type': 'protein',
-                'spliced_exons': [
+                'phased_exons': [
                     {
+                        'start_phase': 0,
                         'end_phase': 0,
+                        'index': 0,
                         'exon': {
-                            'relative_location': {
-                                'end': 55627,
-                                'length': 130,
-                                'start': 55498
-                            },
+                            'stable_id': 'ENSE00002145385.1',
                             'slice': {
+                                'region': {
+                                    'name': '13',
+                                    'strand': {
+                                        'code': 'forward'
+                                    }
+                                },
                                 'location': {
                                     'end': 32371100,
                                     'length': 130,
                                     'start': 32370971
+                                }
+                            },
+                            'relative_location': {
+                                'start': 55498,
+                                'end': 55627,
+                                'length': 130
+                            }
+                        }
+                    },
+                    {
+                        'start_phase': 0,
+                        'end_phase': 0,
+                        'index': 1,
+                        'exon': {
+                            'stable_id': 'ENSE00002167182.1',
+                            'slice': {
+                                'location': {
+                                    'start': 32375343,
+                                    'end': 32375406,
+                                    'length': 64
                                 },
                                 'region': {
                                     'name': '13',
@@ -68,36 +92,12 @@ snapshots['test_transcript_retrieval 1'] = {
                                     }
                                 }
                             },
-                            'stable_id': 'ENSE00002145385.1'
-                        },
-                        'index': 0,
-                        'start_phase': 0
-                    },
-                    {
-                        'end_phase': 0,
-                        'exon': {
                             'relative_location': {
                                 'end': 59933,
                                 'length': 64,
                                 'start': 59870
-                            },
-                            'slice': {
-                                'location': {
-                                    'end': 32375406,
-                                    'length': 64,
-                                    'start': 32375343
-                                },
-                                'region': {
-                                    'name': '13',
-                                    'strand': {
-                                        'code': 'forward'
-                                    }
-                                }
-                            },
-                            'stable_id': 'ENSE00002167182.1'
-                        },
-                        'index': 1,
-                        'start_phase': 0
+                            }
+                        }
                     }
                 ]
             }
