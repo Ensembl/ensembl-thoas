@@ -20,6 +20,7 @@ QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
+PDC_TYPE = ObjectType('ProductGeneratingContext')
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, bySymbol=None, byId=None):
@@ -136,6 +137,18 @@ def query_region(context, feature_type):
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
     return context["mongo_db"].find(query)
+
+
+@PDC_TYPE.field('three_prime_utr')
+def resolve_three_prime_utr(_, info):
+    'Convert stored 3` UTR to GraphQL compatible form'
+    return info.context['3_prime_utr']
+
+@PDC_TYPE.field('five_prime_utr')
+def resolve_utr(_, info):
+    'Convert stored 5` UTR to GraphQL compatible form'
+    return info.context['5_prime_utr']
+
 
 class GeneNotFoundError(GraphQLError):
     '''
