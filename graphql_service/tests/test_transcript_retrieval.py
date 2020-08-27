@@ -47,7 +47,7 @@ def setup_module():
 async def test_transcript_retrieval(snapshot):
     """
     Test retrieval of a transcript from the grapqhl api by id
-    Acquires snapshot from snapshottest by fixture injection
+    Gets the expected test result from snapshottest
     """
     query = """{
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
@@ -97,11 +97,11 @@ async def test_transcript_retrieval(snapshot):
                                 length
                             }
                         }
-                        relative_location {
-                            start
-                            end
-                            length
-                        }
+                    }
+                    relative_location {
+                        start
+                        end
+                        length
                     }
                 }
             }
@@ -109,6 +109,27 @@ async def test_transcript_retrieval(snapshot):
     }"""
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    assert success
+    assert result['data']['transcript']
+    snapshot.assert_match(result['data'])
+
+@pytest.mark.asyncio
+async def test_transcript_splicing(snapshot):
+    '''
+    Run a graphql query checking transcript spliced exons
+    '''
+    query = '''
+    {
+        transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
+            spliced_exons {
+                index
+                exon {
+                    stable_id
+                }
+            }
+        }
+    }'''
+    (success, result) = await graphql(executable_schema, {'query': query}, context_value=context)
     assert success
     assert result['data']['transcript']
     snapshot.assert_match(result['data'])

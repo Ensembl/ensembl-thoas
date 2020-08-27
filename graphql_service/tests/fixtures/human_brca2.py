@@ -55,14 +55,6 @@ def build_transcripts():
         'so_term': 'protein_coding',
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'exons': build_exons(),
-        'cds': {
-            'start': 32316461,
-            'end': 32398770,
-            'relative_start': 988,
-            'relative_end': 83297,
-            'protein_length': 27436,
-            'nucleotide_length': 82309
-        },
         'slice': {
             'region': {
                 'name': '13',
@@ -79,6 +71,56 @@ def build_transcripts():
             },
             'default': True
         },
+        'spliced_exons': [
+            {
+                'index': 0,
+                'exon': {
+                    'stable_id': 'ENSE00002145385.1',
+                    'slice': {
+                        'region': {
+                            'name': '13',
+                            'strand': {
+                                'code': 'forward'
+                            }
+                        },
+                        'location': {
+                            'end': 32371100,
+                            'length': 130,
+                            'start': 32370971
+                        }
+                    }
+                },
+                'relative_location': {
+                    'start': 55498,
+                    'end': 55627,
+                    'length': 130
+                }
+            },
+            {
+                'index': 1,
+                'exon': {
+                    'stable_id': 'ENSE00002167182.1',
+                    'slice': {
+                        'location': {
+                            'start': 32375343,
+                            'end': 32375406,
+                            'length': 64
+                        },
+                        'region': {
+                            'name': '13',
+                            'strand': {
+                                'code': 'forward'
+                            }
+                        }
+                    }
+                },
+                'relative_location': {
+                    'end': 59933,
+                    'length': 64,
+                    'start': 59870
+                }
+            }
+        ],
         'product_generating_contexts': [
             {
                 'product_type': 'protein',
@@ -94,11 +136,6 @@ def build_transcripts():
                     {
                         'end_phase': 0,
                         'exon': {
-                            'relative_location': {
-                                'end': 55627,
-                                'length': 130,
-                                'start': 55498
-                            },
                             'slice': {
                                 'location': {
                                     'end': 32371100,
@@ -115,16 +152,16 @@ def build_transcripts():
                             'stable_id': 'ENSE00002145385.1'
                         },
                         'index': 0,
-                        'start_phase': 0
+                        'start_phase': 0,
+                        'relative_location': {
+                            'end': 55627,
+                            'length': 130,
+                            'start': 55498
+                        }
                     },
                     {
                         'end_phase': 0,
                         'exon': {
-                            'relative_location': {
-                                'end': 59933,
-                                'length': 64,
-                                'start': 59870
-                            },
                             'slice': {
                                 'location': {
                                     'end': 32375406,
@@ -139,6 +176,11 @@ def build_transcripts():
                                 }
                             },
                             'stable_id': 'ENSE00002167182.1'
+                        },
+                        'relative_location': {
+                            'end': 59933,
+                            'length': 64,
+                            'start': 59870
                         },
                         'index': 1,
                         'start_phase': 0
