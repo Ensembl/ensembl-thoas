@@ -231,6 +231,7 @@ def splicify_exons(exons, transcript):
                 }
             )
         })
+        i += 1
     return splicing
 
 

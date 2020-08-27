@@ -153,6 +153,43 @@ def test_phase_calculation():
         )
 
 
+def test_splice_formatting():
+    '''
+    Spliced exons are exons in a wrapper containing index and relative location.
+    Check the emitted format
+    '''
+    # truncated transcript for simplicity
+    transcript = {
+        'start': 1,
+        'end': 30,
+        'strand': 1
+    }
+
+    exon_list = [
+        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
+        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
+    ]
+
+    splicing = splicify_exons(exon_list, transcript)
+    print(splicing[0])
+    assert len(splicing) == 2
+    assert splicing[0]['index'] == 0
+    assert splicing[0]['exon'] == exon_list[0]
+    assert splicing[0]['relative_location'] == {
+        'start': 1,
+        'end': 10,
+        'length': 10
+    }
+    print(splicing[1])
+    assert splicing[1]['index'] == 1
+    assert splicing[1]['exon'] == exon_list[1]
+    assert splicing[1]['relative_location'] == {
+        'start': 21,
+        'end': 30,
+        'length': 10
+    }
+
+
 def test_utr_formatting():
     '''
     Verify UTRs are correctly formatted depending on up/down/reverse/forward settings
