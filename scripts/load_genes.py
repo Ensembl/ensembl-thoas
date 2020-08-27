@@ -88,7 +88,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
     default_region = True
     print('Loaded assembly ' + assembly['name'])
 
-    
+
     required_keys = ('name', 'description')
     with open(json_file) as file:
         print('Chunk')
@@ -149,6 +149,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
             # Add products
             for transcript in gene['transcripts']:
                 for product in transcript['translations']:
+                    # Add mature RNA here
                     if product['ensembl_object_type'] == 'translation':
                         protein_buffer.append(format_protein(product))
 
@@ -236,7 +237,10 @@ def format_transcript(
         ),
         'exons': exon_list,
         'genome_id': genome_id,
-        'cross_references': transcript_xrefs
+        'cross_references': transcript_xrefs,
+        'product_generating contexts': [],
+        'spliced_exons': splicify_exons(exon_list, transcript),
+        'cdna': format_cdna(transcript)
     }
 
     # Now for the tricky stuff around CDS
@@ -247,27 +251,29 @@ def format_transcript(
         cds_end = cds_info[transcript['id']]['end']
         spliced_length = cds_info[transcript['id']]['spliced_length']
 
-        new_transcript['splicing'] = {
-            '__typename': 'ProteinCodingSplicing',
-            'product_type': 'Protein',
-            '5_prime_utr': format_utr(
-                transcript, cds_start, cds_end, downstream=False
-            ),
-            '3_prime_utr': format_utr(
-                transcript, cds_start, cds_end, downstream=True
-            ),
-            'cds': {
-                'start': cds_start,
-                'end': cds_end,
-                'relative_start': relative_cds_start,
-                'relative_end': relative_cds_end,
-                'nucleotide_length': spliced_length,
-                'protein_length': spliced_length // 3
-            },
-            'cdna': format_cdna(transcript),
-            'protein_ids': [translation['id'] for translation in transcript['translations']],
-            'spliced_exons': splicify_exons(exon_list, transcript['id'], phase_info)
-        }
+        # Insert multiple product handling here when we know what it will look like
+        new_transcript['product_generating_contexts'].append(
+            {
+                'product_type': 'Protein',
+                '5_prime_utr': format_utr(
+                    transcript, cds_start, cds_end, downstream=False
+                ),
+                '3_prime_utr': format_utr(
+                    transcript, cds_start, cds_end, downstream=True
+                ),
+                'cds': {
+                    'start': cds_start,
+                    'end': cds_end,
+                    'relative_start': relative_cds_start,
+                    'relative_end': relative_cds_end,
+                    'nucleotide_length': spliced_length,
+                    'protein_length': spliced_length // 3
+                },
+                # Infer the "products" in the resolver. This is a join.
+                'protein_ids': [translation['id'] for translation in transcript['translations']],
+                'phased_exons': phase_exons(exon_list, transcript['id'], phase_info)
+            }
+        )
 
     return new_transcript
 
