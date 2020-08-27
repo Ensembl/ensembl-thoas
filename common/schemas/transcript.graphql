@@ -9,7 +9,6 @@ type Transcript {
   slice: Slice!
   exons: [Exon!]!
   cross_references: [CrossReference]!
-  splicing: [SplicedExon!]!
   relative_location: RelativeLocation!
   product_generating_contexts: [ProductGeneratingContext]!
   spliced_exons: [SplicedExon!]!
@@ -27,7 +26,6 @@ type CDS {
 type Exon {
   # An Exon that is part of a Transcript
   stable_id: String!
-  relative_location: RelativeLocation!
   slice: Slice!
 }
 
@@ -58,6 +56,7 @@ type PhasedExon {
   end_phase: Int!
   index: Int!
   exon: Exon!
+  relative_location: RelativeLocation
 }
 
 type Product {
