@@ -313,7 +313,7 @@ def format_cdna(transcript):
     '''
 
     start = transcript['start']
-    end = transcript['start']
+    end = transcript['end']
 
     relative_start = 1
     relative_end = 0 # temporarily
@@ -325,7 +325,7 @@ def format_cdna(transcript):
         'start': start,
         'end': end,
         'relative_start': relative_start,
-        'relative_end': relative_end,
+        'relative_end': relative_end
     }
 
 

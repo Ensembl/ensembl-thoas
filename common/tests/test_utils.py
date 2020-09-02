@@ -334,14 +334,47 @@ def test_cdna_formatting():
     '''
     cDNA representation
     '''
-    pass
+    transcript = {
+        'start': 1,
+        'end': 100,
+        'exons': [
+            {
+                'start': 1,
+                'end': 20
+            },
+            {
+                'start': 81,
+                'end': 100
+            }
+        ]
+    }
+
+    cdna = format_cdna(transcript)
+    assert cdna['start'] == 1
+    assert cdna['end'] == 100
+    assert cdna['relative_start'] == 1
+    assert cdna['relative_end'] == 40
 
 
 def test_protein_formatting():
     '''
     Verify protein document structure
     '''
-    pass
+    
+    protein = {
+        'id': 'ENSP001',
+        'version': 2,
+        'transcript_id': 'ENST001',
+    }
+
+    result = format_protein(protein)
+    assert result['type'] == 'Protein'
+    assert result['unversioned_stable_id'] == 'ENSP001'
+    assert result['stable_id'] == 'ENSP001.2'
+    assert result['version'] == 2
+    assert result['so_term'] == 'polypeptide'
+    assert result['transcript_id'] == 'ENST001'
+
 
 def test_relative_coords():
     '''
