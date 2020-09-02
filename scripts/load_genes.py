@@ -200,6 +200,9 @@ def format_transcript(
                 transcript=transcript
             )
         )
+    # verify that exons are all in rank order in case the source file isn't
+    # There are no guarantees in the dumping pipeline for rank order
+    exon_list.sort(key=exon_sorter)
 
     try:
         transcript_xrefs = format_cross_refs(transcript['xrefs'])

@@ -73,7 +73,7 @@ def build_transcripts():
         },
         'spliced_exons': [
             {
-                'index': 0,
+                'index': 1,
                 'exon': {
                     'stable_id': 'ENSE00002145385.1',
                     'slice': {
@@ -97,7 +97,7 @@ def build_transcripts():
                 }
             },
             {
-                'index': 1,
+                'index': 2,
                 'exon': {
                     'stable_id': 'ENSE00002167182.1',
                     'slice': {
@@ -151,7 +151,7 @@ def build_transcripts():
                             },
                             'stable_id': 'ENSE00002145385.1'
                         },
-                        'index': 0,
+                        'index': 1,
                         'start_phase': 0,
                         'relative_location': {
                             'end': 55627,
@@ -182,7 +182,7 @@ def build_transcripts():
                             'length': 64,
                             'start': 59870
                         },
-                        'index': 1,
+                        'index': 2,
                         'start_phase': 0
                     }
                 ]

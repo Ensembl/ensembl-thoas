@@ -50,7 +50,7 @@ snapshots['test_transcript_retrieval 1'] = {
                             },
                             'stable_id': 'ENSE00002145385.1'
                         },
-                        'index': 0,
+                        'index': 1,
                         'relative_location': {
                             'end': 55627,
                             'length': 130,
@@ -76,7 +76,7 @@ snapshots['test_transcript_retrieval 1'] = {
                             },
                             'stable_id': 'ENSE00002167182.1'
                         },
-                        'index': 1,
+                        'index': 2,
                         'relative_location': {
                             'end': 59933,
                             'length': 64,
@@ -128,7 +128,7 @@ snapshots['test_transcript_splicing'] = {
                     },
                     'stable_id': 'ENSE00002145385.1'
                 },
-                'index': 0,
+                'index': 1,
                 'relative_location': {
                     'end': 55627,
                     'length': 130,
@@ -152,7 +152,7 @@ snapshots['test_transcript_splicing'] = {
                     },
                     'stable_id': 'ENSE00002167182.1'
                 },
-                'index': 1,
+                'index': 2,
                 'relative_location': {
                     'end': 59933,
                     'length': 64,
@@ -170,13 +170,13 @@ snapshots['test_transcript_splicing 1'] = {
                 'exon': {
                     'stable_id': 'ENSE00002145385.1'
                 },
-                'index': 0
+                'index': 1
             },
             {
                 'exon': {
                     'stable_id': 'ENSE00002167182.1'
                 },
-                'index': 1
+                'index': 2
             }
         ]
     }

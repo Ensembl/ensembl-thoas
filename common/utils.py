@@ -187,37 +187,40 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     }
 
 
+def exon_sorter(exon):
+    'Selects the field to compare for sorting exons'
+    return exon['rank']
+
+
 def phase_exons(exons, transcript_id, phase_lookup):
     '''
     Given formatted exon data, and a phase lookup, return a spliced exon
-    wrapper for each element with start and end phases. Exons MUST be in
-    coding order on input
+    wrapper for each element with start and end phases.
+    exons MUST be sorted by rank before calling
     '''
 
     splicing = []
-    i = 0
     for exon in exons:
         (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
         splicing.append({
             'start_phase': start_phase,
             'end_phase': end_phase,
-            'index': i,
+            'index': exon['rank'],
             'exon': exon
         })
-        i += 1
     return splicing
 
 
 def splicify_exons(exons, transcript):
     '''
     Given a list of exons and the parent transcript, create a list of spliced
-    exons with rank and relative coordinates
+    exons with rank and relative coordinates.
+    exons MUST be sorted by rank before calling
     '''
     splicing = []
-    i = 0
     for exon in exons:
         splicing.append({
-            'index': i,
+            'index': exon['rank'],
             'exon': exon,
             'relative_location': calculate_relative_coords(
                 parent_params={
@@ -231,7 +234,6 @@ def splicify_exons(exons, transcript):
                 }
             )
         })
-        i += 1
     return splicing
 
 
