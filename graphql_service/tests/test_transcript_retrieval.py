@@ -13,35 +13,11 @@
 """
 
 import pytest
-import mongomock
 from ariadne import graphql
+from .snapshot_utils import setup_test
 
-from common.crossrefs import XrefResolver
-from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import DataLoaderCollection
-from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts
+executable_schema, context = setup_test()
 
-mocked_mongo_collection = mongomock.MongoClient().db.collection
-data_loader = DataLoaderCollection(mocked_mongo_collection)
-xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
-
-executable_schema = prepare_executable_schema()
-context = {
-    'mongo_db': mocked_mongo_collection,
-    'data_loader': data_loader,
-    'XrefResolver': xref_resolver
-}
-
-def prepare_db():
-    'Fill mock database with data'
-    transcripts = build_transcripts()
-    gene = build_gene()
-    mocked_mongo_collection.insert_one(gene)
-    mocked_mongo_collection.insert_many(transcripts)
-
-def setup_module():
-    'Run setup scripts once per module'
-    prepare_db()
 
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
