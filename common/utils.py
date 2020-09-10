@@ -335,7 +335,7 @@ def format_protein(protein):
     '''
 
     return {
-        'type': 'Protein',
+        'type': 'Product',
         'unversioned_stable_id': protein['id'],
         'stable_id': get_stable_id(protein['id'], protein['version']),
         'version': protein['version'],
