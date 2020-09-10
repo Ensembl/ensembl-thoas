@@ -12,20 +12,27 @@
    limitations under the License.
 """
 
-from aiodataloader import DataLoader
 from collections import defaultdict
+from aiodataloader import DataLoader
 
 
-class DataLoaderCollection(object):
+class DataLoaderCollection():
     """
     A collection of bulk data aggregators for "joins" in GraphQL
     They're part of a class so they can be initialised in one go
-    outside of the static methods they will be called in
+    outside of the static methods they will be called in.
+
+    Can't currently support multiple genome_ids in the same query.
+    Limitations in the DataLoader design as stateless function
+    with fixed arguments mean we can't inject genome_id on calling
+    .load(). Needs a better solution, or better sandboxing of
+    data loaders.
     """
 
     def __init__(self, db_collection):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
+        self.genome_id = None
 
     async def batch_transcript_load(self, keys):
         '''
@@ -42,14 +49,41 @@ class DataLoaderCollection(object):
         }
 
         data = await self.query_mongo(query)
-        # Now the results must be returned in the order requested by 'keys'
-        # Unpack the bulk query results into a list of lists
+        return self.collate_dataloader_output('gene', keys, data)
+
+    async def batch_product_load(self, keys):
+        '''
+        Load a bunch of products/proteins by ID
+        '''
+        query = {
+            'type': 'Product',
+            'genome_id': self.genome_id,
+            'stable_id': {
+                '$in': keys
+            }
+        }
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output('stable_id', keys, data)
+
+    @staticmethod
+    def collate_dataloader_output(foreign_key, original_ids, docs):
+        '''
+        Query identifier values are in no particular order and so are the query
+        results. We must collect them together and return them in the order
+        initially requested for graphql to unite the results with the async routines
+        that requested them.
+
+        The return value is therefore a list of lists ordered by the original foreign key
+        values, created by building a dictionary of 1..n documents keyed by foreign key and
+        selecting out dict items by the original foreign_key list.
+        '''
+
         grouped_docs = defaultdict(list)
+        for doc in docs:
+            grouped_docs[doc[foreign_key]].append(doc)
 
-        for doc in data:
-            grouped_docs[doc['gene']].append(doc)
+        return [grouped_docs[fk] for fk in original_ids]
 
-        return [grouped_docs[feature_id] for feature_id in keys]
 
     def gene_transcript_dataloader(self, genome_id, max_batch_size=1000):
         'Factory for DataLoaders for Transcripts fetched via Genes'
@@ -60,6 +94,15 @@ class DataLoaderCollection(object):
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_transcript_load,
+            max_batch_size=max_batch_size
+        )
+    
+    def transcript_product_dataloader(self, genome_id, max_batch_size=1000):
+        'Factory for DataLoaders for Products fetched via Transcripts'
+        
+        self.genome_id = genome_id
+        return DataLoader(
+            batch_load_fn=self.batch_product_load,
             max_batch_size=max_batch_size
         )
 

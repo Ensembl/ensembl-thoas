@@ -61,30 +61,32 @@ type PhasedExon {
 
 type Product {
   stable_id: String!
+  unversioned_stable_id: String!
+  version: Int!
   """
   the value of the type field is "protein"
   """
   type: String!
-
+  so_term: String!
   """
   length in amino acids if product is a protein
   """
   length: Int!
-  splice_junction_positions: [Int!]!
-  sequence: String!
   """
   The value of sequence checksum can be used to retrieve the sequence from RefGet
   """
   sequence_checksum: String!
   external_references: [CrossReference]!
-  protein_domains: [ProteinDomain!]!
+  protein_domains: [ProteinDomain]!
 }
 
-"""
-we haven't decided on their fields
-"""
 type ProteinDomain {
-  foo: String!
+  id: String!
+  name: String!
+  resource_name: String!
+  location: RelativeLocation!
+  hit_location: RelativeLocation!
+  score: Float!
 }
 
 type UTR {

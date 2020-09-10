@@ -368,7 +368,7 @@ def test_protein_formatting():
     }
 
     result = format_protein(protein)
-    assert result['type'] == 'Protein'
+    assert result['type'] == 'Product'
     assert result['unversioned_stable_id'] == 'ENSP001'
     assert result['stable_id'] == 'ENSP001.2'
     assert result['version'] == 2

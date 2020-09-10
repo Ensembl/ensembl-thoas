@@ -20,7 +20,8 @@ QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
-PDC_TYPE = ObjectType('ProductGeneratingContext')
+PGC_TYPE = ObjectType('ProductGeneratingContext')
+PRODUCT_TYPE = ObjectType('Product')
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, bySymbol=None, byId=None):
@@ -139,15 +140,43 @@ def query_region(context, feature_type):
     return context["mongo_db"].find(query)
 
 
-@PDC_TYPE.field('three_prime_utr')
+@PGC_TYPE.field('three_prime_utr')
 def resolve_three_prime_utr(_, info):
     'Convert stored 3` UTR to GraphQL compatible form'
     return info.context['3_prime_utr']
 
-@PDC_TYPE.field('five_prime_utr')
+@PGC_TYPE.field('five_prime_utr')
 def resolve_utr(_, info):
     'Convert stored 5` UTR to GraphQL compatible form'
     return info.context['5_prime_utr']
+
+@QUERY_TYPE.field('product')
+def resolve_product_by_id(_, info, genome_id, stable_id):
+    'Fetch a product by stable_id, this is almost always a protein'
+
+    query = {
+        'genome_id': genome_id,
+        'stable_id': stable_id,
+        'type': 'Product'
+    }
+
+    collection = info.context['mongo_db']
+    result = collection.find_one(query)
+    if not result:
+        raise ProductNotFoundError(genome_id, stable_id)
+    return result
+
+@PGC_TYPE.field('product')
+def resolve_product_by_pgc(pgc, info):
+    'Fetch product that is referenced by the Product Generating Context'
+    print(pgc)
+    loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
+
+    product = loader.load(
+        key=pgc['protein_id']
+    )
+
+    return product
 
 
 class GeneNotFoundError(GraphQLError):
@@ -171,4 +200,17 @@ class GeneNotFoundError(GraphQLError):
                 f"'{stable_id}' for genome '{genome_id}'"
             self.extensions['stable_id'] = stable_id
             self.extensions['genome_id'] = genome_id
+        super().__init__(message, extensions=self.extensions)
+
+
+class ProductNotFoundError(GraphQLError):
+    '''
+    Custom error to be raised if gene is not found
+    '''
+    extensions = {"code": "PRODUCT_NOT_FOUND"}
+    def __init__(self, genome_id, stable_id):
+        message = 'Failed to find product with stable id '\
+            f"'{stable_id}' for genome '{genome_id}'"
+        self.extensions['stable_id'] = stable_id
+        self.extensions['genome_id'] = genome_id
         super().__init__(message, extensions=self.extensions)
