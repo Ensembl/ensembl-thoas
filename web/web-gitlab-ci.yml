@@ -87,3 +87,19 @@ internal:wp-hh:
     name: wp-hh-internal
   only:
     - master
+
+# Live : Deploy beta-graphql.ensembl.org to wp-hh-k8s
+public-hh:
+  extends: .deploy
+  environment:
+    name: thoas-public-hh
+  only:
+    - deploy-beta
+
+# Fallback : Deploy beta-graphql.ensembl.org to wp-hx-k8s
+public-hx:
+  extends: .deploy
+  environment:
+    name: thoas-public-hx
+  only:
+    - deploy-beta
