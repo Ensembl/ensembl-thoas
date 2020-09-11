@@ -47,6 +47,7 @@ build:
   extends: .build
   only:
     - master
+    - deploy-beta
 
 # deploy to dev at WP-HX
 deploy:
