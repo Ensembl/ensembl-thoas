@@ -8,7 +8,7 @@ type Transcript {
   so_term: String
   slice: Slice!
   exons: [Exon!]!
-  cross_references: [CrossReference]!
+  external_references: [ExternalReference]!
   relative_location: RelativeLocation!
   product_generating_contexts: [ProductGeneratingContext]!
   spliced_exons: [SplicedExon!]!
@@ -76,7 +76,7 @@ type Product {
   The value of sequence checksum can be used to retrieve the sequence from RefGet
   """
   sequence_checksum: String!
-  external_references: [CrossReference]!
+  external_references: [ExternalReference]!
   protein_domains: [ProteinDomain]!
 }
 

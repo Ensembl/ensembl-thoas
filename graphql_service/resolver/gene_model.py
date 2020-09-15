@@ -47,8 +47,9 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
         raise GeneNotFoundError(bySymbol, byId)
     return result
 
-@GENE_TYPE.field('cross_references')
-@TRANSCRIPT_TYPE.field('cross_references')
+@GENE_TYPE.field('external_references')
+@TRANSCRIPT_TYPE.field('external_references')
+@PRODUCT_TYPE.field('external_references')
 def insert_crossref_urls(feature, info):
     '''
     A gene/transcript with cross references in the data model is given as
@@ -56,7 +57,7 @@ def insert_crossref_urls(feature, info):
     and inject them into the response
     '''
     resolver = info.context['XrefResolver']
-    xrefs = feature['cross_references']
+    xrefs = feature['external_references']
     return list(map(resolver.annotate_crossref, xrefs))
 
 @QUERY_TYPE.field('transcript')

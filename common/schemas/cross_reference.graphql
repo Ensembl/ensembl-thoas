@@ -1,4 +1,4 @@
-type CrossReference {
+type ExternalReference {
   # A reference to a database outside of Ensembl
   id: String!
   name: String!
