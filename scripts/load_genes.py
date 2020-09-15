@@ -255,28 +255,29 @@ def format_transcript(
         spliced_length = cds_info[transcript['id']]['spliced_length']
 
         # Insert multiple product handling here when we know what it will look like
-        new_transcript['product_generating_contexts'].append(
-            {
-                'product_type': 'Protein',
-                '5_prime_utr': format_utr(
-                    transcript, cds_start, cds_end, downstream=False
-                ),
-                '3_prime_utr': format_utr(
-                    transcript, cds_start, cds_end, downstream=True
-                ),
-                'cds': {
-                    'start': cds_start,
-                    'end': cds_end,
-                    'relative_start': relative_cds_start,
-                    'relative_end': relative_cds_end,
-                    'nucleotide_length': spliced_length,
-                    'protein_length': spliced_length // 3
-                },
-                # Infer the "products" in the resolver. This is a join.
-                'protein_ids': [translation['id'] for translation in transcript['translations']],
-                'phased_exons': phase_exons(exon_list, transcript['id'], phase_info)
-            }
-        )
+        for translation in transcript['translations']:
+            new_transcript['product_generating_contexts'].append(
+                {
+                    'product_type': 'Protein', # probably
+                    '5_prime_utr': format_utr(
+                        transcript, cds_start, cds_end, downstream=False
+                    ),
+                    '3_prime_utr': format_utr(
+                        transcript, cds_start, cds_end, downstream=True
+                    ),
+                    'cds': {
+                        'start': cds_start,
+                        'end': cds_end,
+                        'relative_start': relative_cds_start,
+                        'relative_end': relative_cds_end,
+                        'nucleotide_length': spliced_length,
+                        'protein_length': spliced_length // 3
+                    },
+                    # Infer the "products" in the resolver. This is a join.
+                    'product_id': translation['id'],
+                    'phased_exons': phase_exons(exon_list, transcript['id'], phase_info)
+                }
+            )
 
     return new_transcript
 
