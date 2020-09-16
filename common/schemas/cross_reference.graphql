@@ -3,7 +3,7 @@ type ExternalReference {
   accession_id: String!
   name: String!
   description: String
-  assignment_method: XrefMethod
+  assignment_method: XrefMethod!
   url: String
   source: ExternalDB!
 }

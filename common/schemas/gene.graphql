@@ -8,5 +8,5 @@ type Gene {
   so_term: String
   transcripts: [Transcript!]!
   slice: Slice!
-  external_references: [ExternalReference]!
+  external_references: [ExternalReference!]!
 }

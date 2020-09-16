@@ -17,6 +17,6 @@ input IdInput {
 
 type Locus {
   # A dynamically defined part of a Region
-  genes: [Gene]!
-  transcripts: [Transcript]!
+  genes: [Gene!]!
+  transcripts: [Transcript!]!
 }
