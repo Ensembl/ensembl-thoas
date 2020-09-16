@@ -255,6 +255,10 @@ def format_transcript(
         spliced_length = cds_info[transcript['id']]['spliced_length']
 
         # Insert multiple product handling here when we know what it will look like
+        # Pick the first to be default
+        defaults = [False] * len(transcript['translations']) - 1
+        defaults.append(True)
+
         for translation in transcript['translations']:
             new_transcript['product_generating_contexts'].append(
                 {
@@ -275,7 +279,9 @@ def format_transcript(
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': translation['id'],
-                    'phased_exons': phase_exons(exon_list, transcript['id'], phase_info)
+                    'phased_exons': phase_exons(exon_list, transcript['id'], phase_info),
+                    # We'll know default later when it becomes relevant
+                    'default': defaults.pop()
                 }
             )
 
