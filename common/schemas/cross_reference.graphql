@@ -1,8 +1,9 @@
 type ExternalReference {
   # A reference to a database outside of Ensembl
-  id: String!
+  accession_id: String!
   name: String!
   description: String
+  assignment_method: XrefMethod
   url: String
   source: ExternalDB!
 }
@@ -11,5 +12,28 @@ type ExternalDB {
   # Some metadata about databases outside of Ensembl
   id: String!
   name: String!
+  description: String
   url: String
+  release: String
+}
+
+type XrefMethod {
+  # Differentiate by ref assignment method
+  type: InfoType!
+  description: String
+}
+
+enum InfoType {
+  # Enum of valid types in the external reference pipeline
+  PROJECTION
+  MISC
+  DIRECT
+  SEQUENCE_MATCH
+  INFERRED_PAIR
+  PROBE
+  UNMAPPED
+  COORDINATE_OVERLAP
+  CHECKSUM
+  NONE
+  DEPENDENT
 }

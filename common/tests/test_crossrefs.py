@@ -98,12 +98,24 @@ def test_annotate_function(resolver):
     Test the addition of URLs to cross references
     '''
     response = resolver.annotate_crossref({
-        'id': '1',
+        'accession_id': '1',
         'source': {
             'id': 'CHEBI'
+        },
+        'assignment_method': {
+            'type': 'DIRECT'
         }
     })
-    assert response['id'] == '1'
+    assert response['accession_id'] == '1'
     assert response['source']['id'] == 'CHEBI'
     assert response['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:1'
     assert response['source']['url'] == 'https://www.ebi.ac.uk/chebi/'
+    assert response['assignment_method']['description'] == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
+
+
+def test_description_generation(resolver):
+    description = resolver.describe_info_type('DIRECT')
+    assert description == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
+
+    with pytest.raises(KeyError, match='Illegal xref info_type NOTAPPROVED used'):
+        description = resolver.describe_info_type('NOTAPPROVED')

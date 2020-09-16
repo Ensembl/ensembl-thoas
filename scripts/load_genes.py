@@ -128,7 +128,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                         for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
-                'cross_references': gene_xrefs
+                'external_references': gene_xrefs
             }
             gene_buffer.append(json_gene)
 
@@ -240,7 +240,7 @@ def format_transcript(
         ),
         'exons': exon_list,
         'genome_id': genome_id,
-        'cross_references': transcript_xrefs,
+        'external_references': transcript_xrefs,
         'product_generating contexts': [],
         'spliced_exons': splicify_exons(exon_list, transcript),
         'cdna': format_cdna(transcript)

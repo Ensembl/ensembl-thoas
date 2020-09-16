@@ -38,26 +38,34 @@ def test_xref_formatting():
             'display_id': 'BRCA2',
             'description': 'BRCA2 DNA repair associated',
             'db_display': 'HGNC symbol',
-            'dbname': 'HGNC'
+            'dbname': 'HGNC',
+            'info_type': 'DIRECT',
+            'info_text': 'stuff'
         }
     ])
 
-    assert doc_list[0]['id'] == 'HGNC:1101'
-    assert doc_list[0]['name'] == 'BRCA2'
-    assert doc_list[0]['description'] == 'BRCA2 DNA repair associated'
-    assert doc_list[0]['source']['name'] == 'HGNC symbol'
-    assert doc_list[0]['source']['id'] == 'HGNC'
+    first_result = doc_list[0]
+    assert first_result['accession_id'] == 'HGNC:1101'
+    assert first_result['name'] == 'BRCA2'
+    assert first_result['description'] == 'BRCA2 DNA repair associated'
+    assert first_result['source']['name'] == 'HGNC symbol'
+    assert first_result['source']['id'] == 'HGNC'
+    assert first_result['assignment_method']['type'] == 'DIRECT'
+    # Note that assignment_method description is inferred on the fly
+    # assert first_result['assignment_method']['description']
 
     doc_list = format_cross_refs([
         {
             'primary_id': 'GO:0098781',
             'display_id': 'ncRNA transcription',
             'description': 'The transcription of non (protein) coding RNA from a DNA template. Source: GOC:dos',
-            'dbname': 'GO'
+            'dbname': 'GO',
+            'info_type': 'PROJECTION',
+            'info_text': 'Projected from homo_sapiens'
         }
     ])
 
-    assert doc_list[0]['id'] == 'GO:0098781'
+    assert doc_list[0]['accession_id'] == 'GO:0098781'
     assert doc_list[0]['source']['name'] == 'GO'
     assert doc_list[0]['source']['id'] == 'GO'
 
@@ -365,6 +373,7 @@ def test_protein_formatting():
         'id': 'ENSP001',
         'version': 2,
         'transcript_id': 'ENST001',
+        'xrefs': []
     }
 
     result = format_protein(protein)

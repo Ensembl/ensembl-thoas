@@ -98,22 +98,33 @@ def format_cross_refs(xrefs):
         if 'db_display' not in x:
             # This may be a GO xref
             doc = {
-                'id': x['primary_id'],
+                'accession_id': x['primary_id'],
                 'name': x['display_id'],
-                'description': '',
+                'description': None,
+                'assignment_method': {
+                    'type': x['info_type']
+                },
                 'source': {
                     'name': x['dbname'],
-                    'id': x['dbname']
+                    'id': x['dbname'],
+                    # No mechanism to provide description and release from data dumps
+                    'description': None,
+                    'release': None
                 }
             }
         else:
             doc = {
-                'id': x['primary_id'],
+                'accession_id': x['primary_id'],
                 'name': x['display_id'],
                 'description': x['description'],
+                'assignment_method': {
+                    'type': x['info_type']
+                },
                 'source': {
                     'name': x['db_display'],
-                    'id': x['dbname']
+                    'id': x['dbname'],
+                    'description': None,
+                    'release': None
                 }
             }
         json_xrefs.append(doc)
@@ -341,7 +352,8 @@ def format_protein(protein):
         'version': protein['version'],
         # for foreign key behaviour
         'transcript_id': protein['transcript_id'],
-        'so_term': 'polypeptide' # aka SO:0000104
+        'so_term': 'polypeptide', # aka SO:0000104
+        'external_references': format_cross_refs(protein['xrefs'])
     }
 
 
