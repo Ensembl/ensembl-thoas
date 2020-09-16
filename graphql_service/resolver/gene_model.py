@@ -170,7 +170,6 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 @PGC_TYPE.field('product')
 def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
-    print(pgc)
     loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
 
     product = loader.load(

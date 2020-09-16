@@ -114,6 +114,7 @@ def test_annotate_function(resolver):
 
 
 def test_description_generation(resolver):
+    'Test the addition of a description field to xref assignment data'
     description = resolver.describe_info_type('DIRECT')
     assert description == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
 

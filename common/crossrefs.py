@@ -195,7 +195,7 @@ class XrefResolver():
         that an external reference was linked to an Ensembl feature
         '''
 
-        if info_type in  self.info_types:
-            return self.info_types[info_type]
-        else:
+        if info_type not in self.info_types:
             raise KeyError(f'Illegal xref info_type {info_type} used')
+        return self.info_types[info_type]
+            

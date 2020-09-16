@@ -179,7 +179,7 @@ def test_splice_formatting():
     ]
 
     splicing = splicify_exons(exon_list, transcript)
-    print(splicing[0])
+
     assert len(splicing) == 2
     assert splicing[0]['index'] == 1
     assert splicing[0]['exon'] == exon_list[0]
@@ -188,7 +188,6 @@ def test_splice_formatting():
         'end': 10,
         'length': 10
     }
-    print(splicing[1])
     assert splicing[1]['index'] == 2
     assert splicing[1]['exon'] == exon_list[1]
     assert splicing[1]['relative_location'] == {
