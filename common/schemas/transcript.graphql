@@ -10,7 +10,7 @@ type Transcript {
   slice: Slice!
   exons: [Exon!]!
   external_references: [ExternalReference!]!
-  relative_location: RelativeLocation!
+  relative_location: Location!
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
   cdna: CDNA
@@ -29,7 +29,7 @@ type CDNA {
   # The coding portion of a transcript with UTRs but Introns removed
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
-  relative_start: Int!
+  relative_start: Int! # relative coords must ignore intron removal
   relative_end: Int!
   length: Int!
   checksum: String
@@ -41,15 +41,9 @@ type Exon {
   slice: Slice!
 }
 
-type RelativeLocation {
-  start: Int!
-  end: Int!
-  length: Int!
-}
-
 type SplicedExon {
   index: Int!
-  relative_location: RelativeLocation!
+  relative_location: Location!
   exon: Exon!
 }
 
@@ -68,7 +62,7 @@ type PhasedExon {
   end_phase: Int!
   index: Int!
   exon: Exon!
-  relative_location: RelativeLocation
+  relative_location: Location
 }
 
 type Product {
@@ -96,8 +90,8 @@ type ProteinDomain {
   id: String!
   name: String!
   resource_name: String!
-  location: RelativeLocation!
-  hit_location: RelativeLocation!
+  location: Location!
+  hit_location: Location!
   score: Float!
 }
 
