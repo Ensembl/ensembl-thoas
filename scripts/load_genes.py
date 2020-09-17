@@ -215,7 +215,6 @@ def format_transcript(
         'stable_id': get_stable_id(transcript["id"], transcript["version"]),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
-        'name': transcript['name'],
         'so_term': transcript['biotype'],
         'name': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
