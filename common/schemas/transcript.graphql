@@ -26,7 +26,7 @@ type CDS {
 }
 
 type CDNA {
-  # The coding portion of a transcript with UTRs but Introns removed
+  # The transcribed portion of a transcript with UTRs but Introns removed
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
   relative_start: Int! # relative coords must ignore intron removal
