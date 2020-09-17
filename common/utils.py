@@ -326,17 +326,21 @@ def format_cdna(transcript):
     start = transcript['start']
     end = transcript['end']
 
+    # Conveniently, cDNA spans the whole transcript
     relative_start = 1
-    relative_end = 0 # temporarily
+    relative_end = transcript['end'] - transcript['start'] + 1
+    # but length must not include the introns
+    length = 0 # temporarily
     for exon in transcript['exons']:
-        relative_end += exon['end'] - exon['start'] + 1
+        length += exon['end'] - exon['start'] + 1
 
     # Needs sequence too. Add it soon!
     return {
         'start': start,
         'end': end,
         'relative_start': relative_start,
-        'relative_end': relative_end
+        'relative_end': relative_end,
+        'length': length
     }
 
 

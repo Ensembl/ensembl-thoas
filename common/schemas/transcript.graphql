@@ -4,6 +4,7 @@ type Transcript {
   """
   stable_id: String!
   unversioned_stable_id: String!
+  name: String
   version: Int
   so_term: String
   slice: Slice!
@@ -12,6 +13,7 @@ type Transcript {
   relative_location: RelativeLocation!
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
+  cdna: CDNA
 }
 
 type CDS {
@@ -21,6 +23,16 @@ type CDS {
   relative_end: Int!
   protein_length: Int!
   nucleotide_length: Int!
+}
+
+type CDNA {
+  # The coding portion of a transcript with UTRs but Introns removed
+  start: Int! # Start in genomic coordinates
+  end: Int! # End in genomic coordinates
+  relative_start: Int!
+  relative_end: Int!
+  length: Int!
+  checksum: String
 }
 
 type Exon {
