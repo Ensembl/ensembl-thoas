@@ -360,7 +360,8 @@ def test_cdna_formatting():
     assert cdna['start'] == 1
     assert cdna['end'] == 100
     assert cdna['relative_start'] == 1
-    assert cdna['relative_end'] == 40
+    assert cdna['relative_end'] == 100
+    assert cdna['length'] == 40
 
 
 def test_protein_formatting():
