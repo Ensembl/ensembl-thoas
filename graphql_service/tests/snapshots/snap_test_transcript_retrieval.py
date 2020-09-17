@@ -9,6 +9,7 @@ snapshots = Snapshot()
 
 snapshots['test_transcript_retrieval 1'] = {
     'transcript': {
+        'name': 'BRCA2-201',
         'product_generating_contexts': [
             {
                 'cds': {
