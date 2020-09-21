@@ -75,11 +75,6 @@ async def test_transcript_retrieval(snapshot):
                             }
                         }
                     }
-                    relative_location {
-                        start
-                        end
-                        length
-                    }
                 }
             }
         }
