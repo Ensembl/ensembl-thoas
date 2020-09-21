@@ -149,13 +149,13 @@ def test_phase_calculation():
     }
 
     splicing = phase_exons(exon_list, 'ENST01', phase_lookup)
-    for i in range(0, len(splicing)):
-        assert splicing[i]['index'] == i + 1
+    for i, phased_exon in enumerate(splicing):
+        assert phased_exon['index'] == i + 1
         stable_id = exon_list[i]['stable_id']
-        assert splicing[i]['exon']['stable_id'] == stable_id
+        assert phased_exon['exon']['stable_id'] == stable_id
 
         assert (
-            splicing[i]['start_phase'], splicing[i]['end_phase']
+            phased_exon['start_phase'], phased_exon['end_phase']
         ) == (
             phase_lookup['ENST01'][stable_id]
         )
