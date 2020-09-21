@@ -62,7 +62,6 @@ type PhasedExon {
   end_phase: Int!
   index: Int!
   exon: Exon!
-  relative_location: Location!
 }
 
 type Product {
