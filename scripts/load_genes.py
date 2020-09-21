@@ -16,9 +16,7 @@ import csv
 import ijson
 import pymongo
 
-from common.utils import load_config, parse_args, format_cross_refs, \
-    format_slice, format_exon, format_utr, format_cdna, format_protein, \
-    flush_buffer, splicify_exons, get_stable_id, calculate_relative_coords
+import common.utils
 from common.mongo import MongoDbClient
 
 def create_index(mongo_client):
@@ -99,14 +97,14 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                     gene[key] = None
 
             try:
-                gene_xrefs = format_cross_refs(gene['xrefs'])
+                gene_xrefs = common.utils.format_cross_refs(gene['xrefs'])
             except KeyError:
                 gene_xrefs = []
 
             json_gene = {
 
                 'type': 'Gene',
-                'stable_id': get_stable_id(gene["id"], gene["version"]),
+                'stable_id': common.utils.get_stable_id(gene["id"], gene["version"]),
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
@@ -114,7 +112,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 # Note that the description comes the long way via xref
                 # pipeline and includes a [source: string]
                 'name': gene['description'],
-                'slice': format_slice(
+                'slice': common.utils.format_slice(
                     region_name=gene['seq_region_name'],
                     region_type=gene['coord_system']['name'],
                     default_region=default_region,
@@ -124,7 +122,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                     end=int(gene['end'])
                 ),
                 'transcripts': [
-                    [get_stable_id(transcript["id"], transcript["version"]) \
+                    [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
                         for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
@@ -151,11 +149,11 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 for product in transcript['translations']:
                     # Add mature RNA here
                     if product['ensembl_object_type'] == 'translation':
-                        protein_buffer.append(format_protein(product))
+                        protein_buffer.append(common.utils.format_protein(product))
 
-            gene_buffer = flush_buffer(mongo_client, gene_buffer)
-            transcript_buffer = flush_buffer(mongo_client, transcript_buffer)
-            protein_buffer = flush_buffer(mongo_client, protein_buffer)
+            gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
+            transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
+            protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:
@@ -190,7 +188,7 @@ def format_transcript(
     exon_list = []
     for exon in transcript['exons']:
         exon_list.append(
-            format_exon(
+            common.utils.format_exon(
                 exon,
                 region_name=region_name,
                 region_strand=int(exon['strand']),
@@ -202,23 +200,23 @@ def format_transcript(
         )
     # verify that exons are all in rank order in case the source file isn't
     # There are no guarantees in the dumping pipeline for rank order
-    exon_list.sort(key=exon_sorter)
+    exon_list.sort(key=common.utils.exon_sorter)
 
     try:
-        transcript_xrefs = format_cross_refs(transcript['xrefs'])
+        transcript_xrefs = common.utils.format_cross_refs(transcript['xrefs'])
     except KeyError:
         transcript_xrefs = []
 
     new_transcript = {
         'type': 'Transcript',
-        'gene': get_stable_id(gene["id"], gene["version"]),
-        'stable_id': get_stable_id(transcript["id"], transcript["version"]),
+        'gene': common.utils.get_stable_id(gene["id"], gene["version"]),
+        'stable_id': common.utils.get_stable_id(transcript["id"], transcript["version"]),
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
         'symbol': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
-        'relative_location': calculate_relative_coords(
+        'relative_location': common.utils.calculate_relative_coords(
             parent_params={
                 'start': gene['start'],
                 'end':gene['end'],
@@ -229,7 +227,7 @@ def format_transcript(
                 'end': transcript['end']
             }
         ),
-        'slice': format_slice(
+        'slice': common.utils.format_slice(
             region_name=region_name,
             region_type=region_type,
             default_region=default_region,
@@ -242,8 +240,8 @@ def format_transcript(
         'genome_id': genome_id,
         'external_references': transcript_xrefs,
         'product_generating contexts': [],
-        'spliced_exons': splicify_exons(exon_list, transcript),
-        'cdna': format_cdna(transcript)
+        'spliced_exons': common.utils.splicify_exons(exon_list, transcript),
+        'cdna': common.utils.format_cdna(transcript)
     }
 
     # Now for the tricky stuff around CDS
@@ -263,10 +261,10 @@ def format_transcript(
             new_transcript['product_generating_contexts'].append(
                 {
                     'product_type': 'Protein', # probably
-                    '5_prime_utr': format_utr(
+                    '5_prime_utr': common.utils.format_utr(
                         transcript, cds_start, cds_end, downstream=False
                     ),
-                    '3_prime_utr': format_utr(
+                    '3_prime_utr': common.utils.format_utr(
                         transcript, cds_start, cds_end, downstream=True
                     ),
                     'cds': {
@@ -279,7 +277,7 @@ def format_transcript(
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': translation['id'],
-                    'phased_exons': phase_exons(exon_list, transcript['id'], phase_info),
+                    'phased_exons': common.utils.phase_exons(exon_list, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop()
                 }
@@ -336,9 +334,9 @@ def preload_exon_phases(production_name, assembly):
 
 if __name__ == '__main__':
 
-    ARGS = parse_args()
+    ARGS = common.utils.parse_args()
 
-    MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
+    MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
