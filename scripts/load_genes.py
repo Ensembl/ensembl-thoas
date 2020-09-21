@@ -186,7 +186,9 @@ def format_transcript(
 
     default_region = True
     exon_list = []
-    for exon in transcript['exons']:
+    # verify that exons are all in rank order in case the source file isn't
+    # There are no guarantees in the dumping pipeline for rank order
+    for exon in transcript['exons'].sort(key=common.utils.exon_sorter):
         exon_list.append(
             common.utils.format_exon(
                 exon,
@@ -198,9 +200,6 @@ def format_transcript(
                 transcript=transcript
             )
         )
-    # verify that exons are all in rank order in case the source file isn't
-    # There are no guarantees in the dumping pipeline for rank order
-    exon_list.sort(key=common.utils.exon_sorter)
 
     try:
         transcript_xrefs = common.utils.format_cross_refs(transcript['xrefs'])
