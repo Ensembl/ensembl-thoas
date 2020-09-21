@@ -31,7 +31,7 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
         'type': 'Gene',
     }
     if bySymbol:
-        query['name'] = bySymbol['symbol']
+        query['symbol'] = bySymbol['symbol']
         query['genome_id'] = bySymbol['genome_id']
     if byId:
         query['$or'] = [

@@ -29,7 +29,7 @@ async def test_transcript_retrieval(snapshot):
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
             stable_id
             unversioned_stable_id
-            name
+            symbol
             version
             so_term
             slice {

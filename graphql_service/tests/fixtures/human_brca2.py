@@ -16,8 +16,8 @@ def build_gene():
     'Mock representation of human BRCA2 gene'
     gene = {
         'type': 'Gene',
-        'name': 'BRCA2',
-        'description': 'BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]',
+        'symbol': 'BRCA2',
+        'name': 'BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]',
         'stable_id': 'ENSG00000139618.15',
         'unversioned_stable_id': 'ENSG00000139618',
         'version': 15,
@@ -46,8 +46,7 @@ def build_transcripts():
     'Mock representation of two transcripts of human BRCA2 gene'
     brca2_201 = {
         'type': 'Transcript',
-        'name': 'BRCA2-201',
-        'description': None,
+        'symbol': 'BRCA2-201',
         'gene': 'ENSG00000139618.15',
         'stable_id': 'ENST00000380152.7',
         'unversioned_stable_id': 'ENST00000380152',
@@ -192,8 +191,7 @@ def build_transcripts():
     }
     brca2_203 = {
         'type': 'Transcript',
-        'name': 'BRCA2-203',
-        'description': None,
+        'symbol': 'BRCA2-203',
         'gene': 'ENSG00000139618.15',
         'stable_id': 'ENST00000528762.1',
         'unversioned_stable_id': 'ENST00000528762',

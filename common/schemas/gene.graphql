@@ -3,8 +3,8 @@ type Gene {
   stable_id: String!
   unversioned_stable_id: String!
   version: Int
-  name: String!
-  description: String
+  symbol: String!
+  name: String
   so_term: String
   transcripts: [Transcript!]!
   slice: Slice!

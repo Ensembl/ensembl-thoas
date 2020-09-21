@@ -9,7 +9,6 @@ snapshots = Snapshot()
 
 snapshots['test_transcript_retrieval 1'] = {
     'transcript': {
-        'name': 'BRCA2-201',
         'product_generating_contexts': [
             {
                 'cds': {
@@ -92,6 +91,7 @@ snapshots['test_transcript_retrieval 1'] = {
         },
         'so_term': 'protein_coding',
         'stable_id': 'ENST00000380152.7',
+        'symbol': 'BRCA2-201',
         'unversioned_stable_id': 'ENST00000380152',
         'version': 7
     }

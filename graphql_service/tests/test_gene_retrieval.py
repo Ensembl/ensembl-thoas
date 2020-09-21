@@ -24,8 +24,8 @@ async def test_gene_retrieval_by_id(snapshot):
     'Test retrieval of a gene from the grapqhl api by id'
     query = """{
       gene(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
+        symbol
         name
-        description
         stable_id
         unversioned_stable_id
         version
@@ -58,7 +58,7 @@ async def test_gene_retrieval_by_symbol(snapshot):
     'Test retrieval of a gene from the graphql api by its symbol'
     query = """{
       gene(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
-        name
+        symbol
         stable_id
       }
     }"""

@@ -4,7 +4,7 @@ type Transcript {
   """
   stable_id: String!
   unversioned_stable_id: String!
-  name: String
+  symbol: String
   version: Int
   so_term: String
   slice: Slice!

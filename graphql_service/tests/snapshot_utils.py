@@ -13,7 +13,7 @@
 """
 
 import mongomock
-
+import requests
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
@@ -25,7 +25,11 @@ def prepare_db():
 
     mocked_mongo_collection = mongomock.MongoClient().db.collection
     data_loader = DataLoaderCollection(mocked_mongo_collection)
-    xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+    try:
+        xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+    except requests.exceptions.ConnectionError:
+        print('No network available, tests will fail')
+        xref_resolver = None
 
     context = {
         'mongo_db': mocked_mongo_collection,

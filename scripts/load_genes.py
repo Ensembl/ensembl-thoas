@@ -110,10 +110,10 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
-                'name': gene['name'],
+                'symbol': gene['name'],
                 # Note that the description comes the long way via xref
                 # pipeline and includes a [source: string]
-                'description': gene['description'],
+                'name': gene['description'],
                 'slice': format_slice(
                     region_name=gene['seq_region_name'],
                     region_type=gene['coord_system']['name'],
@@ -216,7 +216,7 @@ def format_transcript(
         'unversioned_stable_id': transcript['id'],
         'version': transcript['version'],
         'so_term': transcript['biotype'],
-        'name': transcript['name'] if 'name' in transcript else None,
+        'symbol': transcript['name'] if 'name' in transcript else None,
         'description': transcript['description'] if 'description' in transcript else None,
         'relative_location': calculate_relative_coords(
             parent_params={

@@ -42,8 +42,8 @@ def fixture_basic_data():
     'Some fake genes'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Gene', 'name': 'durian', 'stable_id': 'ENSG002.2', 'unversioned_stable_id': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Gene', 'symbol': 'durian', 'stable_id': 'ENSG002.2', 'unversioned_stable_id': 'ENSG002'},
     ])
     return Info(collection)
 
@@ -53,9 +53,9 @@ def fixture_transcript_data():
     'Some fake transcripts'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Transcript', 'name': 'kumquat', 'stable_id': 'ENST001.1', 'unversioned_stable_id': 'ENST001', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Transcript', 'name': 'grape', 'stable_id': 'ENST002.2', 'unversioned_stable_id': 'ENST002', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Gene', 'name': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'}
+        {'genome_id': 1, 'type': 'Transcript', 'symbol': 'kumquat', 'stable_id': 'ENST001.1', 'unversioned_stable_id': 'ENST001', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Transcript', 'symbol': 'grape', 'stable_id': 'ENST002.2', 'unversioned_stable_id': 'ENST002', 'gene': 'ENSG001.1'},
+        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'}
     ])
     return Info(collection)
 
@@ -70,7 +70,7 @@ def fixture_slice_data():
         {
             'genome_id': 1,
             'type': 'Gene',
-            'name': 'banana',
+            'symbol': 'banana',
             'stable_id': 'ENSG001.1',
             'unversioned_stable_id': 'ENSG001',
             'slice': {
@@ -86,7 +86,7 @@ def fixture_slice_data():
         {
             'genome_id': 1,
             'type': 'Gene',
-            'name': 'durian',
+            'symbol': 'durian',
             'stable_id': 'ENSG002.2',
             'unversioned_stable_id': 'ENSG002',
             'slice': {
@@ -110,7 +110,7 @@ def test_resolve_gene(basic_data):
         basic_data,
         bySymbol={'symbol': 'banana', 'genome_id': 1}
     )
-    assert result['name'] == 'banana'
+    assert result['symbol'] == 'banana'
     result = None
 
     with pytest.raises(GraphQLError) as graphql_error:
@@ -132,7 +132,7 @@ def test_resolve_gene(basic_data):
         byId={'stable_id': 'ENSG001.1', 'genome_id': 1}
     )
 
-    assert result['name'] == 'banana'
+    assert result['symbol'] == 'banana'
     result = None
 
     with pytest.raises(GraphQLError) as graphql_error:
@@ -154,7 +154,7 @@ def test_resolve_gene(basic_data):
         byId={'stable_id': 'ENSG001', 'genome_id': 1}
     )
 
-    assert result['name'] == 'banana'
+    assert result['symbol'] == 'banana'
 
 
 def test_resolve_transcript(transcript_data):
@@ -165,7 +165,7 @@ def test_resolve_transcript(transcript_data):
         byId={'stable_id': 'ENST001.1', 'genome_id': 1}
     )
 
-    assert result['name'] == 'kumquat'
+    assert result['symbol'] == 'kumquat'
     assert result['stable_id'] == 'ENST001.1'
 
     result = model.resolve_transcript(
@@ -186,7 +186,7 @@ def test_resolve_gene_transcripts(transcript_data):
 
     for hit in data:
         assert hit['type'] == 'Transcript'
-        assert hit['name'] in ['kumquat', 'grape']
+        assert hit['symbol'] in ['kumquat', 'grape']
 
 
 def test_resolve_slice(slice_data):
