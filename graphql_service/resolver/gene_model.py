@@ -158,7 +158,9 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
     query = {
         'genome_id': genome_id,
         'stable_id': stable_id,
-        'type': 'Product'
+        'type': {
+            '$in': ['Protein', 'MatureRNA']
+        }
     }
 
     collection = info.context['mongo_db']

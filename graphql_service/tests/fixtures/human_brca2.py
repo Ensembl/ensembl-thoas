@@ -269,7 +269,7 @@ def build_products():
     'Create protein products for fetching individually'
 
     product = {
-        'type': 'Product',
+        'type': 'Protein',
         'unversioned_stable_id': 'ENSP00000369497',
         'stable_id': 'ENSP00000369497.3',
         'version': 3,
@@ -278,5 +278,11 @@ def build_products():
         'protein_domains': [],
         'genome_id': 'homo_sapiens_GCA_000001405_28'
     }
+
+    # Add mature product example once we know the shape of them
+    # rna = {
+    #     'type': 'MatureRNA',
+    #     ...
+    # }
 
     return [product]
