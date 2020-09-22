@@ -196,8 +196,7 @@ def format_transcript(
                 region_strand=int(exon['strand']),
                 region_type=region_type,
                 default_region=default_region,
-                assembly=assembly,
-                transcript=transcript
+                assembly=assembly
             )
         )
 
