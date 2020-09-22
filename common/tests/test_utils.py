@@ -112,12 +112,7 @@ def test_exon_formatting():
         region_strand=1,
         region_type='chromosome',
         default_region=True,
-        assembly='GRCh38',
-        transcript={
-            'start': 1,
-            'end': 200,
-            'strand': 1
-        }
+        assembly='GRCh38'
     )
 
     assert exon['type'] == 'Exon'
@@ -125,9 +120,6 @@ def test_exon_formatting():
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
     assert exon['slice']['region']['name'] == 'chr1'
-    assert exon['relative_location']['start'] == 100
-    assert exon['relative_location']['end'] == 200
-    assert exon['relative_location']['length'] == 101
     # forego further enumeration of slice properties
 
 

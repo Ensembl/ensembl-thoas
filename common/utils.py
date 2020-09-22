@@ -163,7 +163,7 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, region_type, default_region, assembly, transcript):
+def format_exon(exon, region_name, region_strand, region_type, default_region, assembly):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -176,25 +176,15 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     transcript: The transcript that contains this exon
     '''
 
-    relative_location = calculate_relative_coords(
-        parent_params={
-            'start': transcript['start'],
-            'end': transcript['end'],
-            'strand': transcript['strand']
-        },
-        child_params={
-            'start': exon['start'],
-            'end': exon['end']
-        }
-    )
     return {
         'type': 'Exon',
         'stable_id': get_stable_id(exon['id'], exon['version']),
         'unversioned_stable_id': exon['id'],
         'version': exon['version'],
-        'slice': format_slice(region_name, region_type, default_region,
-                              region_strand, assembly, exon['start'], exon['end']),
-        'relative_location': relative_location
+        'slice': format_slice(
+            region_name, region_type, default_region, region_strand,
+            assembly, exon['start'], exon['end']
+        )
     }
 
 
