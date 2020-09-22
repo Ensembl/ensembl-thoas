@@ -226,7 +226,7 @@ def splicify_exons(exons, transcript):
     '''
     Given a list of exons and the parent transcript, create a list of spliced
     exons with rank and relative coordinates.
-    exons MUST be sorted by rank before calling
+    exons MUST be sorted by rank before calling, and are pre-formatted
     '''
     splicing = []
     for i, exon in enumerate(exons, start=1):
@@ -240,8 +240,8 @@ def splicify_exons(exons, transcript):
                     'strand': transcript['strand']
                 },
                 child_params={
-                    'start': exon['start'],
-                    'end': exon['end']
+                    'start': exon['slice']['location']['start'],
+                    'end': exon['slice']['location']['end']
                 }
             )
         })

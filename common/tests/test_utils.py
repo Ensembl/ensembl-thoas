@@ -174,8 +174,20 @@ def test_splice_formatting():
     }
 
     exon_list = [
-        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
-        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
+        {
+            'slice': {
+                'location': {'start': 1, 'end': 10}
+            },
+            'stable_id': 'ENSE01',
+            'unversioned_stable_id': 'ENSE01'
+        },
+        {
+            'slice': {
+                'location': {'start': 21, 'end': 30}
+            },
+            'stable_id': 'ENSE02',
+            'unversioned_stable_id': 'ENSE02'
+        }
     ]
 
     splicing = splicify_exons(exon_list, transcript)
