@@ -251,7 +251,7 @@ def format_transcript(
 
         # Insert multiple product handling here when we know what it will look like
         # Pick the first to be default
-        defaults = [False] * len(transcript['translations']) - 1
+        defaults = [False] * (len(transcript['translations']) - 1)
         defaults.append(True)
 
         for translation in transcript['translations']:
