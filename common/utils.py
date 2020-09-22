@@ -96,7 +96,7 @@ def format_cross_refs(xrefs):
     json_xrefs = []
     for x in xrefs:
         # GO xrefs (or associated xrefs) are a different format inline
-        if x['dbname'] == 'GO':
+        if x['dbname'] == 'GO' or x['dbname'] == 'PHI':
             # Add specific handling later
             continue
         doc = None
