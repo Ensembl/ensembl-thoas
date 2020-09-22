@@ -13,7 +13,6 @@ type Transcript {
   relative_location: Location!
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
-  cdna: CDNA
 }
 
 type CDS {
@@ -55,6 +54,7 @@ type ProductGeneratingContext {
   three_prime_utr: UTR
   product: Product
   phased_exons: [PhasedExon!]!
+  cdna: CDNA!
 }
 
 type PhasedExon {

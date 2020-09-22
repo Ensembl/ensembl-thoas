@@ -237,8 +237,7 @@ def format_transcript(
         'genome_id': genome_id,
         'external_references': transcript_xrefs,
         'product_generating_contexts': [],
-        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
-        'cdna': common.utils.format_cdna(transcript)
+        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript)
     }
 
     # Now for the tricky stuff around CDS
@@ -276,7 +275,8 @@ def format_transcript(
                     'product_id': translation['id'],
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
-                    'default': defaults.pop()
+                    'default': defaults.pop(),
+                    'cdna': common.utils.format_cdna(transcript)
                 }
             )
 
