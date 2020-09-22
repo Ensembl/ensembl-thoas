@@ -91,6 +91,8 @@ def format_cross_refs(xrefs):
     Convert a list of xrefs into schema-compliant sub-documents
     '''
 
+    if not xrefs:
+        return []
     json_xrefs = []
     for x in xrefs:
         # GO xrefs (or associated xrefs) are a different format inline
