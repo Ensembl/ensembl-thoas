@@ -4,13 +4,15 @@ type Transcript {
   """
   stable_id: String!
   unversioned_stable_id: String!
+  symbol: String
   version: Int
   so_term: String
   slice: Slice!
   exons: [Exon!]!
-  cross_references: [CrossReference]!
-  splicing: [Splicing!]!
-  relative_location: RelativeLocation!
+  external_references: [ExternalReference!]!
+  relative_location: Location!
+  product_generating_contexts: [ProductGeneratingContext!]!
+  spliced_exons: [SplicedExon!]!
 }
 
 type CDS {
@@ -22,41 +24,40 @@ type CDS {
   nucleotide_length: Int!
 }
 
+type CDNA {
+  # The transcribed portion of a transcript with UTRs but Introns removed
+  start: Int! # Start in genomic coordinates
+  end: Int! # End in genomic coordinates
+  relative_start: Int! # relative coords must ignore intron removal
+  relative_end: Int!
+  length: Int!
+  checksum: String
+}
+
 type Exon {
   # An Exon that is part of a Transcript
   stable_id: String!
-  relative_location: RelativeLocation!
   slice: Slice!
 }
 
-type RelativeLocation {
-  start: Int!
-  end: Int!
-  length: Int!
+type SplicedExon {
+  index: Int!
+  relative_location: Location!
+  exon: Exon!
 }
 
-union Splicing = ProteinProductSplicing | NonCodingProductSplicing
-
-type ProteinProductSplicing {
-  """
-  product type of this splicing event is 'protein'
-  """
+type ProductGeneratingContext {
   product_type: String!
   default: Boolean!
-  cds: CDS!
-  spliced_exons: [SplicedExon!]!
-  product: Product!
+  cds: CDS
+  five_prime_utr: UTR
+  three_prime_utr: UTR
+  product: Product
+  phased_exons: [PhasedExon!]!
+  cdna: CDNA!
 }
 
-
-type NonCodingProductSplicing {
-  """
-  product type of this splicing event is 'protein'
-  """
-  product_type: String!
- }
-
-type SplicedExon {
+type PhasedExon {
   start_phase: Int!
   end_phase: Int!
   index: Int!
@@ -65,28 +66,39 @@ type SplicedExon {
 
 type Product {
   stable_id: String!
+  unversioned_stable_id: String!
+  version: Int!
   """
   the value of the type field is "protein"
   """
   type: String!
-
+  so_term: String!
   """
   length in amino acids if product is a protein
   """
   length: Int!
-  splice_junction_positions: [Int!]!
-  sequence: String!
   """
   The value of sequence checksum can be used to retrieve the sequence from RefGet
   """
   sequence_checksum: String!
-  external_references: [CrossReference]!
+  external_references: [ExternalReference!]!
   protein_domains: [ProteinDomain!]!
 }
 
-"""
-we haven't decided on their fields
-"""
 type ProteinDomain {
-  foo: String!
+  id: String!
+  name: String!
+  resource_name: String!
+  location: Location!
+  hit_location: Location!
+  score: Float!
+}
+
+type UTR {
+  start: Int!
+  end: Int!
+  relative_start: Int!
+  relative_end: Int!
+  length: Int!
+  # Ignoring checksums until we have a way to get them
 }

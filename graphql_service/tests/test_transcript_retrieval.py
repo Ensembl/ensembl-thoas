@@ -13,46 +13,23 @@
 """
 
 import pytest
-import mongomock
 from ariadne import graphql
+from .snapshot_utils import setup_test
 
-from common.crossrefs import XrefResolver
-from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import DataLoaderCollection
-from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts
+executable_schema, context = setup_test()
 
-mocked_mongo_collection = mongomock.MongoClient().db.collection
-data_loader = DataLoaderCollection(mocked_mongo_collection)
-xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
-
-executable_schema = prepare_executable_schema()
-context = {
-    'mongo_db': mocked_mongo_collection,
-    'data_loader': data_loader,
-    'XrefResolver': xref_resolver
-}
-
-def prepare_db():
-    'Fill mock database with data'
-    transcripts = build_transcripts()
-    gene = build_gene()
-    mocked_mongo_collection.insert_one(gene)
-    mocked_mongo_collection.insert_many(transcripts)
-
-def setup_module():
-    'Run setup scripts once per module'
-    prepare_db()
 
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
     """
     Test retrieval of a transcript from the grapqhl api by id
-    Acquires snapshot from snapshottest by fixture injection
+    Gets the expected test result from snapshottest
     """
     query = """{
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
             stable_id
             unversioned_stable_id
+            symbol
             version
             so_term
             slice {
@@ -68,37 +45,30 @@ async def test_transcript_retrieval(snapshot):
                     length
                 }
             }
-            splicing {
-                ... on ProteinProductSplicing {
-                    product_type
-                    cds {
-                        start
-                        end
-                        relative_start
-                        relative_end
-                        protein_length
-                        nucleotide_length
-                    }
-                    spliced_exons {
-                        start_phase
-                        end_phase
-                        index
-                        exon {
-                            stable_id
-                            slice {
-                                region {
-                                    name
-                                    strand {
-                                        code
-                                    }
-                                }
-                                location {
-                                    start
-                                    end
-                                    length
+            product_generating_contexts {
+                product_type
+                cds {
+                    start
+                    end
+                    relative_start
+                    relative_end
+                    protein_length
+                    nucleotide_length
+                }
+                phased_exons {
+                    start_phase
+                    end_phase
+                    index
+                    exon {
+                        stable_id
+                        slice {
+                            region {
+                                name
+                                strand {
+                                    code
                                 }
                             }
-                            relative_location {
+                            location {
                                 start
                                 end
                                 length
@@ -111,6 +81,27 @@ async def test_transcript_retrieval(snapshot):
     }"""
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    assert success
+    assert result['data']['transcript']
+    snapshot.assert_match(result['data'])
+
+@pytest.mark.asyncio
+async def test_transcript_splicing(snapshot):
+    '''
+    Run a graphql query checking transcript spliced exons
+    '''
+    query = '''
+    {
+        transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
+            spliced_exons {
+                index
+                exon {
+                    stable_id
+                }
+            }
+        }
+    }'''
+    (success, result) = await graphql(executable_schema, {'query': query}, context_value=context)
     assert success
     assert result['data']['transcript']
     snapshot.assert_match(result['data'])

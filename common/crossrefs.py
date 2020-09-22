@@ -65,6 +65,20 @@ class XrefResolver():
                         source['db_name'].lower()
                     ] = source
 
+        self.info_types = {
+            'PROJECTION': 'A reference inferred via homology from an assembly with better annotation coverage',
+            'MISC': 'Yes, misc',
+            'DIRECT': 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification',
+            'SEQUENCE_MATCH': 'A reference inferred by the best match of two sequences',
+            'INFERRED_PAIR': 'A reference inferred by reference made on a parent feature, e.g. a RefSeq protein Id because the Refseq mRNA accession was assigned to an Ensembl transcript',
+            'PROBE': 'Obsolete',
+            'UNMAPPED': 'A mapping could be made between Ensembl and this external reference, but the similarity was not high enough',
+            'COORDINATE_OVERLAP': 'A reference inferred from annotation of the same locus as a feature in Ensembl. Mostly relevant when comparing annotation between assemblies with different sequences than Ensembl for the same species',
+            'CHECKSUM': 'A reference inferred from a sequence checksum match, such as when the sequences are equal',
+            'NONE': 'Void',
+            'DEPENDENT': 'A reference inferred from a DIRECT reference and the links to other entities made by the external database'
+        }
+
     def _load_from_file(self, file):
         'Constructor helper to get JSON from file instead of URL'
         data = None
@@ -164,10 +178,24 @@ class XrefResolver():
         '''
 
         xref['url'] = self.url_from_ens_dbname(
-            xref['id'],
+            xref['accession_id'],
             xref['source']['id']
         )
         xref['source']['url'] = self.source_url_generator(
             self.translate_dbname(xref['source']['id'])
         )
+        xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
         return xref
+
+
+    def describe_info_type(self, info_type):
+        '''
+        Generates a description field for external reference assignment
+        info_type is the old core schema name for an enum representing ways
+        that an external reference was linked to an Ensembl feature
+        '''
+
+        if info_type not in self.info_types:
+            raise KeyError(f'Illegal xref info_type {info_type} used')
+        return self.info_types[info_type]
+            

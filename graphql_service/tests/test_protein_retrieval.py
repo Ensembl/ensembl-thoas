@@ -20,49 +20,44 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_gene_retrieval_by_id(snapshot):
-    'Test retrieval of a gene from the grapqhl api by id'
+async def test_protein_retrieval(snapshot):
+    """
+    Test retrieval of proteins from the grapqhl api by id
+    Gets the expected test result from snapshottest
+    """
     query = """{
-      gene(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
-        symbol
-        name
-        stable_id
-        unversioned_stable_id
-        version
-        so_term
-        transcripts {
-          stable_id
+        product(genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3") {
+            stable_id
+            unversioned_stable_id
+            version
+            so_term
         }
-        slice {
-          region {
-            name
-            strand {
-              code
-            }
-          }
-          location {
-            start
-            end
-          }
-        }
-      }
     }"""
-
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
+    assert result['data']['product']
     snapshot.assert_match(result['data'])
 
+
 @pytest.mark.asyncio
-async def test_gene_retrieval_by_symbol(snapshot):
-    'Test retrieval of a gene from the graphql api by its symbol'
+async def test_protein_retrieval_by_transcript(snapshot):
+    """
+    Test retrieval of proteins from the grapqhl api by transcript
+    """
     query = """{
-      gene(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
-        symbol
-        stable_id
-      }
+        transcript(byId: {stable_id: "ENST00000380152.7", genome_id: "homo_sapiens_GCA_000001405_28"}) {
+            product_generating_contexts {
+                product_type
+                product {
+                    stable_id
+                }
+
+            }
+        }
     }"""
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
+    assert result['data']['transcript']
     snapshot.assert_match(result['data'])

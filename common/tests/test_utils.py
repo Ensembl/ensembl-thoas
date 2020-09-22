@@ -38,29 +38,48 @@ def test_xref_formatting():
             'display_id': 'BRCA2',
             'description': 'BRCA2 DNA repair associated',
             'db_display': 'HGNC symbol',
-            'dbname': 'HGNC'
+            'dbname': 'HGNC',
+            'info_type': 'DIRECT',
+            'info_text': 'stuff'
         }
     ])
 
-    assert doc_list[0]['id'] == 'HGNC:1101'
-    assert doc_list[0]['name'] == 'BRCA2'
-    assert doc_list[0]['description'] == 'BRCA2 DNA repair associated'
-    assert doc_list[0]['source']['name'] == 'HGNC symbol'
-    assert doc_list[0]['source']['id'] == 'HGNC'
+    first_result = doc_list[0]
+    assert first_result['accession_id'] == 'HGNC:1101'
+    assert first_result['name'] == 'BRCA2'
+    assert first_result['description'] == 'BRCA2 DNA repair associated'
+    assert first_result['source']['name'] == 'HGNC symbol'
+    assert first_result['source']['id'] == 'HGNC'
+    assert first_result['assignment_method']['type'] == 'DIRECT'
+    # Note that assignment_method description is inferred on the fly and cannot be tested
+    # without the full resolver chain
 
     doc_list = format_cross_refs([
         {
             'primary_id': 'GO:0098781',
             'display_id': 'ncRNA transcription',
             'description': 'The transcription of non (protein) coding RNA from a DNA template. Source: GOC:dos',
-            'dbname': 'GO'
+            'dbname': 'NOTGO',
+            'info_type': 'PROJECTION',
+            'info_text': 'Projected from homo_sapiens'
+        }
+    ])
+    assert doc_list[0]['accession_id'] == 'GO:0098781'
+    assert doc_list[0]['source']['name'] == 'NOTGO'
+    assert doc_list[0]['source']['id'] == 'NOTGO'
+
+    doc_list = format_cross_refs([
+        {
+            'primary_id': 'GO:0098781',
+            'display_id': 'ncRNA transcription',
+            'description': 'The transcription of non (protein) coding RNA from a DNA template. Source: GOC:dos',
+            'dbname': 'GO',
+            'info_type': 'PROJECTION',
+            'info_text': 'Projected from homo_sapiens'
         }
     ])
 
-    assert doc_list[0]['id'] == 'GO:0098781'
-    assert doc_list[0]['source']['name'] == 'GO'
-    assert doc_list[0]['source']['id'] == 'GO'
-
+    assert len(doc_list) == 0
 
 def test_slice_formatting():
     '''
@@ -104,12 +123,7 @@ def test_exon_formatting():
         region_strand=1,
         region_type='chromosome',
         default_region=True,
-        assembly='GRCh38',
-        transcript={
-            'start': 1,
-            'end': 200,
-            'strand': 1
-        }
+        assembly='GRCh38'
     )
 
     assert exon['type'] == 'Exon'
@@ -117,13 +131,10 @@ def test_exon_formatting():
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
     assert exon['slice']['region']['name'] == 'chr1'
-    assert exon['relative_location']['start'] == 100
-    assert exon['relative_location']['end'] == 200
-    assert exon['relative_location']['length'] == 101
     # forego further enumeration of slice properties
 
 
-def test_splicifying():
+def test_phase_calculation():
     '''
     Check that phases and rank are calculated correctly for a given ordered
     list of exons.
@@ -140,17 +151,65 @@ def test_splicifying():
         }
     }
 
-    splicing = splicify_exons(exon_list, 'ENST01', phase_lookup)
-    for i in range(0, len(splicing)):
-        assert splicing[i]['index'] == i
+    phased_exons = phase_exons(exon_list, 'ENST01', phase_lookup)
+    for i, phased_exon in enumerate(phased_exons):
+        assert phased_exon['index'] == i + 1
         stable_id = exon_list[i]['stable_id']
-        assert splicing[i]['exon']['stable_id'] == stable_id
+        assert phased_exon['exon']['stable_id'] == stable_id
 
         assert (
-            splicing[i]['start_phase'], splicing[i]['end_phase']
+            phased_exon['start_phase'], phased_exon['end_phase']
         ) == (
             phase_lookup['ENST01'][stable_id]
         )
+
+
+def test_splice_formatting():
+    '''
+    Spliced exons are exons in a wrapper containing index and relative location.
+    Check the emitted format
+    '''
+    # truncated transcript for simplicity
+    transcript = {
+        'start': 1,
+        'end': 30,
+        'strand': 1
+    }
+
+    exon_list = [
+        {
+            'slice': {
+                'location': {'start': 1, 'end': 10}
+            },
+            'stable_id': 'ENSE01',
+            'unversioned_stable_id': 'ENSE01'
+        },
+        {
+            'slice': {
+                'location': {'start': 21, 'end': 30}
+            },
+            'stable_id': 'ENSE02',
+            'unversioned_stable_id': 'ENSE02'
+        }
+    ]
+
+    splicing = splicify_exons(exon_list, transcript)
+
+    assert len(splicing) == 2
+    assert splicing[0]['index'] == 1
+    assert splicing[0]['exon'] == exon_list[0]
+    assert splicing[0]['relative_location'] == {
+        'start': 1,
+        'end': 10,
+        'length': 10
+    }
+    assert splicing[1]['index'] == 2
+    assert splicing[1]['exon'] == exon_list[1]
+    assert splicing[1]['relative_location'] == {
+        'start': 21,
+        'end': 30,
+        'length': 10
+    }
 
 
 def test_utr_formatting():
@@ -297,14 +356,50 @@ def test_cdna_formatting():
     '''
     cDNA representation
     '''
-    pass
+    transcript = {
+        'start': 1,
+        'end': 100,
+        'exons': [
+            {
+                'start': 1,
+                'end': 20
+            },
+            {
+                'start': 81,
+                'end': 100
+            }
+        ]
+    }
+
+    cdna = format_cdna(transcript)
+    assert cdna['start'] == 1
+    assert cdna['end'] == 100
+    assert cdna['relative_start'] == 1
+    assert cdna['relative_end'] == 100
+    assert cdna['length'] == 40
 
 
 def test_protein_formatting():
     '''
     Verify protein document structure
     '''
-    pass
+    
+    protein = {
+        'id': 'ENSP001',
+        'version': 2,
+        'transcript_id': 'ENST001',
+        'xrefs': [],
+        'protein_features': []
+    }
+
+    result = format_protein(protein)
+    assert result['type'] == 'Protein'
+    assert result['unversioned_stable_id'] == 'ENSP001'
+    assert result['stable_id'] == 'ENSP001.2'
+    assert result['version'] == 2
+    assert result['so_term'] == 'polypeptide'
+    assert result['transcript_id'] == 'ENST001'
+
 
 def test_relative_coords():
     '''

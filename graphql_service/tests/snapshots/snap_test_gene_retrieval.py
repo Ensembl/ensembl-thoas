@@ -1,16 +1,4 @@
-"""
-.. See the NOTICE file distributed with this work for additional information
-   regarding copyright ownership.
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-       http://www.apache.org/licenses/LICENSE-2.0
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-"""
+# -*- coding: utf-8 -*-
 # snapshottest: v1 - https://goo.gl/zC4yUc
 from __future__ import unicode_literals
 
@@ -21,8 +9,7 @@ snapshots = Snapshot()
 
 snapshots['test_gene_retrieval_by_id 1'] = {
     'gene': {
-        'description': 'BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]',
-        'name': 'BRCA2',
+        'name': 'BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]',
         'slice': {
             'location': {
                 'end': 32400266,
@@ -37,6 +24,7 @@ snapshots['test_gene_retrieval_by_id 1'] = {
         },
         'so_term': 'protein_coding',
         'stable_id': 'ENSG00000139618.15',
+        'symbol': 'BRCA2',
         'transcripts': [
             {
                 'stable_id': 'ENST00000380152.7'
@@ -52,7 +40,7 @@ snapshots['test_gene_retrieval_by_id 1'] = {
 
 snapshots['test_gene_retrieval_by_symbol 1'] = {
     'gene': {
-        'name': 'BRCA2',
-        'stable_id': 'ENSG00000139618.15'
+        'stable_id': 'ENSG00000139618.15',
+        'symbol': 'BRCA2'
     }
 }

@@ -91,29 +91,45 @@ def format_cross_refs(xrefs):
     Convert a list of xrefs into schema-compliant sub-documents
     '''
 
-    # GO xrefs (or associated xrefs) are a different format inline
+    if not xrefs:
+        return []
     json_xrefs = []
     for x in xrefs:
+        # GO xrefs (or associated xrefs) are a different format inline
+        if x['dbname'] == 'GO' or x['dbname'] == 'PHI':
+            # Add specific handling later
+            continue
         doc = None
         if 'db_display' not in x:
             # This may be a GO xref
             doc = {
-                'id': x['primary_id'],
+                'accession_id': x['primary_id'],
                 'name': x['display_id'],
-                'description': '',
+                'description': None,
+                'assignment_method': {
+                    'type': x['info_type']
+                },
                 'source': {
                     'name': x['dbname'],
-                    'id': x['dbname']
+                    'id': x['dbname'],
+                    # No mechanism to provide description and release from data dumps
+                    'description': None,
+                    'release': None
                 }
             }
         else:
             doc = {
-                'id': x['primary_id'],
+                'accession_id': x['primary_id'],
                 'name': x['display_id'],
                 'description': x['description'],
+                'assignment_method': {
+                    'type': x['info_type']
+                },
                 'source': {
                     'name': x['db_display'],
-                    'id': x['dbname']
+                    'id': x['dbname'],
+                    'description': None,
+                    'release': None
                 }
             }
         json_xrefs.append(doc)
@@ -152,7 +168,7 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, region_type, default_region, assembly, transcript):
+def format_exon(exon, region_name, region_strand, region_type, default_region, assembly):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -165,38 +181,32 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
     transcript: The transcript that contains this exon
     '''
 
-    relative_location = calculate_relative_coords(
-        parent_params={
-            'start': transcript['start'],
-            'end': transcript['end'],
-            'strand': transcript['strand']
-        },
-        child_params={
-            'start': exon['start'],
-            'end': exon['end']
-        }
-    )
     return {
         'type': 'Exon',
         'stable_id': get_stable_id(exon['id'], exon['version']),
         'unversioned_stable_id': exon['id'],
         'version': exon['version'],
-        'slice': format_slice(region_name, region_type, default_region,
-                              region_strand, assembly, exon['start'], exon['end']),
-        'relative_location': relative_location
+        'slice': format_slice(
+            region_name, region_type, default_region, region_strand,
+            assembly, exon['start'], exon['end']
+        )
     }
 
 
-def splicify_exons(exons, transcript_id, phase_lookup):
+def exon_sorter(exon):
+    'Selects the field to compare for sorting exons'
+    return exon['rank']
+
+
+def phase_exons(exons, transcript_id, phase_lookup):
     '''
     Given formatted exon data, and a phase lookup, return a spliced exon
-    wrapper for each element with start and end phases. Exons MUST be in
-    coding order
+    wrapper for each element with start and end phases.
+    exons MUST be sorted by rank before calling
     '''
 
     splicing = []
-    i = 0
-    for exon in exons:
+    for i, exon in enumerate(exons, start=1):
         (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
         splicing.append({
             'start_phase': start_phase,
@@ -204,7 +214,32 @@ def splicify_exons(exons, transcript_id, phase_lookup):
             'index': i,
             'exon': exon
         })
-        i += 1
+    return splicing
+
+
+def splicify_exons(exons, transcript):
+    '''
+    Given a list of exons and the parent transcript, create a list of spliced
+    exons with rank and relative coordinates.
+    exons MUST be sorted by rank before calling, and are pre-formatted
+    '''
+    splicing = []
+    for i, exon in enumerate(exons, start=1):
+        splicing.append({
+            'index': i,
+            'exon': exon,
+            'relative_location': calculate_relative_coords(
+                parent_params={
+                    'start': transcript['start'],
+                    'end': transcript['end'],
+                    'strand': transcript['strand']
+                },
+                child_params={
+                    'start': exon['slice']['location']['start'],
+                    'end': exon['slice']['location']['end']
+                }
+            )
+        })
     return splicing
 
 
@@ -284,12 +319,15 @@ def format_cdna(transcript):
     '''
 
     start = transcript['start']
-    end = transcript['start']
+    end = transcript['end']
 
+    # Conveniently, cDNA spans the whole transcript
     relative_start = 1
-    relative_end = 0 # temporarily
+    relative_end = transcript['end'] - transcript['start'] + 1
+    # but length must not include the introns
+    length = 0 # temporarily
     for exon in transcript['exons']:
-        relative_end += exon['end'] - exon['start'] + 1
+        length += exon['end'] - exon['start'] + 1
 
     # Needs sequence too. Add it soon!
     return {
@@ -297,6 +335,7 @@ def format_cdna(transcript):
         'end': end,
         'relative_start': relative_start,
         'relative_end': relative_end,
+        'length': length
     }
 
 
@@ -311,10 +350,35 @@ def format_protein(protein):
         'stable_id': get_stable_id(protein['id'], protein['version']),
         'version': protein['version'],
         # for foreign key behaviour
-        'transcript_id': protein['transcript_id'],
-        'so_term': 'polypeptide' # aka SO:0000104
+        'transcript_id': protein['transcript_id'], # missing version...
+        'so_term': 'polypeptide', # aka SO:0000104
+        'external_references': format_cross_refs(protein['xrefs']),
+        'protein_domains': format_protein_domains(protein['protein_features'])
     }
 
+
+def format_protein_domains(protein_features):
+    '''
+    Create protein domain representation from a list of protein_features
+    '''
+
+    domains = []
+    # Needs work from production before this can be sorted
+    # for feature in protein_features:
+    #     domains.append(
+    #         {
+    #             'id': feature['name'],
+    #             'name': feature['name'],
+    #             'resource_name': feature['dbname'],
+    #             'location': {
+    #                 'start': feature['start'],
+    #                 'end': feature['end']
+    #             },
+    #             'hit_location': None,
+    #             'score': None
+    #         }
+    #     )
+    return domains
 
 def flush_buffer(mongo_client, buffer):
     'Check if a buffer needs flushing, and insert documents when it does'

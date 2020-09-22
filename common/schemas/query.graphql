@@ -1,6 +1,7 @@
 type Query {
   gene(bySymbol: SymbolInput, byId: IdInput): Gene
   transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
+  product(genome_id: String!, stable_id: String!): Product
   slice(genome_id: String!, region: String!, start: Int!, end: Int!): Locus
 }
 
@@ -16,6 +17,6 @@ input IdInput {
 
 type Locus {
   # A dynamically defined part of a Region
-  genes: [Gene]!
-  transcripts: [Transcript]!
+  genes: [Gene!]!
+  transcripts: [Transcript!]!
 }
