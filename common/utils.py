@@ -91,9 +91,12 @@ def format_cross_refs(xrefs):
     Convert a list of xrefs into schema-compliant sub-documents
     '''
 
-    # GO xrefs (or associated xrefs) are a different format inline
     json_xrefs = []
     for x in xrefs:
+        # GO xrefs (or associated xrefs) are a different format inline
+        if x['dbname'] == 'GO':
+            # Add specific handling later
+            continue
         doc = None
         if 'db_display' not in x:
             # This may be a GO xref
@@ -345,11 +348,35 @@ def format_protein(protein):
         'stable_id': get_stable_id(protein['id'], protein['version']),
         'version': protein['version'],
         # for foreign key behaviour
-        'transcript_id': protein['transcript_id'],
+        'transcript_id': protein['transcript_id'], # missing version...
         'so_term': 'polypeptide', # aka SO:0000104
-        'external_references': format_cross_refs(protein['xrefs'])
+        'external_references': format_cross_refs(protein['xrefs']),
+        'protein_domains': format_protein_domains(protein['protein_features'])
     }
 
+
+def format_protein_domains(protein_features):
+    '''
+    Create protein domain representation from a list of protein_features
+    '''
+
+    domains = []
+    # Needs work from production before this can be sorted
+    # for feature in protein_features:
+    #     domains.append(
+    #         {
+    #             'id': feature['name'],
+    #             'name': feature['name'],
+    #             'resource_name': feature['dbname'],
+    #             'location': {
+    #                 'start': feature['start'],
+    #                 'end': feature['end']
+    #             },
+    #             'hit_location': None,
+    #             'score': None
+    #         }
+    #     )
+    return domains
 
 def flush_buffer(mongo_client, buffer):
     'Check if a buffer needs flushing, and insert documents when it does'

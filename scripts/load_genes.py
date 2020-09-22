@@ -236,7 +236,7 @@ def format_transcript(
         ),
         'genome_id': genome_id,
         'external_references': transcript_xrefs,
-        'product_generating contexts': [],
+        'product_generating_contexts': [],
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
         'cdna': common.utils.format_cdna(transcript)
     }

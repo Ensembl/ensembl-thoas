@@ -59,16 +59,27 @@ def test_xref_formatting():
             'primary_id': 'GO:0098781',
             'display_id': 'ncRNA transcription',
             'description': 'The transcription of non (protein) coding RNA from a DNA template. Source: GOC:dos',
+            'dbname': 'NOTGO',
+            'info_type': 'PROJECTION',
+            'info_text': 'Projected from homo_sapiens'
+        }
+    ])
+    assert doc_list[0]['accession_id'] == 'GO:0098781'
+    assert doc_list[0]['source']['name'] == 'NOTGO'
+    assert doc_list[0]['source']['id'] == 'NOTGO'
+
+    doc_list = format_cross_refs([
+        {
+            'primary_id': 'GO:0098781',
+            'display_id': 'ncRNA transcription',
+            'description': 'The transcription of non (protein) coding RNA from a DNA template. Source: GOC:dos',
             'dbname': 'GO',
             'info_type': 'PROJECTION',
             'info_text': 'Projected from homo_sapiens'
         }
     ])
 
-    assert doc_list[0]['accession_id'] == 'GO:0098781'
-    assert doc_list[0]['source']['name'] == 'GO'
-    assert doc_list[0]['source']['id'] == 'GO'
-
+    assert len(doc_list) == 0
 
 def test_slice_formatting():
     '''
@@ -377,7 +388,8 @@ def test_protein_formatting():
         'id': 'ENSP001',
         'version': 2,
         'transcript_id': 'ENST001',
-        'xrefs': []
+        'xrefs': [],
+        'protein_features': []
     }
 
     result = format_protein(protein)
