@@ -137,8 +137,8 @@ def test_phase_calculation():
     list of exons.
     '''
     exon_list = [
-        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01', 'rank': 1},
-        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02', 'rank': 2}
+        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
+        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
     ]
 
     phase_lookup = {
@@ -148,8 +148,8 @@ def test_phase_calculation():
         }
     }
 
-    splicing = phase_exons(exon_list, 'ENST01', phase_lookup)
-    for i, phased_exon in enumerate(splicing):
+    phased_exons = phase_exons(exon_list, 'ENST01', phase_lookup)
+    for i, phased_exon in enumerate(phased_exons):
         assert phased_exon['index'] == i + 1
         stable_id = exon_list[i]['stable_id']
         assert phased_exon['exon']['stable_id'] == stable_id
@@ -174,8 +174,8 @@ def test_splice_formatting():
     }
 
     exon_list = [
-        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01', 'rank': 1},
-        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02', 'rank': 2}
+        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
+        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
     ]
 
     splicing = splicify_exons(exon_list, transcript)

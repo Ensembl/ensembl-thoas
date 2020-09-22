@@ -211,12 +211,12 @@ def phase_exons(exons, transcript_id, phase_lookup):
     '''
 
     splicing = []
-    for exon in exons:
+    for i, exon in enumerate(exons, start=1):
         (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
         splicing.append({
             'start_phase': start_phase,
             'end_phase': end_phase,
-            'index': exon['rank'],
+            'index': i,
             'exon': exon
         })
     return splicing
@@ -229,9 +229,9 @@ def splicify_exons(exons, transcript):
     exons MUST be sorted by rank before calling
     '''
     splicing = []
-    for exon in exons:
+    for i, exon in enumerate(exons, start=1):
         splicing.append({
-            'index': exon['rank'],
+            'index': i,
             'exon': exon,
             'relative_location': calculate_relative_coords(
                 parent_params={

@@ -185,11 +185,11 @@ def format_transcript(
     '''
 
     default_region = True
-    exon_list = []
+    ordered_formatted_exons = []
     # verify that exons are all in rank order in case the source file isn't
     # There are no guarantees in the dumping pipeline for rank order
-    for exon in transcript['exons'].sort(key=common.utils.exon_sorter):
-        exon_list.append(
+    for exon in sorted(transcript['exons'], key=common.utils.exon_sorter):
+        ordered_formatted_exons.append(
             common.utils.format_exon(
                 exon,
                 region_name=region_name,
@@ -235,11 +235,10 @@ def format_transcript(
             start=int(transcript['start']),
             end=int(transcript['end'])
         ),
-        'exons': exon_list,
         'genome_id': genome_id,
         'external_references': transcript_xrefs,
         'product_generating contexts': [],
-        'spliced_exons': common.utils.splicify_exons(exon_list, transcript),
+        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
         'cdna': common.utils.format_cdna(transcript)
     }
 
@@ -276,7 +275,7 @@ def format_transcript(
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': translation['id'],
-                    'phased_exons': common.utils.phase_exons(exon_list, transcript['id'], phase_info),
+                    'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop()
                 }
