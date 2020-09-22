@@ -103,7 +103,8 @@ def test_annotate_function(resolver):
             'id': 'CHEBI'
         },
         'assignment_method': {
-            'type': 'DIRECT'
+            'type': 'DIRECT',
+            'description': 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
         }
     })
     assert response['accession_id'] == '1'

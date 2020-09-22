@@ -51,8 +51,8 @@ def test_xref_formatting():
     assert first_result['source']['name'] == 'HGNC symbol'
     assert first_result['source']['id'] == 'HGNC'
     assert first_result['assignment_method']['type'] == 'DIRECT'
-    # Note that assignment_method description is inferred on the fly
-    # assert first_result['assignment_method']['description']
+    # Note that assignment_method description is inferred on the fly and cannot be tested
+    # without the full resolver chain
 
     doc_list = format_cross_refs([
         {
