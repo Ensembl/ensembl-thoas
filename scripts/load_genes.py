@@ -146,10 +146,11 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
             # Add products
             for transcript in gene['transcripts']:
-                for product in transcript['translations']:
-                    # Add mature RNA here
-                    if product['ensembl_object_type'] == 'translation':
-                        protein_buffer.append(common.utils.format_protein(product))
+                if transcript['translations']:
+                    for product in transcript['translations']:
+                        # Add mature RNA here
+                        if product['ensembl_object_type'] == 'translation':
+                            protein_buffer.append(common.utils.format_protein(product))
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
