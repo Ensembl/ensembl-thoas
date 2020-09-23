@@ -146,7 +146,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
             # Add products
             for transcript in gene['transcripts']:
-                if transcript['translations']:
+                if 'translations' in transcript:
                     for product in transcript['translations']:
                         # Add mature RNA here
                         if product['ensembl_object_type'] == 'translation':
