@@ -56,7 +56,7 @@ class DataLoaderCollection():
         Load a bunch of products/proteins by ID
         '''
         query = {
-            'type': 'Product',
+            'type': 'Protein',
             'genome_id': self.genome_id,
             'stable_id': {
                 '$in': keys
