@@ -5,7 +5,7 @@ type Gene {
   version: Int
   symbol: String!
   name: String
-  so_term: String
+  so_term: String!
   transcripts: [Transcript!]!
   slice: Slice!
   external_references: [ExternalReference!]!

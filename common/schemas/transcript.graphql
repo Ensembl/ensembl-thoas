@@ -6,7 +6,7 @@ type Transcript {
   unversioned_stable_id: String!
   symbol: String
   version: Int
-  so_term: String
+  so_term: String!
   slice: Slice!
   external_references: [ExternalReference!]!
   relative_location: Location!
