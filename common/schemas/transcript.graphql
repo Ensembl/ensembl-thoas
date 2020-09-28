@@ -8,7 +8,6 @@ type Transcript {
   version: Int
   so_term: String
   slice: Slice!
-  exons: [Exon!]!
   external_references: [ExternalReference!]!
   relative_location: Location!
   product_generating_contexts: [ProductGeneratingContext!]!
