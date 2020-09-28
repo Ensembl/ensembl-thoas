@@ -20,7 +20,7 @@ type Location {
 type Region {
   # A large contiguous block of assembled sequence, such as a whole chromosome.
   name: String!
-  strand: Strand
+  strand: Strand!
   assembly: String!
 }
 
