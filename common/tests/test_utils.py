@@ -384,7 +384,7 @@ def test_protein_formatting():
     '''
     Verify protein document structure
     '''
-    
+
     protein = {
         'id': 'ENSP001',
         'version': 2,
@@ -408,7 +408,7 @@ def test_relative_coords():
     Test relative coords function w.r.t. parent feature
     Inputs are Ensembl-style always ascending values irrespective of strand
     '''
-    
+
     rel_coords = calculate_relative_coords(
         parent_params={
             'start': 10,

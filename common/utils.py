@@ -396,7 +396,7 @@ def flush_buffer(mongo_client, buffer, flush_threshold=1000):
             print(
                 'One of these borked the pipeline for {}: {}'.format(
                     buffer[0]['genome_id'],
-                    map(lambda x: x['stable_id'], buffer)
+                    list(map(lambda x: x['stable_id'], buffer))
                 ),
                 file=sys.stderr
             )
@@ -404,7 +404,7 @@ def flush_buffer(mongo_client, buffer, flush_threshold=1000):
             print(
                 'One of these borked the server for {}: {}'.format(
                     buffer[0]['genome_id'],
-                    map(lambda x: x['stable_id'], buffer)
+                    list(map(lambda x: x['stable_id'], buffer))
                 ),
                 file=sys.stderr
             )
