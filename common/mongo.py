@@ -13,6 +13,7 @@
 """
 
 import pymongo
+import mongomock
 
 
 class MongoDbClient():
@@ -51,4 +52,18 @@ class MongoDbClient():
         '''
         Get the currently set default collection to run queries against
         '''
+        return self.mongo_db[self.default_collection]
+
+
+class FakeMongoDbClient():
+    '''
+    Sets up a mongomock collection for thoas code to test with
+    '''
+
+    def __init__(self):
+        'Override default setup'
+        self.mongo_db = mongomock.MongoClient().db
+        self.default_collection = 'test'
+
+    def collection(self):
         return self.mongo_db[self.default_collection]

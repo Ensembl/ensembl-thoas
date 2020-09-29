@@ -14,6 +14,9 @@
 
 from configparser import ConfigParser
 import argparse
+import sys
+import pymongo
+
 
 def load_config(filename):
     'Load a config, return a ConfigParser object'
@@ -380,11 +383,30 @@ def format_protein_domains(protein_features):
     #     )
     return domains
 
-def flush_buffer(mongo_client, buffer):
+def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     'Check if a buffer needs flushing, and insert documents when it does'
-    if len(buffer) > 1000:
-        print('Pushing 1000 documents into Mongo')
-        mongo_client.collection().insert_many(buffer)
+    if len(buffer) > flush_threshold:
+        print('Pushing buffer into Mongo')
+        # pymongo can generate size errors, but so can the server which gives
+        # rise to a second kind of exception.
+        try:
+            mongo_client.collection().insert_many(buffer)
+        except pymongo.errors.DocumentTooLarge:
+            print(
+                'One of these borked the pipeline for {}: {}'.format(
+                    buffer[0]['genome_id'],
+                    map(lambda x: x['stable_id'], buffer)
+                ),
+                file=sys.stderr
+            )
+        except pymongo.errors.OperationFailure:
+            print(
+                'One of these borked the server for {}: {}'.format(
+                    buffer[0]['genome_id'],
+                    map(lambda x: x['stable_id'], buffer)
+                ),
+                file=sys.stderr
+            )
         print('Done')
         buffer = []
     return buffer

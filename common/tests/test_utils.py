@@ -13,6 +13,7 @@
 """
 
 from common.utils import *
+from common.mongo import FakeMongoDbClient
 
 
 def test_stable_id():
@@ -453,3 +454,26 @@ def test_relative_coords():
 
     assert rel_coords['start'] == 1
     assert rel_coords['end'] == 10
+
+
+def test_flush_buffer():
+    '''
+    A large number of documents need to be bundled up for performant loading
+    Sometimes errors can occur involving document size that we need to debug
+    so we must check the debugging is sane
+    '''
+
+    mongo = FakeMongoDbClient()
+
+    # empty buffer means no action
+    result = flush_buffer(mongo, [])
+    assert not result
+
+    test_data = [{'test': 'a'} for _ in range(10)]
+    result = flush_buffer(mongo, test_data, flush_threshold=9)
+    assert not result
+
+    result = mongo.collection().find()
+    assert mongo.collection().count_documents({}) == 10
+
+    # Struggled to meaningfully test exception behaviour
