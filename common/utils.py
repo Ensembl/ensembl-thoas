@@ -342,7 +342,7 @@ def format_cdna(transcript):
     }
 
 
-def format_protein(protein):
+def format_protein(protein, genome_id):
     '''
     Create a protein representation from limited data
     '''
@@ -354,6 +354,7 @@ def format_protein(protein):
         'version': protein['version'],
         # for foreign key behaviour
         'transcript_id': protein['transcript_id'], # missing version...
+        'genome_id': genome_id,
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features'])

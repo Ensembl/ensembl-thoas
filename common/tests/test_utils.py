@@ -393,13 +393,14 @@ def test_protein_formatting():
         'protein_features': []
     }
 
-    result = format_protein(protein)
+    result = format_protein(protein, 'tralalala')
     assert result['type'] == 'Protein'
     assert result['unversioned_stable_id'] == 'ENSP001'
     assert result['stable_id'] == 'ENSP001.2'
     assert result['version'] == 2
     assert result['so_term'] == 'polypeptide'
     assert result['transcript_id'] == 'ENST001'
+    assert result['genome_id'] == 'tralalala'
 
 
 def test_relative_coords():
