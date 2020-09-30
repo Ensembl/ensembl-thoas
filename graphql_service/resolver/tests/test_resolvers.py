@@ -296,7 +296,7 @@ def test_url_generation(basic_data):
 
 @pytest.mark.asyncio
 async def test_resolve_transcript_products(transcript_data):
-    'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
+    'Check the DataLoader for products is working via transcript. Requires event loop for DataLoader'
     result = await model.resolve_product_by_pgc(
         {'product_id': 'ENSP001.1'},
         transcript_data
