@@ -63,3 +63,22 @@ def test_batch_transcript_load():
 
     # No results in the structure that is returned
     assert not data[0]
+
+
+def test_batch_product_load():
+    '''
+    Batch load some test products
+    '''
+
+    collection = mongomock.MongoClient().db.collection
+    collection.insert_many([
+        {'genome_id': 1, 'type': 'Protein', 'stable_id': 'ENSP001.1'},
+        {'genome_id': 1, 'type': 'Protein', 'stable_id': 'ENSP002.1'}
+    ])
+
+    loader = DataLoaderCollection(collection)
+    loader.genome_id = 1
+    response = loader.batch_product_load(['ENSP001.1'])
+    data = asyncio.get_event_loop().run_until_complete(response)
+    
+    assert data[0][0]['stable_id'] == 'ENSP001.1'
