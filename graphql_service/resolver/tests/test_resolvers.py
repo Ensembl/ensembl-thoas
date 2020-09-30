@@ -33,7 +33,8 @@ class Info():
             'stuff': 'Nonsense',
             'mongo_db': self.collection,
             'data_loader': data_loader.DataLoaderCollection(self.collection),
-            'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json')
+            'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json'),
+            'genome_id': 1 # This should be added by the top-level resolver on query
         }
 
 
@@ -204,7 +205,7 @@ def test_resolve_slice(slice_data):
     context = slice_data.context
     result = model.query_region(
         {
-            'slice.genome_id': 1,
+            'genome_id': 1,
             'slice.region.name': 'chr1',
             'slice.location.start': 1,
             'slice.location.end': 120,
@@ -217,7 +218,7 @@ def test_resolve_slice(slice_data):
 
     result = model.query_region(
         {
-            'slice.genome_id': 1,
+            'genome_id': 1,
             'slice.region.name': 'chr1',
             'slice.location.start': 5,
             'slice.location.end': 205,

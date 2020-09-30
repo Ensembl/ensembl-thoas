@@ -41,6 +41,7 @@ def resolve_gene(_, info, bySymbol=None, byId=None):
         query['genome_id'] = byId['genome_id']
 
     collection = info.context['mongo_db']
+    info.context['genome_id'] = query['genome_id']
 
     result = collection.find_one(query)
     if not result:
@@ -76,6 +77,8 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         ]
         query['genome_id'] = byId['genome_id']
 
+    info.context['genome_id'] = query['genome_id']
+
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
     return transcript
@@ -86,7 +89,7 @@ async def resolve_gene_transcripts(gene, info):
     gene_stable_id = gene['stable_id']
 
     # Get a dataloader from info
-    loader = info.context['data_loader'].gene_transcript_dataloader(gene['genome_id'])
+    loader = info.context['data_loader'].gene_transcript_dataloader(info.context['genome_id'])
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(
         key=gene_stable_id
@@ -105,7 +108,7 @@ def resolve_slice(_, info, genome_id, region, start, end):
     '''
     # Caution team, this is global, and might contaminate a second slice
     # in the same query, depending on the graph descent method
-    info.context['slice.genome_id'] = genome_id
+    info.context['genome_id'] = genome_id
     info.context['slice.region.name'] = region
     info.context['slice.start'] = start
     info.context['slice.end'] = end
@@ -132,7 +135,7 @@ def query_region(context, feature_type):
     end coordinate
     '''
     query = {
-        'genome_id': context['slice.genome_id'],
+        'genome_id': context['genome_id'],
         'type': feature_type,
         'slice.region.name': context['slice.region.name'],
         'slice.location.start': {'$gt': context['slice.location.start']},
@@ -165,6 +168,10 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 
     collection = info.context['mongo_db']
     result = collection.find_one(query)
+
+    # persist genome_id for later resolvers
+    info.context['genome_id'] = genome_id
+
     if not result:
         raise ProductNotFoundError(genome_id, stable_id)
     return result
@@ -172,7 +179,7 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 @PGC_TYPE.field('product')
 def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
-    loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
+    loader = info.context['data_loader'].transcript_product_dataloader(info.context['genome_id'])
 
     product = loader.load(
         key=pgc['product_id']
