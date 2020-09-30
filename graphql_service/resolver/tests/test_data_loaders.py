@@ -12,12 +12,13 @@
    limitations under the License.
 """
 
-import asyncio
 import mongomock
+import pytest
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 
-def test_batch_transcript_load():
+@pytest.mark.asyncio
+async def test_batch_transcript_load():
     """
     Try the batch loader outside of the async event process
     """
@@ -35,37 +36,34 @@ def test_batch_transcript_load():
     # This is normally set by calling gene_transcript_dataloader()
     loader.genome_id = 1
 
-    response = loader.batch_transcript_load(
+    response = await loader.batch_transcript_load(
         ['ENSG001.1']
     )
-    data = asyncio.get_event_loop().run_until_complete(response)
 
-    assert len(data) == 1
-    assert len(data[0]) == 2
+    assert len(response) == 1
+    # There are two hits that match the one requested ID
+    assert len(response[0]) == 2
 
-    response = loader.batch_transcript_load(
+    response = await loader.batch_transcript_load(
         ['ENSG001.1', 'ENSG002.2']
     )
-    data = asyncio.get_event_loop().run_until_complete(response)
-
     # This broadly proves that data emerges in lists ordered
     # by the input IDs
-    assert len(data) == 2
-    assert len(data[0]) == 2
-    assert len(data[1]) == 3
-    assert data[1][0]["gene"] == "ENSG002.2"
+    assert len(response) == 2
+    assert len(response[0]) == 2
+    assert len(response[1]) == 3
+    assert response[1][0]["gene"] == "ENSG002.2"
 
     # Try for absent data
-    response = loader.batch_transcript_load(
+    response = await loader.batch_transcript_load(
         ['nonsense']
     )
-    data = asyncio.get_event_loop().run_until_complete(response)
 
     # No results in the structure that is returned
-    assert not data[0]
+    assert not response[0]
 
-
-def test_batch_product_load():
+@pytest.mark.asyncio
+async def test_batch_product_load():
     '''
     Batch load some test products
     '''
@@ -78,7 +76,6 @@ def test_batch_product_load():
 
     loader = DataLoaderCollection(collection)
     loader.genome_id = 1
-    response = loader.batch_product_load(['ENSP001.1'])
-    data = asyncio.get_event_loop().run_until_complete(response)
-    
-    assert data[0][0]['stable_id'] == 'ENSP001.1'
+    response = await loader.batch_product_load(['ENSP001.1'])
+
+    assert response[0][0]['stable_id'] == 'ENSP001.1'

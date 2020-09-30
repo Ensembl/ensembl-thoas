@@ -12,7 +12,6 @@
    limitations under the License.
 """
 
-import asyncio
 import pytest
 import mongomock
 from graphql import GraphQLError
@@ -54,9 +53,41 @@ def fixture_transcript_data():
     'Some fake transcripts'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Transcript', 'symbol': 'kumquat', 'stable_id': 'ENST001.1', 'unversioned_stable_id': 'ENST001', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Transcript', 'symbol': 'grape', 'stable_id': 'ENST002.2', 'unversioned_stable_id': 'ENST002', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'}
+        {
+            'genome_id': 1,
+            'type': 'Gene',
+            'symbol': 'banana',
+            'stable_id': 'ENSG001.1', 
+            'unversioned_stable_id': 'ENSG001'
+        },
+        {
+            'genome_id': 1,
+            'type': 'Transcript',
+            'symbol': 'kumquat',
+            'stable_id': 'ENST001.1',
+            'unversioned_stable_id': 'ENST001',
+            'gene': 'ENSG001.1',
+            'product_generating_contexts': [
+                {
+                    'product_type': 'Protein',
+                    'product_id': 'ENSP001.1'
+                }
+            ]
+        },
+        {
+            'genome_id': 1,
+            'type': 'Transcript',
+            'symbol': 'grape',
+            'stable_id': 'ENST002.2',
+            'unversioned_stable_id': 'ENST002',
+            'gene': 'ENSG001.1',
+            'product_generating_contexts': []
+        },
+        {
+            'genome_id': 1,
+            'type': 'Protein',
+            'stable_id': 'ENSP001.1'
+        }
     ])
     return Info(collection)
 
@@ -176,16 +207,15 @@ def test_resolve_transcript(transcript_data):
     )
     assert not result
 
-
-def test_resolve_gene_transcripts(transcript_data):
-    'Check the DataLoader for transcripts is working via gene'
-    result = model.resolve_gene_transcripts(
+@pytest.mark.asyncio
+async def test_resolve_gene_transcripts(transcript_data):
+    'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
+    result = await model.resolve_gene_transcripts(
         {'stable_id': 'ENSG001.1', 'genome_id': 1},
         transcript_data
     )
-    data = asyncio.get_event_loop().run_until_complete(result)
 
-    for hit in data:
+    for hit in result:
         assert hit['type'] == 'Transcript'
         assert hit['symbol'] in ['kumquat', 'grape']
 
@@ -262,3 +292,16 @@ def test_url_generation(basic_data):
     assert result[0]['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:some_molecule'
     assert result[0]['source']['url'] == 'https://www.ebi.ac.uk/chebi/'
     assert result[0]['assignment_method']['description'] == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
+
+
+@pytest.mark.asyncio
+async def test_resolve_transcript_products(transcript_data):
+    'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
+    result = await model.resolve_product_by_pgc(
+        {'product_id': 'ENSP001.1'},
+        transcript_data
+    )
+
+    assert len(result) == 1
+    assert result[0]['type'] == 'Protein'
+    assert result[0]['stable_id'] == 'ENSP001.1'
