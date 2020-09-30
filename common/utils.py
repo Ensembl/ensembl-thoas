@@ -92,6 +92,8 @@ def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
     Convert a list of xrefs into schema-compliant sub-documents
+
+    Particular sources can be problematic with document size: protein_id, ENA
     '''
 
     if not xrefs:
@@ -99,12 +101,11 @@ def format_cross_refs(xrefs):
     json_xrefs = []
     for x in xrefs:
         # GO xrefs (or associated xrefs) are a different format inline
-        if x['dbname'] == 'GO' or x['dbname'] == 'PHI':
-            # Add specific handling later
+        if x['dbname'] in ['GO', 'PHI', 'protein_id', 'EMBL']:
+            # Add specific handling for ontology terms later
             continue
         doc = None
         if 'db_display' not in x:
-            # This may be a GO xref
             doc = {
                 'accession_id': x['primary_id'],
                 'name': x['display_id'],
