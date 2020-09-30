@@ -175,7 +175,7 @@ def resolve_product_by_pgc(pgc, info):
     loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
 
     product = loader.load(
-        key=pgc['protein_id']
+        key=pgc['product_id']
     )
 
     return product
