@@ -272,7 +272,7 @@ def format_transcript(
                         'protein_length': spliced_length // 3
                     },
                     # Infer the "products" in the resolver. This is a join.
-                    'product_id': translation['id'],
+                    'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
