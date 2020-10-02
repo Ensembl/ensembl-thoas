@@ -16,6 +16,7 @@ from ariadne import QueryType, ObjectType
 from graphql import GraphQLError
 
 # Define Query types for GraphQL
+# Don't forget to import these into ariadne_app.py if you add a new type
 QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
@@ -145,14 +146,14 @@ def query_region(context, feature_type):
 
 
 @PGC_TYPE.field('three_prime_utr')
-def resolve_three_prime_utr(_, info):
+def resolve_three_prime_utr(pgc, _):
     'Convert stored 3` UTR to GraphQL compatible form'
-    return info.context['3_prime_utr']
+    return pgc['3_prime_utr']
 
 @PGC_TYPE.field('five_prime_utr')
-def resolve_utr(_, info):
+def resolve_utr(pgc, _):
     'Convert stored 5` UTR to GraphQL compatible form'
-    return info.context['5_prime_utr']
+    return pgc['5_prime_utr']
 
 @QUERY_TYPE.field('product')
 def resolve_product_by_id(_, info, genome_id, stable_id):
@@ -177,15 +178,15 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
     return result
 
 @PGC_TYPE.field('product')
-def resolve_product_by_pgc(pgc, info):
+async def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
     loader = info.context['data_loader'].transcript_product_dataloader(info.context['genome_id'])
-
-    product = loader.load(
+    products = await loader.load(
         key=pgc['product_id']
     )
-
-    return product
+    # Data loader returns a list because most data-loads are one-many
+    # ID mappings
+    return products[0]
 
 
 class GeneNotFoundError(GraphQLError):

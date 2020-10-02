@@ -11,7 +11,9 @@ snapshots['test_protein_retrieval_by_transcript 1'] = {
     'transcript': {
         'product_generating_contexts': [
             {
-                'product': None,
+                'product': {
+                    'stable_id': 'ENSP00000369497.3'
+                },
                 'product_type': 'protein'
             }
         ]

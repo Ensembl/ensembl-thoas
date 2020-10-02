@@ -302,6 +302,21 @@ async def test_resolve_transcript_products(transcript_data):
         transcript_data
     )
 
-    assert len(result) == 1
-    assert result[0]['type'] == 'Protein'
-    assert result[0]['stable_id'] == 'ENSP001.1'
+    assert result['type'] == 'Protein'
+    assert result['stable_id'] == 'ENSP001.1'
+
+
+@pytest.mark.asyncio
+async def test_resolve_nested_products(transcript_data):
+    'Test products inside transcripts inside the gene'
+    gene_result = model.resolve_gene(
+        None, transcript_data, None, byId={'genome_id': 1, 'stable_id': 'ENSG001.1'}
+    )
+    assert gene_result
+
+    transcript_result = await model.resolve_gene_transcripts(gene_result, transcript_data)
+    for i in transcript_result:
+        for pgc in i['product_generating_contexts']:
+            product_result = await model.resolve_product_by_pgc(pgc, transcript_data)
+            if 'stable_id' in product_result:
+                assert product_result['stable_id'] == 'ENSP001.1'
