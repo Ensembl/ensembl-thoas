@@ -154,7 +154,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                                 common.utils.format_protein(
                                     protein=product,
                                     genome_id=genome['id'],
-                                    product_length=cds_info[transcript['id']]['spliced_length']) // 3
+                                    product_length=cds_info[transcript['id']]['spliced_length'] // 3
+                                )
                             )
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
