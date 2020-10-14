@@ -12,12 +12,15 @@
    limitations under the License.
 """
 
+import re
 import csv
 import ijson
 import pymongo
 
 import common.utils
 from common.mongo import MongoDbClient
+
+lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
@@ -95,6 +98,10 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
             for key in required_keys:
                 if key not in gene:
                     gene[key] = None
+            # LRGs are difficult. They should probably be kept in another
+            # Gene Set because they have little to do with Ensembl Genebuild
+            if lrg_detector.search(gene['id']):
+                continue
 
             try:
                 gene_xrefs = common.utils.format_cross_refs(gene['xrefs'])
