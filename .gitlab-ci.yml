@@ -27,7 +27,7 @@ variables:
 # Template to deploy application to k8s cluster
 .deploy:
   stage: deploy
-  image: dockerhub.ebi.ac.uk/kamal/deploy-tools:0.1
+  image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
 
   script:
     - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/thoas_deployment.yaml
