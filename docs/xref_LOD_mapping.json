@@ -1034,6 +1034,13 @@
       "ensembl_db_name": "Reactome_gene"
     },
     {
+      "db_name": "Reactome_transcript",
+      "example_id": "R-HSA-201451",
+      "id_namespace": "reactome",
+      "feature_type": "annotation",
+      "ensembl_db_name": "Reactome_transcript"
+    },
+    {
       "db_name": "Rebase",
       "description": "Restriction enzyme database",
       "id_namespace": "rebase",
