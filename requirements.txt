@@ -3,6 +3,7 @@ ariadne
 configparser
 ijson
 mongomock
+owlready2
 pymongo
 pytest
 pytest-asyncio
