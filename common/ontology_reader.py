@@ -36,7 +36,6 @@ class OntologyReader():
         return hits[0]
 
 
-
 class SoOntologyReader(OntologyReader):
     '''
     Customized to access the sequence ontology
@@ -84,6 +83,12 @@ class SoOntologyReader(OntologyReader):
 
         return {
             'accession_id': term.id[0],
-            'name': term.label[0],
-            'description': self.get_term_name(term)
+            'value': term.label[0],
+            'url': term.iri,
+            'version': None,
+            'description': self.get_term_name(term),
+            'source': {
+                'name': 'Sequence Ontology',
+                'url': 'sequenceontology.org'
+            }
         }
