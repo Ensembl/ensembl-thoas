@@ -17,28 +17,32 @@ import owlready2
 
 class OntologyReader():
     '''
-    A very bland class for reading ontologies and
-    accessing terms in a sensible way
+    A very bland class for reading ontologies and accessing terms in a
+    sensible way. Ontology titles are unreliable to fetch from the ontology
+    itself!
+    ontology -- the IRI to the ontology
+    source_name -- a default value for source name when the data cannot provide one
+    source_url -- a default URL for the ontology source when the data cannot provide one
     '''
-    def __init__(self, ontology):
+    def __init__(self, ontology, source_name=None, source_url=None):
         self.ontology = owlready2.get_ontology(ontology).load()
+        self.source_name = source_name
+        self.source_url = source_url
 
     def get_term_by_accession(self, accession):
-        'Accession interface. See subclass implementation'
+        'Get term by accession'
         hits = self.ontology.search(id=accession)
-        print(hits)
         return hits[0]
 
     def get_term_by_label(self, label):
-        'Get terms using the label, e.g. "protein_coding"'
+        'Get the first term that matches a label e.g. "protein_coding"'
         hits = self.ontology.search(label=label)
-        print(hits)
         return hits[0]
 
 
-class SoOntologyReader(OntologyReader):
+class OboOntologyReader(OntologyReader):
     '''
-    Customized to access the sequence ontology
+    Customized to access the transcribed OBO ontologies such as Sequence Ontology
     Sample exerpt from Sequence Ontology to help with finding predicates:
 
         <owl:Class rdf:about="http://purl.obolibrary.org/obo/SO_0000704">
@@ -88,7 +92,7 @@ class SoOntologyReader(OntologyReader):
             'version': None,
             'description': self.get_term_name(term),
             'source': {
-                'name': 'Sequence Ontology',
-                'url': 'sequenceontology.org'
+                'name': self.source_name,
+                'url': self.source_url
             }
         }
