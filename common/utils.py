@@ -156,10 +156,6 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     return {
         'region': {
             'name': region_name,
-            'strand': {
-                'code': 'forward' if strand > 0 else 'reverse',
-                'value': strand
-            },
             'assembly': assembly
         },
         'location': {
@@ -167,6 +163,10 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
             'end': int(end),
             'length': int(end) - int(start) + 1,
             'location_type': region_type
+        },
+        'strand': {
+            'code': 'forward' if strand > 0 else 'reverse',
+            'value': strand
         },
         'default': default_region
     }

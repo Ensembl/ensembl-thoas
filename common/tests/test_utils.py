@@ -89,8 +89,8 @@ def test_slice_formatting():
     slice_dict = format_slice('test', 'test place', True, 1, 'GRCh38', 100, 200)
 
     assert slice_dict['region']['name'] == 'test'
-    assert slice_dict['region']['strand']['code'] == 'forward'
-    assert slice_dict['region']['strand']['value'] == 1
+    assert slice_dict['strand']['code'] == 'forward'
+    assert slice_dict['strand']['value'] == 1
     assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
@@ -100,8 +100,8 @@ def test_slice_formatting():
     slice_dict = format_slice('test', 'test place', False, -1, 'GRCh38', 100, 200)
 
     assert slice_dict['region']['name'] == 'test'
-    assert slice_dict['region']['strand']['code'] == 'reverse'
-    assert slice_dict['region']['strand']['value'] == -1
+    assert slice_dict['strand']['code'] == 'reverse'
+    assert slice_dict['strand']['value'] == -1
     assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
