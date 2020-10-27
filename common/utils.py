@@ -79,6 +79,10 @@ def wrapper_parse_args():
         '--release',
         help='The current release of Ensembl. Not the EG release'
     )
+    parser.add_argument(
+        '--so_file',
+        help='Data load requires a copy of the Sequence Ontology'
+    )
     return parser.parse_args()
 
 

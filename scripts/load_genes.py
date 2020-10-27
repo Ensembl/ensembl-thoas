@@ -19,6 +19,7 @@ import pymongo
 
 import common.utils
 from common.mongo import MongoDbClient
+import common.ontology_reader
 
 lrg_detector = re.compile('^LRG')
 
@@ -60,7 +61,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, sequence_ontology):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -68,6 +69,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
     json_file = File containing gene data from production pipeline
     cds_info = CDS start and end coordinates indexed by transcript ID
     phase_info = Per exon start and end phases indexed by transcript and exon ID
+    sequence_ontology = An instance of OboOntologyReader loaded with Sequence Ontology
     """
     gene_buffer = []
     transcript_buffer = []
@@ -109,12 +111,12 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 gene_xrefs = []
 
             json_gene = {
-
                 'type': 'Gene',
                 'stable_id': common.utils.get_stable_id(gene["id"], gene["version"]),
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
-                'so_term': gene['biotype'],
+                'so_term': gene['biotype'], # at least until it's explicitly available
+                'biotype': gene['biotype'],
                 'symbol': gene['name'],
                 # Note that the description comes the long way via xref
                 # pipeline and includes a [source: string]
@@ -357,6 +359,14 @@ if __name__ == '__main__':
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
     PHASE_INFO = preload_exon_phases(ARGS.species, ARGS.assembly)
+
+    print('Loading Sequence Ontology')
+    SEQUENCE_ONTOLOGY = common.ontology_reader.OboOntologyReader(
+        ARGS.so_file,
+        source_name='Sequence Ontology',
+        source_url='sequenceontology.org'
+    )
+
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, SEQUENCE_ONTOLOGY)
     create_index(MONGO_CLIENT)

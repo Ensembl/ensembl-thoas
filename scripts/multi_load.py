@@ -34,15 +34,20 @@ async def run_assembly(args):
         shell_command = f'''
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]};\
-            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]}
+            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --so_file={args["so_file"]}
         '''
     else:
         shell_command = f'''
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]};\
-            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]}
+            python {code}/load_genes.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]}  --so_file={args["so_file"]}
         '''
-    await asyncio.create_subprocess_shell(shell_command)
+    process = await asyncio.create_subprocess_shell(shell_command)
+    await process.wait()
+    if process.returncode != 0:
+        raise ChildProcessError(
+            f'Subprocess died with params: {args["production_name"]}, {args["data"]}. Check the logs'
+        )
 
 
 if __name__ == '__main__':
