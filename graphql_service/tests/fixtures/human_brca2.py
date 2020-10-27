@@ -25,17 +25,17 @@ def build_gene():
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'slice': {
             'region': {
-                'name': '13',
-                'strand': {
-                    'code': 'forward',
-                    'value': 1
-                }
+                'name': '13'
             },
             'location': {
                 'start': 32315086,
                 'end': 32400266,
                 'length': 85181,
                 'location_type': 'chromosome'
+            },
+            'strand': {
+                'code': 'forward',
+                'value': 1
             },
             'default': True
         }
@@ -56,17 +56,17 @@ def build_transcripts():
         'exons': build_exons(),
         'slice': {
             'region': {
-                'name': '13',
-                'strand': {
-                    'code': 'forward',
-                    'value': 1
-                },
+                'name': '13'
             },
             'location': {
                 'start': 32315474,
                 'end': 32400266,
                 'length': 84793,
                 'location_type': 'chromosome'
+            },
+            'strand': {
+                'code': 'forward',
+                'value': 1
             },
             'default': True
         },
@@ -77,15 +77,15 @@ def build_transcripts():
                     'stable_id': 'ENSE00002145385.1',
                     'slice': {
                         'region': {
-                            'name': '13',
-                            'strand': {
-                                'code': 'forward'
-                            }
+                            'name': '13'
                         },
                         'location': {
                             'end': 32371100,
                             'length': 130,
                             'start': 32370971
+                        },
+                        'strand': {
+                            'code': 'forward'
                         }
                     }
                 },
@@ -106,10 +106,10 @@ def build_transcripts():
                             'length': 64
                         },
                         'region': {
-                            'name': '13',
-                            'strand': {
-                                'code': 'forward'
-                            }
+                            'name': '13'
+                        },
+                        'strand': {
+                            'code': 'forward'
                         }
                     }
                 },
@@ -142,10 +142,10 @@ def build_transcripts():
                                     'start': 32370971
                                 },
                                 'region': {
-                                    'name': '13',
-                                    'strand': {
-                                        'code': 'forward'
-                                    }
+                                    'name': '13'
+                                },
+                                'strand': {
+                                    'code': 'forward'
                                 }
                             },
                             'stable_id': 'ENSE00002145385.1'
@@ -168,10 +168,10 @@ def build_transcripts():
                                     'start': 32375343
                                 },
                                 'region': {
-                                    'name': '13',
-                                    'strand': {
-                                        'code': 'forward'
-                                    }
+                                    'name': '13'
+                                },
+                                'strand': {
+                                    'code': 'forward'
                                 }
                             },
                             'stable_id': 'ENSE00002167182.1'
@@ -201,11 +201,11 @@ def build_transcripts():
         'exons': build_exons(),
         'slice': {
             'region': {
-                'name': '13',
-                'strand': {
-                    'code': 'forward',
-                    'value': 1
-                }
+                'name': '13'
+            },
+            'strand': {
+                'code': 'forward',
+                'value': 1
             },
             'location': {
                 'start': 32370971,
@@ -228,11 +228,11 @@ def build_exons():
             'version': 1,
             'slice': {
                 'region': {
-                    'name': '13',
-                    'strand': {
-                        'code': 'forward',
-                        'value': 1
-                    }
+                    'name': '13'
+                },
+                'strand': {
+                    'code': 'forward',
+                    'value': 1
                 },
                 'location': {
                     'start': 32370971,
@@ -249,11 +249,11 @@ def build_exons():
             'version': 1,
             'slice': {
                 'region': {
-                    'name': '13',
-                    'strand': {
-                        'code': 'forward',
-                        'value': 1
-                    }
+                    'name': '13'
+                },
+                'strand': {
+                    'code': 'forward',
+                    'value': 1
                 },
                 'location': {
                     'start': 32375343,
