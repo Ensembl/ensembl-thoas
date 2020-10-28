@@ -247,6 +247,57 @@ def splicify_exons(exons, transcript):
     return splicing
 
 
+def infer_introns(exons, transcript):
+    '''
+    Given a list of formatted exons in rank order, we will infer the presence
+    of introns.
+    transcript must be unformatted, and is required in order to calculate a relative
+    location for each intron
+    '''
+
+    introns = []
+    if len(exons) == 1:
+        return introns
+
+    for index, (exon_one, exon_two) in enumerate(zip(exons[:-1], exons[1:]), start=1):
+        if exon_one['slice']['strand']['value'] == 1:
+            intron_start = exon_one['slice']['location']['end'] + 1
+            intron_end = exon_two['slice']['location']['start'] - 1
+        else:
+            intron_start = exon_two['slice']['location']['end'] + 1
+            intron_end = exon_one['slice']['location']['start'] - 1
+
+        introns.append({
+            'index': index,
+            'checksum': None,
+            'slice': {
+                'region': exon_one['slice']['region'],
+                'location': {
+                    'start': intron_start,
+                    'end': intron_end,
+                    # Note, a cross ori intron is gonna break hard
+                    'length': intron_end - intron_start + 1
+                },
+                'strand': exon_one['slice']['strand']
+            },
+            'so_term': 'intron',
+            'relative_location': calculate_relative_coords(
+                parent_params={
+                    'start': transcript['start'],
+                    'end': transcript['end'],
+                    'strand': transcript['strand']
+                },
+                child_params={
+                    'start': intron_start,
+                    'end': intron_end
+                }
+            ),
+            'type': 'Intron'
+        })
+
+    return introns
+
+
 def format_utr(
         transcript, absolute_cds_start, absolute_cds_end, downstream
 ):

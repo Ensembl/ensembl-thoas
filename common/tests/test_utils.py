@@ -353,6 +353,229 @@ def test_utr_formatting():
     assert utr['relative_end'] == 10
 
 
+def test_infer_introns():
+    '''
+    Exons are used to infer the presence of introns
+    '''
+
+    transcript = {
+        'start': 10,
+        'end': 100,
+        'strand': 1
+    }
+
+    exons = [
+        {
+            'stable_id': 'ENSE01.1',
+            'slice': {
+                'location': {
+                    'start': 10,
+                    'end': 30
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': 1
+                }
+            }
+        },
+        {
+            'stable_id': 'ENSE02.1',
+            'slice': {
+                'location': {
+                    'start': 40,
+                    'end': 60
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': 1
+                }
+            }
+        },
+        {
+            'stable_id': 'ENSE03.1',
+            'slice': {
+                'location': {
+                    'start': 90,
+                    'end': 100
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': 1
+                }
+            }
+        }
+    ]
+
+    introns = infer_introns(exons, transcript)
+    target_introns = [
+        {
+            'type': 'Intron',
+            'index': 1,
+            'slice': {
+                'region': {
+                    'name': '13'
+                },
+                'location': {
+                    'start': 31,
+                    'end': 39,
+                    'length': 9
+                },
+                'strand': {
+                    'value': 1
+                }
+            },
+            'relative_location': {
+                'start': 22,
+                'end': 30,
+                'length': 9
+            },
+            'checksum': None,
+            'so_term': 'intron'
+        },
+        {
+            'type': 'Intron',
+            'index': 2,
+            'slice': {
+                'region': {
+                    'name': '13'
+                },
+                'location': {
+                    'start': 61,
+                    'end': 89,
+                    'length': 29
+                },
+                'strand': {
+                    'value': 1
+                }
+            },
+            'relative_location': {
+                'start': 52,
+                'end': 80,
+                'length': 29
+            },
+            'checksum': None,
+            'so_term': 'intron'
+        }
+    ]
+    assert len(introns) == len(target_introns)
+    for test_intron, target_intron in zip(introns, target_introns):
+        assert test_intron == target_intron
+
+    reverse_transcript = {
+        'start': 10,
+        'end': 100,
+        'strand': -1
+    }
+    reverse_exons = [
+        {
+            'stable_id': 'ENSE03.1',
+            'slice': {
+                'location': {
+                    'start': 90,
+                    'end': 100
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': -1
+                }
+            }
+        },
+        {
+            'stable_id': 'ENSE02.1',
+            'slice': {
+                'location': {
+                    'start': 40,
+                    'end': 60
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': -1
+                }
+            }
+        },
+        {
+            'stable_id': 'ENSE01.1',
+            'slice': {
+                'location': {
+                    'start': 10,
+                    'end': 30
+                },
+                'region': {
+                    'name': '13'
+                },
+                'strand': {
+                    'value': -1
+                }
+            }
+        }
+    ]
+
+    target_reverse_introns = [
+        {
+            'type': 'Intron',
+            'index': 1,
+            'slice': {
+                'region': {
+                    'name': '13'
+                },
+                'location': {
+                    'start': 61,
+                    'end': 89,
+                    'length': 29
+                },
+                'strand': {
+                    'value': -1
+                }
+            },
+            'relative_location': {
+                'start': 12,
+                'end': 40,
+                'length': 29
+            },
+            'checksum': None,
+            'so_term': 'intron'
+        },
+        {
+            'type': 'Intron',
+            'index': 2,
+            'slice': {
+                'region': {
+                    'name': '13'
+                },
+                'location': {
+                    'start': 31,
+                    'end': 39,
+                    'length': 9
+                },
+                'strand': {
+                    'value': -1
+                }
+            },
+            'relative_location': {
+                'start': 62,
+                'end': 70,
+                'length': 9
+            },
+            'checksum': None,
+            'so_term': 'intron'
+        }
+    ]
+    reverse_introns = infer_introns(reverse_exons, reverse_transcript)
+
+    for test_intron, target_intron in zip(reverse_introns, target_reverse_introns):
+        assert test_intron == target_intron
+
+
 def test_cdna_formatting():
     '''
     cDNA representation
