@@ -251,7 +251,7 @@ def format_transcript(
         'genome_id': genome_id,
         'external_references': transcript_xrefs,
         'product_generating_contexts': [],
-        'introns': common.utils.infer_introns(ordered_formatted_exons),
+        'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript)
     }
 
