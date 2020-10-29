@@ -12,6 +12,7 @@ type Transcript {
   relative_location: Location!
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
+  introns: [Intron!]!
 }
 
 type CDS {
@@ -41,6 +42,15 @@ type SplicedExon {
   index: Int!
   relative_location: Location!
   exon: Exon!
+}
+
+type Intron {
+  index: Int!
+  slice: Slice!
+  so_term: String!
+  relative_location: Location!
+  type: String!
+  checksum: String
 }
 
 type ProductGeneratingContext {
