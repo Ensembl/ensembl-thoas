@@ -336,6 +336,13 @@
       "ensembl_db_name": "Ens_Hs_transcript"
     },
     {
+      "db_name": "Ens_Hs_translation",
+      "example_id": "ENSP00000266557",
+      "ignore": true,
+      "feature_type": "annotation",
+      "ensembl_db_name": "Ens_Hs_transcript"
+    },
+    {
       "db_name": "ENS_LRG_gene",
       "example_id": "LRG_357",
       "id_namespace": "lrg",
