@@ -162,7 +162,7 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
             'start': int(start),
             'end': int(end),
             'length': int(end) - int(start) + 1,
-            'location_type': region_type
+            'type': region_type
         },
         'strand': {
             'code': 'forward' if strand > 0 else 'reverse',
@@ -378,7 +378,8 @@ def format_cdna(transcript):
         'end': end,
         'relative_start': relative_start,
         'relative_end': relative_end,
-        'length': length
+        'length': length,
+        'type': 'CDNA'
     }
 
 
@@ -412,6 +413,7 @@ def format_protein_domains(protein_features):
     # for feature in protein_features:
     #     domains.append(
     #         {
+    #             'type': 'ProteinDomain',
     #             'id': feature['name'],
     #             'name': feature['name'],
     #             'resource_name': feature['dbname'],

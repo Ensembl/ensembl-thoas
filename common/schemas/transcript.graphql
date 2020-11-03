@@ -2,6 +2,7 @@ type Transcript {
   """
   A Transcript of a Gene. Exons are listed in sequence order
   """
+  type: String!
   stable_id: String!
   unversioned_stable_id: String!
   symbol: String
@@ -16,6 +17,7 @@ type Transcript {
 }
 
 type CDS {
+  type: String!
   start: Int!
   end: Int!
   relative_start: Int!
@@ -26,6 +28,7 @@ type CDS {
 
 type CDNA {
   # The transcribed portion of a transcript with UTRs but Introns removed
+  type: String!
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
   length: Int!
@@ -33,6 +36,7 @@ type CDNA {
 }
 
 type Exon {
+  type: String!
   # An Exon that is part of a Transcript
   stable_id: String!
   slice: Slice!
@@ -45,11 +49,11 @@ type SplicedExon {
 }
 
 type Intron {
+  type: String!
   index: Int!
   slice: Slice!
   so_term: String!
   relative_location: Location!
-  type: String!
   checksum: String
 }
 
@@ -72,13 +76,13 @@ type PhasedExon {
 }
 
 type Product {
+  type: String!
   stable_id: String!
   unversioned_stable_id: String!
   version: Int
   """
   the value of the type field is "protein"
   """
-  type: String!
   so_term: String!
   """
   length in amino acids if product is a protein
@@ -93,6 +97,7 @@ type Product {
 }
 
 type ProteinDomain {
+  type: String!
   id: String!
   name: String!
   resource_name: String!
@@ -102,6 +107,7 @@ type ProteinDomain {
 }
 
 type UTR {
+  type: String!
   start: Int!
   end: Int!
   relative_start: Int!

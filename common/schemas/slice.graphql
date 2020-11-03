@@ -15,11 +15,12 @@ type Location {
   start: Int!
   end: Int!
   length: Int!
-  location_type: String!
+  type: String!
 }
 
 type Region {
   # A large contiguous block of assembled sequence, such as a whole chromosome.
+  type: String!
   name: String!
   assembly: String!
 }
