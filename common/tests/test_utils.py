@@ -244,8 +244,6 @@ def test_utr_formatting():
     assert utr['type'] == '5_prime_utr'
     assert utr['start'] == 1
     assert utr['end'] == 1
-    assert utr['relative_start'] == 1
-    assert utr['relative_end'] == 1
 
     forward_end_cds = {
         'start': 1,
@@ -269,8 +267,6 @@ def test_utr_formatting():
     assert utr['type'] == '3_prime_utr'
     assert utr['start'] == 10
     assert utr['end'] == 10
-    assert utr['relative_start'] == 10
-    assert utr['relative_end'] == 10
 
     forward_non_utr = {
         'start': 1,
@@ -324,8 +320,6 @@ def test_utr_formatting():
     assert utr['type'] == '5_prime_utr'
     assert utr['start'] == 9
     assert utr['end'] == 10
-    assert utr['relative_start'] == 1
-    assert utr['relative_end'] == 2
 
     reverse_cds_downstream = {
         'start': 8,
@@ -349,8 +343,6 @@ def test_utr_formatting():
     assert utr['type'] == '3_prime_utr'
     assert utr['start'] == 1
     assert utr['end'] == 7
-    assert utr['relative_start'] == 4
-    assert utr['relative_end'] == 10
 
 
 def test_infer_introns():

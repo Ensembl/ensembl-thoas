@@ -334,36 +334,24 @@ def format_utr(
         utr_type = '3_prime_utr'
         start = absolute_cds_end + 1
         end = transcript['end']
-        relative_start = absolute_cds_end - transcript['start'] + 2
-        relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream and transcript['strand'] == -1):
         utr_type = '3_prime_utr'
         start = transcript['start']
         end = absolute_cds_start - 1
-        relative_start = transcript['end'] - absolute_cds_start + 2
-        # i.e. first base of transcript in e! coords is the end of a reverse
-        # stranded 3' UTR
-        relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream is False and transcript['strand'] == 1):
         utr_type = '5_prime_utr'
         start = transcript['start']
         end = absolute_cds_start - 1
-        relative_start = 1
-        relative_end = absolute_cds_start - transcript['start']
     else:
         # reverse stranded 5'
         utr_type = '5_prime_utr'
         start = absolute_cds_end + 1
         end = transcript['end']
-        relative_start = 1
-        relative_end = transcript['end'] - absolute_cds_end
 
     return {
         'type': utr_type,
         'start': start,
-        'end': end,
-        'relative_start': relative_start,
-        'relative_end':  relative_end
+        'end': end
     }
 
 
