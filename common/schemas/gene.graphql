@@ -9,4 +9,5 @@ type Gene {
   transcripts: [Transcript!]!
   slice: Slice!
   external_references: [ExternalReference!]!
+  alternative_symbols: [String!]!
 }
