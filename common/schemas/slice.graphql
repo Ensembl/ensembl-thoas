@@ -19,7 +19,6 @@ type Location {
 
 type Region {
   # A large contiguous block of assembled sequence, such as a whole chromosome.
-  type: String!
   name: String!
   assembly: String!
 }
