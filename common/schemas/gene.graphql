@@ -10,4 +10,6 @@ type Gene {
   slice: Slice!
   external_references: [ExternalReference!]!
   alternative_symbols: [String!]!
+  # These are not populated yet
+  alternative_names: [String!]!
 }
