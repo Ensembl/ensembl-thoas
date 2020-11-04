@@ -86,7 +86,7 @@ def test_slice_formatting():
     '''
     Ensure slices are correctly generated from parameters
     '''
-    slice_dict = format_slice('test', 'test place', True, 1, 'GRCh38', 100, 200)
+    slice_dict = format_slice('test', True, 1, 'GRCh38', 100, 200)
 
     assert slice_dict['region']['name'] == 'test'
     assert slice_dict['strand']['code'] == 'forward'
@@ -95,9 +95,8 @@ def test_slice_formatting():
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict['default'] is True
-    assert slice_dict['location']['type'] == 'test place'
 
-    slice_dict = format_slice('test', 'test place', False, -1, 'GRCh38', 100, 200)
+    slice_dict = format_slice('test', False, -1, 'GRCh38', 100, 200)
 
     assert slice_dict['region']['name'] == 'test'
     assert slice_dict['strand']['code'] == 'reverse'
@@ -106,7 +105,6 @@ def test_slice_formatting():
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict['default'] is False
-    assert slice_dict['location']['type'] == 'test place'
 
 
 def test_exon_formatting():
@@ -122,7 +120,6 @@ def test_exon_formatting():
         },
         region_name='chr1',
         region_strand=1,
-        region_type='chromosome',
         default_region=True,
         assembly='GRCh38'
     )

@@ -140,13 +140,12 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, region_type, default_region, strand, assembly,
+def format_slice(region_name, default_region, strand, assembly,
                  start, end):
     '''
     Creates regular slices with locations and regions
 
     region_name: The string representing a region (perhaps chromosome 1)
-    region_type: What kind of thing is the region? e.g. chromosome, plasmid
     default_region[Boolean]: Is this a good default region, i.e. not a patch
     strand[int]: Forward = 1, Reverse = -1, 0 = No idea or not relevant
     assembly: A string naming the assembly the region is from
@@ -161,8 +160,7 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
         'location': {
             'start': int(start),
             'end': int(end),
-            'length': int(end) - int(start) + 1,
-            'type': region_type
+            'length': int(end) - int(start) + 1
         },
         'strand': {
             'code': 'forward' if strand > 0 else 'reverse',
@@ -172,14 +170,13 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, region_type, default_region, assembly):
+def format_exon(exon, region_name, region_strand, default_region, assembly):
     '''
     Turn transcript-borne information into an Exon entity
 
     exon: The exon to format, containing start, end, version, id
     region_name: The string representing a region (perhaps "1")
     region_strand: Forward = 1, Reverse = -1, 0 = No idea or not relevant
-    region_type: What kind of thing is the region? e.g. chromosome, plasmid
     default_region: Is this a good default region, i.e. not a patch
     assembly: A string naming the assembly the region is from
     transcript: The transcript that contains this exon
@@ -191,7 +188,7 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
         'unversioned_stable_id': exon['id'],
         'version': exon['version'],
         'slice': format_slice(
-            region_name, region_type, default_region, region_strand,
+            region_name, default_region, region_strand,
             assembly, exon['start'], exon['end']
         )
     }

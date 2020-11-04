@@ -121,7 +121,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 'name': gene['description'],
                 'slice': common.utils.format_slice(
                     region_name=gene['seq_region_name'],
-                    region_type=gene['coord_system']['name'],
                     default_region=default_region,
                     strand=int(gene['strand']),
                     assembly=assembly['id'],
@@ -142,7 +141,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 transcript_buffer.append(format_transcript(
                     transcript=transcript,
                     gene=gene,
-                    region_type=gene['coord_system']['name'],
                     region_name=gene['seq_region_name'],
                     genome_id=genome['id'],
                     cds_info=cds_info,
@@ -179,7 +177,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
 
 def format_transcript(
-        transcript, gene, region_type, region_name, genome_id,
+        transcript, gene, region_name, genome_id,
         cds_info, phase_info, default_region, assembly
 ):
     '''
@@ -187,7 +185,6 @@ def format_transcript(
     Args:
     transcript - directly from JSON file
     gene - the parent gene data
-    region_type - a shortcut to having to look up the region again
     region_name - like 'chr1' or '1'
     genome_id - the assembly/species/data release combo for this data
     cds_info - data from file representing cds_start and cds_end in relative
@@ -208,7 +205,6 @@ def format_transcript(
                 exon,
                 region_name=region_name,
                 region_strand=int(exon['strand']),
-                region_type=region_type,
                 default_region=default_region,
                 assembly=assembly
             )
@@ -241,7 +237,6 @@ def format_transcript(
         ),
         'slice': common.utils.format_slice(
             region_name=region_name,
-            region_type=region_type,
             default_region=default_region,
             strand=int(transcript['strand']),
             assembly=assembly,
