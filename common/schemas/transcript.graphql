@@ -24,6 +24,7 @@ type CDS {
   relative_end: Int!
   protein_length: Int!
   nucleotide_length: Int!
+  sequence_checksum: String!
 }
 
 type CDNA {
@@ -32,7 +33,7 @@ type CDNA {
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
   length: Int!
-  checksum: String
+  sequence_checksum: String!
 }
 
 type Exon {
@@ -54,7 +55,7 @@ type Intron {
   slice: Slice!
   so_term: String!
   relative_location: Location!
-  checksum: String
+  sequence_checksum: String!
 }
 
 type ProductGeneratingContext {
@@ -110,8 +111,6 @@ type UTR {
   type: String!
   start: Int!
   end: Int!
-  relative_start: Int!
-  relative_end: Int!
   length: Int!
-  # Ignoring checksums until we have a way to get them
+  sequence_checksum: String!
 }
