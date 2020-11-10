@@ -35,14 +35,14 @@ async def test_transcript_retrieval(snapshot):
             slice {
                 region {
                     name
-                    strand {
-                        code
-                    }
                 }
                 location {
                     start
                     end
                     length
+                }
+                strand {
+                    code
                 }
             }
             product_generating_contexts {
@@ -64,14 +64,14 @@ async def test_transcript_retrieval(snapshot):
                         slice {
                             region {
                                 name
-                                strand {
-                                    code
-                                }
                             }
                             location {
                                 start
                                 end
                                 length
+                            }
+                            strand {
+                                code
                             }
                         }
                     }

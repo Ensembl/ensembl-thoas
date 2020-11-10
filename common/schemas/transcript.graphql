@@ -2,6 +2,7 @@ type Transcript {
   """
   A Transcript of a Gene. Exons are listed in sequence order
   """
+  type: String!
   stable_id: String!
   unversioned_stable_id: String!
   symbol: String
@@ -12,26 +13,31 @@ type Transcript {
   relative_location: Location!
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
+  introns: [Intron!]!
 }
 
 type CDS {
+  type: String!
   start: Int!
   end: Int!
   relative_start: Int!
   relative_end: Int!
   protein_length: Int!
   nucleotide_length: Int!
+  sequence_checksum: String!
 }
 
 type CDNA {
   # The transcribed portion of a transcript with UTRs but Introns removed
+  type: String!
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
   length: Int!
-  checksum: String
+  sequence_checksum: String!
 }
 
 type Exon {
+  type: String!
   # An Exon that is part of a Transcript
   stable_id: String!
   slice: Slice!
@@ -41,6 +47,15 @@ type SplicedExon {
   index: Int!
   relative_location: Location!
   exon: Exon!
+}
+
+type Intron {
+  type: String!
+  index: Int!
+  slice: Slice!
+  so_term: String!
+  relative_location: Location!
+  sequence_checksum: String!
 }
 
 type ProductGeneratingContext {
@@ -62,13 +77,13 @@ type PhasedExon {
 }
 
 type Product {
+  type: String!
   stable_id: String!
   unversioned_stable_id: String!
   version: Int
   """
   the value of the type field is "protein"
   """
-  type: String!
   so_term: String!
   """
   length in amino acids if product is a protein
@@ -83,6 +98,7 @@ type Product {
 }
 
 type ProteinDomain {
+  type: String!
   id: String!
   name: String!
   resource_name: String!
@@ -92,10 +108,9 @@ type ProteinDomain {
 }
 
 type UTR {
+  type: String!
   start: Int!
   end: Int!
-  relative_start: Int!
-  relative_end: Int!
   length: Int!
-  # Ignoring checksums until we have a way to get them
+  sequence_checksum: String!
 }
