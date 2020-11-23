@@ -47,6 +47,7 @@ build:
   extends: .build
   only:
     - master
+    - ebi-docker-reg-python
 
 # deploy to dev at WP-HX
 deploy:
