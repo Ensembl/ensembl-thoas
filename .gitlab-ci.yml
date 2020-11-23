@@ -35,7 +35,7 @@ variables:
 
 # Run a suite of unit and integration tests
 test:
-  image: python:3.7.9-slim-stretch
+  image: python:3.8.6-slim
   stage: test
   before_script:
     - pip3 install -r requirements.txt
