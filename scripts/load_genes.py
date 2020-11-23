@@ -117,7 +117,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 'so_term': gene['biotype'],
                 'symbol': gene['name'],
                 'alternative_symbols': gene['synonyms'] if 'synonyms' in gene else [],
-                'alternative_names': [],
                 # Note that the description comes the long way via xref
                 # pipeline and includes a [source: string]
                 'name': gene['description'],
