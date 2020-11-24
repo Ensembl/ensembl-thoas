@@ -34,7 +34,7 @@ class XrefResolver():
     '''
 
     def __init__(self, from_file=None, mapping_file=None):
-        self.api_url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
+        self.api_url = 'http://registry.api.identifiers.org/resolutionApi/getResolverDataset'
         if mapping_file:
             self.mapping_file = mapping_file
         else:
