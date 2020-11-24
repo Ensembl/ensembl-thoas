@@ -1,4 +1,4 @@
-FROM dockerhub.ebi.ac.uk/ensembl-web/software/python:3.7.9-slim-stretch as build
+FROM python:3.8.6-slim-buster as build
 # Contains relevant basics for Python, like GCC and similar by default
 LABEL maintainer="kamal@ebi.ac.uk"
 
