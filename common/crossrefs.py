@@ -90,9 +90,7 @@ class XrefResolver():
     def _load_from_url(self, url):
         'Get JSON from identifiers.org'
 
-        # DANGER! I have disabled HTTPS certificate checking to circumvent an incompatible SSL
-        # issue with identifiers.org. Remove verify=False in future to see if the issue is resolved
-        response = requests.get(url, headers={'Accepts': 'application/json'}, verify=False)
+        response = requests.get(url, headers={'Accepts': 'application/json'})
         if response.status_code != 200:
             raise Exception(f'Unable to load data from Identifiers.org. HTTP response code: {response.status_code}')
 
