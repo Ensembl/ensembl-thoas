@@ -137,27 +137,7 @@ def fixture_slice_data():
 
 def test_resolve_gene(basic_data):
     'Test the querying of Mongo by gene symbol'
-    result = model.resolve_gene(
-        None,
-        basic_data,
-        bySymbol={'symbol': 'banana', 'genome_id': 1}
-    )
-    assert result['symbol'] == 'banana'
-    result = None
-
-    with pytest.raises(GraphQLError) as graphql_error:
-        result = model.resolve_gene(
-            None,
-            basic_data,
-            bySymbol={'symbol': 'very not here', 'genome_id': 1}
-        )
-    assert not result
-    assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
-    assert graphql_error.value.extensions['symbol'] == 'very not here'
-    assert graphql_error.value.extensions['genome_id'] == 1
-
-    graphql_error = None
-
+    
     result = model.resolve_gene(
         None,
         basic_data,
@@ -187,6 +167,32 @@ def test_resolve_gene(basic_data):
     )
 
     assert result['symbol'] == 'banana'
+
+
+def test_resolve_gene_by_symbol(basic_data):
+    'Test querying by gene symbol which can be ambiguous'
+
+    result = model.resolve_genes(
+        None,
+        basic_data,
+        bySymbol={'symbol': 'banana', 'genome_id': 1}
+    )
+    assert isinstance(result, list)
+    assert result[0]['symbol'] == 'banana'
+    result = None
+
+    with pytest.raises(GraphQLError) as graphql_error:
+        result = model.resolve_genes(
+            None,
+            basic_data,
+            bySymbol={'symbol': 'very not here', 'genome_id': 1}
+        )
+    assert not result
+    assert graphql_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    assert graphql_error.value.extensions['symbol'] == 'very not here'
+    assert graphql_error.value.extensions['genome_id'] == 1
+
+    graphql_error = None
 
 
 def test_resolve_transcript(transcript_data):
@@ -310,7 +316,7 @@ async def test_resolve_transcript_products(transcript_data):
 async def test_resolve_nested_products(transcript_data):
     'Test products inside transcripts inside the gene'
     gene_result = model.resolve_gene(
-        None, transcript_data, None, byId={'genome_id': 1, 'stable_id': 'ENSG001.1'}
+        None, transcript_data, byId={'genome_id': 1, 'stable_id': 'ENSG001.1'}
     )
     assert gene_result
 
