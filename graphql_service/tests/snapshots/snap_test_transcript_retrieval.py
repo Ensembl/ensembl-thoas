@@ -7,6 +7,25 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots['test_transcript_splicing 1'] = {
+    'transcript': {
+        'spliced_exons': [
+            {
+                'exon': {
+                    'stable_id': 'ENSE00002145385.1'
+                },
+                'index': 1
+            },
+            {
+                'exon': {
+                    'stable_id': 'ENSE00002167182.1'
+                },
+                'index': 2
+            }
+        ]
+    }
+}
+
 snapshots['test_transcript_retrieval 1'] = {
     'transcript': {
         'product_generating_contexts': [
@@ -30,10 +49,10 @@ snapshots['test_transcript_retrieval 1'] = {
                                     'start': 32370971
                                 },
                                 'region': {
-                                    'name': '13',
-                                    'strand': {
-                                        'code': 'forward'
-                                    }
+                                    'name': '13'
+                                },
+                                'strand': {
+                                    'code': 'forward'
                                 }
                             },
                             'stable_id': 'ENSE00002145385.1'
@@ -51,10 +70,10 @@ snapshots['test_transcript_retrieval 1'] = {
                                     'start': 32375343
                                 },
                                 'region': {
-                                    'name': '13',
-                                    'strand': {
-                                        'code': 'forward'
-                                    }
+                                    'name': '13'
+                                },
+                                'strand': {
+                                    'code': 'forward'
                                 }
                             },
                             'stable_id': 'ENSE00002167182.1'
@@ -73,10 +92,10 @@ snapshots['test_transcript_retrieval 1'] = {
                 'start': 32315474
             },
             'region': {
-                'name': '13',
-                'strand': {
-                    'code': 'forward'
-                }
+                'name': '13'
+            },
+            'strand': {
+                'code': 'forward'
             }
         },
         'so_term': 'protein_coding',
@@ -84,24 +103,5 @@ snapshots['test_transcript_retrieval 1'] = {
         'symbol': 'BRCA2-201',
         'unversioned_stable_id': 'ENST00000380152',
         'version': 7
-    }
-}
-
-snapshots['test_transcript_splicing 1'] = {
-    'transcript': {
-        'spliced_exons': [
-            {
-                'exon': {
-                    'stable_id': 'ENSE00002145385.1'
-                },
-                'index': 1
-            },
-            {
-                'exon': {
-                    'stable_id': 'ENSE00002167182.1'
-                },
-                'index': 2
-            }
-        ]
     }
 }

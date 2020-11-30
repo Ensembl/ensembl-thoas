@@ -1,0 +1,44 @@
+{
+    "has_variations": "true",
+    "division": "EnsemblVertebrates",
+    "has_peptide_compara": "true",
+    "has_other_alignments": "true",
+    "has_synteny": "true",
+    "species_id": 1,
+    "dbname": "bos_taurus_core_102_12",
+    "reference": null,
+    "has_genome_alignments": "true",
+    "genebuild": "2018-09-Ensembl/2018-11",
+    "id": "bos_taurus",
+    "has_pan_compara": "false",
+    "organism": {
+        "name": "bos_taurus",
+        "url_name": "Bos_taurus",
+        "display_name": "Cow",
+        "taxonomy_id": 9913,
+        "scientific_name": "Bos taurus",
+        "strain": null,
+        "aliases": [
+            "9913",
+            "bos taurus",
+            "bos_taurus",
+            "bostau",
+            "bovine",
+            "btau",
+            "btaurus",
+            "cattle",
+            "cow",
+            "domestic cattle",
+            "domestic cow"
+        ],
+        "serotype": null,
+        "species_taxonomy_id": 9913
+    },
+    "assembly": {
+        "level": "primary_assembly",
+        "name": "ARS-UCD1.2",
+        "ucsc": null,
+        "default": "ARS-UCD1.2",
+        "accession": "GCA_002263795.2"
+    }
+}
