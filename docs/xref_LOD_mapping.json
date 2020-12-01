@@ -3,7 +3,6 @@
     {
       "db_name": "ArrayExpress",
       "example_id": "ENSG00000265094",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "ArrayExpress",
       "id_namespace": "arrayexpress"
@@ -17,7 +16,6 @@
     {
       "db_name": "BaylorCollege",
       "example_id": "NCRNA_8378",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "BaylorCollege"
     },
@@ -51,7 +49,6 @@
     {
       "db_name": "CADRE",
       "example_id": "AFUA_3G01196",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "CADRE"
     },
@@ -103,30 +100,24 @@
     {
       "db_name": "Clone_based_ensembl_gene",
       "example_id": "AL162430.1",
-      "ignore": true,
       "description": "Source of gene names fabricated by us to ensure all genes and transcripts have a display name, even if we haven't imported any",
       "feature_type": "gene",
-      "priority": 10,
       "ensembl_db_name": "Clone_based_ensembl_gene"
     },
     {
       "db_name": "Clone_based_ensembl_transcript",
-      "ignore":true,
       "description": "Source of gene names fabricated by us to ensure all genes and transcripts have a display name, even if we haven't imported any",
       "feature_type": "transcript",
-      "priority": 10,
       "ensembl_db_name": "Clone_based_ensembl_transcript"
     },
     {
       "db_name": "Clone_based_vega_gene",
-      "ignore":true,
       "description": "Retired source of gene names from Havana project. DB no longer available",
       "feature_type": "gene",
       "ensembl_db_name": "Clone_based_vega_gene"
     },
     {
       "db_name": "Clone_based_vega_transcript",
-      "ignore":true,
       "description": "Retired source of transcript names from Havana project. DB no longer available",
       "feature_type": "transcript",
       "ensembl_db_name": "Clone_based_vega_transcript"
@@ -153,7 +144,6 @@
     {
       "db_name": "DBASS3",
       "example_id": "80",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "DBASS3",
       "manual_source_url": "http://www.dbass.soton.ac.uk/",
@@ -162,7 +152,6 @@
     {
       "db_name": "DBASS",
       "example_id": "80",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "DBASS5",
       "manual_source_url": "http://www.dbass.soton.ac.uk/",
@@ -296,7 +285,6 @@
     {
       "db_name": "ENA_FEATURE_GENE",
       "example_id": "BN000065",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "ENA_FEATURE_GENE",
       "manual_source_url" : "https://www.ebi.ac.uk/ena/",
@@ -305,7 +293,6 @@
     {
       "db_name": "ENA_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "ENA_TRANSCRIPT",
       "manual_source_url" : "https://www.ebi.ac.uk/ena/",
@@ -314,7 +301,6 @@
     {
       "db_name": "ENA_FEATURE_TRANSCRIPT",
       "example_id": "AFUA_3G01196",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "ENA_FEATURE_TRANSCRIPT",
       "manual_source_url" : "https://www.ebi.ac.uk/ena/",
@@ -331,9 +317,14 @@
     {
       "db_name": "Ens_Hs_transcript",
       "example_id": "ENST00000266557",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "Ens_Hs_transcript"
+    },
+    {
+      "db_name": "Ens_Hs_translation",
+      "example_id": "ENSP00000266557",
+      "feature_type": "annotation",
+      "ensembl_db_name": "Ens_Hs_translation"
     },
     {
       "db_name": "ENS_LRG_gene",
@@ -362,7 +353,6 @@
       "id_namespace": "ncbigene",
       "URI_type": "http://purl.obolibrary.org/obo/SO_0000704",
       "feature_type": "gene",
-      "priority": 60,
       "ensembl_db_name": "EntrezGene"
     },
     {
@@ -371,7 +361,6 @@
       "id_namespace": "ncbigene",
       "URI_type": "http://purl.obolibrary.org/obo/SO_0000704",
       "feature_type": "gene",
-      "priority": 60,
       "ensembl_db_name": "EntrezGene"
     },
     {
@@ -380,14 +369,12 @@
       "id_namespace": "ncbigene",
       "URI_type": "http://purl.obolibrary.org/obo/SO_0000704",
       "feature_type": "gene",
-      "priority": 60,
       "ensembl_db_name": "GeneID"
     },
     {
       "db_name": "EntrezGene_trans_name",
       "example_id": "CTD-2297D10.2-001",
       "id_namespace": "ncbiprotein",
-      "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "EntrezGene_trans_name"
     },
@@ -405,13 +392,11 @@
     },
     {
       "db_name": "Fantom",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
       "db_name": "flybase_annotation_id",
       "example_id": "FBan0011023",
-      "ignore": true,
       "id_namespace": "fb",
       "feature_type": "annotation",
       "ensembl_db_name": "flybase_annotation_id"
@@ -447,7 +432,6 @@
       "db_name": "FlyBaseCGID_gene",
       "example_id": "CG11023",
       "id_namespace": "fb",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "FlyBaseCGID_gene"
     },
@@ -455,7 +439,6 @@
       "db_name": "FlyBaseCGID_transcript",
       "example_id": "CG11023-RB",
       "id_namespace": "fb",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "FlyBaseCGID_transcript"
     },
@@ -463,7 +446,6 @@
       "db_name": "FlyBaseCGID_translation",
       "example_id": "CG11023-PB",
       "id_namespace": "fb",
-      "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "FlyBaseCGID_translation"
     },
@@ -491,7 +473,6 @@
     {
       "db_name": "FlyReactome",
       "example_id": "101824",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "FlyReactome"
     },
@@ -524,21 +505,18 @@
     {
       "db_name": "GenomeRNAi",
       "example_id": "33155",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "GenomeRNAi"
     },
     {
       "db_name": "Genoscope_pred_gene",
       "example_id": "GSTENG10001827001",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "Genoscope_pred_gene"
     },
     {
       "db_name": "Genoscope_pred_translation",
       "example_id": "GSTENT10001827001",
-      "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "Genoscope_pred_translation"
     },
@@ -572,7 +550,6 @@
     {
       "db_name": "Gramene_MarkersDB_EST",
       "example_id": "DT479660",
-      "ignore": true,
       "description": "While several identifiers.org paths are possible for Gramene, external sources are not sufficiently explicit to choose the right one",
       "feature_type": "annotation",
       "ensembl_db_name": "Gramene_MarkersDB_EST"
@@ -580,14 +557,12 @@
     {
       "db_name": "Gramene_MarkersDB_mRNA",
       "example_id": "XM_002305109",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "Gramene_MarkersDB_mRNA"
     },
     {
       "db_name": "Gramene_Pathway",
       "example_id": "6.3.2.12",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
@@ -602,13 +577,11 @@
       "example_id": "HGNC:13598",
       "id_namespace": "hgnc",
       "feature_type": "gene",
-      "priority": 100,
       "ensembl_db_name": "HGNC"
     },
     {
       "db_name": "HGNC_trans_name",
       "example_id": "CCRN4L (2 of 2)-201",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "HGNC_trans_name"
     },
@@ -628,7 +601,6 @@
     {
       "db_name": "HPA",
       "example_id": "CD36",
-      "ignore": true,
       "description" : "Human Protein Atlas. IDs can be Ensembl-like",
       "id_namespace": "hpa",
       "feature_type": "annotation",
@@ -636,22 +608,18 @@
     },
     {
       "db_name": "IKMCs_ES_cells_available",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
       "db_name": "IKMCs_Mice_available",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
       "db_name": "IKMCs_No_products_available_yet",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
       "db_name": "IKMCs_Vector_available",
-      "ignore": true,
       "feature_type": "annotation"
     },
     {
@@ -664,7 +632,6 @@
     {
       "db_name": "InteractiveFly",
       "example_id": "cytoskel/lethl2g1.htm",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "InteractiveFly",
       "manual_source_url": "http://www.sdbonline.org/",
@@ -680,14 +647,12 @@
     {
       "db_name": "IPI",
       "example_id": "IPI00867334",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "IPI"
     },
     {
       "db_name": "IRGSPv1_GENE",
       "example_id": "OS11G0599200",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "IRGSPv1_GENE"
     },
@@ -707,7 +672,6 @@
     {
       "db_name": "KEGG",
       "example_id": "00450+2.1.1.-",
-      "ignore": true,
       "id_namespace": "kegg.genes",
       "feature_type": "gene",
       "ensembl_db_name": "KEGG"
@@ -729,7 +693,6 @@
     {
       "db_name": "MetaCyc",
       "example_id": "PWY-7248",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "MetaCyc",
       "manual_source_url": "http://metacyc.org/",
@@ -741,12 +704,10 @@
       "description": "Mouse genome database (MGD) is an authority on rodent genes",
       "id_namespace": "mgi",
       "feature_type": "gene",
-      "priority": 100,
       "ensembl_db_name": "MGI"
     },
     {
       "db_name": "MGI_trans_name",
-      "ignore": true,
       "feature_type": "transcript",
       "id_namespace": "mgi",
       "ensembl_db_name": "MGI_trans_name"
@@ -754,7 +715,6 @@
     {
       "db_name": "MIM",
       "example_id": "602349",
-      "ignore": true,
       "id_namespace": "mim",
       "feature_type": "annotation",
       "ensembl_db_name": "MIM_GENE"
@@ -762,7 +722,6 @@
     {
       "db_name": "MIM_GENE",
       "example_id": "602349",
-      "ignore": true,
       "id_namespace": "mim",
       "feature_type": "gene",
       "ensembl_db_name": "MIM_GENE"
@@ -770,7 +729,6 @@
     {
       "db_name": "MIM_MORBID",
       "example_id": "615122",
-      "ignore": true,
       "id_namespace": "mim",
       "feature_type": "annotation",
       "ensembl_db_name": "MIM_MORBID"
@@ -780,7 +738,6 @@
       "description": "MIM data describing the MIM gene entries and their relationships with other resources",
       "example_id": "615122",
       "id_namespace": "mim",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "MIM_GENE"
     },
@@ -797,7 +754,6 @@
       "example_id": "MI0000866",
       "id_namespace": "mirbase",
       "feature_type": "annotation",
-      "priority": 100,
       "ensembl_db_name": "miRBase"
     },
     {
@@ -811,27 +767,22 @@
       "db_name": "miRBase_gene_name",
       "example_id": "dre-let-7a-1.1",
       "id_namespace": "mirbase.mature",
-      "ignore": true,
-      "feature_type": "gene",
-      "priority": 100
+      "feature_type": "gene"
     },
     {
       "db_name": "miRBase_trans_name",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "miRBase_trans_name"
     },
     {
       "db_name": "MitoDrome",
       "example_id": "MTDROME11455",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "MitoDrome"
     },
     {
       "db_name": "NASC_GENE_ID",
       "example_id": "AT3G18710",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "NASC_GENE_ID"
     },
@@ -869,13 +820,11 @@
       "db_name": "OTTG",
       "example_id": "OTTDARG00000029138",
       "description": "Havana gene",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "OTTG"
     },
     {
       "db_name": "OTTT",
-      "ignore": true,
       "description": "Havana transcript",
       "feature_type": "annotation",
       "ensembl_db_name": "OTTT"
@@ -927,7 +876,6 @@
     {
       "db_name": "PHI",
       "example_id": "PHI:2322",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "PHI"
     },
@@ -951,7 +899,6 @@
     {
       "db_name": "PlantGDB_PUT",
       "example_id": "PUT-157a-Populus_trichocarpa-7958",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "PlantGDB_PUT"
     },
@@ -1143,13 +1090,11 @@
       "example_id": "RF00001",
       "id_namespace": "rfam",
       "feature_type": "annotation",
-      "priority": 20,
       "ensembl_db_name": "RFAM"
     },
     {
       "db_name": "RFAM_gene_name",
       "example_id": "5S_rRNA.420",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "RFAM_gene_name",
       "manual_source_url" : "https://rfam.xfam.org/"
@@ -1157,14 +1102,12 @@
     {
       "db_name": "RFAM_GENE",
       "example_id": "5S_rRNA.420",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "RFAM_GENE",
       "manual_source_url" : "https://rfam.xfam.org/"
     },
     {
       "db_name": "RFAM_trans_name",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "RFAM_trans_name",
       "manual_source_url" : "https://rfam.xfam.org/"
@@ -1174,13 +1117,11 @@
       "example_id": "6486239",
       "id_namespace": "rgd",
       "feature_type": "gene",
-      "priority": 100,
       "ensembl_db_name": "RGD"
     },
     {
       "db_name": "RGD_trans_name",
       "example_id": "Ppm1n-201",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "RGD_trans_name"
     },
@@ -1196,7 +1137,6 @@
     {
       "db_name": "RNAMMER",
       "example_id": "8s_rRNA",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "RNAMMER"
     },
@@ -1239,13 +1179,11 @@
     },
     {
       "db_name": "shares_CDS_and_UTR_with_OTTT",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "shares_CDS_and_UTR_with_OTTT"
     },
     {
       "db_name": "shares_CDS_with_OTTT",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "shares_CDS_with_OTTT"
     },
@@ -1288,7 +1226,6 @@
     {
       "db_name": "TAIR_SYMBOL",
       "example_id": "ATA7",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "TAIR_SYMBOL",
       "id_namespace": "tair.gene"
@@ -1296,7 +1233,6 @@
     {
       "db_name": "TAIR_TRANSLATION",
       "example_id": "AT3G18710",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "TAIR_TRANSLATION",
       "id_namespace": "tair.protein"
@@ -1317,21 +1253,18 @@
     {
       "db_name": "TIGR_GeneIndex",
       "example_id": "TC60870",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "TIGR_GeneIndex"
     },
     {
       "db_name": "TIGR_LOCUS",
       "example_id": "LOC_Os11g38650.1",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "TIGR_LOCUS"
     },
     {
       "db_name": "TransFac",
       "example_id": "T01396",
-      "ignore": true,
       "feature_type": "annotation",
       "ensembl_db_name": "TransFac",
       "manual_source_url": "http://transfac.gbf.de/",
@@ -1352,7 +1285,6 @@
     },
     {
       "db_name": "UCSC",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "UCSC"
     },
@@ -1441,19 +1373,16 @@
     {
       "db_name": "Vega_gene",
       "example_id": "OTTDARG00000029138",
-      "ignore": true,
       "feature_type": "gene",
       "ensembl_db_name": "Vega_gene"
     },
     {
       "db_name": "Vega_transcript",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "Vega_transcript"
     },
     {
       "db_name": "Vega_translation",
-      "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "Vega_translation"
     },
@@ -1502,7 +1431,6 @@
     {
       "db_name": "wormbase_transcript",
       "example_id": "ZC449.3a.1",
-      "ignore": true,
       "id_namespace": "wormbase",
       "feature_type": "transcript",
       "ensembl_db_name": "wormbase_transcript"
@@ -1518,7 +1446,6 @@
       "db_name": "wormpep_id",
       "example_id": "CE29622",
       "id_namespace": "wormbase",
-      "ignore": true,
       "feature_type": "translation",
       "ensembl_db_name": "wormpep_id"
     },
@@ -1532,7 +1459,6 @@
     {
       "db_name": "Xenbase_trans_name",
       "example_id": "golt1b-201",
-      "ignore": true,
       "id_namespace": "xenbase",
       "feature_type": "translation",
       "ensembl_db_name": "Xenbase_trans_name"
@@ -1542,20 +1468,17 @@
       "example_id": "ZDB-GENE-040718-36",
       "id_namespace": "zfin",
       "feature_type": "gene",
-      "priority": 100,
       "ensembl_db_name": "ZFIN_ID"
     },
     {
       "db_name": "zfin",
       "id_namespace": "zfin",
       "feature_type": "gene",
-      "priority": 100,
       "ensembl_db_name": "ZFIN_ID"
     },
     {
       "db_name": "ZFIN_ID_trans_name",
       "example_id": "hvcn1-201",
-      "ignore": true,
       "feature_type": "transcript",
       "ensembl_db_name": "ZFIN_ID_trans_name"
     },

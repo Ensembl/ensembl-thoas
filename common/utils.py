@@ -144,13 +144,12 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, region_type, default_region, strand, assembly,
+def format_slice(region_name, default_region, strand, assembly,
                  start, end):
     '''
     Creates regular slices with locations and regions
 
     region_name: The string representing a region (perhaps chromosome 1)
-    region_type: What kind of thing is the region? e.g. chromosome, plasmid
     default_region[Boolean]: Is this a good default region, i.e. not a patch
     strand[int]: Forward = 1, Reverse = -1, 0 = No idea or not relevant
     assembly: A string naming the assembly the region is from
@@ -160,30 +159,28 @@ def format_slice(region_name, region_type, default_region, strand, assembly,
     return {
         'region': {
             'name': region_name,
-            'strand': {
-                'code': 'forward' if strand > 0 else 'reverse',
-                'value': strand
-            },
             'assembly': assembly
         },
         'location': {
             'start': int(start),
             'end': int(end),
-            'length': int(end) - int(start) + 1,
-            'location_type': region_type
+            'length': int(end) - int(start) + 1
+        },
+        'strand': {
+            'code': 'forward' if strand > 0 else 'reverse',
+            'value': strand
         },
         'default': default_region
     }
 
 
-def format_exon(exon, region_name, region_strand, region_type, default_region, assembly):
+def format_exon(exon, region_name, region_strand, default_region, assembly):
     '''
     Turn transcript-borne information into an Exon entity
 
     exon: The exon to format, containing start, end, version, id
     region_name: The string representing a region (perhaps "1")
     region_strand: Forward = 1, Reverse = -1, 0 = No idea or not relevant
-    region_type: What kind of thing is the region? e.g. chromosome, plasmid
     default_region: Is this a good default region, i.e. not a patch
     assembly: A string naming the assembly the region is from
     transcript: The transcript that contains this exon
@@ -195,7 +192,7 @@ def format_exon(exon, region_name, region_strand, region_type, default_region, a
         'unversioned_stable_id': exon['id'],
         'version': exon['version'],
         'slice': format_slice(
-            region_name, region_type, default_region, region_strand,
+            region_name, default_region, region_strand,
             assembly, exon['start'], exon['end']
         )
     }
@@ -251,6 +248,57 @@ def splicify_exons(exons, transcript):
     return splicing
 
 
+def infer_introns(exons, transcript):
+    '''
+    Given a list of formatted exons in rank order, we will infer the presence
+    of introns.
+    transcript must be unformatted, and is required in order to calculate a relative
+    location for each intron
+    '''
+
+    introns = []
+    if len(exons) == 1:
+        return introns
+
+    for index, (exon_one, exon_two) in enumerate(zip(exons[:-1], exons[1:]), start=1):
+        if exon_one['slice']['strand']['value'] == 1:
+            intron_start = exon_one['slice']['location']['end'] + 1
+            intron_end = exon_two['slice']['location']['start'] - 1
+        else:
+            intron_start = exon_two['slice']['location']['end'] + 1
+            intron_end = exon_one['slice']['location']['start'] - 1
+
+        introns.append({
+            'index': index,
+            'checksum': None,
+            'slice': {
+                'region': exon_one['slice']['region'],
+                'location': {
+                    'start': intron_start,
+                    'end': intron_end,
+                    # Note, a cross ori intron is gonna break hard
+                    'length': intron_end - intron_start + 1
+                },
+                'strand': exon_one['slice']['strand']
+            },
+            'so_term': 'intron',
+            'relative_location': calculate_relative_coords(
+                parent_params={
+                    'start': transcript['start'],
+                    'end': transcript['end'],
+                    'strand': transcript['strand']
+                },
+                child_params={
+                    'start': intron_start,
+                    'end': intron_end
+                }
+            ),
+            'type': 'Intron'
+        })
+
+    return introns
+
+
 def format_utr(
         transcript, absolute_cds_start, absolute_cds_end, downstream
 ):
@@ -287,36 +335,24 @@ def format_utr(
         utr_type = '3_prime_utr'
         start = absolute_cds_end + 1
         end = transcript['end']
-        relative_start = absolute_cds_end - transcript['start'] + 2
-        relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream and transcript['strand'] == -1):
         utr_type = '3_prime_utr'
         start = transcript['start']
         end = absolute_cds_start - 1
-        relative_start = transcript['end'] - absolute_cds_start + 2
-        # i.e. first base of transcript in e! coords is the end of a reverse
-        # stranded 3' UTR
-        relative_end = transcript['end'] - transcript['start'] + 1
     elif (downstream is False and transcript['strand'] == 1):
         utr_type = '5_prime_utr'
         start = transcript['start']
         end = absolute_cds_start - 1
-        relative_start = 1
-        relative_end = absolute_cds_start - transcript['start']
     else:
         # reverse stranded 5'
         utr_type = '5_prime_utr'
         start = absolute_cds_end + 1
         end = transcript['end']
-        relative_start = 1
-        relative_end = transcript['end'] - absolute_cds_end
 
     return {
         'type': utr_type,
         'start': start,
-        'end': end,
-        'relative_start': relative_start,
-        'relative_end':  relative_end
+        'end': end
     }
 
 
@@ -343,7 +379,8 @@ def format_cdna(transcript):
         'end': end,
         'relative_start': relative_start,
         'relative_end': relative_end,
-        'length': length
+        'length': length,
+        'type': 'CDNA'
     }
 
 
@@ -377,6 +414,7 @@ def format_protein_domains(protein_features):
     # for feature in protein_features:
     #     domains.append(
     #         {
+    #             'type': 'ProteinDomain',
     #             'id': feature['name'],
     #             'name': feature['name'],
     #             'resource_name': feature['dbname'],

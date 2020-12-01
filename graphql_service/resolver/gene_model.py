@@ -25,29 +25,46 @@ PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
 
 @QUERY_TYPE.field('gene')
-def resolve_gene(_, info, bySymbol=None, byId=None):
-    'Load Genes via symbol or stable_id'
+def resolve_gene(_, info, byId=None):
+    'Load Gene via stable_id'
 
     query = {
         'type': 'Gene',
-    }
-    if bySymbol:
-        query['symbol'] = bySymbol['symbol']
-        query['genome_id'] = bySymbol['genome_id']
-    if byId:
-        query['$or'] = [
+        '$or': [
             {'stable_id': byId['stable_id']},
             {'unversioned_stable_id': byId['stable_id']}
-        ]
-        query['genome_id'] = byId['genome_id']
+        ],
+        'genome_id': byId['genome_id']
+    }
 
     collection = info.context['mongo_db']
     info.context['genome_id'] = query['genome_id']
 
     result = collection.find_one(query)
     if not result:
-        raise GeneNotFoundError(bySymbol, byId)
+        raise GeneNotFoundError(byId=byId)
     return result
+
+@QUERY_TYPE.field('genes_by_symbol')
+def resolve_genes(_, info, bySymbol=None):
+    'Load Genes via potentially ambiguous symbol'
+
+    query = {
+        'genome_id': bySymbol['genome_id'],
+        'type': 'Gene',
+        'symbol': bySymbol['symbol']
+    }
+
+    collection = info.context['mongo_db']
+    info.context['genome_id'] = query['genome_id']
+
+    result = collection.find(query)
+    #unpack cursor into a list. We're guaranteed relatively small results
+    result = list(result)
+    if len(list(result)) == 0:
+        raise GeneNotFoundError(bySymbol=bySymbol)
+    return list(result)
+
 
 @GENE_TYPE.field('external_references')
 @TRANSCRIPT_TYPE.field('external_references')

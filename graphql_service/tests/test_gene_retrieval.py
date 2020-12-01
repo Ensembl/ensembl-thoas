@@ -36,13 +36,13 @@ async def test_gene_retrieval_by_id(snapshot):
         slice {
           region {
             name
-            strand {
-              code
-            }
           }
           location {
             start
             end
+          }
+          strand {
+            code
           }
         }
       }
@@ -57,7 +57,7 @@ async def test_gene_retrieval_by_id(snapshot):
 async def test_gene_retrieval_by_symbol(snapshot):
     'Test retrieval of a gene from the graphql api by its symbol'
     query = """{
-      gene(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
+      genes_by_symbol(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
         symbol
         stable_id
       }
@@ -65,4 +65,4 @@ async def test_gene_retrieval_by_symbol(snapshot):
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
-    snapshot.assert_match(result['data'])
+    snapshot.assert_match(result['data']['genes_by_symbol'][0])
