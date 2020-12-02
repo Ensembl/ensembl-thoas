@@ -15,7 +15,7 @@
 from common.utils import (
     format_cross_refs, format_slice, format_exon, phase_exons,
     format_utr, format_cdna, flush_buffer, get_stable_id, splicify_exons,
-    format_protein, calculate_relative_coords
+    format_protein, calculate_relative_coords, infer_introns
 )
 from common.mongo import FakeMongoDbClient
 
