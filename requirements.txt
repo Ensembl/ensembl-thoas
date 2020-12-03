@@ -11,3 +11,4 @@ snapshottest
 starlette
 requests
 uvicorn
+psycopg2
