@@ -41,6 +41,8 @@ type Exon {
   # An Exon that is part of a Transcript
   stable_id: String!
   slice: Slice!
+  so_term: String
+  version: Int
 }
 
 type SplicedExon {
