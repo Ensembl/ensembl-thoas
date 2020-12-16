@@ -26,7 +26,7 @@ lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
-    Create indexes for searching useful things on genes, transcripts etc.
+    Create indexes for searching    useful things on genes, transcripts etc.
     '''
     collection = mongo_client.collection()
     collection.create_index([
@@ -74,6 +74,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
+    refget = RefgetDB(ARGS.config_file)
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -162,7 +163,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     protein=product,
                                     genome_id=genome['id'],
                                     product_length=cds_info[transcript['id']]['spliced_length'] // 3,
-                                    assembly=assembly, release_version=release)
+                                    assembly=assembly, release_version=release, refget=refget)
                             )
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -199,6 +200,7 @@ def format_transcript(
 
     default_region = True
     ordered_formatted_exons = []
+    refget = RefgetDB(ARGS.config_file)
     # verify that exons are all in rank order in case the source file isn't
     # There are no guarantees in the dumping pipeline for rank order
     for exon in sorted(transcript['exons'], key=common.utils.exon_sorter):
@@ -266,7 +268,6 @@ def format_transcript(
         # Pick the first to be default
         defaults = [False] * (len(transcript['translations']) - 1)
         defaults.append(True)
-        refget = RefgetDB()
         for translation in transcript['translations']:
             new_transcript['product_generating_contexts'].append(
                 {
@@ -293,7 +294,7 @@ def format_transcript(
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript=transcript, release_version=release, assembly=assembly,)
+                    'cdna': common.utils.format_cdna(transcript=transcript, release_version=release, assembly=assembly, refget=refget)
                 }
             )
 
