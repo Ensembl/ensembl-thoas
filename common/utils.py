@@ -187,6 +187,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly):
         'stable_id': get_stable_id(exon['id'], exon['version']),
         'unversioned_stable_id': exon['id'],
         'version': exon['version'],
+        'so_term': 'exon',
         'slice': format_slice(
             region_name, default_region, region_strand,
             assembly, exon['start'], exon['end']
