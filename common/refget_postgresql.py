@@ -1,7 +1,6 @@
 import psycopg2
 
 
-
 class RefgetDB:
     def __init__(self, config):
         self._config = config
@@ -12,11 +11,6 @@ class RefgetDB:
         self.dbname = self._config.get('REFGET DB', 'db')
         with psycopg2.connect(self.connection_info) as connection:
             self.connection = connection
-
-
-    @property
-    def ARGS(self):
-        return common.utils.parse_args()
 
     @property
     def CDNA(self):
@@ -42,7 +36,7 @@ class RefgetDB:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("""
-                                select seq.md5, species.assembly,species.species_id,species.species, molecule.id, mol_type.type from seq 
+                                select seq.md5 from seq
                                 join molecule using (seq_id)
                                 join release using (release_id)
                                 join mol_type using(mol_type_id)
@@ -50,9 +44,9 @@ class RefgetDB:
                                 where release.release=%s and species.assembly=%s and molecule.id=%s and type = %s
                                 limit 10;
                             """,
-                            (release_version, assembly, stable_id, sequence_type))
-                result_list = cur.fetchall()
+                            (release_version, assembly.lower(), stable_id, sequence_type))
 
-            return result_list[0][0]
-        except:
-            return ''
+                result = cur.fetchone()
+            return result[0]
+        except Exception as e:
+            raise e
