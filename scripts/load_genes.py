@@ -74,7 +74,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
-    refget = RefgetDB(ARGS.config_file)
+    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -201,7 +201,7 @@ def format_transcript(
 
     default_region = True
     ordered_formatted_exons = []
-    refget = RefgetDB(ARGS.config_file)
+    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
     # verify that exons are all in rank order in case the source file isn't
     # There are no guarantees in the dumping pipeline for rank order
     for exon in sorted(transcript['exons'], key=common.utils.exon_sorter):
