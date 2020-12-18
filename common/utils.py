@@ -39,6 +39,10 @@ def parse_args():
         '--collection',
         help='If the assembly is kept in a collection by Ensembl, specify the collection name'
     )
+    parser.add_argument(
+        '--release',
+        help='Release version'
+    )
     return parser.parse_args()
 
 
