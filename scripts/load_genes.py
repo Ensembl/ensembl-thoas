@@ -148,7 +148,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                     cds_info=cds_info,
                     phase_info=phase_info,
                     default_region=default_region,
-                    assembly=assembly['id'],
+                    assembly=assembly,
                     release=release
 
                 ))
@@ -211,7 +211,7 @@ def format_transcript(
                 region_name=region_name,
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly
+                assembly=assembly['id']
             )
         )
 
@@ -246,7 +246,7 @@ def format_transcript(
             region_name=region_name,
             default_region=default_region,
             strand=int(transcript['strand']),
-            assembly=assembly,
+            assembly=assembly['id'],
             start=int(transcript['start']),
             end=int(transcript['end'])
         ),
@@ -286,7 +286,7 @@ def format_transcript(
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
                         'protein_length': spliced_length // 3,
-                        'sequence_checksum': refget.get_checksum(release_version=release, assembly=assembly,
+                        'sequence_checksum': refget.get_checksum(release_version=release, assembly=assembly['name'],
                                                                  stable_id=new_transcript['stable_id'],
                                                                  sequence_type=refget.CDS)
                     },

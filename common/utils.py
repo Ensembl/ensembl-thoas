@@ -360,7 +360,7 @@ def format_cdna(transcript, release_version, assembly, refget):
     '''
 
 
-    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly,
+    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
                                             stable_id=transcript,
                                             sequence_type=refget.CDNA)
     start = transcript['start']
@@ -391,7 +391,7 @@ def format_protein(protein, genome_id, product_length, assembly, release_version
     Create a protein representation from limited data
     '''
 
-    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly,
+    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
                                             stable_id=protein['id'],
                                             sequence_type=refget.PEP)
     return {
