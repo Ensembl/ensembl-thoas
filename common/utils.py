@@ -360,7 +360,7 @@ def format_cdna(transcript, release_version, assembly, refget):
 
 
     sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
-                                            stable_id=transcript,
+                                            stable_id=get_stable_id(transcript["id"], transcript["version"]),
                                             sequence_type=refget.CDNA)
     start = transcript['start']
     end = transcript['end']
