@@ -396,7 +396,7 @@ def format_protein(protein, genome_id, product_length, assembly, release_version
     '''
 
     sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
-                                            stable_id=protein['id'],
+                                            stable_id=get_stable_id(protein['id'], protein['version']),
                                             sequence_type=refget.PEP)
     return {
         'type': 'Protein',
