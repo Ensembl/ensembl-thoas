@@ -23,7 +23,6 @@ from common.refget_postgresql import RefgetDB
 
 lrg_detector = re.compile('^LRG')
 
-
 def create_index(mongo_client):
     '''
     Create indexes for searching    useful things on genes, transcripts etc.
@@ -74,7 +73,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
-    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -201,7 +199,6 @@ def format_transcript(
 
     default_region = True
     ordered_formatted_exons = []
-    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
     # verify that exons are all in rank order in case the source file isn't
     # There are no guarantees in the dumping pipeline for rank order
     for exon in sorted(transcript['exons'], key=common.utils.exon_sorter):
@@ -351,7 +348,7 @@ def preload_exon_phases(production_name, assembly):
 if __name__ == '__main__':
 
     ARGS = common.utils.parse_args()
-
+    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
     MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'

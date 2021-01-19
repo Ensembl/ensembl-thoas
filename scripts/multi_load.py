@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # each section of the file dictates a particular assembly to work on
     for section in CONF_PARSER.sections():
         # one section is MongoDB config, the rest are species info
-        if section == 'MONGO DB':
+        if section in ['MONGO DB', 'REFGET DB']:
             continue
         # Insert extra inferred parameters
         CONF_PARSER[section]['config_file'] = CLI_ARGS.config

@@ -1,5 +1,5 @@
-import psycopg2
 
+import psycopg2
 
 class RefgetDB:
     def __init__(self, config):
@@ -9,8 +9,11 @@ class RefgetDB:
         self.user = self._config.get('REFGET DB', 'user')
         self.password = self._config.get('REFGET DB', 'password')
         self.dbname = self._config.get('REFGET DB', 'db')
-        with psycopg2.connect(self.connection_info) as connection:
-            self.connection = connection
+        try:
+            with psycopg2.connect(self.connection_info) as connection:
+                self.connection = connection
+        except Exception as e:
+            raise e
 
     @property
     def CDNA(self):
@@ -49,4 +52,4 @@ class RefgetDB:
                 result = cur.fetchone()
             return result[0]
         except Exception as e:
-            raise e
+            return None
