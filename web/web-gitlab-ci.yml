@@ -87,3 +87,19 @@ internal:wp-hh:
     name: wp-hh-internal
   only:
     - master
+    
+ # deploy to live at WP-HX
+live:wp-hx:
+  extends: .deploy
+  environment:
+    name : wp-hx-live
+  only:
+    - master
+
+# deploy to live at WP-HL
+live:wp-hl:
+  extends: .deploy
+  environment:
+    name : wp-hh-live
+  only:
+    - master
