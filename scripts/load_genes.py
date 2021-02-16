@@ -19,12 +19,13 @@ import pymongo
 
 import common.utils
 from common.mongo import MongoDbClient
+from common.refget_postgresql import RefgetDB
 
 lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
-    Create indexes for searching useful things on genes, transcripts etc.
+    Create indexes for searching    useful things on genes, transcripts etc.
     '''
     collection = mongo_client.collection()
     collection.create_index([
@@ -60,7 +61,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, release):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -72,7 +73,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
-
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -88,7 +88,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
     # at least until there's a process for alt-alleles etc.
     default_region = True
     print('Loaded assembly ' + assembly['name'])
-
 
     required_keys = ('name', 'description')
     with open(json_file) as file:
@@ -130,7 +129,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                 ),
                 'transcripts': [
                     [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
-                        for transcript in gene['transcripts']]
+                     for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
                 'external_references': gene_xrefs
@@ -147,7 +146,9 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                     cds_info=cds_info,
                     phase_info=phase_info,
                     default_region=default_region,
-                    assembly=assembly['id']
+                    assembly=assembly,
+                    release=release
+
                 ))
 
             # Add products
@@ -160,8 +161,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
                                 common.utils.format_protein(
                                     protein=product,
                                     genome_id=genome['id'],
-                                    product_length=cds_info[transcript['id']]['spliced_length'] // 3
-                                )
+                                    product_length=cds_info[transcript['id']]['spliced_length'] // 3,
+                                    assembly=assembly, release_version=release, refget=refget)
                             )
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -179,7 +180,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info)
 
 def format_transcript(
         transcript, gene, region_name, genome_id,
-        cds_info, phase_info, default_region, assembly
+        cds_info, phase_info, default_region, assembly, release
 ):
     '''
     Transform and supplement transcript information
@@ -207,7 +208,7 @@ def format_transcript(
                 region_name=region_name,
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly
+                assembly=assembly['id']
             )
         )
 
@@ -215,6 +216,8 @@ def format_transcript(
         transcript_xrefs = common.utils.format_cross_refs(transcript['xrefs'])
     except KeyError:
         transcript_xrefs = []
+
+    ####TODO: Type and release version
 
     new_transcript = {
         'type': 'Transcript',
@@ -228,8 +231,8 @@ def format_transcript(
         'relative_location': common.utils.calculate_relative_coords(
             parent_params={
                 'start': gene['start'],
-                'end':gene['end'],
-                'strand':gene['strand']
+                'end': gene['end'],
+                'strand': gene['strand']
             },
             child_params={
                 'start': transcript['start'],
@@ -240,12 +243,12 @@ def format_transcript(
             region_name=region_name,
             default_region=default_region,
             strand=int(transcript['strand']),
-            assembly=assembly,
+            assembly=assembly['id'],
             start=int(transcript['start']),
             end=int(transcript['end'])
         ),
-        'genome_id': genome_id,
-        'external_references': transcript_xrefs,
+                'genome_id': genome_id,
+                'external_references': transcript_xrefs,
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript)
@@ -263,11 +266,10 @@ def format_transcript(
         # Pick the first to be default
         defaults = [False] * (len(transcript['translations']) - 1)
         defaults.append(True)
-
         for translation in transcript['translations']:
             new_transcript['product_generating_contexts'].append(
                 {
-                    'product_type': 'Protein', # probably
+                    'product_type': 'Protein',  # probably
                     '5_prime_utr': common.utils.format_utr(
                         transcript, cds_start, cds_end, downstream=False
                     ),
@@ -280,14 +282,17 @@ def format_transcript(
                         'relative_start': relative_cds_start,
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
-                        'protein_length': spliced_length // 3
+                        'protein_length': spliced_length // 3,
+                        'sequence_checksum': refget.get_checksum(release_version=release, assembly=assembly['name'],
+                                                                 stable_id=new_transcript['stable_id'],
+                                                                 sequence_type=refget.CDS)
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript)
+                    'cdna': common.utils.format_cdna(transcript=transcript, release_version=release, assembly=assembly, refget=refget)
                 }
             )
 
@@ -303,7 +308,7 @@ def preload_cds_coords(production_name, assembly):
 
     with open(production_name + '_' + assembly + '.csv') as file:
         reader = csv.reader(file)
-        next(reader, None) # skip header line
+        next(reader, None)  # skip header line
         for row in reader:
             cds_buffer[row[0]] = {
                 'start': int(row[1]),
@@ -343,17 +348,18 @@ def preload_exon_phases(production_name, assembly):
 if __name__ == '__main__':
 
     ARGS = common.utils.parse_args()
-
+    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
     MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
         JSON_FILE = f'{ARGS.data_path}{ARGS.species}/{ARGS.species}_genes.json'
     ASSEMBLY = ARGS.assembly
+    RELEASE = ARGS.release
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
     PHASE_INFO = preload_exon_phases(ARGS.species, ARGS.assembly)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, RELEASE)
     create_index(MONGO_CLIENT)

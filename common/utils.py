@@ -39,6 +39,10 @@ def parse_args():
         '--collection',
         help='If the assembly is kept in a collection by Ensembl, specify the collection name'
     )
+    parser.add_argument(
+        '--release',
+        help='Release version'
+    )
     return parser.parse_args()
 
 
@@ -353,12 +357,16 @@ def format_utr(
     }
 
 
-def format_cdna(transcript):
+def format_cdna(transcript, release_version, assembly, refget):
     '''
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
     '''
 
+
+    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
+                                            stable_id=get_stable_id(transcript["id"], transcript["version"]),
+                                            sequence_type=refget.CDNA)
     start = transcript['start']
     end = transcript['end']
 
@@ -377,15 +385,19 @@ def format_cdna(transcript):
         'relative_start': relative_start,
         'relative_end': relative_end,
         'length': length,
+        'sequence_checksum': sequence_checksum,
         'type': 'CDNA'
     }
 
 
-def format_protein(protein, genome_id, product_length):
+def format_protein(protein, genome_id, product_length, assembly, release_version, refget):
     '''
     Create a protein representation from limited data
     '''
 
+    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
+                                            stable_id=get_stable_id(protein['id'], protein['version']),
+                                            sequence_type=refget.PEP)
     return {
         'type': 'Protein',
         'unversioned_stable_id': protein['id'],
@@ -397,7 +409,9 @@ def format_protein(protein, genome_id, product_length):
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features']),
-        'length': product_length
+        'length': product_length,
+        'sequence_checksum': sequence_checksum
+
     }
 
 

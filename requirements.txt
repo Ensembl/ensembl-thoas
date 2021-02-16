@@ -10,3 +10,4 @@ python-dotenv
 snapshottest
 requests
 uvicorn
+psycopg2
