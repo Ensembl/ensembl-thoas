@@ -283,8 +283,7 @@ def format_transcript(
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
                         'protein_length': spliced_length // 3,
-                        'sequence_checksum': refget.get_checksum(release_version=release, assembly=assembly['name'],
-                                                                 stable_id=new_transcript['stable_id'],
+                        'sequence_checksum': refget.get_checksum(stable_id=new_transcript['stable_id'],
                                                                  sequence_type=refget.CDS)
                     },
                     # Infer the "products" in the resolver. This is a join.
@@ -348,7 +347,8 @@ def preload_exon_phases(production_name, assembly):
 if __name__ == '__main__':
 
     ARGS = common.utils.parse_args()
-    refget = RefgetDB(common.utils.load_config(ARGS.config_file))
+    CONFIG = common.utils.load_config(ARGS.config_file)
+    SPECIES = ARGS.species
     MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
@@ -356,6 +356,13 @@ if __name__ == '__main__':
         JSON_FILE = f'{ARGS.data_path}{ARGS.species}/{ARGS.species}_genes.json'
     ASSEMBLY = ARGS.assembly
     RELEASE = ARGS.release
+    NV_RELEASE = int(RELEASE) - 53
+    division = CONFIG.get(SPECIES, 'division')
+
+    if division in ['plants', 'protists', 'bacteria']:
+        refget = RefgetDB(NV_RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
+    if division in ['vertebrates', 'metazoa']:
+        refget = RefgetDB(RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
