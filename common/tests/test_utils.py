@@ -11,6 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from unittest import mock
+from unittest.mock import MagicMock
 
 from common.utils import *
 from common.mongo import FakeMongoDbClient
@@ -81,6 +83,7 @@ def test_xref_formatting():
     ])
 
     assert len(doc_list) == 0
+
 
 def test_slice_formatting():
     '''
@@ -156,10 +159,10 @@ def test_phase_calculation():
         assert phased_exon['exon']['stable_id'] == stable_id
 
         assert (
-            phased_exon['start_phase'], phased_exon['end_phase']
-        ) == (
-            phase_lookup['ENST01'][stable_id]
-        )
+                   phased_exon['start_phase'], phased_exon['end_phase']
+               ) == (
+                   phase_lookup['ENST01'][stable_id]
+               )
 
 
 def test_splice_formatting():
@@ -565,6 +568,19 @@ def test_infer_introns():
         assert test_intron == target_intron
 
 
+class RefgetDB:
+    @property
+    def CDNA(self):
+        return 'cdna'
+
+    @property
+    def PEP(self):
+        return 'protein'
+
+    def get_checksum(self, **kwargs):
+        return '1f47b55923e2d23090f894c439974b55'
+
+
 def test_cdna_formatting():
     '''
     cDNA representation
@@ -583,8 +599,10 @@ def test_cdna_formatting():
             }
         ]
     }
-
-    cdna = format_cdna(transcript)
+    release_version = ''
+    assembly = ''
+    refget = RefgetDB()
+    cdna = format_cdna(transcript, release_version, assembly, refget)
     assert cdna['start'] == 1
     assert cdna['end'] == 100
     assert cdna['relative_start'] == 1
@@ -604,11 +622,15 @@ def test_protein_formatting():
         'xrefs': [],
         'protein_features': []
     }
-
+    refget = RefgetDB()
     result = format_protein(
         protein=protein,
         genome_id='tralalala',
-        product_length=10
+        product_length=10,
+        assembly='',
+        release_version='',
+        refget=refget
+
     )
     assert result['type'] == 'Protein'
     assert result['unversioned_stable_id'] == 'ENSP001'
