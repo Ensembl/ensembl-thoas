@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 from common.utils import *
 from common.mongo import FakeMongoDbClient
-
+from common.refget_postgresql import MockRefgetDB as RefgetDB
 
 def test_stable_id():
     '''
@@ -568,24 +568,14 @@ def test_infer_introns():
         assert test_intron == target_intron
 
 
-class RefgetDB:
-    @property
-    def CDNA(self):
-        return 'cdna'
-
-    @property
-    def PEP(self):
-        return 'protein'
-
-    def get_checksum(self, **kwargs):
-        return '1f47b55923e2d23090f894c439974b55'
-
 
 def test_cdna_formatting():
     '''
     cDNA representation
     '''
     transcript = {
+    'id': 1,
+    'version': 0.1, 
         'start': 1,
         'end': 100,
         'exons': [
@@ -600,7 +590,7 @@ def test_cdna_formatting():
         ]
     }
     release_version = ''
-    assembly = ''
+    assembly = {'name':'','id':1}
     refget = RefgetDB()
     cdna = format_cdna(transcript, release_version, assembly, refget)
     assert cdna['start'] == 1
@@ -627,7 +617,7 @@ def test_protein_formatting():
         protein=protein,
         genome_id='tralalala',
         product_length=10,
-        assembly='',
+        assembly={'name':'','id':1},
         release_version='',
         refget=refget
 

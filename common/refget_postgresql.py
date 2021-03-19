@@ -53,3 +53,15 @@ class RefgetDB:
             return result[0]
         except Exception as e:
             return None
+
+class MockRefgetDB:
+    @property
+    def CDNA(self):
+        return 'cdna'
+
+    @property
+    def PEP(self):
+        return 'protein'
+
+    def get_checksum(self, **kwargs):
+        return '1f47b55923e2d23090f894c439974b55'
