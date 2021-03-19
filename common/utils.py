@@ -357,7 +357,7 @@ def format_utr(
     }
 
 
-def format_cdna(transcript, release_version, assembly, refget):
+def format_cdna(transcript,refget):
     '''
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
@@ -389,7 +389,7 @@ def format_cdna(transcript, release_version, assembly, refget):
     }
 
 
-def format_protein(protein, genome_id, product_length, assembly, release_version, refget):
+def format_protein(protein, genome_id, product_length, refget):
     '''
     Create a protein representation from limited data
     '''

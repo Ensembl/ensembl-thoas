@@ -12,8 +12,12 @@
    limitations under the License.
 """
 
+from unittest import mock
+from unittest.mock import MagicMock
+
 from common.utils import *
 from common.mongo import FakeMongoDbClient
+from common.refget_postgresql import MockRefgetDB as RefgetDB
 
 
 def test_stable_id():
@@ -570,6 +574,8 @@ def test_cdna_formatting():
     cDNA representation
     '''
     transcript = {
+    'id': 1,
+    'version': 0.1, 
         'start': 1,
         'end': 100,
         'exons': [
@@ -583,8 +589,8 @@ def test_cdna_formatting():
             }
         ]
     }
-
-    cdna = format_cdna(transcript)
+    refget = RefgetDB()
+    cdna = format_cdna(transcript,refget)
     assert cdna['start'] == 1
     assert cdna['end'] == 100
     assert cdna['relative_start'] == 1
@@ -604,12 +610,14 @@ def test_protein_formatting():
         'xrefs': [],
         'protein_features': []
     }
-
+    refget = RefgetDB()
     result = format_protein(
         protein=protein,
         genome_id='tralalala',
-        product_length=10
+        product_length=10,
+        refget=refget
     )
+
     assert result['type'] == 'Protein'
     assert result['unversioned_stable_id'] == 'ENSP001'
     assert result['stable_id'] == 'ENSP001.2'
