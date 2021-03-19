@@ -177,15 +177,19 @@ class XrefResolver():
         Called in map functions, to mutate an xref into a better xref
         '''
 
-        xref['url'] = self.url_from_ens_dbname(
-            xref['accession_id'],
-            xref['source']['id']
-        )
-        xref['source']['url'] = self.source_url_generator(
-            self.translate_dbname(xref['source']['id'])
-        )
-        xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
-        return xref
+        try:
+            xref['url'] = self.url_from_ens_dbname(
+                xref['accession_id'],
+                xref['source']['id']
+            )
+            xref['source']['url'] = self.source_url_generator(
+                self.translate_dbname(xref['source']['id'])
+            )
+            xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
+            return xref
+        except:
+            # probably log the error somewhere; just don't send it to the client
+            return None
 
 
     def describe_info_type(self, info_type):

@@ -77,7 +77,9 @@ def insert_crossref_urls(feature, info):
     '''
     resolver = info.context['XrefResolver']
     xrefs = feature['external_references']
-    return list(map(resolver.annotate_crossref, xrefs))
+    annotated_xrefs = map(resolver.annotate_crossref, xrefs) # might contain None values due to caught exceptions
+    xrefs_with_nulls_removed = filter(lambda x: x is not None, annotated_xrefs)
+    return list(xrefs_with_nulls_removed)
 
 @QUERY_TYPE.field('transcript')
 def resolve_transcript(_, info, bySymbol=None, byId=None):
