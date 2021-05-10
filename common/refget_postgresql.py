@@ -2,13 +2,18 @@
 import psycopg2
 
 class RefgetDB:
-    def __init__(self, config):
+    def __init__(self, release, assembly, config):
+        self.release_version = release
+        self.assembly = assembly
         self._config = config
+
+        # Set RefgetDB Connection Parameters from config file
         self.host = self._config.get('REFGET DB', 'host')
         self.port = self._config.getint('REFGET DB', 'port')
         self.user = self._config.get('REFGET DB', 'user')
         self.password = self._config.get('REFGET DB', 'password')
         self.dbname = self._config.get('REFGET DB', 'db')
+
         try:
             with psycopg2.connect(self.connection_info) as connection:
                 self.connection = connection
@@ -35,7 +40,7 @@ class RefgetDB:
     def connection_info(self):
         return f"host={self.host} dbname={self.dbname} user={self.user} password={self.password}"
 
-    def get_checksum(self, release_version, assembly, stable_id, sequence_type):
+    def get_checksum(self, stable_id, sequence_type):
         try:
             with self.connection.cursor() as cur:
                 cur.execute("""
@@ -47,7 +52,7 @@ class RefgetDB:
                                 where release.release=%s and species.assembly=%s and molecule.id=%s and type = %s
                                 limit 10;
                             """,
-                            (release_version, assembly.lower(), stable_id, sequence_type))
+                            (self.release_version, self.assembly.lower(), stable_id, sequence_type))
 
                 result = cur.fetchone()
             return result[0]

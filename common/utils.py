@@ -357,15 +357,14 @@ def format_utr(
     }
 
 
-def format_cdna(transcript, release_version, assembly, refget):
+def format_cdna(transcript,refget):
     '''
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
     '''
 
 
-    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
-                                            stable_id=get_stable_id(transcript["id"], transcript["version"]),
+    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(transcript["id"], transcript["version"]),
                                             sequence_type=refget.CDNA)
     start = transcript['start']
     end = transcript['end']
@@ -390,13 +389,12 @@ def format_cdna(transcript, release_version, assembly, refget):
     }
 
 
-def format_protein(protein, genome_id, product_length, assembly, release_version, refget):
+def format_protein(protein, genome_id, product_length, refget):
     '''
     Create a protein representation from limited data
     '''
 
-    sequence_checksum = refget.get_checksum(release_version=release_version, assembly=assembly['name'],
-                                            stable_id=get_stable_id(protein['id'], protein['version']),
+    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(protein['id'], protein['version']),
                                             sequence_type=refget.PEP)
     return {
         'type': 'Protein',
