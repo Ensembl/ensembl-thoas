@@ -11,6 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from unittest import mock
+from unittest.mock import MagicMock
 
 from unittest import mock
 from unittest.mock import MagicMock
@@ -18,7 +20,6 @@ from unittest.mock import MagicMock
 from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
-
 
 def test_stable_id():
     '''
@@ -85,6 +86,7 @@ def test_xref_formatting():
     ])
 
     assert len(doc_list) == 0
+
 
 def test_slice_formatting():
     '''
@@ -160,10 +162,10 @@ def test_phase_calculation():
         assert phased_exon['exon']['stable_id'] == stable_id
 
         assert (
-            phased_exon['start_phase'], phased_exon['end_phase']
-        ) == (
-            phase_lookup['ENST01'][stable_id]
-        )
+                   phased_exon['start_phase'], phased_exon['end_phase']
+               ) == (
+                   phase_lookup['ENST01'][stable_id]
+               )
 
 
 def test_splice_formatting():
@@ -567,6 +569,7 @@ def test_infer_introns():
 
     for test_intron, target_intron in zip(reverse_introns, target_reverse_introns):
         assert test_intron == target_intron
+
 
 
 def test_cdna_formatting():
