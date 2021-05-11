@@ -291,7 +291,7 @@ def format_transcript(
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript=transcript, release_version=release, assembly=assembly, refget=refget)
+                    'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, config=CONFIG)
                 }
             )
 
@@ -349,7 +349,7 @@ if __name__ == '__main__':
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     SPECIES = ARGS.species
-    MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
+    MONGO_CLIENT = MongoDbClient(CONFIG)
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
@@ -360,9 +360,9 @@ if __name__ == '__main__':
     division = CONFIG.get(SPECIES, 'division')
 
     if division in ['plants', 'protists', 'bacteria']:
-        refget = RefgetDB(NV_RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
+        refget = RefgetDB(NV_RELEASE, ASSEMBLY, CONFIG)
     if division in ['vertebrates', 'metazoa']:
-        refget = RefgetDB(RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
+        refget = RefgetDB(RELEASE, ASSEMBLY, CONFIG)
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')

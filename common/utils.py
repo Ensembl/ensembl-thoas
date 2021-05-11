@@ -364,8 +364,9 @@ def format_cdna(transcript,refget):
     '''
 
 
-    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(transcript["id"], transcript["version"]),
-                                            sequence_type=refget.CDNA)
+    stable_id = get_stable_id(transcript["id"], transcript["version"])
+    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
+
     start = transcript['start']
     end = transcript['end']
 
@@ -384,9 +385,52 @@ def format_cdna(transcript,refget):
         'relative_start': relative_start,
         'relative_end': relative_end,
         'length': length,
-        'sequence_checksum': sequence_checksum,
-        'type': 'CDNA'
+        'type': 'CDNA',
+        'sequence': sequence
     }
+
+
+def format_sequence_object(refget, stable_id, sequence_type):
+
+    # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
+    type_to_alphabet = {
+        'cdna': {
+            'accession_id': 'test_cdna_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for cdna sequence',
+            'description': None
+        },
+        'cds': {
+            'accession_id': 'test_cds_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for cds sequence',
+            'description': None
+        },
+        'protein': {
+            'accession_id': 'test_protein_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for protein sequence',
+            'description': None
+        },
+        'rcna': {
+            'accession_id': 'test_rcna_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for rcna sequence',
+            'description': None
+        }
+    }
+
+    sequence_checksum = refget.get_checksum(stable_id, sequence_type)
+
+    return {
+        'alphabet': type_to_alphabet[sequence_type],
+        'checksum': sequence_checksum,
+        'sequence': None
+        }
 
 
 def format_protein(protein, genome_id, product_length, refget):

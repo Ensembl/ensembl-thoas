@@ -33,6 +33,7 @@ type CDNA {
   start: Int! # Start in genomic coordinates
   end: Int! # End in genomic coordinates
   length: Int!
+  sequence: Sequence!
   sequence_checksum: String!
 }
 
