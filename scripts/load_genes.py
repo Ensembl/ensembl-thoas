@@ -282,8 +282,7 @@ def format_transcript(
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
                         'protein_length': spliced_length // 3,
-                        'sequence_checksum': refget.get_checksum(stable_id=new_transcript['stable_id'],
-                                                                 sequence_type=refget.CDS)
+                        'sequence': common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'], sequence_type=refget.CDS)
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
