@@ -291,7 +291,7 @@ def format_transcript(
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, config=CONFIG)
+                    'cdna': common.utils.format_cdna(transcript=transcript, refget=refget)
                 }
             )
 
