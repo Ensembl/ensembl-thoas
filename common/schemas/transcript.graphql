@@ -24,7 +24,7 @@ type CDS {
   relative_end: Int!
   protein_length: Int!
   nucleotide_length: Int!
-  sequence_checksum: String!
+  sequence: Sequence!
 }
 
 type CDNA {
@@ -34,7 +34,6 @@ type CDNA {
   end: Int! # End in genomic coordinates
   length: Int!
   sequence: Sequence!
-  sequence_checksum: String!
 }
 
 type Exon {
