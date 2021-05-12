@@ -1,0 +1,7 @@
+interface ValueSetMetadata {
+	# Metadata derived from a value set
+	value: String!
+	label: String!
+	definition: String!
+	descrition: String!
+}
