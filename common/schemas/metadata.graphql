@@ -5,3 +5,19 @@ interface ValueSetMetadata {
 	definition: String!
 	descrition: String!
 }
+
+type TranscriptGencodeBasicMetadata implements ValueSetMetadata {
+
+}
+
+type TranscriptApprisMetadata implements ValueSetMetadata {
+
+}
+
+type TranscriptTSLMetadata implements ValueSetMetadata {
+
+}
+
+type TranscriptManeMetadata implements ValueSetMetadata {
+
+}
