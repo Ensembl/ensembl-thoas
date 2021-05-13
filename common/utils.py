@@ -132,7 +132,7 @@ def get_transcript_metadata():
     transcript_metadata = {}
     transcript_metadata['gencode_basic'] = get_gencodebasic_metadata()
     transcript_metadata['tsl'] = get_tsl_metadata()
-    transcript_metadata['appris'] = get_gencodebasic_metadata()
+    transcript_metadata['appris'] = get_appris_metadata()
     transcript_metadata['mane'] = get_mane_metadata()
     return transcript_metadata
 
