@@ -252,6 +252,7 @@ def format_transcript(
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript)
+        'metadata' : common.utils.get_transcript_metadata()
     }
 
     # Now for the tricky stuff around CDS
