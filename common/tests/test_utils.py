@@ -706,3 +706,7 @@ def test_flush_buffer():
     assert mongo.collection().count_documents({}) == 10
 
     # Struggled to meaningfully test exception behaviour
+
+def test_get_transcript_metadata():
+    transcript_metadata = get_transcript_metadata()
+    assert transcript_metadata['gencode_basic']['value'] == 'gencode_basic'
