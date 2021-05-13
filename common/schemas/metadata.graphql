@@ -21,3 +21,10 @@ type TranscriptTSLMetadata implements ValueSetMetadata {
 type TranscriptManeMetadata implements ValueSetMetadata {
 
 }
+
+type TranscriptMetadata {
+		gencode_basic: TranscriptGencodeBasicMetadata
+		appris: TranscriptApprisMetadata
+		tsl: TranscriptTSLMetadata
+		mane: TranscriptManeMetadata
+}
