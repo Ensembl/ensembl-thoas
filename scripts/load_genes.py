@@ -162,7 +162,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     protein=product,
                                     genome_id=genome['id'],
                                     product_length=cds_info[transcript['id']]['spliced_length'] // 3,
-                                    assembly=assembly, release_version=release, refget=refget)
+                                    refget=refget)
                             )
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -251,7 +251,7 @@ def format_transcript(
                 'external_references': transcript_xrefs,
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
-        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript)
+        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
         'metadata' : common.utils.get_transcript_metadata()
     }
 
@@ -292,7 +292,7 @@ def format_transcript(
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript=transcript, release_version=release, assembly=assembly, refget=refget)
+                    'cdna': common.utils.format_cdna(transcript=transcript, refget=refget)
                 }
             )
 
