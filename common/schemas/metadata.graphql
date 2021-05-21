@@ -3,35 +3,35 @@ interface ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	descrition: String!
+	description: String!
 }
 
 type TranscriptGencodeBasicMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	descrition: String!
+	description: String!
 }
 
 type TranscriptApprisMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	descrition: String!
+	description: String!
 }
 
 type TranscriptTSLMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	descrition: String!
+	description: String!
 }
 
 type TranscriptManeMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	descrition: String!
+	description: String!
 }
 
 type TranscriptMetadata {
