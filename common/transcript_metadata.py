@@ -46,3 +46,37 @@ class TSL:
         tsl_dict = self.__dict__
         del tsl_dict['_str']
         return tsl_dict
+
+class APPRIS:
+    regex = re.compile("(principal|alternative)(\d+)")
+    definitions = {
+        "principal1" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS",
+        "principal2" : "Two or more of the CDS variants as \"candidates\" to be the principal variant.",
+        "principal3" : "Lowest CCDS identifier as the principal variant",
+        "principal4" : "Longest CCDS isoform as the principal variant",
+        "principal5" : "The longest of the candidate isoforms as the principal variant",
+        "alternative1" : "Candidate transcript(s) models that are conserved in at least three tested species",
+        "alternative2" : "Candidate transcript(s) models that appear to be conserved in fewer than three tested species"
+        }
+
+    def __init__(self, str):
+        self._str = str.strip()
+        self.value = None
+        self.label = None
+        self.definition = None
+        self.description = None
+
+    def parse_input(self):
+        appris_matches = self.regex.match(self._str)
+        if appris_matches:
+            self.value = f'{appris_matches.groups()[0]}{appris_matches.groups()[1]}'
+            self.label = f'APPRIS {appris_matches.groups()[0]}:{appris_matches.groups()[1]}'
+            self.definition = self.definitions[self.value]
+            self.description = ""
+            return True
+        return False
+
+    def toJson(self):
+        appris_dict = self.__dict__
+        del appris_dict['_str']
+        return appris_dict
