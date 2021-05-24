@@ -42,7 +42,7 @@ class TSL:
             return True
         return False
 
-    def toJson(self):
+    def to_json(self):
         tsl_dict = self.__dict__
         del tsl_dict['_str']
         return tsl_dict
@@ -76,7 +76,7 @@ class APPRIS:
             return True
         return False
 
-    def toJson(self):
+    def to_json(self):
         appris_dict = self.__dict__
         del appris_dict['_str']
         return appris_dict
@@ -101,6 +101,6 @@ class MANE:
         self.definition = self.definitions[self.value]
         self.description = ''
 
-    def toJson(self):
+    def to_json(self):
         mane_dict = self.__dict__
         return mane_dict

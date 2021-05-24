@@ -20,7 +20,7 @@ def test_parse_input_tsl1():
 	'''
 	tsl = TSL("tsl1")
 	parse_success = tsl.parse_input()
-	assert tsl.toJson()['value'] == '1'
+	assert tsl.to_json()['value'] == '1'
 
 def test_parse_input_tsl3_extra():
 	'''
@@ -28,7 +28,7 @@ def test_parse_input_tsl3_extra():
 	'''
 	tsl = TSL("tsl3 (version 9)")
 	parse_success = tsl.parse_input()
-	assert tsl.toJson()['value'] == '3'
+	assert tsl.to_json()['value'] == '3'
 
 def test_parse_input_tslNA():
 	'''
@@ -36,7 +36,7 @@ def test_parse_input_tslNA():
 	'''
 	tsl = TSL("tslNA")
 	parse_success = tsl.parse_input()
-	assert tsl.toJson()['value'] == 'NA'
+	assert tsl.to_json()['value'] == 'NA'
 
 def test_parse_input_failure():
 	'''
@@ -52,7 +52,7 @@ def test_appris_parse_input_principal1():
 	'''
 	appris = APPRIS("principal1")
 	parse_success = appris.parse_input()
-	assert appris.toJson()['value'] == 'principal1'
+	assert appris.to_json()['value'] == 'principal1'
 
 def test_appris_parse_input_principal1():
 	'''
@@ -60,7 +60,7 @@ def test_appris_parse_input_principal1():
 	'''
 	appris = APPRIS("alternative2")
 	parse_success = appris.parse_input()
-	assert appris.toJson()['value'] == 'alternative2'
+	assert appris.to_json()['value'] == 'alternative2'
 
 def test_appris_parse_input_failure():
 	'''
@@ -75,13 +75,13 @@ def test_parse_input_mane_select():
 	Ensure MANE input mane select is parsed correctly
 	'''
 	mane = MANE("select", "NM_015694.3")
-	assert mane.toJson()['value'] == 'select'
-	assert mane.toJson()['label'] == 'MANE Select'
+	assert mane.to_json()['value'] == 'select'
+	assert mane.to_json()['label'] == 'MANE Select'
 
 def test_parse_input_mane_plus_clinical():
 	'''
 	Ensure MANE input mane plus clinical is parsed correctly
 	'''
 	mane = MANE("plus_clinical", "NM_015694.3")
-	assert mane.toJson()['value'] == 'plus_clinical'
-	assert mane.toJson()['label'] == 'MANE Plus Clinical'
+	assert mane.to_json()['value'] == 'plus_clinical'
+	assert mane.to_json()['label'] == 'MANE Plus Clinical'
