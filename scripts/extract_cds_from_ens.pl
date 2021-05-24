@@ -54,7 +54,11 @@ print $fh '"transcript ID", "cds_start", "cds_end", "cds relative start",'.
 my $phase_fh = IO::File->new($species.'_'.$assembly.'_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
+my $attrib_fh = IO::File->new($species.'_'.$assembly.'_attrib.csv', 'w');
+print $attrib_fh 'transcript ID,gencode_basic,appris,TSL,MANE_Select,MANE_Plus_Clinical'."\n";
+
 my $transcript_adaptor;
+my $attribute_adaptor;
 if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                        -USER => $meta_user,
@@ -74,6 +78,7 @@ if ($host =~ /mysql-ens-mirror-[3,4]/) {
   );
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
+  $attribute_adaptor = ${ $dbas }[0]->get_AttributeAdaptor();
 } else {
   $registry->load_registry_from_db(
     -host => $host,
@@ -82,10 +87,15 @@ if ($host =~ /mysql-ens-mirror-[3,4]/) {
     -port => $port
   );
   $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
+  $attribute_adaptor = $registry->get_adaptor($species, 'core', 'Attribute');
 }
 
 my $transcripts = $transcript_adaptor->fetch_all;
 my $x = 0;
+my $attrib = Bio::EnsEMBL::Attribute->new(-NAME        => 'test_name',
+                                          -CODE        => 'test_code',
+                                          -DESCRIPTION => 'test_desc',
+                                          -VALUE       => 'test_value');
 while (my $transcript = shift @$transcripts) {
   $x++;
   my $translation = $transcript->translation;
@@ -129,8 +139,33 @@ while (my $transcript = shift @$transcripts) {
       $exon->phase,
       $exon->end_phase;
   }
+
+  my %tr_attribute = ('stable_id' => '',
+                      'gencode_basic' => '',
+                      'appris' => '',
+                      'TSL' => '',
+                      'MANE_Select' => '',
+                      'MANE_Plus_Clinical' => '');
+
+  $tr_attribute{'stable_id'} = $transcript->stable_id;
+  for my $tr_attribute_code (@transcript_attribute_codes){
+        my @tr_attributes_for_code = @{$attribute_adaptor->fetch_all_by_Transcript($transcript,$tr_attribute_code)};
+        if (@tr_attributes_for_code){
+                $attrib = $tr_attributes_for_code[0];
+                $tr_attribute{$tr_attribute_code} = $attrib->value;
+                }
+        }
+
+  printf $attrib_fh "%s,%s,%s,%s,%s,%s\n",
+         $transcript->stable_id,
+         $tr_attribute{'gencode_basic'},
+         $tr_attribute{'appris'},
+         $tr_attribute{'TSL'},
+         $tr_attribute{'MANE_Select'},
+         $tr_attribute{'MANE_Plus_Clinical'};
 }
 print "Dumping completed of $x of coding transcripts\n";
 
 close $fh;
 close $phase_fh;
+close $attrib_fh;
