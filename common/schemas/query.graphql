@@ -21,17 +21,3 @@ type Locus {
   genes: [Gene!]!
   transcripts: [Transcript!]!
 }
-
-type Sequence {
-  alphabet: SequenceAlphabet
-  checksum: String!
-  sequence: String
-}
-
-type SequenceAlphabet {
-  accession_id: String!
-  label: String!
-  value: String!
-  definition: String!
-  description: String
-}

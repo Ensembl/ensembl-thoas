@@ -428,9 +428,8 @@ def format_sequence_object(refget, stable_id, sequence_type):
 
     return {
         'alphabet': type_to_alphabet[sequence_type],
-        'checksum': sequence_checksum,
-        'sequence': None
-        }
+        'checksum': sequence_checksum
+    }
 
 
 def format_protein(protein, genome_id, product_length, refget):
