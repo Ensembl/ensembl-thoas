@@ -80,3 +80,27 @@ class APPRIS:
         appris_dict = self.__dict__
         del appris_dict['_str']
         return appris_dict
+
+class MANE:
+    base_url = "https://www.ncbi.nlm.nih.gov/protein/"
+    definitions = {
+        "select" : "The MANE Select is a default transcript per human gene that is representative of biology, well-supported, expressed and highly-conserved.",
+        "select_v0.5" : "The preliminary release (phase 1) of the MANE Select data set",
+        "plus_clinical" : "Transcripts in the MANE Plus Clinical set are additional transcripts per locus necessary to support clinical variant reporting"
+        }
+
+    labels = {
+        "select" : "MANE Select",
+        "select_v0.5" : "MANE Select v0.5",
+        "plus_clinical" : "MANE Plus Clinical"
+        }
+
+    def __init__(self, value, ncbi_id):
+        self.value = value.strip()
+        self.label = self.labels[self.value]
+        self.definition = self.definitions[self.value]
+        self.description = ''
+
+    def toJson(self):
+        mane_dict = self.__dict__
+        return mane_dict
