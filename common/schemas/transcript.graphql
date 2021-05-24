@@ -92,9 +92,9 @@ type Product {
   """
   length: Int!
   """
-  The value of sequence checksum can be used to retrieve the sequence from RefGet
+  The value of checksum in the Sequence object can be used to retrieve the sequence from RefGet
   """
-  sequence_checksum: String!
+  sequence: Sequence!
   external_references: [ExternalReference!]!
   protein_domains: [ProteinDomain!]!
 }

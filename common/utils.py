@@ -437,12 +437,13 @@ def format_protein(protein, genome_id, product_length, refget):
     Create a protein representation from limited data
     '''
 
-    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(protein['id'], protein['version']),
-                                            sequence_type=refget.PEP)
+    stable_id = get_stable_id(protein['id'], protein['version'])
+    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.PEP)
+
     return {
         'type': 'Protein',
         'unversioned_stable_id': protein['id'],
-        'stable_id': get_stable_id(protein['id'], protein['version']),
+        'stable_id': stable_id,
         'version': protein['version'],
         # for foreign key behaviour
         'transcript_id': protein['transcript_id'], # missing version...
@@ -451,8 +452,7 @@ def format_protein(protein, genome_id, product_length, refget):
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features']),
         'length': product_length,
-        'sequence_checksum': sequence_checksum
-
+        'sequence': sequence
     }
 
 
