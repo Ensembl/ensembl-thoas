@@ -45,3 +45,27 @@ def test_parse_input_failure():
 	tsl = TSL("random")
 	parse_success = tsl.parse_input()
 	assert parse_success == False
+
+def test_appris_parse_input_principal1():
+	'''
+	Ensure APPRIS input principal1 is parsed correctly
+	'''
+	appris = APPRIS("principal1")
+	parse_success = appris.parse_input()
+	assert appris.toJson()['value'] == 'principal1'
+
+def test_appris_parse_input_principal1():
+	'''
+	Ensure APPRIS input alternative2 is parsed correctly
+	'''
+	appris = APPRIS("alternative2")
+	parse_success = appris.parse_input()
+	assert appris.toJson()['value'] == 'alternative2'
+
+def test_appris_parse_input_failure():
+	'''
+	Ensure Failure of any other input e.g random
+	'''
+	appris = APPRIS("random")
+	parse_success = appris.parse_input()
+	assert parse_success == False
