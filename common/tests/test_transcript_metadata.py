@@ -69,3 +69,19 @@ def test_appris_parse_input_failure():
 	appris = APPRIS("random")
 	parse_success = appris.parse_input()
 	assert parse_success == False
+
+def test_parse_input_mane_select():
+	'''
+	Ensure MANE input mane select is parsed correctly
+	'''
+	mane = MANE("select", "NM_015694.3")
+	assert mane.toJson()['value'] == 'select'
+	assert mane.toJson()['label'] == 'MANE Select'
+
+def test_parse_input_mane_plus_clinical():
+	'''
+	Ensure MANE input mane plus clinical is parsed correctly
+	'''
+	mane = MANE("plus_clinical", "NM_015694.3")
+	assert mane.toJson()['value'] == 'plus_clinical'
+	assert mane.toJson()['label'] == 'MANE Plus Clinical'
