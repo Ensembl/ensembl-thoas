@@ -35,8 +35,8 @@ type TranscriptManeMetadata implements ValueSetMetadata {
 }
 
 type TranscriptMetadata {
-		gencode_basic: TranscriptGencodeBasicMetadata
-		appris: TranscriptApprisMetadata
-		tsl: TranscriptTSLMetadata
-		mane: TranscriptManeMetadata
+	gencode_basic: TranscriptGencodeBasicMetadata
+	appris: TranscriptApprisMetadata
+	tsl: TranscriptTSLMetadata
+	mane: TranscriptManeMetadata
 }
