@@ -707,6 +707,3 @@ def test_flush_buffer():
 
     # Struggled to meaningfully test exception behaviour
 
-def test_get_transcript_metadata():
-    transcript_metadata = get_transcript_metadata()
-    assert transcript_metadata['gencode_basic']['value'] == 'gencode_basic'

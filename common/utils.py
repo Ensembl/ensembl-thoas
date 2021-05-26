@@ -91,51 +91,6 @@ def get_stable_id(iid, version):
     stable_id = f'{iid}.{str(version)}' if version else iid
     return stable_id
 
-def get_gencodebasic_metadata():
-    gencodebasic_metadata = {
-        'value' : 'gencode_basic',
-        'label' : 'GENCODE basic annotation',
-        'definition' : 'GENCODE Basic is a view provided by UCSC for users. It includes a subset of the GENCODE transcripts. In general, for protein coding genes it will show only the full length models (unless a protein coding gene has no full-length models, in which case other rules apply). For noncoding genes, it will also only show the full-length (mRNA start and end found) models (unless there are no full-length models, in which case other rules apply).',
-        'description' : 'GENCODE Basic is a view provided by UCSC for users. It includes a subset of the GENCODE transcripts. In general, for protein coding genes it will show only the full length models (unless a protein coding gene has no full-length models, in which case other rules apply). For noncoding genes, it will also only show the full-length (mRNA start and end found) models (unless there are no full-length models, in which case other rules apply).'
-    }
-    return gencodebasic_metadata
-
-def get_appris_metadata():
-    appris_metadata = {
-        'value' : 'appris',
-        'label' : 'APPRIS',
-        'definition' : 'APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. APPRIS also selects one of the CDS for each gene as the principal isoform. APPRIS defines the principal variant by combining protein structural and functional information and information from the conservation of related species. principal1 - APPRIS principal isoform. principal2 - APPRIS candidate isoform (CCDS). principal3 - APPRIS candidate isoform (earliest CCDS). principal4 - APPRIS candidate isoform (longest CCDS). principal5 - APPRIS candidate isoform (longest coding sequence). alternative1 - APPRIS candidate isoform that is conserved in at least three tested species. alternative2 - APPRIS candidate isoform that appears to be conserved in fewer than three tested species',
-        'description' : 'APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. APPRIS also selects one of the CDS for each gene as the principal isoform. APPRIS defines the principal variant by combining protein structural and functional information and information from the conservation of related species. principal1 - APPRIS principal isoform. principal2 - APPRIS candidate isoform (CCDS). principal3 - APPRIS candidate isoform (earliest CCDS). principal4 - APPRIS candidate isoform (longest CCDS). principal5 - APPRIS candidate isoform (longest coding sequence). alternative1 - APPRIS candidate isoform that is conserved in at least three tested species. alternative2 - APPRIS candidate isoform that appears to be conserved in fewer than three tested species'
-    }
-    return appris_metadata
-
-def get_tsl_metadata():
-    tsl_metadata = {
-        'value' : 'tsl',
-        'label' : 'Transcript Support Level',
-        'definition' : 'Transcription Support Level (TSL) is a method to highlight the well-supported and poorly-supported transcript models for users. The method relies on the primary data that can support full-length transcript structure and data are provided by UCSC.  The following categories are assigned to each of the evaluated annotations. tsl1 - all splice junctions of the transcript are supported by at least one non-suspect mRNA. tsl2 - the best supporting mRNA is flagged as suspect or the support is from multiple ESTs. tsl3 - the only support is from a single EST. tsl4 - the best supporting EST is flagged as suspect. tsl5 - no single transcript supports the model structure. tslNA - the transcript was not analyzed for one of the following reasons: pseudogene annotation, including transcribed pseudogenes.Human leukocyte antigen (HLA) transcript. Immunoglobin gene transcript.  T-cell receptor transcript. Single-exon transcript (will be included in a future version)',
-        'description' : 'Transcription Support Level (TSL) is a method to highlight the well-supported and poorly-supported transcript models for users. The method relies on the primary data that can support full-length transcript structure and data are provided by UCSC.  The following categories are assigned to each of the evaluated annotations. tsl1 - all splice junctions of the transcript are supported by at least one non-suspect mRNA. tsl2 - the best supporting mRNA is flagged as suspect or the support is from multiple ESTs. tsl3 - the only support is from a single EST. tsl4 - the best supporting EST is flagged as suspect. tsl5 - no single transcript supports the model structure. tslNA - the transcript was not analyzed for one of the following reasons: pseudogene annotation, including transcribed pseudogenes.Human leukocyte antigen (HLA) transcript. Immunoglobin gene transcript.  T-cell receptor transcript. Single-exon transcript (will be included in a future version)'
-    }
-    return tsl_metadata
-
-def get_mane_metadata():
-    mane_metadata = {
-        'value' : 'MANE_Select',
-        'label' : 'MANE Select v0.93',
-        'definition' : "MANE Select (v0.93) is the preliminary release (phase 8) of the MANE Select data set. The Matched Annotation from NCBI and EMBL-EBI project (MANE) is a collaboration between Ensembl-GENCODE and RefSeq to select a default transcript per human protein coding locus that is representative of biology, well-supported, expressed and conserved. This transcript set matches GRCh38 and is 100% identical between RefSeq and Ensembl-GENCODE for 5' UTR, CDS, splicing and 3' UTR.'",
-        'description' : "MANE Select (v0.93) is the preliminary release (phase 8) of the MANE Select data set. The Matched Annotation from NCBI and EMBL-EBI project (MANE) is a collaboration between Ensembl-GENCODE and RefSeq to select a default transcript per human protein coding locus that is representative of biology, well-supported, expressed and conserved. This transcript set matches GRCh38 and is 100% identical between RefSeq and Ensembl-GENCODE for 5' UTR, CDS, splicing and 3' UTR."
-    }
-    return mane_metadata
-
-def get_transcript_metadata():
-    'Get Transcript Metadata'
-    transcript_metadata = {}
-    transcript_metadata['gencode_basic'] = get_gencodebasic_metadata()
-    transcript_metadata['tsl'] = get_tsl_metadata()
-    transcript_metadata['appris'] = get_appris_metadata()
-    transcript_metadata['mane'] = get_mane_metadata()
-    return transcript_metadata
-
 def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
