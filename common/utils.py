@@ -395,18 +395,11 @@ def format_sequence_object(refget, stable_id, sequence_type):
 
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
-        'cdna': {
-            'accession_id': 'test_cdna_accession_id',
+        'dna': {
+            'accession_id': 'test_dna_accession_id',
             'value': 'test',
             'label': 'test',
-            'definition': 'Test - IUPAC notation for cdna sequence',
-            'description': None
-        },
-        'cds': {
-            'accession_id': 'test_cds_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for cds sequence',
+            'definition': 'Test - IUPAC notation for dna sequence',
             'description': None
         },
         'protein': {
@@ -415,20 +408,13 @@ def format_sequence_object(refget, stable_id, sequence_type):
             'label': 'test',
             'definition': 'Test - IUPAC notation for protein sequence',
             'description': None
-        },
-        'rcna': {
-            'accession_id': 'test_rcna_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for rcna sequence',
-            'description': None
         }
     }
 
     sequence_checksum = refget.get_checksum(stable_id, sequence_type)
 
     return {
-        'alphabet': type_to_alphabet[sequence_type],
+        'alphabet': type_to_alphabet.get('dna') if sequence_type in [refget.CDNA, refget.CDS] else type_to_alphabet.get('protein'),
         'checksum': sequence_checksum
     }
 
