@@ -706,4 +706,3 @@ def test_flush_buffer():
     assert mongo.collection().count_documents({}) == 10
 
     # Struggled to meaningfully test exception behaviour
-

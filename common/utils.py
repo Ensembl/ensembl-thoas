@@ -91,6 +91,7 @@ def get_stable_id(iid, version):
     stable_id = f'{iid}.{str(version)}' if version else iid
     return stable_id
 
+
 def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
