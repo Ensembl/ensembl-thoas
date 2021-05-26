@@ -386,7 +386,8 @@ def format_cdna(transcript,refget):
         'relative_end': relative_end,
         'length': length,
         'type': 'CDNA',
-        'sequence': sequence
+        'sequence': sequence,
+        'sequence_checksum': sequence.get('checksum')
     }
 
 
@@ -452,7 +453,8 @@ def format_protein(protein, genome_id, product_length, refget):
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features']),
         'length': product_length,
-        'sequence': sequence
+        'sequence': sequence,
+        'sequence_checksum': sequence.get('checksum')
     }
 
 

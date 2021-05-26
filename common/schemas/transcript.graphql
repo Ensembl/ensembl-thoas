@@ -25,6 +25,7 @@ type CDS {
   protein_length: Int!
   nucleotide_length: Int!
   sequence: Sequence!
+  sequence_checksum: String! @deprecated
 }
 
 type CDNA {
@@ -34,6 +35,7 @@ type CDNA {
   end: Int! # End in genomic coordinates
   length: Int!
   sequence: Sequence!
+  sequence_checksum: String! @deprecated
 }
 
 type Exon {
@@ -95,6 +97,7 @@ type Product {
   The value of checksum in the Sequence object can be used to retrieve the sequence from RefGet
   """
   sequence: Sequence!
+  sequence_checksum: String! @deprecated
   external_references: [ExternalReference!]!
   protein_domains: [ProteinDomain!]!
 }
