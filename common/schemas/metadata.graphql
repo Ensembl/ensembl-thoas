@@ -27,11 +27,17 @@ type TranscriptTSLMetadata implements ValueSetMetadata {
 	description: String!
 }
 
+type NCBITranscript {
+	id: String!
+	url : String!
+}
+
 type TranscriptManeMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
 	description: String!
+	ncbi_transcript: NCBITranscript!
 }
 
 type TranscriptMetadata {
