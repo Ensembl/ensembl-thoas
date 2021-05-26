@@ -61,7 +61,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, release):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, release):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -145,6 +145,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                     genome_id=genome['id'],
                     cds_info=cds_info,
                     phase_info=phase_info,
+                    tr_metadata_info=tr_metadata_info,
                     default_region=default_region,
                     assembly=assembly,
                     release=release
@@ -180,7 +181,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
 
 def format_transcript(
         transcript, gene, region_name, genome_id,
-        cds_info, phase_info, default_region, assembly, release
+        cds_info, phase_info, tr_metadata_info, default_region, assembly, release
 ):
     '''
     Transform and supplement transcript information
@@ -252,7 +253,7 @@ def format_transcript(
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
-        'metadata' : common.utils.get_transcript_metadata()
+        'metadata' : tr_metadata_info[transcript["id"]]
     }
 
     # Now for the tricky stuff around CDS
