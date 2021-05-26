@@ -85,3 +85,4 @@ def test_parse_input_mane_plus_clinical():
 	mane = MANE("plus_clinical", "NM_015694.3")
 	assert mane.to_json()['value'] == 'plus_clinical'
 	assert mane.to_json()['label'] == 'MANE Plus Clinical'
+	assert mane.to_json()['ncbi_transcript']['id'] == 'NM_015694.3'

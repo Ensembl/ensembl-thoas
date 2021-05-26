@@ -49,6 +49,9 @@ class TSL:
 
 class APPRIS:
     regex = re.compile("(principal|alternative)(\d+)")
+    appris_qualifiers = {
+
+    }
     definitions = {
         "principal1" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS",
         "principal2" : "Two or more of the CDS variants as \"candidates\" to be the principal variant.",
@@ -82,24 +85,30 @@ class APPRIS:
         return appris_dict
 
 class MANE:
-    base_url = "https://www.ncbi.nlm.nih.gov/protein/"
-    definitions = {
-        "select" : "The MANE Select is a default transcript per human gene that is representative of biology, well-supported, expressed and highly-conserved.",
-        "select_v0.5" : "The preliminary release (phase 1) of the MANE Select data set",
-        "plus_clinical" : "Transcripts in the MANE Plus Clinical set are additional transcripts per locus necessary to support clinical variant reporting"
-        }
-
-    labels = {
-        "select" : "MANE Select",
-        "select_v0.5" : "MANE Select v0.5",
-        "plus_clinical" : "MANE Plus Clinical"
+    base_url = "https://www.ncbi.nlm.nih.gov/protein/" # Not sure what base_url should be
+    mane_qualifiers = {
+        "select" : {
+            "label" : "MANE Select",
+            "definition" : "The MANE Select is a default transcript per human gene that is representative of biology, well-supported, expressed and highly-conserved."
+            },
+        "plus_clinical" : {
+            "label" : "MANE Plus Clinical",
+            "definition" : "Transcripts in the MANE Plus Clinical set are additional transcripts per locus necessary to support clinical variant reporting"
+            }
         }
 
     def __init__(self, value, ncbi_id):
         self.value = value.strip()
-        self.label = self.labels[self.value]
-        self.definition = self.definitions[self.value]
+        self.label = self.mane_qualifiers[self.value]['label']
+        self.definition = self.mane_qualifiers[self.value]['definition']
         self.description = ''
+        if ncbi_id:
+            self.ncbi_transcript = {
+               "id" : ncbi_id,
+               "url" : f'{self.base_url}{ncbi_id}'
+            }
+        else:
+            ncbi_transcript = {}
 
     def to_json(self):
         mane_dict = self.__dict__
