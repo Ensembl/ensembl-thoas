@@ -363,15 +363,15 @@ def get_transcript_meta(row):
     try:
         appris = APPRIS(row['appris'])
         if appris.parse_input():
-            transcript_meta['appris'] = appris.toJson()
+            transcript_meta['appris'] = appris.to_json()
         tsl = TSL(row['TSL'])
         if tsl.parse_input():
-            transcript_meta['tsl'] = tsl.toJson()
+            transcript_meta['tsl'] = tsl.to_json()
         if row['MANE_Select']:
             mane = MANE('select', row['MANE_Select'])
         if row['MANE_Plus_Clinical']:
             mane = MANE('plus_clinical', row['MANE_Plus_Clinical'])
-        transcript_meta['mane'] = mane.toJson()
+        transcript_meta['mane'] = mane.to_json()
     except Exception as ex:
         pass
     return transcript_meta
