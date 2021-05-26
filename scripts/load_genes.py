@@ -344,6 +344,47 @@ def preload_exon_phases(production_name, assembly):
 
     return phase_lookup
 
+def get_transcript_meta_item(value,label,definition,description):
+    transcript_meta_item = {}
+    try:
+        if value and label:
+            transcript_meta_item['value'] = value
+            transcript_meta_item['label'] = label
+            transcript_meta_item['definition'] = definition
+            transcript_meta_item['description'] = description
+    except Exception as ex:
+        pass
+    return transcript_meta_item
+
+def get_transcript_meta(row):
+    #codes = {'gencode_basic':'gencode_basic', 'appris':'appris', 'TSL':'tsl', 'MANE_Select':'mane'}
+    codes = {'appris':'appris', 'TSL':'tsl'}
+    transcript_meta = {'appris': None, 'tsl': None, 'mane':None}
+    try:
+        appris = APPRIS(row['appris'])
+        if appris.parse_input():
+            transcript_meta['appris'] = appris.toJson()
+        tsl = TSL(row['TSL'])
+        if tsl.parse_input():
+            transcript_meta['tsl'] = tsl.toJson()
+        if row['MANE_Select']:
+            mane = MANE('select', row['MANE_Select'])
+        if row['MANE_Plus_Clinical']:
+            mane = MANE('plus_clinical', row['MANE_Plus_Clinical'])
+        transcript_meta['mane'] = mane.toJson()
+    except Exception as ex:
+        pass
+    return transcript_meta
+
+def preload_transcript_meta(production_name, assembly):
+    transcript_meta = {}
+    with open(production_name + '_' + assembly + '_attrib.csv') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            stable_id = row['transcript ID']
+            transcript_meta[stable_id] = get_transcript_meta(row)
+    return transcript_meta
+
 
 if __name__ == '__main__':
 
@@ -368,6 +409,8 @@ if __name__ == '__main__':
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
     PHASE_INFO = preload_exon_phases(ARGS.species, ARGS.assembly)
+    print("Loading Transcript Metadata")
+    TRANSCRIPT_METADATA = preload_transcript_meta(ARGS.species, ARGS.assembly)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, RELEASE)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, RELEASE)
     create_index(MONGO_CLIENT)
