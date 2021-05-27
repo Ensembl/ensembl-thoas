@@ -346,21 +346,7 @@ def preload_exon_phases(production_name, assembly):
 
     return phase_lookup
 
-def get_transcript_meta_item(value,label,definition,description):
-    transcript_meta_item = {}
-    try:
-        if value and label:
-            transcript_meta_item['value'] = value
-            transcript_meta_item['label'] = label
-            transcript_meta_item['definition'] = definition
-            transcript_meta_item['description'] = description
-    except Exception as ex:
-        pass
-    return transcript_meta_item
-
 def get_transcript_meta(row):
-    #codes = {'gencode_basic':'gencode_basic', 'appris':'appris', 'TSL':'tsl', 'MANE_Select':'mane'}
-    codes = {'appris':'appris', 'TSL':'tsl'}
     transcript_meta = {'appris': None, 'tsl': None, 'mane':None}
     try:
         appris = APPRIS(row['appris'])
