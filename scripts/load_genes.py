@@ -18,6 +18,7 @@ import ijson
 import pymongo
 
 import common.utils
+from common.transcript_metadata import TSL, APPRIS, MANE
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
 
@@ -370,9 +371,10 @@ def get_transcript_meta(row):
             transcript_meta['tsl'] = tsl.to_json()
         if row['MANE_Select']:
             mane = MANE('select', row['MANE_Select'])
+            transcript_meta['mane'] = mane.to_json()
         if row['MANE_Plus_Clinical']:
             mane = MANE('plus_clinical', row['MANE_Plus_Clinical'])
-        transcript_meta['mane'] = mane.to_json()
+            transcript_meta['mane'] = mane.to_json()
     except Exception as ex:
         pass
     return transcript_meta
