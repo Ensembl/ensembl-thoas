@@ -59,6 +59,7 @@ print $attrib_fh 'transcript ID,gencode_basic,appris,TSL,MANE_Select,MANE_Plus_C
 
 my $transcript_adaptor;
 my $attribute_adaptor;
+my @transcript_attribute_codes = ('gencode_basic', 'appris', 'TSL', 'MANE_Select','MANE_Plus_Clinical');
 if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                        -USER => $meta_user,
@@ -92,53 +93,16 @@ if ($host =~ /mysql-ens-mirror-[3,4]/) {
 
 my $transcripts = $transcript_adaptor->fetch_all;
 my $x = 0;
+my $cds_c = 0;
+my $phase_c = 0;
+my $attrib_c = 0;
+
 my $attrib = Bio::EnsEMBL::Attribute->new(-NAME        => 'test_name',
                                           -CODE        => 'test_code',
                                           -DESCRIPTION => 'test_desc',
                                           -VALUE       => 'test_value');
 while (my $transcript = shift @$transcripts) {
   $x++;
-  my $translation = $transcript->translation;
-  next unless $translation;
-  my $start = $translation->start;
-  my $end = $translation->end;
-
-  my $transcript_slice = $transcript->feature_Slice;
-  my $cds_feats = $transcript->get_all_CDS();
-  # Note that CDS coords in transcript space are 5' to 3', so always
-  # are ascending. We don't care about the intervening CDSes for 
-  # rendering purposes.
-
-  if (@$cds_feats > 1) {
-    my ($relative_first_cds) = $cds_feats->[0]->transfer($transcript_slice);
-    my ($relative_last_cds) = $cds_feats->[-1]->transfer($transcript_slice);
-    printf $fh "%s,%s,%s,%s,%s,%s\n",
-      $transcript->stable_id,
-      $cds_feats->[0]->start,
-      $cds_feats->[-1]->end,
-      $relative_first_cds->start,
-      $relative_last_cds->end,
-      sum map {$_->length} @$cds_feats;
-  } else {
-    my ($relative_cds) = $cds_feats->[0]->transfer($transcript_slice);
-    printf $fh "%s,%s,%s,%s,%s,%s\n",
-      $transcript->stable_id,
-      $cds_feats->[0]->start,
-      $cds_feats->[0]->end,
-      $relative_cds->start,
-      $relative_cds->end,
-      $cds_feats->[0]->length;
-  }
-
-  foreach my $et (@{$transcript->get_all_ExonTranscripts}) {
-    my $exon = $et->exon;
-    printf $phase_fh "%s,%s,%s,%s,%s\n",
-      $transcript->stable_id,
-      $exon->stable_id,
-      $et->rank,
-      $exon->phase,
-      $exon->end_phase;
-  }
 
   my %tr_attribute = ('stable_id' => '',
                       'gencode_basic' => '',
@@ -163,8 +127,57 @@ while (my $transcript = shift @$transcripts) {
          $tr_attribute{'TSL'},
          $tr_attribute{'MANE_Select'},
          $tr_attribute{'MANE_Plus_Clinical'};
+         $attrib_c++;
+
+  my $translation = $transcript->translation;
+  next unless $translation;
+  my $start = $translation->start;
+  my $end = $translation->end;
+
+  my $transcript_slice = $transcript->feature_Slice;
+  my $cds_feats = $transcript->get_all_CDS();
+  # Note that CDS coords in transcript space are 5' to 3', so always
+  # are ascending. We don't care about the intervening CDSes for 
+  # rendering purposes.
+
+  if (@$cds_feats > 1) {
+    my ($relative_first_cds) = $cds_feats->[0]->transfer($transcript_slice);
+    my ($relative_last_cds) = $cds_feats->[-1]->transfer($transcript_slice);
+    printf $fh "%s,%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $cds_feats->[0]->start,
+      $cds_feats->[-1]->end,
+      $relative_first_cds->start,
+      $relative_last_cds->end,
+      sum map {$_->length} @$cds_feats;
+      $cds_c++;
+  } else {
+    my ($relative_cds) = $cds_feats->[0]->transfer($transcript_slice);
+    printf $fh "%s,%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $cds_feats->[0]->start,
+      $cds_feats->[0]->end,
+      $relative_cds->start,
+      $relative_cds->end,
+      $cds_feats->[0]->length;
+      $cds_c++;
+  }
+
+  foreach my $et (@{$transcript->get_all_ExonTranscripts}) {
+    my $exon = $et->exon;
+    printf $phase_fh "%s,%s,%s,%s,%s\n",
+      $transcript->stable_id,
+      $exon->stable_id,
+      $et->rank,
+      $exon->phase,
+      $exon->end_phase;
+      $phase_c++;
+  }
+
+
 }
 print "Dumping completed of $x of coding transcripts\n";
+print "\t Transcripts : $x \n\t CDS : $cds_c \n\t PHASE : $phase_c \n\t ATTRIB : $attrib_c";
 
 close $fh;
 close $phase_fh;
