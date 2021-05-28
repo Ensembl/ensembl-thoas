@@ -86,3 +86,13 @@ def test_parse_input_mane_plus_clinical():
 	assert mane.to_json()['value'] == 'plus_clinical'
 	assert mane.to_json()['label'] == 'MANE Plus Clinical'
 	assert mane.to_json()['ncbi_transcript']['id'] == 'NM_015694.3'
+
+def test_parse_input_gencode_basic():
+	gencode_basic = GencodeBasic("GENCODE basic")
+	gencode_basic.parse_input()
+	assert gencode_basic.to_json()['value'] == 'GENCODE basic'
+
+def test_parse_input_biotype():
+	biotype = Biotype("protein_coding")
+	biotype.parse_input()
+	assert biotype.to_json()['value'] == 'protein_coding'
