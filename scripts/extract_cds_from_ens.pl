@@ -55,7 +55,7 @@ my $phase_fh = IO::File->new($species.'_'.$assembly.'_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $attrib_fh = IO::File->new($species.'_'.$assembly.'_attrib.csv', 'w');
-print $attrib_fh 'transcript ID,gencode_basic,appris,TSL,MANE_Select,MANE_Plus_Clinical'."\n";
+print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MANE_Plus_Clinical'."\n";
 
 my $transcript_adaptor;
 my $attribute_adaptor;
