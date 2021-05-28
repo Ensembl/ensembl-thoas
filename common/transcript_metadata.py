@@ -113,3 +113,58 @@ class MANE:
     def to_json(self):
         mane_dict = self.__dict__
         return mane_dict
+
+class GencodeBasic:
+    gencode_classifiers = {
+    "GENCODE basic" :
+        {
+        "value" : "GENCODE basic",
+        "label" : "GENCODE basic",
+        "definition" : "A subset of the GENCODE gene set, and is intended to provide a simplified, high-quality subset of the GENCODE transcript annotations",
+        "description" : ""
+        }
+    }
+    def __init__(self, classifier):
+        self.classifier =  classifier
+        self.value = None
+        self.label = None
+        self.definition = None
+        self.description = None
+
+    def parse_input(self):
+        if self.classifier in self.gencode_classifiers.keys():
+            self.value = self.classifier
+            self.label = self.gencode_classifiers[self.value]['label']
+            self.definition = self.gencode_classifiers[self.value]['definition']
+            self.description = ""
+            return True
+        return False
+
+    def to_json(self):
+        gencode_dict = self.__dict__
+        del gencode_dict['classifier']
+        return gencode_dict
+
+class Biotype:
+    with open("docs/biotype_classifiers.json") as json_file:
+        biotype_classifiers = json.load(json_file)
+    def __init__(self, classifier):
+        self.classifier = classifier
+        self.value = None
+        self.label = None
+        self.definition = None
+        self.description = None
+
+    def parse_input(self):
+        if self.classifier in self.biotype_classifiers.keys():
+            self.value = self.classifier
+            self.label = self.biotype_classifiers[self.value]['label']
+            self.definition = self.biotype_classifiers[self.value]['definition']
+            self.description = ""
+            return True
+        return False
+
+    def to_json(self):
+        biotype_dict = self.__dict__
+        del biotype_dict['classifier']
+        return biotype_dict
