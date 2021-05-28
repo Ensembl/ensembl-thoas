@@ -107,11 +107,13 @@ while (my $transcript = shift @$transcripts) {
   my %tr_attribute = ('stable_id' => '',
                       'gencode_basic' => '',
                       'appris' => '',
+                      'biotype' => '',
                       'TSL' => '',
                       'MANE_Select' => '',
                       'MANE_Plus_Clinical' => '');
 
   $tr_attribute{'stable_id'} = $transcript->stable_id;
+  $tr_attribute{'biotype'} = $transcript->biotype;
   for my $tr_attribute_code (@transcript_attribute_codes){
         my @tr_attributes_for_code = @{$attribute_adaptor->fetch_all_by_Transcript($transcript,$tr_attribute_code)};
         if (@tr_attributes_for_code){
@@ -120,10 +122,11 @@ while (my $transcript = shift @$transcripts) {
                 }
         }
 
-  printf $attrib_fh "%s,%s,%s,%s,%s,%s\n",
+  printf $attrib_fh "%s,%s,%s,%s,%s,%s,%s\n",
          $transcript->stable_id,
          $tr_attribute{'gencode_basic'},
          $tr_attribute{'appris'},
+         $tr_attribute{'biotype'},
          $tr_attribute{'TSL'},
          $tr_attribute{'MANE_Select'},
          $tr_attribute{'MANE_Plus_Clinical'};
