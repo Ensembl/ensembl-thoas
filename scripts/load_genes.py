@@ -18,7 +18,7 @@ import ijson
 import pymongo
 
 import common.utils
-from common.transcript_metadata import TSL, APPRIS, MANE
+from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
 
@@ -347,7 +347,7 @@ def preload_exon_phases(production_name, assembly):
     return phase_lookup
 
 def get_transcript_meta(row):
-    transcript_meta = {'appris': None, 'tsl': None, 'mane':None}
+    transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None}
     try:
         appris = APPRIS(row['appris'])
         if appris.parse_input():
@@ -361,6 +361,12 @@ def get_transcript_meta(row):
         if row['MANE_Plus_Clinical']:
             mane = MANE('plus_clinical', row['MANE_Plus_Clinical'])
             transcript_meta['mane'] = mane.to_json()
+        gencode_basic = GencodeBasic(row['gencode_basic'])
+        if gencode_basic.parse_input():
+            transcript_meta['gencode_basic'] = gencode_basic.to_json()
+        biotype = Biotype(row["biotype"])
+        if biotype.parse_input():
+            transcript_meta['biotype'] = biotype.to_json()
     except Exception as ex:
         pass
     return transcript_meta
