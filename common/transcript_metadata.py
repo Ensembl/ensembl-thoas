@@ -168,3 +168,22 @@ class Biotype:
         biotype_dict = self.__dict__
         del biotype_dict['classifier']
         return biotype_dict
+
+class EnsemblCanonical:
+    def __init__(self, value):
+        self.value = value
+        self.label = None
+        self.definition = None
+        self.description = None
+
+    def parse_input(self):
+        if self.value == 1:
+            self.label = "Ensembl canonical"
+            self.definition = "A single, representative transcript identified at every locus"
+            self.description = ""
+            return True
+        return False
+
+    def to_json(self):
+        ensembl_canoncial_dict = self.__dict__
+        return ensembl_canoncial_dict
