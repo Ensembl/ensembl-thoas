@@ -3,35 +3,35 @@ interface ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type TranscriptBiotypeMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type TranscriptGencodeBasicMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type TranscriptApprisMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type TranscriptTSLMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type NCBITranscript {
@@ -43,7 +43,7 @@ type TranscriptManeMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 	ncbi_transcript: NCBITranscript!
 }
 
@@ -51,7 +51,7 @@ type TranscriptEnsemblCanonicalMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
 	definition: String!
-	description: String!
+	description: String
 }
 
 type TranscriptMetadata {
