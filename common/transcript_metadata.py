@@ -38,7 +38,6 @@ class TSL:
             self.value = tsl_matches.group(1)
             self.label = f'TSL:{self.value}'
             self.definition = self.definitions[self.value]
-            self.description = ""
             return True
         return False
 
@@ -75,7 +74,6 @@ class APPRIS:
             self.value = f'{appris_matches.groups()[0]}{appris_matches.groups()[1]}'
             self.label = f'APPRIS {appris_matches.groups()[0]}:{appris_matches.groups()[1]}'
             self.definition = self.definitions[self.value]
-            self.description = ""
             return True
         return False
 
@@ -101,7 +99,7 @@ class MANE:
         self.value = value.strip()
         self.label = self.mane_qualifiers[self.value]['label']
         self.definition = self.mane_qualifiers[self.value]['definition']
-        self.description = ''
+        self.description = None
         if ncbi_id:
             self.ncbi_transcript = {
                "id" : ncbi_id,
@@ -136,7 +134,6 @@ class GencodeBasic:
             self.value = self.classifier
             self.label = self.gencode_classifiers[self.value]['label']
             self.definition = self.gencode_classifiers[self.value]['definition']
-            self.description = ""
             return True
         return False
 
@@ -160,7 +157,6 @@ class Biotype:
             self.value = self.classifier
             self.label = self.biotype_classifiers[self.value]['label']
             self.definition = self.biotype_classifiers[self.value]['definition']
-            self.description = ""
             return True
         return False
 
@@ -182,7 +178,6 @@ class EnsemblCanonical:
             self.value = True
             self.label = "Ensembl canonical"
             self.definition = "A single, representative transcript identified at every locus"
-            self.description = ""
             return True
         return False
 
