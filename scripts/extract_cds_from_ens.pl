@@ -55,7 +55,7 @@ my $phase_fh = IO::File->new($species.'_'.$assembly.'_phase.csv', 'w');
 print $phase_fh '"transcript ID","exon ID","rank","start_phase","end_phase"'."\n";
 
 my $attrib_fh = IO::File->new($species.'_'.$assembly.'_attrib.csv', 'w');
-print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MANE_Plus_Clinical'."\n";
+print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MANE_Plus_Clinical,Ensembl_Canonical'."\n";
 
 my $transcript_adaptor;
 my $attribute_adaptor;
@@ -110,10 +110,12 @@ while (my $transcript = shift @$transcripts) {
                       'biotype' => '',
                       'TSL' => '',
                       'MANE_Select' => '',
-                      'MANE_Plus_Clinical' => '');
+                      'MANE_Plus_Clinical' => '',
+                      'Ensembl_Canonical' => '');
 
   $tr_attribute{'stable_id'} = $transcript->stable_id;
   $tr_attribute{'biotype'} = $transcript->biotype;
+  $tr_attribute{'Ensembl_Canonical'} = $transcript->is_canonical;
   for my $tr_attribute_code (@transcript_attribute_codes){
         my @tr_attributes_for_code = @{$attribute_adaptor->fetch_all_by_Transcript($transcript,$tr_attribute_code)};
         if (@tr_attributes_for_code){
@@ -122,14 +124,15 @@ while (my $transcript = shift @$transcripts) {
                 }
         }
 
-  printf $attrib_fh "%s,%s,%s,%s,%s,%s,%s\n",
+  printf $attrib_fh "%s,%s,%s,%s,%s,%s,%s,%s\n",
          $transcript->stable_id,
          $tr_attribute{'gencode_basic'},
          $tr_attribute{'appris'},
          $tr_attribute{'biotype'},
          $tr_attribute{'TSL'},
          $tr_attribute{'MANE_Select'},
-         $tr_attribute{'MANE_Plus_Clinical'};
+         $tr_attribute{'MANE_Plus_Clinical'},
+         $tr_attribute{'Ensembl_Canonical'};
          $attrib_c++;
 
   my $translation = $transcript->translation;
