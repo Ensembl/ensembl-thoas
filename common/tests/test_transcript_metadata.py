@@ -96,3 +96,17 @@ def test_parse_input_biotype():
 	biotype = Biotype("protein_coding")
 	biotype.parse_input()
 	assert biotype.to_json()['value'] == 'protein_coding'
+
+def test_parse_input_enesmbl_canonical():
+    ensembl_canonical = EnsemblCanonical(1)
+    ensembl_canonical.parse_input()
+    parsed_object = ensembl_canonical.to_json()
+    assert parsed_object['value'] == 1
+    assert parsed_object['label'] == "Ensembl canonical"
+
+def test_parse_input_not_enesmbl_canonical():
+    ensembl_canonical = EnsemblCanonical(0)
+    ensembl_canonical.parse_input()
+    parsed_object = ensembl_canonical.to_json()
+    assert parsed_object['value'] == 0
+    assert parsed_object['label'] == None
