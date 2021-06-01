@@ -56,8 +56,8 @@
 	"definition" : "Small RNA molecules that are found in the cell nucleolus and are involved in the post-transcriptional modification of other RNAs."
 	},
 "transcribed_processed_pseudogene" : {
-	"label" : "",
-	"definition" : ""
+	"label" : "transcribed_processed_pseudogene",
+	"definition" : "transcribed_processed_pseudogene"
 	},
 "rRNA_pseudogene" : {
 	"label" : "rRNA pseudogene",
@@ -104,16 +104,16 @@
 	"definition" : "Diversity chain immunoglobulin gene that undergoes somatic recombination before transcription"
 	},
 "scaRNA" : {
-	"label" : "",
-	"definition" : ""
+	"label" : "scaRNA",
+	"definition" : "scaRNA"
 	},
 "TR_V_pseudogene" : {
-	"label" : "",
-	"definition" : ""
+	"label" : "TR_V_pseudogene",
+	"definition" : "TR_V_pseudogene"
 	},
 "pseudogene" : {
-	"label" : "",
-	"definition" : ""
+	"label" : "pseudogene",
+	"definition" : "pseudogene"
 	},
 "IG_C_gene" : {
 	"label" : "IG C gene",
