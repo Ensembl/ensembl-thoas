@@ -53,31 +53,31 @@ class APPRIS:
     }
     appris_classifiers = {
         "principal1" : {
-            "label" : "P1",
+            "label" : "APPRIS P1",
             "definition" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS"
             },
         "principal2" : {
-            "label" : "P2",
+            "label" : "APPRIS P2",
             "definition" : "Two or more of the CDS variants as \"candidates\" to be the principal variant."
             },
         "principal3" : {
-            "label" : "P3",
+            "label" : "APPRIS P3",
             "definition" : "Lowest CCDS identifier as the principal variant"
             },
         "principal4" : {
-            "label" : "P4",
+            "label" : "APPRIS APPRIS P4",
             "definition" : "Longest CCDS isoform as the principal variant"
             },
         "principal5" : {
-            "label" : "P5",
+            "label" : "APPRIS P5",
             "definition" : "The longest of the candidate isoforms as the principal variant"
             },
         "alternative1" : {
-            "label" : "ALT1",
+            "label" : "APPRIS ALT1",
             "definition" : "Candidate transcript(s) models that are conserved in at least three tested species"
             },
         "alternative2" : {
-            "label" : "ALT2",
+            "label" : "APPRIS ALT2",
             "definition" : "Candidate transcript(s) models that appear to be conserved in fewer than three tested species"
             }
         }
