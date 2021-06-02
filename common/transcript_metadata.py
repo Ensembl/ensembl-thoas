@@ -51,14 +51,35 @@ class APPRIS:
     appris_qualifiers = {
 
     }
-    definitions = {
-        "principal1" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS",
-        "principal2" : "Two or more of the CDS variants as \"candidates\" to be the principal variant.",
-        "principal3" : "Lowest CCDS identifier as the principal variant",
-        "principal4" : "Longest CCDS isoform as the principal variant",
-        "principal5" : "The longest of the candidate isoforms as the principal variant",
-        "alternative1" : "Candidate transcript(s) models that are conserved in at least three tested species",
-        "alternative2" : "Candidate transcript(s) models that appear to be conserved in fewer than three tested species"
+    appris_classifiers = {
+        "principal1" : {
+            "label" : "P1",
+            "definition" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS"
+            },
+        "principal2" : {
+            "label" : "P2",
+            "definition" : "Two or more of the CDS variants as \"candidates\" to be the principal variant."
+            },
+        "principal3" : {
+            "label" : "P3",
+            "definition" : "Lowest CCDS identifier as the principal variant"
+            },
+        "principal4" : {
+            "label" : "P4",
+            "definition" : "Longest CCDS isoform as the principal variant"
+            },
+        "principal5" : {
+            "label" : "P5",
+            "definition" : "The longest of the candidate isoforms as the principal variant"
+            },
+        "alternative1" : {
+            "label" : "ALT1",
+            "definition" : "Candidate transcript(s) models that are conserved in at least three tested species"
+            },
+        "alternative2" : {
+            "label" : "ALT2",
+            "definition" : "Candidate transcript(s) models that appear to be conserved in fewer than three tested species"
+            }
         }
 
     def __init__(self, str):
@@ -72,8 +93,8 @@ class APPRIS:
         appris_matches = self.regex.match(self._str)
         if appris_matches:
             self.value = f'{appris_matches.groups()[0]}{appris_matches.groups()[1]}'
-            self.label = f'APPRIS {appris_matches.groups()[0]}:{appris_matches.groups()[1]}'
-            self.definition = self.definitions[self.value]
+            self.label = self.appris_classifiers[self.value]['label']
+            self.definition = self.appris_classifiers[self.value]['definition']
             return True
         return False
 

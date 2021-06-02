@@ -52,15 +52,15 @@ def test_appris_parse_input_principal1():
 	'''
 	appris = APPRIS("principal1")
 	parse_success = appris.parse_input()
-	assert appris.to_json()['value'] == 'principal1'
+	assert appris.to_json()['label'] == 'P1'
 
-def test_appris_parse_input_principal1():
+def test_appris_parse_input_alternative2():
 	'''
 	Ensure APPRIS input alternative2 is parsed correctly
 	'''
 	appris = APPRIS("alternative2")
 	parse_success = appris.parse_input()
-	assert appris.to_json()['value'] == 'alternative2'
+	assert appris.to_json()['label'] == 'ALT2'
 
 def test_appris_parse_input_failure():
 	'''
