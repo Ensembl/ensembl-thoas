@@ -364,8 +364,9 @@ def format_cdna(transcript,refget):
     '''
 
 
-    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(transcript["id"], transcript["version"]),
-                                            sequence_type=refget.CDNA)
+    stable_id = get_stable_id(transcript["id"], transcript["version"])
+    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
+
     start = transcript['start']
     end = transcript['end']
 
@@ -384,8 +385,37 @@ def format_cdna(transcript,refget):
         'relative_start': relative_start,
         'relative_end': relative_end,
         'length': length,
-        'sequence_checksum': sequence_checksum,
-        'type': 'CDNA'
+        'type': 'CDNA',
+        'sequence': sequence,
+        'sequence_checksum': sequence.get('checksum')
+    }
+
+
+def format_sequence_object(refget, stable_id, sequence_type):
+
+    # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
+    type_to_alphabet = {
+        'dna': {
+            'accession_id': 'test_dna_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for dna sequence',
+            'description': None
+        },
+        'protein': {
+            'accession_id': 'test_protein_accession_id',
+            'value': 'test',
+            'label': 'test',
+            'definition': 'Test - IUPAC notation for protein sequence',
+            'description': None
+        }
+    }
+
+    sequence_checksum = refget.get_checksum(stable_id, sequence_type)
+
+    return {
+        'alphabet': type_to_alphabet.get('dna') if sequence_type in [refget.CDNA, refget.CDS] else type_to_alphabet.get('protein'),
+        'checksum': sequence_checksum
     }
 
 
@@ -394,12 +424,13 @@ def format_protein(protein, genome_id, product_length, refget):
     Create a protein representation from limited data
     '''
 
-    sequence_checksum = refget.get_checksum(stable_id=get_stable_id(protein['id'], protein['version']),
-                                            sequence_type=refget.PEP)
+    stable_id = get_stable_id(protein['id'], protein['version'])
+    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.PEP)
+
     return {
         'type': 'Protein',
         'unversioned_stable_id': protein['id'],
-        'stable_id': get_stable_id(protein['id'], protein['version']),
+        'stable_id': stable_id,
         'version': protein['version'],
         # for foreign key behaviour
         'transcript_id': protein['transcript_id'], # missing version...
@@ -408,8 +439,8 @@ def format_protein(protein, genome_id, product_length, refget):
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features']),
         'length': product_length,
-        'sequence_checksum': sequence_checksum
-
+        'sequence': sequence,
+        'sequence_checksum': sequence.get('checksum')
     }
 
 
