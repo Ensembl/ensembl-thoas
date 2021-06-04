@@ -36,6 +36,10 @@ def parse_args():
         help='Path to JSON files from the "Gene search" dumps'
     )
     parser.add_argument(
+        '--classifier_path',
+        help='Path to JSON files for the gene/transcript metadata classifiers'
+    )
+    parser.add_argument(
         '--collection',
         help='If the assembly is kept in a collection by Ensembl, specify the collection name'
     )
