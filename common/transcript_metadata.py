@@ -48,9 +48,6 @@ class TSL:
 
 class APPRIS:
     regex = re.compile("(principal|alternative)(\d+)")
-    appris_qualifiers = {
-
-    }
     appris_classifiers = {
         "principal1" : {
             "label" : "APPRIS P1",
