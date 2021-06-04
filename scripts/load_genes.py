@@ -92,6 +92,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     default_region = True
     print('Loaded assembly ' + assembly['name'])
 
+    gene_biotype_classifiers = metadata_classifier['biotype']
+
     required_keys = ('name', 'description')
     with open(json_file) as file:
         print('Chunk')
@@ -110,7 +112,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
             except KeyError:
                 gene_xrefs = []
             try:
-                gene_biotype = metadata_classifier['biotype'][gene['biotype']]
+                gene_biotype = gene_biotype_classifiers[gene['biotype']]['label']
             except KeyError as ke:
                 gene_biotype = ""
 
