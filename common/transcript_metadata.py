@@ -101,7 +101,7 @@ class APPRIS:
         return appris_dict
 
 class MANE:
-    base_url = "https://www.ncbi.nlm.nih.gov/nuccore/" # Not sure what base_url should be
+    base_url = "https://www.ncbi.nlm.nih.gov/nuccore/"
     mane_qualifiers = {
         "select" : {
             "label" : "MANE Select",
