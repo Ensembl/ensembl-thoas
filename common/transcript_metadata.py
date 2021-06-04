@@ -54,7 +54,7 @@ class APPRIS:
     appris_classifiers = {
         "principal1" : {
             "label" : "APPRIS P1",
-            "definition" : "Transcript(s) expected to code for the main functional isoform based solely on the core modules in the APPRIS"
+            "definition" : "Transcript expected to code for the main functional isoform based solely on the core modules in the APPRIS"
             },
         "principal2" : {
             "label" : "APPRIS P2",
