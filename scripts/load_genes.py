@@ -16,6 +16,8 @@ import re
 import csv
 import ijson
 import pymongo
+import os
+import json
 
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
@@ -62,7 +64,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, release):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -107,6 +109,10 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_xrefs = common.utils.format_cross_refs(gene['xrefs'])
             except KeyError:
                 gene_xrefs = []
+            try:
+                gene_biotype = metadata_classifier['biotype'][gene['biotype']]
+            except KeyError as ke:
+                gene_biotype = ""
 
             json_gene = {
 
@@ -115,6 +121,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
+                'biotype': gene_biotype,
                 'symbol': gene['name'],
                 'alternative_symbols': gene['synonyms'] if 'synonyms' in gene else [],
                 # Note that the description comes the long way via xref
@@ -383,6 +390,14 @@ def preload_transcript_meta(production_name, assembly):
             transcript_meta[stable_id] = get_transcript_meta(row)
     return transcript_meta
 
+def preload_classifiers(CLASSIFIER_PATH):
+    meta_classifiers = transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
+    for classifier in meta_classifiers:
+        classifier_file = os.path.join(CLASSIFIER_PATH,f"{classifier}.json")
+        with open(classifier_file) as raw_classifier_file:
+            classifier_items = json.load(raw_classifier_file)
+        meta_classifiers[classifier] = classifier_items
+    return meta_classifiers
 
 if __name__ == '__main__':
 
@@ -395,6 +410,7 @@ if __name__ == '__main__':
     else:
         JSON_FILE = f'{ARGS.data_path}{ARGS.species}/{ARGS.species}_genes.json'
     ASSEMBLY = ARGS.assembly
+    CLASSIFIER_PATH = ARGS.classifier_path
     RELEASE = ARGS.release
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
@@ -409,6 +425,8 @@ if __name__ == '__main__':
     PHASE_INFO = preload_exon_phases(ARGS.species, ARGS.assembly)
     print("Loading Transcript Metadata")
     TRANSCRIPT_METADATA = preload_transcript_meta(ARGS.species, ARGS.assembly)
+    print("Loading Metadata Classifiers")
+    METADATA_CLASSIFIER = preload_classifiers(CLASSIFIER_PATH)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, RELEASE)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE)
     create_index(MONGO_CLIENT)
