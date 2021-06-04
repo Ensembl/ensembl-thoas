@@ -14,7 +14,7 @@ type Transcript {
   product_generating_contexts: [ProductGeneratingContext!]!
   spliced_exons: [SplicedExon!]!
   introns: [Intron!]!
-  metadata : TranscriptMetadata!
+  metadata: TranscriptMetadata!
 }
 
 type CDS {

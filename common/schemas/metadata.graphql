@@ -60,5 +60,5 @@ type TranscriptMetadata {
 	appris: TranscriptApprisMetadata
 	tsl: TranscriptTSLMetadata
 	mane: TranscriptManeMetadata
-	canonical : TranscriptEnsemblCanonicalMetadata
+	canonical: TranscriptEnsemblCanonicalMetadata
 }
