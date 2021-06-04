@@ -65,7 +65,7 @@ class APPRIS:
             "definition" : "Lowest CCDS identifier as the principal variant"
             },
         "principal4" : {
-            "label" : "APPRIS APPRIS P4",
+            "label" : "APPRIS P4",
             "definition" : "Longest CCDS isoform as the principal variant"
             },
         "principal5" : {
