@@ -7,6 +7,7 @@ type Gene {
   symbol: String
   name: String
   so_term: String!
+  biotype: String!
   transcripts: [Transcript!]!
   slice: Slice!
   external_references: [ExternalReference!]!
