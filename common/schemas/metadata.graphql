@@ -61,3 +61,14 @@ type TranscriptMetadata {
 	mane: TranscriptManeMetadata
 	canonical: TranscriptEnsemblCanonicalMetadata
 }
+
+type GeneBiotypeMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type GeneMetadata {
+	biotype: GeneBiotypeMetadata
+}
