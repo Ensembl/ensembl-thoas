@@ -1,6 +1,5 @@
 interface ValueSetMetadata {
 	# Metadata derived from a value set
-	value: String!
 	label: String!
 	definition: String!
 	description: String
@@ -48,7 +47,7 @@ type TranscriptManeMetadata implements ValueSetMetadata {
 }
 
 type TranscriptEnsemblCanonicalMetadata implements ValueSetMetadata {
-	value: String!
+	value: Boolean!
 	label: String!
 	definition: String!
 	description: String
