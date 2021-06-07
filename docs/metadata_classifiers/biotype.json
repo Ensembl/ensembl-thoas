@@ -1,181 +1,267 @@
 {
 "protein_coding" : {
+	"value" : "protein_coding",
 	"label" : "Protein coding",
-	"definition" : "Transcipt that contains an open reading frame (ORF)."
+	"definition" : "Transcipt that contains an open reading frame (ORF).",
+	"description" : null
 	},
 "lncRNA" : {
+	"value" : "lncRNA",
 	"label" : "Long non-coding RNA",
-	"definition" : "A non-coding transcript >200bp in length"
+	"definition" : "A non-coding transcript >200bp in length",
+	"description" : null
 	},
 "retained_intron" : {
+	"value" : "retained_intron",
 	"label" : "Retained intron",
-	"definition" : "An alternatively spliced transcript believed to contain intronic sequence relative to other, coding, transcripts of the same gene."
+	"definition" : "An alternatively spliced transcript believed to contain intronic sequence relative to other, coding, transcripts of the same gene.",
+	"description" : null
 	},
 "processed_transcript" : {
+	"value" : "processed_transcript",
 	"label" : "Processed transcript",
-	"definition" : "Gene/transcript that doesn't contain an open reading frame (ORF)."
+	"definition" : "Gene/transcript that doesn't contain an open reading frame (ORF).",
+	"description" : null
 	},
 "nonsense_mediated_decay" : {
+	"value" : "nonsense_mediated_decay",
 	"label" : "Nonsense Mediated Decay",
-	"definition" : "A transcript with a premature stop codon considered likely to be subjected to targeted degradation."
+	"definition" : "A transcript with a premature stop codon considered likely to be subjected to targeted degradation.",
+	"description" : null
 	},
 "processed_pseudogene" : {
+	"value" : "processed_pseudogene",
 	"label" : "Processed pseudogene",
-	"definition" : "Pseudogene that lack introns and is thought to arise from reverse transcription of mRNA followed by reinsertion of DNA into the genome."
+	"definition" : "Pseudogene that lack introns and is thought to arise from reverse transcription of mRNA followed by reinsertion of DNA into the genome.",
+	"description" : null
 	},
 "unprocessed_pseudogene" : {
+	"value" : "unprocessed_pseudogene",
 	"label" : "Unprocessed pseudogene",
-	"definition" : "Pseudogene that can contain introns since produced by gene duplication"
+	"definition" : "Pseudogene that can contain introns since produced by gene duplication",
+	"description" : null
 	},
 "misc_RNA" : {
+	"value" : "misc_RNA",
 	"label" : "miscRNA",
-	"definition" : "Miscellaneous RNA. A non-coding RNA that cannot be classified."
+	"definition" : "Miscellaneous RNA. A non-coding RNA that cannot be classified.",
+	"description" : null
 	},
 "snRNA" : {
+	"value" : "snRNA",
 	"label" : "snRNA",
 	"definition" : "Small RNA molecules that are found in the cell nucleus and are involved in the processing of pre messenger RNAs"
 },
 "miRNA" : {
+	"value" : "miRNA",
 	"label" : "miRNA",
-	"definition" : "A small RNA (~22bp) that silences the expression of target mRNA"
+	"definition" : "A small RNA (~22bp) that silences the expression of target mRNA",
+	"description" : null
 	},
 "TEC" : {
+	"value" : "TEC",
 	"label" : "TEC (To be Experimentally Confirmed)",
-	"definition" : "Regions with EST clusters that have polyA features that could indicate the presence of protein coding genes."
+	"definition" : "Regions with EST clusters that have polyA features that could indicate the presence of protein coding genes.",
+	"description" : null
 	},
 "transcribed_unprocessed_pseudogene" : {
+	"value" : "transcribed_unprocessed_pseudogene",
 	"label" : "Transcribed unprocessed pseudogene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "LRG_gene" : {
+	"value" : "LRG_gene",
 	"label" : "LRG Gene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "snoRNA" : {
+	"value" : "snoRNA",
 	"label" : "snoRNA",
-	"definition" : "Small RNA molecules that are found in the cell nucleolus and are involved in the post-transcriptional modification of other RNAs."
+	"definition" : "Small RNA molecules that are found in the cell nucleolus and are involved in the post-transcriptional modification of other RNAs.",
+	"description" : null
 	},
 "transcribed_processed_pseudogene" : {
+	"value" : "transcribed_processed_pseudogene",
 	"label" : "transcribed_processed_pseudogene",
-	"definition" : "transcribed_processed_pseudogene"
+	"definition" : "transcribed_processed_pseudogene",
+	"description" : null
 	},
 "rRNA_pseudogene" : {
+	"value" : "rRNA_pseudogene",
 	"label" : "rRNA pseudogene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "IG_V_pseudogene" : {
+	"value" : "IG_V_pseudogene",
 	"label" : "IG V pseudogene",
 	"definition" : ""
 },
 "IG_V_gene" : {
+	"value" : "IG_V_gene",
 	"label" : "IG V gene",
-	"definition" : "Variable chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Variable chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "TR_V_gene" : {
+	"value" : "TR_V_gene",
 	"label" : "TR V gene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "transcribed_unitary_pseudogene" : {
+	"value" : "transcribed_unitary_pseudogene",
 	"label" : "Transcribed unitary pseudogene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "polymorphic_pseudogene" : {
+	"value" : "polymorphic_pseudogene",
 	"label" : "Polymorphic pseudogene",
-	"definition" : "Pseudogene owing to a SNP/indel but in other individuals/haplotypes/strains the gene is translated."
+	"definition" : "Pseudogene owing to a SNP/indel but in other individuals/haplotypes/strains the gene is translated.",
+	"description" : null
 	},
 "non_stop_decay" : {
+	"value" : "non_stop_decay",
 	"label" : "Non Stop Decay",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "unitary_pseudogene" : {
+	"value" : "unitary_pseudogene",
 	"label" : "Unitary pseudogene",
-	"definition" : "A species specific unprocessed pseudogene without a parent gene, as it has an active orthologue in another species."
+	"definition" : "A species specific unprocessed pseudogene without a parent gene, as it has an active orthologue in another species.",
+	"description" : null
 	},
 "TR_J_gene" : {
+	"value" : "TR_J_gene",
 	"label" : "TR J gene",
 	"definition" : ""
 },
 "rRNA" : {
+	"value" : "rRNA",
 	"label" : "rRNA",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "IG_D_gene" : {
+	"value" : "IG_D_gene",
 	"label" : "IG D gene",
-	"definition" : "Diversity chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Diversity chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "scaRNA" : {
+	"value" : "scaRNA",
 	"label" : "scaRNA",
-	"definition" : "scaRNA"
+	"definition" : "scaRNA",
+	"description" : null
 	},
 "TR_V_pseudogene" : {
+	"value" : "TR_V_pseudogene",
 	"label" : "TR_V_pseudogene",
-	"definition" : "TR_V_pseudogene"
+	"definition" : "TR_V_pseudogene",
+	"description" : null
 	},
 "pseudogene" : {
+	"value" : "pseudogene",
 	"label" : "Pseudogene",
-	"definition" : "Pseudogene"
+	"definition" : "Pseudogene",
+	"description" : null
 	},
 "IG_C_gene" : {
+	"value" : "IG_C_gene",
 	"label" : "IG C gene",
-	"definition" : "Constant chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Constant chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "IG_J_gene" : {
+	"value" : "IG_J_gene",
 	"label" : "IG J gene",
-	"definition" : "Joining chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Joining chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "Mt_tRNA" : {
+	"value" : "Mt_tRNA",
 	"label" : "Mt-tRNA",
-	"definition" : "A transfer RNA located in the mitochondrial genome"
+	"definition" : "A transfer RNA located in the mitochondrial genome",
+	"description" : null
 	},
 "IG_C_pseudogene" : {
+	"value" : "IG_C_pseudogene",
 	"label" : "IG C gene",
-	"definition" : "Constant chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Constant chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "TR_C_gene" : {
+	"value" : "",
 	"label" : "TR C gene",
-	"definition" : "Constant chain T cell receptor gene that undergoes somatic recombination before transcription"
+	"definition" : "Constant chain T cell receptor gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "ribozyme" : {
+	"value" : "TR_C_gene",
 	"label" : "Ribozyme",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "sRNA" : {
+	"value" : "sRNA",
 	"label" : "sRNA",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "IG_J_pseudogene" : {
+	"value" : "IG_J_pseudogene",
 	"label" : "IG J gene",
-	"definition" : "Joining chain immunoglobulin gene that undergoes somatic recombination before transcription"
+	"definition" : "Joining chain immunoglobulin gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "TR_D_gene" : {
+	"value" : "TR_D_gene",
 	"label" : "TR D gene",
-	"definition" : "Diversity chain T cell receptor gene that undergoes somatic recombination before transcription"
+	"definition" : "Diversity chain T cell receptor gene that undergoes somatic recombination before transcription",
+	"description" : null
 	},
 "TR_J_pseudogene" : {
+	"value" : "TR_J_pseudogene",
 	"label" : "TR J pseudogene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "Mt_rRNA" : {
+	"value" : "Mt_rRNA",
 	"label" : "Mt-rRNA",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "translated_processed_pseudogene" : {
+	"value" : "translated_processed_pseudogene",
 	"label" : "Translated Processed pseudogene",
-	"definition" : "Pseudogenes that have mass spec data suggesting that they are also translated"
+	"definition" : "Pseudogenes that have mass spec data suggesting that they are also translated",
+	"description" : null
 	},
 "IG_pseudogene" : {
+	"value" : "IG_pseudogene",
 	"label" : "IG pseudogene",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "translated_unprocessed_pseudogene" : {
+	"value" : "translated_unprocessed_pseudogene",
 	"label" : "Translated Unprocessed  pseudogene",
-	"definition" : "Pseudogenes that have mass spec data suggesting that they are also translated"
+	"definition" : "Pseudogenes that have mass spec data suggesting that they are also translated",
+	"description" : null
 	},
 "scRNA" : {
+	"value" : "scRNA",
 	"label" : "scRNA",
-	"definition" : ""
+	"definition" : "",
+	"description" : null
 	},
 "vault_RNA" : {
+	"value" : "vault_RNA",
 	"label" : "vaultRNA",
 	"definition" : "Short non coding RNA genes that form part of the vault ribonucleoprotein complex."
 	}
