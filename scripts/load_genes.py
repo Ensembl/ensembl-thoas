@@ -111,10 +111,11 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_xrefs = common.utils.format_cross_refs(gene['xrefs'])
             except KeyError:
                 gene_xrefs = []
+            gene_metadata = {}
             try:
-                gene_biotype = gene_biotype_classifiers[gene['biotype']]['label']
+                gene_metadata['biotype'] = gene_biotype_classifiers[gene['biotype']]
             except KeyError as ke:
-                gene_biotype = ""
+                gene_metadata['biotype'] = None
 
             json_gene = {
 
@@ -123,7 +124,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 'unversioned_stable_id': gene['id'],
                 'version': gene['version'],
                 'so_term': gene['biotype'],
-                'biotype': gene_biotype,
                 'symbol': gene['name'],
                 'alternative_symbols': gene['synonyms'] if 'synonyms' in gene else [],
                 # Note that the description comes the long way via xref
@@ -143,6 +143,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 ],
                 'genome_id': genome['id'],
                 'external_references': gene_xrefs
+                'metadata' : gene_metadata
             }
             gene_buffer.append(json_gene)
 
