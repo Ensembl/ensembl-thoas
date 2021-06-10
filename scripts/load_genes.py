@@ -142,7 +142,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                      for transcript in gene['transcripts']]
                 ],
                 'genome_id': genome['id'],
-                'external_references': gene_xrefs
+                'external_references': gene_xrefs,
                 'metadata' : gene_metadata
             }
             gene_buffer.append(json_gene)
