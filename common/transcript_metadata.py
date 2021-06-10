@@ -207,3 +207,21 @@ class EnsemblCanonical:
         ensembl_canoncial_dict = self.__dict__
         del ensembl_canoncial_dict['is_canonical']
         return ensembl_canoncial_dict
+
+class Classfiers:
+    meta_types = ['appris', 'tsl', 'mane', 'gencode_basic', 'biotype', 'canonical']
+    def __init__(self, classifier_path):
+        self.classifier_path = classifier_path
+        self.classifiers = {}
+
+    def load_classifiers(self):
+        for meta_type in self.meta_types:
+            meta_classifier_file = os.path.join(self.classifier_path,f'{meta_type}.json')
+            with open(meta_classifier_file) as json_file:
+                self.classifiers[meta_type] = json.load(json_file)
+
+    def get_classfier(self,classifier_type):
+        try:
+            return self.classifiers[classifier_type]
+        except KeyError as ke:
+            return None
