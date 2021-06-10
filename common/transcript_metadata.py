@@ -118,16 +118,20 @@ class MANE:
         self.label = self.mane_qualifiers[self.value]['label']
         self.definition = self.mane_qualifiers[self.value]['definition']
         self.description = None
+        self.ncbi_id = None
+        self.ncbi_transcript = None
         if ncbi_id:
+            self.ncbi_id = ncbi_id
             self.ncbi_transcript = {
-               "id" : ncbi_id,
-               "url" : f'{self.base_url}{ncbi_id}'
+               "id" : self.ncbi_id,
+               "url" : f'{self.base_url}{self.ncbi_id}'
             }
-        else:
-            ncbi_transcript = {}
 
     def to_json(self):
-        mane_dict = self.__dict__
+        mane_dict = None
+        if self.ncbi_id:
+            mane_dict = self.__dict__
+            del mane_dict['ncbi_id']
         return mane_dict
 
 class GencodeBasic:

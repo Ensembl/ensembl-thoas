@@ -75,17 +75,19 @@ def test_parse_input_mane_select():
 	Ensure MANE input mane select is parsed correctly
 	'''
 	mane = MANE("select", "NM_015694.3")
-	assert mane.to_json()['value'] == 'select'
-	assert mane.to_json()['label'] == 'MANE Select'
+	mane_json = mane.to_json()
+	assert mane_json['value'] == 'select'
+	assert mane_json['label'] == 'MANE Select'
 
 def test_parse_input_mane_plus_clinical():
 	'''
 	Ensure MANE input mane plus clinical is parsed correctly
 	'''
 	mane = MANE("plus_clinical", "NM_015694.3")
-	assert mane.to_json()['value'] == 'plus_clinical'
-	assert mane.to_json()['label'] == 'MANE Plus Clinical'
-	assert mane.to_json()['ncbi_transcript']['id'] == 'NM_015694.3'
+	mane_json = mane.to_json()
+	assert mane_json['value'] == 'plus_clinical'
+	assert mane_json['label'] == 'MANE Plus Clinical'
+	assert mane_json['ncbi_transcript']['id'] == 'NM_015694.3'
 
 def test_parse_input_gencode_basic():
 	gencode_basic = GencodeBasic("GENCODE basic")
