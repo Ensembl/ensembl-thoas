@@ -13,6 +13,7 @@
 """
 import re
 import json
+import os
 
 class TSL:
     regex = re.compile("tsl(\d+|NA)")
@@ -165,7 +166,10 @@ class GencodeBasic:
         return gencode_dict
 
 class Biotype:
-    with open("docs/biotype_classifiers.json") as json_file:
+    CLASSIFIER_PATH = os.environ['META_CLASSIFIER_PATH']
+    biotype_meta_file = os.path.join(CLASSIFIER_PATH,"biotype.json")
+    biotype_classifiers = None
+    with open(biotype_meta_file) as json_file:
         biotype_classifiers = json.load(json_file)
     def __init__(self, classifier):
         self.classifier = classifier
