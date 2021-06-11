@@ -18,12 +18,12 @@ import os
 class TSL:
     regex = re.compile("tsl(\d+|NA)")
     definitions = {
-        "1" : "All splice junctions of the transcript are supported by at least one non-suspect mRNA",
-        "2" : "The best supporting mRNA is flagged as suspect or the support is from multiple ESTs",
-        "3" : "The only support is from a single EST",
-        "4" : "The best supporting EST is flagged as suspect",
-        "5" : "No single transcript supports the model structure",
-        "NA" : "The transcript was not analysed"
+        "tsl1" : "All splice junctions of the transcript are supported by at least one non-suspect mRNA",
+        "tsl2" : "The best supporting mRNA is flagged as suspect or the support is from multiple ESTs",
+        "tsl3" : "The only support is from a single EST",
+        "tsl4" : "The best supporting EST is flagged as suspect",
+        "tsl5" : "No single transcript supports the model structure",
+        "tslNA" : "The transcript was not analysed"
         }
 
     def __init__(self, str):
@@ -36,8 +36,8 @@ class TSL:
     def parse_input(self):
         tsl_matches = self.regex.match(self._str)
         if tsl_matches:
-            self.value = tsl_matches.group(1)
-            self.label = f'TSL:{self.value}'
+            self.value = tsl_matches.group(0)
+            self.label = f'TSL:{tsl_matches.group(1)}'
             self.definition = self.definitions[self.value]
             return True
         return False

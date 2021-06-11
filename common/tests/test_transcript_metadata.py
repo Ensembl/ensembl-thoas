@@ -20,7 +20,9 @@ def test_parse_input_tsl1():
 	'''
 	tsl = TSL("tsl1")
 	parse_success = tsl.parse_input()
-	assert tsl.to_json()['value'] == '1'
+	tsl_json = tsl.to_json()
+	assert tsl_json['value'] == 'tsl1'
+	assert tsl_json['label'] == 'TSL:1'
 
 def test_parse_input_tsl3_extra():
 	'''
@@ -28,7 +30,9 @@ def test_parse_input_tsl3_extra():
 	'''
 	tsl = TSL("tsl3 (version 9)")
 	parse_success = tsl.parse_input()
-	assert tsl.to_json()['value'] == '3'
+	tsl_json = tsl.to_json()
+	assert tsl_json['value'] == 'tsl3'
+	assert tsl_json['label'] == 'TSL:3'
 
 def test_parse_input_tslNA():
 	'''
@@ -36,7 +40,9 @@ def test_parse_input_tslNA():
 	'''
 	tsl = TSL("tslNA")
 	parse_success = tsl.parse_input()
-	assert tsl.to_json()['value'] == 'NA'
+	tsl_json = tsl.to_json()
+	assert tsl_json['value'] =='tslNA'
+	assert tsl_json['label'] == 'TSL:NA'
 
 def test_parse_input_failure():
 	'''
