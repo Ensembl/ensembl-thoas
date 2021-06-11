@@ -39,6 +39,7 @@ test:
   stage: test
   before_script:
     - pip3 install -r requirements.txt
+    - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
     - pytest
 
