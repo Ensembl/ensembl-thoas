@@ -61,6 +61,10 @@ class RefgetDB:
 
 class MockRefgetDB:
     @property
+    def CDS(self):
+        return 'cds'
+
+    @property
     def CDNA(self):
         return 'cdna'
 
@@ -68,5 +72,5 @@ class MockRefgetDB:
     def PEP(self):
         return 'protein'
 
-    def get_checksum(self, **kwargs):
+    def get_checksum(self, *args, **kwargs):
         return '1f47b55923e2d23090f894c439974b55'

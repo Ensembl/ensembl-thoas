@@ -28,3 +28,16 @@ type Strand {
   code: String
   value: Int
 }
+
+type Sequence {
+  alphabet: SequenceAlphabet
+  checksum: String!
+}
+
+type SequenceAlphabet {
+  accession_id: String!
+  label: String!
+  value: String!
+  definition: String!
+  description: String
+}

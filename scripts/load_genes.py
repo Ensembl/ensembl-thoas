@@ -128,7 +128,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 'alternative_symbols': gene['synonyms'] if 'synonyms' in gene else [],
                 # Note that the description comes the long way via xref
                 # pipeline and includes a [source: string]
-                'name': gene['description'],
+                'name': re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
                 'slice': common.utils.format_slice(
                     region_name=gene['seq_region_name'],
                     default_region=default_region,
@@ -280,6 +280,7 @@ def format_transcript(
         defaults = [False] * (len(transcript['translations']) - 1)
         defaults.append(True)
         for translation in transcript['translations']:
+            cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'], sequence_type=refget.CDS)
             new_transcript['product_generating_contexts'].append(
                 {
                     'product_type': 'Protein',  # probably
@@ -296,8 +297,8 @@ def format_transcript(
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
                         'protein_length': spliced_length // 3,
-                        'sequence_checksum': refget.get_checksum(stable_id=new_transcript['stable_id'],
-                                                                 sequence_type=refget.CDS)
+                        'sequence': cds_sequence,
+                        'sequence_checksum': cds_sequence.get('checksum')
                     },
                     # Infer the "products" in the resolver. This is a join.
                     'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
@@ -407,7 +408,7 @@ if __name__ == '__main__':
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     SPECIES = ARGS.species
-    MONGO_CLIENT = MongoDbClient(common.utils.load_config(ARGS.config_file))
+    MONGO_CLIENT = MongoDbClient(CONFIG)
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
@@ -419,9 +420,9 @@ if __name__ == '__main__':
     division = CONFIG.get(SPECIES, 'division')
 
     if division in ['plants', 'protists', 'bacteria']:
-        refget = RefgetDB(NV_RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
+        refget = RefgetDB(NV_RELEASE, ASSEMBLY, CONFIG)
     if division in ['vertebrates', 'metazoa']:
-        refget = RefgetDB(RELEASE, ASSEMBLY, common.utils.load_config(ARGS.config_file))
+        refget = RefgetDB(RELEASE, ASSEMBLY, CONFIG)
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
