@@ -1,0 +1,8 @@
+{
+"GENCODE basic" : {
+    "value" : "GENCODE basic",
+    "label" : "GENCODE basic",
+    "definition" : "A subset of the GENCODE gene set, and is intended to provide a simplified, high-quality subset of the GENCODE transcript annotations",
+    "description" : ""
+    }
+}

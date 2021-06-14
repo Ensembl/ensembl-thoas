@@ -11,4 +11,5 @@ type Gene {
   slice: Slice!
   external_references: [ExternalReference!]!
   alternative_symbols: [String!]!
+  metadata: GeneMetadata!
 }

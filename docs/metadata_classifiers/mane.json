@@ -1,0 +1,10 @@
+{
+"select" : {
+    "label" : "MANE Select",
+    "definition" : "The MANE Select is a default transcript per human gene that is representative of biology, well-supported, expressed and highly-conserved."
+    },
+"plus_clinical" : {
+    "label" : "MANE Plus Clinical",
+    "definition" : "Transcripts in the MANE Plus Clinical set are additional transcripts per locus necessary to support clinical variant reporting"
+    }
+}

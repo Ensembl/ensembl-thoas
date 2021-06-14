@@ -1,0 +1,74 @@
+interface ValueSetMetadata {
+	# Metadata derived from a value set
+	label: String!
+	definition: String!
+	description: String
+}
+
+type TranscriptBiotypeMetadata implements ValueSetMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type TranscriptGencodeBasicMetadata implements ValueSetMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type TranscriptApprisMetadata implements ValueSetMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type TranscriptTSLMetadata implements ValueSetMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type NCBITranscript {
+	id: String!
+	url : String!
+}
+
+type TranscriptManeMetadata implements ValueSetMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+	ncbi_transcript: NCBITranscript!
+}
+
+type TranscriptEnsemblCanonicalMetadata implements ValueSetMetadata {
+	value: Boolean!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type TranscriptMetadata {
+	gencode_basic: TranscriptGencodeBasicMetadata
+	biotype : TranscriptBiotypeMetadata
+	appris: TranscriptApprisMetadata
+	tsl: TranscriptTSLMetadata
+	mane: TranscriptManeMetadata
+	canonical: TranscriptEnsemblCanonicalMetadata
+}
+
+type GeneBiotypeMetadata {
+	value: String!
+	label: String!
+	definition: String!
+	description: String
+}
+
+type GeneMetadata {
+	biotype: GeneBiotypeMetadata
+}
