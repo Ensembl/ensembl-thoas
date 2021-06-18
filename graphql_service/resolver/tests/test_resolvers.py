@@ -304,7 +304,7 @@ def test_url_generation(basic_data):
 async def test_resolve_transcript_products(transcript_data):
     'Check the DataLoader for products is working via transcript. Requires event loop for DataLoader'
     result = await model.resolve_product_by_pgc(
-        {'product_id': 'ENSP001.1'},
+        {'product_id': 'ENSP001.1', 'genome_id':1},
         transcript_data
     )
 
@@ -323,6 +323,7 @@ async def test_resolve_nested_products(transcript_data):
     transcript_result = await model.resolve_gene_transcripts(gene_result, transcript_data)
     for i in transcript_result:
         for pgc in i['product_generating_contexts']:
+            pgc['genome_id'] = 1
             product_result = await model.resolve_product_by_pgc(pgc, transcript_data)
             if 'stable_id' in product_result:
                 assert product_result['stable_id'] == 'ENSP001.1'
