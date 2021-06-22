@@ -107,7 +107,6 @@ async def resolve_gene_transcripts(gene, info):
     'Use a DataLoader to get transcripts for the parent gene'
 
     gene_stable_id = gene['stable_id']
-    genome_id = gene['genome_id']
     # Get a dataloader from info
     loader = info.context['data_loader'].gene_transcript_dataloader(gene['genome_id'])
     # Tell DataLoader to get this request done when it feels like it
