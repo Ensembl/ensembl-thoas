@@ -38,7 +38,6 @@ def resolve_gene(_, info, byId=None):
     }
 
     collection = info.context['mongo_db']
-    info.context['genome_id'] = byId['genome_id']
     result = collection.find_one(query)
     if not result:
         raise GeneNotFoundError(byId=byId)
@@ -55,7 +54,6 @@ def resolve_genes(_, info, bySymbol=None):
     }
 
     collection = info.context['mongo_db']
-    info.context['genome_id'] = bySymbol['genome_id']
 
     result = collection.find(query)
     #unpack cursor into a list. We're guaranteed relatively small results
@@ -95,8 +93,6 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
             {'unversioned_stable_id': byId['stable_id']}
         ]
         query['genome_id'] = byId['genome_id']
-
-    info.context['genome_id'] = query['genome_id']
 
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
@@ -194,9 +190,6 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 
     collection = info.context['mongo_db']
     result = collection.find_one(query)
-
-    # persist genome_id for later resolvers
-    info.context['genome_id'] = genome_id
 
     if not result:
         raise ProductNotFoundError(genome_id, stable_id)
