@@ -544,11 +544,11 @@ def get_gene_name_metadata(xrefs, config):
             name_metadata = {
                 'accession_id': xref.get('primary_id'),
                 'value': xref.get('description'),
-                'url': config.get('HGNC_URL', 'GENERAL') + xref.get('primary_id'),
+                'url': config.get('GENERAL', 'HGNC_URL') + xref.get('primary_id'),
                 'source': {
                     'name': xref.get('dbname'),
-                    'url': config.get('HGNC_WEBSITE', 'GENERAL'),
-                    'description': config.get('HGNC_DESCRIPTION', 'GENERAL'),
+                    'url': config.get('GENERAL', 'HGNC_WEBSITE'),
+                    'description': config.get('GENERAL', 'HGNC_DESCRIPTION'),
                 }
             }
             return xref
