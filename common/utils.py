@@ -535,3 +535,21 @@ def calculate_relative_coords(parent_params, child_params):
     relative_location['start'] = relative_start
     relative_location['end'] = relative_end
     return relative_location
+
+
+def get_gene_name_metadata(xrefs, config):
+
+    for xref in xrefs:
+        if xref.get('dbname') == 'HGNC':
+            name_metadata = {
+                'accession_id': xref.get('primary_id'),
+                'value': xref.get('description'),
+                'url': config.get('HGNC_URL', 'GENERAL') + xref.get('primary_id'),
+                'source': {
+                    'name': xref.get('dbname'),
+                    'url': config.get('HGNC_WEBSITE', 'GENERAL'),
+                    'description': config.get('HGNC_DESCRIPTION', 'GENERAL'),
+                }
+            }
+            return xref
+    return None
