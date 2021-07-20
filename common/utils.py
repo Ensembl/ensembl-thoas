@@ -551,5 +551,5 @@ def get_gene_name_metadata(xrefs, config):
                     'description': config.get('GENERAL', 'HGNC_DESCRIPTION'),
                 }
             }
-            return xref
+            return name_metadata
     return None
