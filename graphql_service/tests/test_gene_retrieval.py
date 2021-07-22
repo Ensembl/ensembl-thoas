@@ -30,6 +30,26 @@ async def test_gene_retrieval_by_id(snapshot):
         unversioned_stable_id
         version
         so_term
+        metadata {
+          biotype {
+            label
+            definition
+            description
+            value
+          }
+          name{
+            accession_id
+            value
+            url
+            source{
+              id
+              name
+              description
+              url
+              release
+            }
+          }
+        }
         transcripts {
           stable_id
         }
