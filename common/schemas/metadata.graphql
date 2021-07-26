@@ -5,6 +5,13 @@ interface ValueSetMetadata {
 	description: String
 }
 
+interface XrefMetadata {
+	accession_id: String!
+	value: String!
+	url: String!
+	source: ExternalDB!
+}
+
 type TranscriptBiotypeMetadata implements ValueSetMetadata {
 	value: String!
 	label: String!
@@ -69,6 +76,14 @@ type GeneBiotypeMetadata {
 	description: String
 }
 
+type GeneNameMetadata implements XrefMetadata {
+	accession_id: String!
+	value: String!
+	url: String!
+	source: ExternalDB!
+}
+
 type GeneMetadata {
 	biotype: GeneBiotypeMetadata
+	name: GeneNameMetadata
 }

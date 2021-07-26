@@ -41,7 +41,27 @@ snapshots['test_gene_retrieval_by_id 1'] = {
             }
         ],
         'unversioned_stable_id': 'ENSG00000139618',
-        'version': 15
+        'version': 15,
+         'metadata': {
+            'biotype': {
+                'label': 'Protein coding',
+                'definition': 'Transcipt that contains an open reading frame (ORF).',
+                'description': None,
+                'value': 'protein_coding'
+            },
+            'name': {
+                'accession_id': 'HGNC:1101',
+                'value': 'BRCA2 DNA repair associated',
+                'url': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:1101',
+                'source': {
+                    'id': 'HGNC Symbol',
+                    'name': 'HGNC',
+                    'description': 'The HGNC is responsible for approving unique symbols and names for human loci, including protein coding genes, ncRNA genes and pseudogenes, to allow unambiguous scientific communication.',
+                    'url': 'https://www.genenames.org/',
+                    'release': None
+                }
+            }
+        },
     }
 }
 
