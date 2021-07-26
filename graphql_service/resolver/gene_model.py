@@ -38,8 +38,6 @@ def resolve_gene(_, info, byId=None):
     }
 
     collection = info.context['mongo_db']
-    info.context['genome_id'] = query['genome_id']
-
     result = collection.find_one(query)
     if not result:
         raise GeneNotFoundError(byId=byId)
@@ -56,7 +54,6 @@ def resolve_genes(_, info, bySymbol=None):
     }
 
     collection = info.context['mongo_db']
-    info.context['genome_id'] = query['genome_id']
 
     result = collection.find(query)
     #unpack cursor into a list. We're guaranteed relatively small results
@@ -97,8 +94,6 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         ]
         query['genome_id'] = byId['genome_id']
 
-    info.context['genome_id'] = query['genome_id']
-
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
     return transcript
@@ -106,16 +101,23 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
 @GENE_TYPE.field('transcripts')
 async def resolve_gene_transcripts(gene, info):
     'Use a DataLoader to get transcripts for the parent gene'
-    gene_stable_id = gene['stable_id']
 
+    gene_stable_id = gene['stable_id']
     # Get a dataloader from info
-    loader = info.context['data_loader'].gene_transcript_dataloader(info.context['genome_id'])
+    loader = info.context['data_loader'].gene_transcript_dataloader(gene['genome_id'])
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(
         key=gene_stable_id
     )
-
     return transcripts
+
+@TRANSCRIPT_TYPE.field('product_generating_contexts')
+async def resolve_transcript_pgc(transcript, info):
+    pgcs = []
+    for pgc in transcript['product_generating_contexts']:
+        pgc['genome_id'] = transcript['genome_id']
+        pgcs.append(pgc)
+    return pgcs
 
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
@@ -189,9 +191,6 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
     collection = info.context['mongo_db']
     result = collection.find_one(query)
 
-    # persist genome_id for later resolvers
-    info.context['genome_id'] = genome_id
-
     if not result:
         raise ProductNotFoundError(genome_id, stable_id)
     return result
@@ -199,7 +198,7 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 @PGC_TYPE.field('product')
 async def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
-    loader = info.context['data_loader'].transcript_product_dataloader(info.context['genome_id'])
+    loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
     products = await loader.load(
         key=pgc['product_id']
     )
