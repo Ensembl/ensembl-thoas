@@ -269,7 +269,7 @@ def format_transcript(
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
-        'metadata' : tr_metadata_info[transcript["id"]]
+        'metadata': tr_metadata_info[transcript['id']]
     }
 
     # Insert multiple product handling here when we know what it will look like
@@ -324,10 +324,10 @@ def format_transcript(
                 '3_prime_utr': None,
                 'cds': None,
                 'product_id': None,
-                'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
+                #'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                 # We'll know default later when it becomes relevant
                 'default': defaults.pop(),
-                'cdna': common.utils.format_cdna(transcript=transcript, refget=refget)
+                'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, non_coding = True)
             }
         )
 

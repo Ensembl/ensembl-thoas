@@ -361,7 +361,7 @@ def format_utr(
     }
 
 
-def format_cdna(transcript,refget):
+def format_cdna(transcript, refget, non_coding=False):
     '''
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
@@ -369,7 +369,11 @@ def format_cdna(transcript,refget):
 
 
     stable_id = get_stable_id(transcript["id"], transcript["version"])
-    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
+
+    if non_coding:
+        sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.NCRNA)
+    else:
+        sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
 
     start = transcript['start']
     end = transcript['end']
