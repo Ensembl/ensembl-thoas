@@ -371,7 +371,10 @@ def format_cdna(transcript, refget, non_coding=False):
     stable_id = get_stable_id(transcript["id"], transcript["version"])
 
     if non_coding:
-        sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.NCRNA)
+        sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
+        # Some non-coding transcripts don't have CDNA. Instead fetch NCRNA.
+        if sequence.get('checksum') is None:
+            sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.NCRNA)
     else:
         sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
 
@@ -422,7 +425,7 @@ def format_sequence_object(refget, stable_id, sequence_type):
     sequence_checksum = refget.get_checksum(stable_id, sequence_type)
 
     return {
-        'alphabet': type_to_alphabet.get('dna') if sequence_type in [refget.CDNA, refget.CDS] else type_to_alphabet.get('protein'),
+        'alphabet': type_to_alphabet.get('protein') if sequence_type == refget.PEP else type_to_alphabet.get('dna'),
         'checksum': sequence_checksum
     }
 
