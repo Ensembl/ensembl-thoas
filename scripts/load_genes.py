@@ -324,7 +324,8 @@ def format_transcript(
                 '3_prime_utr': None,
                 'cds': None,
                 'product_id': None,
-                #'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
+                # Phased exons may have to be disabled
+                'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                 # We'll know default later when it becomes relevant
                 'default': defaults.pop(),
                 'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, non_coding = True)
