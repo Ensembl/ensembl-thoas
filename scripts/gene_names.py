@@ -26,7 +26,7 @@ parser.add_argument('--database', help='Database name',  required=True)
 
 args = parser.parse_args()
 
-data = open(args.species + "_sources.txt", "a")
+data = open(args.species + "_" + args.assembly + "_sources.txt", "a")
 select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
 select_display_xref_query = "select gene.display_xref_id as gene_display_xref_id, " \
                             "gene.description as gene_description, " \
@@ -75,6 +75,6 @@ for gene in genes:
             for element in matched_string_elements:
                 key, value = element.split(':')
                 if key == 'Source':
-                    print(value)
+                    #print(value)
                     data.write(value+'\n')
 data.close()
