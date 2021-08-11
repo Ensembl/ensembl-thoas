@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-import argparse, re
+import argparse, re, json
 from mysql.connector import MySQLConnection, Error
 
 
@@ -27,6 +27,8 @@ parser.add_argument('--database', help='Database name',  required=True)
 args = parser.parse_args()
 
 data = open(args.species + "_" + args.assembly + "_sources.txt", "a")
+gene_names = open(args.species + "_" + args.assembly + "_gene_names.txt", "a")
+
 select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
 select_display_xref_query = "select gene.display_xref_id as gene_display_xref_id, " \
                             "gene.description as gene_description, " \
@@ -60,10 +62,8 @@ matches = {}
 for gene in genes:
 
     if gene.get('display_xref_id') is not None:
-        pass
-        #mysql_cursor.execute(select_display_xref_query.format(gene.get('stable_id')))
-        #data = open("data.txt", "a")
-        #json.dump(mysql_cursor.fetchone(), data)
+        mysql_cursor.execute(select_display_xref_query.format(gene.get('stable_id')))
+        json.dump(mysql_cursor.fetchone(), gene_names)
     elif gene.get('description') is not None:
 
         # Search for content starting with 'Source' within square brackets
