@@ -26,10 +26,10 @@ parser.add_argument('--database', help='Database name',  required=True)
 
 args = parser.parse_args()
 
-data = open(args.species + "_" + args.assembly + "_sources.txt", "a")
-gene_names = open(args.species + "_" + args.assembly + "_gene_names.txt", "a")
+gene_names_file = open(args.species + "_" + args.assembly + "_gene_names.txt", "w")
 
 select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
+
 select_display_xref_query = "select gene.display_xref_id as gene_display_xref_id, " \
                             "gene.description as gene_description, " \
                             "gene.stable_id as gene_stable_id, " \
@@ -61,9 +61,26 @@ genes = mysql_cursor.fetchall()
 matches = {}
 for gene in genes:
 
+    gene_name_info = {'gene_display_xref_id': None,
+                      'gene_description': gene.get('description'),
+                      'gene_stable_id': gene.get('stable_id'),
+                      'xref_primary_id': None,
+                      'xref_display_label': None,
+                      'xref_description': None,
+                      'external_db_name': None,
+                      'external_db_release': None,
+                      'external_db_display_name': None
+                      }
+
     if gene.get('display_xref_id') is not None:
+
+        # Get display_xref and external db details if 'display_xref_id' exists
         mysql_cursor.execute(select_display_xref_query.format(gene.get('stable_id')))
-        json.dump(mysql_cursor.fetchone(), gene_names)
+
+        # Save the results to the file
+        json.dump(mysql_cursor.fetchone(), gene_names_file)
+
+    # If no 'display_xref_id' but we have gene 'description', get as much info as possible from the gene description
     elif gene.get('description') is not None:
 
         # Search for content starting with 'Source' within square brackets
@@ -75,6 +92,14 @@ for gene in genes:
             for element in matched_string_elements:
                 key, value = element.split(':')
                 if key == 'Source':
-                    #print(value)
-                    data.write(value+'\n')
-data.close()
+                    gene_name_info['external_db_name'] = value
+                if key == 'Acc':
+                    gene_name_info['xref_primary_id'] = value
+        json.dump(gene_name_info, gene_names_file)
+    else:
+
+        # If no 'display_xref_id' and no 'description', just store stable_id
+        json.dump(gene_name_info, gene_names_file)
+
+
+gene_names_file.close()
