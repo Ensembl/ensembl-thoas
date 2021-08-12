@@ -198,6 +198,9 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 @PGC_TYPE.field('product')
 async def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
+
+    if pgc['product_id'] is None:
+        return
     loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
     products = await loader.load(
         key=pgc['product_id']
