@@ -15,6 +15,7 @@ type Transcript {
   spliced_exons: [SplicedExon!]!
   introns: [Intron!]!
   metadata: TranscriptMetadata!
+  gene: Gene!
 }
 
 type CDS {
