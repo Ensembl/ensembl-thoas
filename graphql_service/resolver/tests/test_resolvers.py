@@ -225,6 +225,17 @@ async def test_resolve_gene_transcripts(transcript_data):
         assert hit['type'] == 'Transcript'
         assert hit['symbol'] in ['kumquat', 'grape']
 
+@pytest.mark.asyncio
+async def test_resolve_gene_from_transcript(transcript_data):
+    'Check the DataLoader for gene is working via transcript. Requires event loop for DataLoader'
+    result = await model.resolve_transcript_gene(
+        {'gene': 'ENSG001.1', 'genome_id': 1},
+        transcript_data
+    )
+
+    assert result['type'] == 'Gene'
+    assert result['stable_id'] == 'ENSG001.1'
+    assert result['symbol'] == 'banana'
 
 def test_resolve_slice(slice_data):
     'Check features can be found via coordinates'
