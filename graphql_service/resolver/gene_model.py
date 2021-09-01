@@ -119,6 +119,18 @@ async def resolve_transcript_pgc(transcript, info):
         pgcs.append(pgc)
     return pgcs
 
+@TRANSCRIPT_TYPE.field('gene')
+async def resolve_transcript_gene(transcript, info):
+    'Use a DataLoader to get the parent gene of a transcript'
+    query = {
+        'type': 'Gene',
+        'genome_id': transcript['genome_id'],
+        'stable_id': transcript['gene']
+    }
+    collection = info.context['mongo_db']
+    gene = collection.find_one(query)
+    return gene
+
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
 # rather than entities entirely within the range
