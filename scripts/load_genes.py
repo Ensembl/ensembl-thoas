@@ -64,7 +64,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release, gene_name_metadata):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -118,7 +118,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['xrefs'], CONFIG)
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['id'], CONFIG, gene_name_metadata)
             except KeyError as ke:
                 gene_metadata['name'] = None
 
@@ -399,6 +399,13 @@ def preload_transcript_meta(production_name, assembly):
             transcript_meta[stable_id] = get_transcript_meta(row)
     return transcript_meta
 
+
+def preload_gene_name_metadata(production_name, assembly):
+    with open(production_name + "_" + assembly + "_gene_names.json", "r") as gene_name_metadata_file:
+        gene_name_metadata = json.load(gene_name_metadata_file)
+        return gene_name_metadata
+
+
 def preload_classifiers(CLASSIFIER_PATH):
     meta_classifiers = transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
     for classifier in meta_classifiers:
@@ -436,6 +443,8 @@ if __name__ == '__main__':
     TRANSCRIPT_METADATA = preload_transcript_meta(ARGS.species, ARGS.assembly)
     print("Loading Metadata Classifiers")
     METADATA_CLASSIFIER = preload_classifiers(CLASSIFIER_PATH)
+    print("Loading Gene Name Metadata")
+    GENE_NAME_METADATA = preload_gene_name_metadata(ARGS.species, ARGS.assembly)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA)
     create_index(MONGO_CLIENT)

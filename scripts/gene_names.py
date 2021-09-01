@@ -26,13 +26,12 @@ parser.add_argument('--database', help='Database name',  required=True)
 
 args = parser.parse_args()
 
-gene_names_file = open(args.species + "_" + args.assembly + "_gene_names.txt", "w")
+gene_names_file = open(args.species + "_" + args.assembly + "_gene_names.json", "w")
 
 select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
 
-select_display_xref_query = "select gene.display_xref_id as gene_display_xref_id, " \
+select_display_xref_query = "select gene.stable_id as gene_stable_id, " \
                             "gene.description as gene_description, " \
-                            "gene.stable_id as gene_stable_id, " \
                             "xref.dbprimary_acc as xref_primary_id, " \
                             "xref.display_label as xref_display_label, " \
                             "xref.description as xref_description, " \
@@ -61,15 +60,14 @@ genes = mysql_cursor.fetchall()
 matches = {}
 for gene in genes:
 
-    gene_name_info = {'gene_display_xref_id': None,
+    gene_name_info = {'gene_stable_id': gene.get('stable_id'),
                       'gene_description': gene.get('description'),
-                      'gene_stable_id': gene.get('stable_id'),
                       'xref_primary_id': None,
                       'xref_display_label': None,
                       'xref_description': None,
                       'external_db_name': None,
-                      'external_db_release': None,
-                      'external_db_display_name': None
+                      'external_db_display_name': None,
+                      'external_db_release': None
                       }
 
     if gene.get('display_xref_id') is not None:

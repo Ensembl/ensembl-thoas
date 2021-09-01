@@ -537,21 +537,18 @@ def calculate_relative_coords(parent_params, child_params):
     return relative_location
 
 
-def get_gene_name_metadata(xrefs, config):
+def get_gene_name_metadata(gene_stable_id, config, gene_name_metadata):
 
-    for xref in xrefs:
-        if xref.get('dbname') == 'HGNC':
-            name_metadata = {
-                'accession_id': xref.get('primary_id'),
-                'value': xref.get('description'),
-                'url': config.get('GENERAL', 'HGNC_URL') + xref.get('primary_id'),
-                'source': {
-                    'id': xref.get('db_display'),
-                    'name': xref.get('dbname'),
-                    'url': config.get('GENERAL', 'HGNC_WEBSITE'),
-                    'description': config.get('GENERAL', 'HGNC_DESCRIPTION'),
-                    'release': xref.get('release')
-                }
-            }
-            return name_metadata
+    name_metadata = {
+        'accession_id': gene_name_metadata.get(gene_stable_id).get('xref_primary_id'),
+        'value': gene_name_metadata.get(gene_stable_id).get('xref_description'),
+        'url': None,
+        'source': {
+            'id': gene_name_metadata.get(gene_stable_id).get('external_db_name'),
+            'name': gene_name_metadata.get(gene_stable_id).get('external_db_display_name'),
+            'url': None,
+            'description': None,
+            'release': gene_name_metadata.get(gene_stable_id).get('external_db_release'),
+        }
+    }
     return None
