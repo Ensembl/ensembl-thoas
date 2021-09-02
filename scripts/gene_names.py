@@ -84,6 +84,8 @@ for gene in genes:
         # Search for content starting with 'Source' within square brackets
         match = re.search(r'\[Source.*?\]', gene.get('description'))
         if match:
+
+            gene_name_info['xref_description'] = gene.get('description')
             # Remove square brackets
             match_string = match[0][1:-1]
             matched_string_elements = match_string.split(';')
