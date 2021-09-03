@@ -118,7 +118,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['id'], CONFIG, gene_name_metadata)
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['id'], CONFIG, gene_name_metadata[gene['id']])
             except KeyError as ke:
                 gene_metadata['name'] = None
 
@@ -401,9 +401,12 @@ def preload_transcript_meta(production_name, assembly):
 
 
 def preload_gene_name_metadata(production_name, assembly):
+    gene_name_metadata = {}
     with open(production_name + "_" + assembly + "_gene_names.json", "r") as gene_name_metadata_file:
-        gene_name_metadata = json.load(gene_name_metadata_file)
-        return gene_name_metadata
+        gene_name_metadata_load = json.load(gene_name_metadata_file)
+        for gene_name in gene_name_metadata_load:
+            gene_name_metadata[gene_name['gene_stable_id']] = gene_name
+    return gene_name_metadata
 
 
 def preload_classifiers(CLASSIFIER_PATH):
