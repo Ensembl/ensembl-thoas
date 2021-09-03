@@ -33,16 +33,16 @@ async def run_assembly(args):
     if 'collection' in args:
         shell_command = f'''
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+            python {code}/gene_names.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
             python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]}
-            python {code}/gene_names.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]}
         '''
     else:
         shell_command = f'''
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+            python {code}/gene_names.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]};\
             python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]}
-            python {code}/gene_names.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]}
         '''
     await asyncio.create_subprocess_shell(shell_command)
 
