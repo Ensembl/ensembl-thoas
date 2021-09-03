@@ -537,18 +537,18 @@ def calculate_relative_coords(parent_params, child_params):
     return relative_location
 
 
-def get_gene_name_metadata(gene_stable_id, config, gene_name_metadata):
+def get_gene_name_metadata(config, gene_name_metadata):
 
     name_metadata = {
-        'accession_id': gene_name_metadata.get(gene_stable_id).get('xref_primary_id'),
-        'value': gene_name_metadata.get(gene_stable_id).get('xref_description'),
+        'accession_id': gene_name_metadata.get('xref_primary_id'),
+        'value': gene_name_metadata.get('xref_description'),
         'url': None,
         'source': {
-            'id': gene_name_metadata.get(gene_stable_id).get('external_db_name'),
-            'name': gene_name_metadata.get(gene_stable_id).get('external_db_display_name'),
+            'id': gene_name_metadata.get('external_db_name'),
+            'name': gene_name_metadata.get('external_db_display_name'),
             'url': None,
             'description': None,
-            'release': gene_name_metadata.get(gene_stable_id).get('external_db_release'),
+            'release': gene_name_metadata.get('external_db_release'),
         }
     }
     return None

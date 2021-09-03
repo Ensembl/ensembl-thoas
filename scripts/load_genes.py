@@ -118,7 +118,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['id'], CONFIG, gene_name_metadata[gene['id']])
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(CONFIG, gene_name_metadata[gene['id']])
             except KeyError as ke:
                 gene_metadata['name'] = None
 
