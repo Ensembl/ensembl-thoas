@@ -539,7 +539,7 @@ def calculate_relative_coords(parent_params, child_params):
 
 def get_gene_name_metadata(config, gene_name_metadata):
 
-    name_metadata = {
+    gene_name_metadata = {
         'accession_id': gene_name_metadata.get('xref_primary_id'),
         'value': gene_name_metadata.get('xref_description'),
         'url': None,
@@ -551,4 +551,4 @@ def get_gene_name_metadata(config, gene_name_metadata):
             'release': gene_name_metadata.get('external_db_release'),
         }
     }
-    return None
+    return gene_name_metadata
