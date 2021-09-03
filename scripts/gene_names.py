@@ -26,8 +26,6 @@ parser.add_argument('--database', help='Database name',  required=True)
 
 args = parser.parse_args()
 
-gene_names_file = open(args.species + "_" + args.assembly + "_gene_names.json", "w")
-
 select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
 
 select_display_xref_query = "select gene.stable_id as gene_stable_id, " \
@@ -57,7 +55,7 @@ mysql_cursor = conn.cursor(dictionary=True)
 
 mysql_cursor.execute(select_all_query)
 genes = mysql_cursor.fetchall()
-matches = {}
+gene_names = []
 for gene in genes:
 
     gene_name_info = {'gene_stable_id': gene.get('stable_id'),
@@ -75,8 +73,8 @@ for gene in genes:
         # Get display_xref and external db details if 'display_xref_id' exists
         mysql_cursor.execute(select_display_xref_query.format(gene.get('stable_id')))
 
-        # Save the results to the file
-        json.dump(mysql_cursor.fetchone(), gene_names_file)
+        # Add to list
+        gene_names.append(mysql_cursor.fetchone())
 
     # If no 'display_xref_id' but we have gene 'description', get as much info as possible from the gene description
     elif gene.get('description') is not None:
@@ -95,11 +93,15 @@ for gene in genes:
                     gene_name_info['external_db_name'] = value
                 if key == 'Acc':
                     gene_name_info['xref_primary_id'] = value
-        json.dump(gene_name_info, gene_names_file)
+
+        # Add to list
+        gene_names.append(gene_name_info)
     else:
 
-        # If no 'display_xref_id' and no 'description', just store stable_id
-        json.dump(gene_name_info, gene_names_file)
+        # If no 'display_xref_id' and no 'description', just add stable_id
+        gene_names.append(gene_name_info)
 
 
-gene_names_file.close()
+with open(args.species + "_" + args.assembly + "_gene_names.json", "w") as write_file:
+    json.dump(gene_names, write_file)
+
