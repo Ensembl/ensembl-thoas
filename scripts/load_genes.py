@@ -319,7 +319,7 @@ def format_transcript(
     elif transcript['exons']:
         new_transcript['product_generating_contexts'].append(
             {
-                'product_type': transcript['biotype'],
+                'product_type': None,
                 '5_prime_utr': None,
                 '3_prime_utr': None,
                 'cds': None,

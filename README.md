@@ -31,8 +31,11 @@ GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:AP
 
 ## Testing and development
 
-If changes are expected, run pip install -e
-pytest
+Set this environment variable:
+```
+export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
+```
+Then to run all the tests run ```pytest .```
 
 ## Containerisation
 docker build -t $NAME:$VERSION .
