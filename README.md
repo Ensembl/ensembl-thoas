@@ -31,7 +31,7 @@ GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:AP
 
 ## Testing and development
 
-Set this environment variable:
+Navigate to the root of this repository and set this environment variable:
 ```
 export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
 ```
