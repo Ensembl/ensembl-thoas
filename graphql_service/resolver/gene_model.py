@@ -23,6 +23,8 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
+SLICE_TYPE = ObjectType('Slice')
+
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, byId=None):
@@ -171,7 +173,7 @@ def query_region(context, feature_type):
     query = {
         'genome_id': context['genome_id'],
         'type': feature_type,
-        'slice.region.name': context['slice.region.name'],
+        'slice.region.name': context['slice.region.name'], # TODO replace this with region_id
         'slice.location.start': {'$gt': context['slice.location.start']},
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
@@ -220,6 +222,20 @@ async def resolve_product_by_pgc(pgc, info):
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
     return products[0]
+
+
+@SLICE_TYPE.field('region')
+async def resolve_region(slc, info):
+    'Fetch a region that is referenced by a slice'
+    if slc['region_id'] is None:
+        return
+    loader = info.context['data_loader'].region_dataloader()
+    regions = await loader.load(
+        key=slc["region_id"]
+    )
+    # Data loader returns a list because most data-loads are one-many
+    # ID mappings
+    return regions[0]
 
 
 class GeneNotFoundError(GraphQLError):

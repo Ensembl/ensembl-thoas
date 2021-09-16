@@ -28,7 +28,7 @@ lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
-    Create indexes for searching    useful things on genes, transcripts etc.
+    Create indexes for searching useful things on genes, transcripts etc. and enforcing uniqueness
     '''
     collection = mongo_client.collection()
     collection.create_index([
@@ -76,6 +76,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
+    region_buffer = []
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -138,9 +139,9 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                     region_name=gene['seq_region_name'],
                     default_region=default_region,
                     strand=int(gene['strand']),
-                    assembly=assembly['id'],
                     start=int(gene['start']),
-                    end=int(gene['end'])
+                    end=int(gene['end']),
+                    genome_id=genome['id']
                 ),
                 'transcripts': [
                     [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
@@ -182,6 +183,10 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     refget=refget)
                             )
 
+            region = common.utils.format_region(gene, genome["id"], assembly)
+            if region not in region_buffer:
+                region_buffer.append(region)
+
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
@@ -193,6 +198,12 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
         mongo_client.collection().insert_many(transcript_buffer)
     if len(protein_buffer) > 0:
         mongo_client.collection().insert_many(protein_buffer)
+
+    # The number of regions is expected to be small
+    MAX_REGIONS = 1000
+    if len(region_buffer) > MAX_REGIONS:
+        raise ValueError(f"The number of regions was {len(region_buffer)}, exceeding threshold of {MAX_REGIONS}")
+    mongo_client.collection().insert_many(region_buffer)
 
 
 def format_transcript(
@@ -225,7 +236,8 @@ def format_transcript(
                 region_name=region_name,
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly['id']
+                assembly=assembly['id'],
+                genome_id=genome_id
             )
         )
 
@@ -260,9 +272,9 @@ def format_transcript(
             region_name=region_name,
             default_region=default_region,
             strand=int(transcript['strand']),
-            assembly=assembly['id'],
             start=int(transcript['start']),
-            end=int(transcript['end'])
+            end=int(transcript['end']),
+            genome_id=genome_id
         ),
                 'genome_id': genome_id,
                 'external_references': transcript_xrefs,

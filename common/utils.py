@@ -96,6 +96,10 @@ def get_stable_id(iid, version):
     return stable_id
 
 
+def get_region_id(region_name, genome_id):
+    return f'{genome_id}_{region_name}'
+
+
 def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
@@ -148,8 +152,8 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, default_region, strand, assembly,
-                 start, end):
+def format_slice(region_name, default_region, strand,
+                 start, end, genome_id):
     '''
     Creates regular slices with locations and regions
 
@@ -161,10 +165,7 @@ def format_slice(region_name, default_region, strand, assembly,
     end[int]: End coordinate
     '''
     return {
-        'region': {
-            'name': region_name,
-            'assembly': assembly
-        },
+        'region_id': get_region_id(region_name, genome_id),
         'location': {
             'start': int(start),
             'end': int(end),
@@ -178,7 +179,7 @@ def format_slice(region_name, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, assembly):
+def format_exon(exon, region_name, region_strand, default_region, assembly, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -198,7 +199,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly):
         'so_term': 'exon',
         'slice': format_slice(
             region_name, default_region, region_strand,
-            assembly, exon['start'], exon['end']
+            exon['start'], exon['end'], genome_id
         )
     }
 
@@ -277,7 +278,7 @@ def infer_introns(exons, transcript):
             'index': index,
             'checksum': None,
             'slice': {
-                'region': exon_one['slice']['region'],
+                'region_id': exon_one['slice']['region_id'],
                 'location': {
                     'start': intron_start,
                     'end': intron_end,
@@ -476,6 +477,16 @@ def format_protein_domains(protein_features):
     #         }
     #     )
     return domains
+
+
+def format_region(gene, genome_id, assembly):
+    return {
+        "type": "Region",
+        "region_id": get_region_id(gene["seq_region_name"], genome_id),
+        "name": gene["seq_region_name"],
+        "assembly": assembly
+    }
+
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     'Check if a buffer needs flushing, and insert documents when it does'
