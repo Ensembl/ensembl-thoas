@@ -48,11 +48,11 @@ def test_source_url(resolver):
     Test URLs for sources of crossrefs, as well as nice names for the source
     '''
 
-    response = resolver.source_url_generator('chebi')
+    response = resolver.source_information_retriever('chebi', 'resourceHomeUrl')
 
     assert response == 'https://www.ebi.ac.uk/chebi/'
 
-    response = resolver.source_url_generator('bogus')
+    response = resolver.source_information_retriever('bogus', 'resourceHomeUrl')
     assert response is None
 
 

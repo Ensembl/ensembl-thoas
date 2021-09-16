@@ -23,6 +23,8 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
+GENE_METADATA_TYPE = ObjectType('GeneMetadata')
+
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, byId=None):
@@ -77,6 +79,24 @@ def insert_crossref_urls(feature, info):
     annotated_xrefs = map(resolver.annotate_crossref, xrefs) # might contain None values due to caught exceptions
     xrefs_with_nulls_removed = filter(lambda x: x is not None, annotated_xrefs)
     return list(xrefs_with_nulls_removed)
+
+@GENE_METADATA_TYPE.field('name')
+def insert_gene_name_urls(gene_metadata, info):
+    '''
+    A gene metadata of a gene is given as argument.
+    Using the gene name metadata info we can infer URLs to those resources
+    and inject them into the response
+    '''
+
+    resolver = info.context['XrefResolver']
+    gene_name_metadata = gene_metadata.get('name')
+
+    if gene_name_metadata:
+        annotated_gene_names = resolver.annotate_gene_names(gene_name_metadata)
+        return annotated_gene_names
+
+    return None
+
 
 @QUERY_TYPE.field('transcript')
 def resolve_transcript(_, info, bySymbol=None, byId=None):

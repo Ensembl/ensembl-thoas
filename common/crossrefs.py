@@ -126,26 +126,26 @@ class XrefResolver():
             (url, _) = self.id_substitution.subn(xref, url_base)
         return url
 
-    def source_url_generator(self, dbname):
+    def source_information_retriever(self, dbname, field):
         '''
         On receipt of a source name (prefix in identifiers.org)
-        we then get the official resource and its url.
+        we then get the official resource and its fields(url or description etc).
         Sources have multiple resources in them, which may have
-        different URLs. Unhelpful to us but useful generally.
+        different field values. Unhelpful to us but useful generally.
         '''
-        url = None
+        data = None
         if dbname in self.namespace:
             resources = self.namespace[dbname]['resources']
             for i in resources:
                 if i['official'] is True:
-                    url = i['resourceHomeUrl']
+                    data = i[field]
         else:
             return None
 
         # Handle the lack of an official source
-        if url is None:
-            url = resources[0]['resourceHomeUrl']
-        return url
+        if data is None:
+            data = resources[0][field]
+        return data
 
     def translate_dbname(self, dbname):
         '''
@@ -182,8 +182,8 @@ class XrefResolver():
                 xref['accession_id'],
                 xref['source']['id']
             )
-            xref['source']['url'] = self.source_url_generator(
-                self.translate_dbname(xref['source']['id'])
+            xref['source']['url'] = self.source_information_retriever(
+                self.translate_dbname(xref['source']['id']), 'resourceHomeUrl'
             )
             xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
             return xref
@@ -191,6 +191,27 @@ class XrefResolver():
             # probably log the error somewhere; just don't send it to the client
             return None
 
+
+    def annotate_gene_names(self, gene_name_metadata):
+
+        try:
+            gene_name_metadata['url'] = self.url_from_ens_dbname(
+                gene_name_metadata['accession_id'], gene_name_metadata['source']['id']
+            )
+
+            gene_name_metadata['source']['url'] = self.source_information_retriever(
+                self.translate_dbname(gene_name_metadata['source']['id']), 'resourceHomeUrl'
+            )
+
+            gene_name_metadata['source']['description'] = self.source_information_retriever(
+                self.translate_dbname(gene_name_metadata['source']['id']), 'description'
+            )
+
+            return gene_name_metadata
+
+        except:
+            # probably log the error somewhere; just don't send it to the client
+            return None
 
     def describe_info_type(self, info_type):
         '''
