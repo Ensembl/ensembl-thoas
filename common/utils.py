@@ -162,6 +162,7 @@ def format_slice(region_name, default_region, strand, assembly,
     '''
     return {
         'region': {
+            # TODO Probably region_name is not a unique id, since it just seems to be a number.  Maybe region_name + genome would work?
             'name': region_name,
             'assembly': assembly
         },
@@ -476,6 +477,25 @@ def format_protein_domains(protein_features):
     #         }
     #     )
     return domains
+
+
+def format_region(gene):
+    # TODO these are placeholders, none of these except region are actually populated on the gene json
+    return {
+        "region": gene["seq_region_name"],
+        "code": safe_get("code", gene),
+        "topology": safe_get("topology", gene),
+        "so_term": safe_get("so_term", gene),
+        "length": int(safe_get("length", gene))
+    }
+
+
+def safe_get(val, dictionary):
+    try:
+        return dictionary[val]
+    except KeyError as ke:
+        return None
+
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     'Check if a buffer needs flushing, and insert documents when it does'

@@ -76,6 +76,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
+    region_buffer = []
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -182,9 +183,14 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     refget=refget)
                             )
 
+            # Add region.
+            # TODO I am assuming here that the region of a transcript is the same as the region of its gene - verify this
+            region_buffer.append(common.utils.format_region(gene))
+
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
+            region_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:

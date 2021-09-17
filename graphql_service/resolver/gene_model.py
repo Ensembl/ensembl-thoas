@@ -160,6 +160,7 @@ def resolve_slice_transcripts(_, info):
     return query_region(info.context, 'Transcript')
 
 
+# TODO make sure this still works after we move region into its own document
 def query_region(context, feature_type):
     '''
     Query backend for a feature type using slice parameters:
@@ -220,6 +221,15 @@ async def resolve_product_by_pgc(pgc, info):
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
     return products[0]
+
+
+@GENE_TYPE.field('region')
+@TRANSCRIPT_TYPE.field('region')
+async def resolve_region(feature, info):
+    'Fetch a region that is referenced by a feature'
+    if feature['region'] is None:
+        return
+    loader = info.context['data_loader']
 
 
 class GeneNotFoundError(GraphQLError):
