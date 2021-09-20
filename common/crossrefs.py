@@ -118,6 +118,7 @@ class XrefResolver():
                     (url, _) = self.id_substitution.subn(xref, url_base)
 
         else:
+            print('*** {} namespace not in idntifiers.org ***'.format(dbname))
             return None
         # some sources seemingly have no official entry.
         # Take the first arbitrarily
@@ -151,9 +152,15 @@ class XrefResolver():
         '''
         Turn Ensembl DB names into identifiers.org prefixes where possible
         '''
-        namespace = self.identifiers_mapping[dbname.lower()]
-        if 'id_namespace' in namespace:
-            return namespace['id_namespace']
+
+        if dbname.lower() in self.identifiers_mapping:
+            namespace = self.identifiers_mapping[dbname.lower()]
+            if 'id_namespace' in namespace:
+                return namespace['id_namespace']
+            else:
+                print('*** No id_namespace for {} in mapping file ***'.format(dbname.lower()))
+        else:
+            print('*** {} not in mapping_file ***'.format(dbname.lower()))
 
         return None
 
@@ -161,16 +168,25 @@ class XrefResolver():
         '''
         Convert Ensembl dbnames and generate an xref URL
         '''
+
+        # Find identifiers.org namespace for a given ensembl dbname
         namespace = self.translate_dbname(dbname)
+
+        # If there is no namespace defined in mapping file but manual_xref_url is defined,
+        # use this manual_xref_url to generate URL.
         if (
                 namespace is None and
+                dbname.lower() in self.identifiers_mapping and
                 'manual_xref_url' in self.identifiers_mapping[dbname.lower()]
         ):
             # Some sources are not in identifiers.org URLs Ensembl needs a URL
             xref_base = self.identifiers_mapping[dbname.lower()]['manual_xref_url']
             return xref_base + xref
 
-        return self.url_generator(xref, namespace)
+        # Now get the URL from identifiers.org using the namespace and xref_id
+        URL = self.url_generator(xref, namespace)
+
+        return URL
 
     def annotate_crossref(self, xref):
         '''
@@ -194,24 +210,37 @@ class XrefResolver():
 
     def annotate_gene_names(self, gene_name_metadata):
 
+        # Handle Plants genes where source information is projected from another species
+        source_id = self.handle_projected_source_info(gene_name_metadata['source']['id'])
+
+        print(source_id)
+
         try:
             gene_name_metadata['url'] = self.url_from_ens_dbname(
-                gene_name_metadata['accession_id'], gene_name_metadata['source']['id']
+                gene_name_metadata['accession_id'], source_id
             )
 
             gene_name_metadata['source']['url'] = self.source_information_retriever(
-                self.translate_dbname(gene_name_metadata['source']['id']), 'resourceHomeUrl'
+                self.translate_dbname(source_id), 'resourceHomeUrl'
             )
 
             gene_name_metadata['source']['description'] = self.source_information_retriever(
-                self.translate_dbname(gene_name_metadata['source']['id']), 'description'
+                self.translate_dbname(source_id), 'description'
             )
 
             return gene_name_metadata
 
         except:
             # probably log the error somewhere; just don't send it to the client
-            return None
+            raise
+
+    def handle_projected_source_info(self, source_id):
+
+        if source_id.startswith('Projected from'):
+            source_id = source_id.split()[-1]
+
+        return source_id
+
 
     def describe_info_type(self, info_type):
         '''
