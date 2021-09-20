@@ -96,6 +96,11 @@ def get_stable_id(iid, version):
     return stable_id
 
 
+# TODO check if this is a good id
+def get_stable_region_id(region_name, genome_id, version=None):
+    return f'{region_name}.{genome_id}.{str(version)}' if version else f'{region_name}.{genome_id}'
+
+
 def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
@@ -149,7 +154,7 @@ def format_cross_refs(xrefs):
 
 
 def format_slice(region_name, default_region, strand, assembly,
-                 start, end):
+                 start, end, genome_id):
     '''
     Creates regular slices with locations and regions
 
@@ -162,8 +167,7 @@ def format_slice(region_name, default_region, strand, assembly,
     '''
     return {
         'region': {
-            # TODO Probably region_name is not a unique id, since it just seems to be a number.  Maybe region_name + genome would work?
-            'name': region_name,
+            'name': get_stable_region_id(region_name, genome_id),
             'assembly': assembly
         },
         'location': {
@@ -179,7 +183,7 @@ def format_slice(region_name, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, assembly):
+def format_exon(exon, region_name, region_strand, default_region, assembly, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -199,7 +203,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly):
         'so_term': 'exon',
         'slice': format_slice(
             region_name, default_region, region_strand,
-            assembly, exon['start'], exon['end']
+            assembly, exon['start'], exon['end'], genome_id
         )
     }
 
@@ -480,9 +484,9 @@ def format_protein_domains(protein_features):
 
 
 def format_region(gene):
-    # TODO these are placeholders, none of these except region are actually populated on the gene json
+    # TODO these are placeholders, none of these except name are actually populated on the gene json
     return {
-        "region": gene["seq_region_name"],
+        "name": gene["seq_region_name"],
         "code": safe_get("code", gene),
         "topology": safe_get("topology", gene),
         "so_term": safe_get("so_term", gene),

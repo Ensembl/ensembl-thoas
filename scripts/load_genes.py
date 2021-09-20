@@ -141,7 +141,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                     strand=int(gene['strand']),
                     assembly=assembly['id'],
                     start=int(gene['start']),
-                    end=int(gene['end'])
+                    end=int(gene['end']),
+                    genome_id=genome['id']
                 ),
                 'transcripts': [
                     [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
@@ -231,7 +232,8 @@ def format_transcript(
                 region_name=region_name,
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly['id']
+                assembly=assembly['id'],
+                genome_id=genome_id
             )
         )
 
@@ -268,7 +270,8 @@ def format_transcript(
             strand=int(transcript['strand']),
             assembly=assembly['id'],
             start=int(transcript['start']),
-            end=int(transcript['end'])
+            end=int(transcript['end']),
+            genome_id=genome_id
         ),
                 'genome_id': genome_id,
                 'external_references': transcript_xrefs,
