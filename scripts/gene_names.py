@@ -28,7 +28,7 @@ parser.add_argument('--collection', help='Is it a collection',  default=False)
 args = parser.parse_args()
 
 if args.collection:
-    species_genes = "select stable_id display_xref_id, description from gene " \
+    species_genes = "select stable_id, display_xref_id, description from gene " \
                        "join seq_region using (seq_region_id) " \
                        "join coord_system using (coord_system_id) " \
                        "join meta using (species_id) " \
