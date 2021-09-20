@@ -540,7 +540,7 @@ def calculate_relative_coords(parent_params, child_params):
 def get_gene_name_metadata(config, gene_name_metadata):
 
     gene_name_metadata = {
-        'accession_id': gene_name_metadata.get('xref_primary_id'),
+        'accession_id': gene_name_metadata.get('xref_primary_acc'),
         'value': gene_name_metadata.get('xref_description'),
         'url': None,
         'source': {

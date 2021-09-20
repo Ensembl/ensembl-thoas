@@ -23,14 +23,23 @@ parser.add_argument('--port', help='DB port', required=True)
 parser.add_argument('--species', help='Species name(Production name)', required=True)
 parser.add_argument('--assembly', help='Assembly name',  required=True)
 parser.add_argument('--database', help='Database name',  required=True)
+parser.add_argument('--collection', help='Is it a collection',  default=False)
 
 args = parser.parse_args()
 
-select_all_query = "SELECT stable_id, display_xref_id, description FROM gene"
+if args.collection:
+    species_genes = "select stable_id display_xref_id, description from gene " \
+                       "join seq_region using (seq_region_id) " \
+                       "join coord_system using (coord_system_id) " \
+                       "join meta using (species_id) " \
+                       "where meta_key='species.production_name' and meta_value='{}'"
+else:
+    species_genes = "SELECT stable_id, display_xref_id, description FROM gene"
 
-select_display_xref_query = "select gene.stable_id as gene_stable_id, " \
+
+species_display_xref = "select gene.stable_id as gene_stable_id, " \
                             "gene.description as gene_description, " \
-                            "xref.dbprimary_acc as xref_primary_id, " \
+                            "xref.dbprimary_acc as xref_primary_acc, " \
                             "xref.display_label as xref_display_label, " \
                             "xref.description as xref_description, " \
                             "external_db.db_name as external_db_name, " \
@@ -53,14 +62,15 @@ conn = MySQLConnection(
 
 mysql_cursor = conn.cursor(dictionary=True)
 
-mysql_cursor.execute(select_all_query)
+mysql_cursor.execute(species_genes.format(args.species)) if args.collection else mysql_cursor.execute(species_genes)
+
 genes = mysql_cursor.fetchall()
 gene_names = []
 for gene in genes:
 
     gene_name_info = {'gene_stable_id': gene.get('stable_id'),
                       'gene_description': gene.get('description'),
-                      'xref_primary_id': None,
+                      'xref_primary_acc': None,
                       'xref_display_label': None,
                       'xref_description': None,
                       'external_db_name': None,
@@ -71,7 +81,7 @@ for gene in genes:
     if gene.get('display_xref_id') is not None:
 
         # Get display_xref and external db details if 'display_xref_id' exists
-        mysql_cursor.execute(select_display_xref_query.format(gene.get('stable_id')))
+        mysql_cursor.execute(species_display_xref.format(gene.get('stable_id')))
 
         # Add to list
         gene_names.append(mysql_cursor.fetchone())
@@ -92,7 +102,7 @@ for gene in genes:
                 if key == 'Source':
                     gene_name_info['external_db_name'] = value
                 if key == 'Acc':
-                    gene_name_info['xref_primary_id'] = value
+                    gene_name_info['xref_primary_acc'] = value
 
         # Add to list
         gene_names.append(gene_name_info)
