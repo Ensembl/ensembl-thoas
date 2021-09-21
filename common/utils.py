@@ -490,7 +490,7 @@ def format_region(gene):
         "code": safe_get("code", gene),
         "topology": safe_get("topology", gene),
         "so_term": safe_get("so_term", gene),
-        "length": int(safe_get("length", gene))
+        "length": safe_int(safe_get("length", gene))
     }
 
 
@@ -499,6 +499,10 @@ def safe_get(val, dictionary):
         return dictionary[val]
     except KeyError as ke:
         return None
+
+
+def safe_int(string):
+    return int(string) if string is not None else None
 
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
