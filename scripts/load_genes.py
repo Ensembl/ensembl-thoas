@@ -186,7 +186,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
 
             # Add region.
             # TODO I am assuming here that the region of a transcript is the same as the region of its gene - verify this
-            region_buffer.append(common.utils.format_region(gene))
+            region_buffer.append(common.utils.format_region(gene, genome["id"]))
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)

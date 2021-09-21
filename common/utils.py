@@ -483,11 +483,11 @@ def format_protein_domains(protein_features):
     return domains
 
 
-def format_region(gene):
+def format_region(gene, genome_id):
     # TODO these are placeholders, none of these except name are actually populated on the gene json
     return {
-        "type": "region",
-        "stable_id": get_stable_region_id(gene["seq_region_name"], gene['id']),
+        "type": "Region",
+        "stable_id": get_stable_region_id(gene["seq_region_name"], genome_id),
         "name": gene["seq_region_name"],
         "code": safe_get("code", gene),
         "topology": safe_get("topology", gene),
