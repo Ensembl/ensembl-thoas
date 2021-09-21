@@ -7,8 +7,8 @@ interface ValueSetMetadata {
 
 interface XrefMetadata {
 	accession_id: String!
-	value: String!
-	url: String!
+	value: String
+	url: String
 	source: ExternalDB!
 }
 
@@ -78,8 +78,12 @@ type GeneBiotypeMetadata {
 
 type GeneNameMetadata implements XrefMetadata {
 	accession_id: String!
-	value: String!
-	url: String!
+
+	# Temp solution: Not nullable because some xrefs doesnt have xref description eg: TraesCS1D02G435500
+	value: String
+
+	# Temp solution: Not nullable because URLs will be missing for some genes
+	url: String
 	source: ExternalDB!
 }
 
