@@ -28,7 +28,7 @@ lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
-    Create indexes for searching    useful things on genes, transcripts etc.
+    Create indexes for searching useful things on genes, transcripts etc. and enforcing uniqueness
     '''
     collection = mongo_client.collection()
     collection.create_index([
@@ -62,6 +62,9 @@ def create_index(mongo_client):
         ('genome_id', pymongo.ASCENDING),
         ('protein_id', pymongo.ASCENDING)
     ], name='protein_fk')
+    collection.create_index([
+        ('stable_region_id', pymongo.ASCENDING)
+    ], unique=True)
 
 
 def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
