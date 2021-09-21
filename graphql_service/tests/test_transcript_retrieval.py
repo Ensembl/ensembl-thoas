@@ -45,6 +45,11 @@ async def test_transcript_retrieval(snapshot):
                     code
                 }
             }
+            gene {
+                stable_id
+                unversioned_stable_id
+                symbol
+            }
             product_generating_contexts {
                 product_type
                 cds {

@@ -139,6 +139,18 @@ async def resolve_transcript_pgc(transcript, info):
         pgcs.append(pgc)
     return pgcs
 
+@TRANSCRIPT_TYPE.field('gene')
+async def resolve_transcript_gene(transcript, info):
+    'Use a DataLoader to get the parent gene of a transcript'
+    query = {
+        'type': 'Gene',
+        'genome_id': transcript['genome_id'],
+        'stable_id': transcript['gene']
+    }
+    collection = info.context['mongo_db']
+    gene = collection.find_one(query)
+    return gene
+
 # Note that this kind of hard boundary search is not often appropriate for
 # genomics. Most usefully we will want any entities overlapping this range
 # rather than entities entirely within the range
@@ -218,6 +230,9 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 @PGC_TYPE.field('product')
 async def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
+
+    if pgc['product_id'] is None:
+        return
     loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
     products = await loader.load(
         key=pgc['product_id']

@@ -28,6 +28,11 @@ snapshots['test_transcript_splicing 1'] = {
 
 snapshots['test_transcript_retrieval 1'] = {
     'transcript': {
+        'gene': {
+            'stable_id': 'ENSG00000139618.15',
+            'symbol': 'BRCA2',
+            'unversioned_stable_id': 'ENSG00000139618'
+        },
         'product_generating_contexts': [
             {
                 'cds': {

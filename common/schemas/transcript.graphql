@@ -15,6 +15,7 @@ type Transcript {
   spliced_exons: [SplicedExon!]!
   introns: [Intron!]!
   metadata: TranscriptMetadata!
+  gene: Gene!
 }
 
 type CDS {
@@ -64,7 +65,7 @@ type Intron {
 }
 
 type ProductGeneratingContext {
-  product_type: String!
+  product_type: String
   default: Boolean!
   cds: CDS
   five_prime_utr: UTR

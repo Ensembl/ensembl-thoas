@@ -269,8 +269,13 @@ def format_transcript(
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
-        'metadata' : tr_metadata_info[transcript["id"]]
+        'metadata': tr_metadata_info[transcript['id']]
     }
+
+    # Insert multiple product handling here when we know what it will look like
+    # Pick the first to be default
+    defaults = [False] * (len(transcript['translations']) - 1)
+    defaults.append(True)
 
     # Now for the tricky stuff around CDS
     if transcript['id'] in cds_info:
@@ -279,13 +284,10 @@ def format_transcript(
         cds_start = cds_info[transcript['id']]['start']
         cds_end = cds_info[transcript['id']]['end']
         spliced_length = cds_info[transcript['id']]['spliced_length']
+        cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'],
+                                                           sequence_type=refget.CDS)
 
-        # Insert multiple product handling here when we know what it will look like
-        # Pick the first to be default
-        defaults = [False] * (len(transcript['translations']) - 1)
-        defaults.append(True)
         for translation in transcript['translations']:
-            cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'], sequence_type=refget.CDS)
             new_transcript['product_generating_contexts'].append(
                 {
                     'product_type': 'Protein',  # probably
@@ -313,6 +315,21 @@ def format_transcript(
                     'cdna': common.utils.format_cdna(transcript=transcript, refget=refget)
                 }
             )
+    # cds_info has a list of all the coding transcripts. If not in that list, it is a non-coding transcript
+    elif transcript['exons']:
+        new_transcript['product_generating_contexts'].append(
+            {
+                'product_type': None,
+                '5_prime_utr': None,
+                '3_prime_utr': None,
+                'cds': None,
+                'product_id': None,
+                'phased_exons': [],
+                # We'll know default later when it becomes relevant
+                'default': defaults.pop(),
+                'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, non_coding = True)
+            }
+        )
 
     return new_transcript
 
