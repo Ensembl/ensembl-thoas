@@ -62,9 +62,6 @@ def create_index(mongo_client):
         ('genome_id', pymongo.ASCENDING),
         ('protein_id', pymongo.ASCENDING)
     ], name='protein_fk')
-    collection.create_index([
-        ('stable_region_id', pymongo.ASCENDING)
-    ], unique=True)
 
 
 def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
@@ -194,7 +191,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
-            region_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
+            region_buffer = common.utils.flush_buffer(mongo_client, gene_buffer, upsert=True)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:
