@@ -96,9 +96,8 @@ def get_stable_id(iid, version):
     return stable_id
 
 
-# TODO check if this is a good id
-def get_stable_region_id(region_name, genome_id, version=None):
-    return f'{region_name}.{genome_id}.{str(version)}' if version else f'{region_name}.{genome_id}'
+def get_region_id(region_name, genome_id):
+    return f'{genome_id}_{region_name}'
 
 
 def format_cross_refs(xrefs):
@@ -166,10 +165,7 @@ def format_slice(region_name, default_region, strand, assembly,
     end[int]: End coordinate
     '''
     return {
-        'region': {
-            'name': get_stable_region_id(region_name, genome_id),
-            'assembly': assembly
-        },
+        'region_id': get_region_id(region_name, genome_id),
         'location': {
             'start': int(start),
             'end': int(end),
@@ -183,7 +179,7 @@ def format_slice(region_name, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, assembly, genome_id):
+def format_exon(exon, region_name, region_strand, default_region, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -203,7 +199,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly, geno
         'so_term': 'exon',
         'slice': format_slice(
             region_name, default_region, region_strand,
-            assembly, exon['start'], exon['end'], genome_id
+            exon['start'], exon['end'], genome_id
         )
     }
 
@@ -483,16 +479,17 @@ def format_protein_domains(protein_features):
     return domains
 
 
-def format_region(gene, genome_id):
+def format_region(gene, genome_id, assembly):
     # TODO these are placeholders, none of these except name are actually populated on the gene json
     return {
         "type": "Region",
-        "stable_region_id": get_stable_region_id(gene["seq_region_name"], genome_id),
+        "region_id": get_region_id(gene["seq_region_name"], genome_id),
         "name": gene["seq_region_name"],
         "code": safe_get("code", gene),
         "topology": safe_get("topology", gene),
         "so_term": safe_get("so_term", gene),
-        "length": safe_int(safe_get("length", gene))
+        "length": safe_int(safe_get("length", gene)),
+        "assembly": assembly
     }
 
 
@@ -507,17 +504,14 @@ def safe_int(string):
     return int(string) if string is not None else None
 
 
-def flush_buffer(mongo_client, buffer, flush_threshold=1000, upsert=False):
+def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     'Check if a buffer needs flushing, and insert documents when it does'
     if len(buffer) > flush_threshold:
         print('Pushing buffer into Mongo')
         # pymongo can generate size errors, but so can the server which gives
         # rise to a second kind of exception.
         try:
-            if upsert:
-                mongo_client.collection.update_many(buffer, upsert=True)
-            else:
-                mongo_client.collection().insert_many(buffer)
+            mongo_client.collection().insert_many(buffer)
         except pymongo.errors.DocumentTooLarge:
             print(
                 'One of these borked the pipeline for {}: {}'.format(

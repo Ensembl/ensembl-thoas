@@ -23,6 +23,8 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
+SLICE_TYPE = ObjectType('Slice')
+
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, byId=None):
@@ -222,15 +224,15 @@ async def resolve_product_by_pgc(pgc, info):
     return products[0]
 
 
-@GENE_TYPE.field('region')
-@TRANSCRIPT_TYPE.field('region')
-async def resolve_region(feature, info):
-    'Fetch a region that is referenced by a feature'
-    if feature['region'] is None:
+@SLICE_TYPE.field('region')
+async def resolve_region(slc, info):
+    'Fetch a region that is referenced by a slice'
+    if slc['region'] is None:
         return
-    loader = info.context['data_loader'].region_dataloader(feature['genome_id'])
+    loader = info.context['data_loader'].region_dataloader()
+    print(slc["region"]["name"])
     regions = await loader.load(
-        key=feature["region"]
+        key=slc["region"]["name"]
     )
     # Data loader returns a list because most data-loads are one-many
     # ID mappings

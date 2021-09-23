@@ -62,6 +62,7 @@ def create_index(mongo_client):
         ('genome_id', pymongo.ASCENDING),
         ('protein_id', pymongo.ASCENDING)
     ], name='protein_fk')
+    # TODO create an index for region_id??
 
 
 def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
@@ -184,14 +185,14 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     refget=refget)
                             )
 
-            # Add region.
             # TODO I am assuming here that the region of a transcript is the same as the region of its gene - verify this
-            region_buffer.append(common.utils.format_region(gene, genome["id"]))
+            region = common.utils.format_region(gene, genome["id"], assembly)
+            if region not in region_buffer:
+                region_buffer.append(region)
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
-            region_buffer = common.utils.flush_buffer(mongo_client, gene_buffer, upsert=True)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:
@@ -200,6 +201,12 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
         mongo_client.collection().insert_many(transcript_buffer)
     if len(protein_buffer) > 0:
         mongo_client.collection().insert_many(protein_buffer)
+
+    # The number of regions is expected to be small
+    MAX_REGIONS = 1000
+    if len(region_buffer) > MAX_REGIONS:
+        raise ValueError(f"The number of regions was {len(region_buffer)}, exceeding threshold of {MAX_REGIONS}")
+    common.utils.flush_buffer(mongo_client, region_buffer)
 
 
 def format_transcript(

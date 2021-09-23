@@ -70,14 +70,11 @@ class DataLoaderCollection():
         Load regions by ID
         '''
         query = {
-            'type': 'region',
-            'genome_id': self.genome_id,
-            'Region': {
-                '$in': keys
-            }
+            'type': 'Region',
+            'region_id': keys[0] # TODO find out why keys is being turned into a list
         }
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output('region', keys, data)
+        return self.collate_dataloader_output('region_id', keys, data)
 
 
     @staticmethod
@@ -121,10 +118,9 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    def region_dataloader(self, genome_id, max_batch_size=1000):
+    def region_dataloader(self, max_batch_size=1000):
         'Factory for DataLoaders for Regions'
 
-        self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_region_load,
             max_batch_size=max_batch_size
