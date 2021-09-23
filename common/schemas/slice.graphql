@@ -27,6 +27,16 @@ type Region {
   assembly: Assembly! #TODO confirm this
 }
 
+type Assembly {
+  default: Boolean!
+  id: String!
+  name: String!
+  accession_id: String!
+  accessioning_body: String!
+  species: String!
+}
+
+
 enum RegionCode {
   CHROMOSOME
   PLASMID

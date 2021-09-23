@@ -227,12 +227,11 @@ async def resolve_product_by_pgc(pgc, info):
 @SLICE_TYPE.field('region')
 async def resolve_region(slc, info):
     'Fetch a region that is referenced by a slice'
-    if slc['region'] is None:
+    if slc['region_id'] is None:
         return
     loader = info.context['data_loader'].region_dataloader()
-    print(slc["region"]["name"])
     regions = await loader.load(
-        key=slc["region"]["name"]
+        key=slc["region_id"]
     )
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
