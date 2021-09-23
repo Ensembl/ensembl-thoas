@@ -92,23 +92,21 @@ def test_slice_formatting():
     '''
     Ensure slices are correctly generated from parameters
     '''
-    slice_dict = format_slice('test_name', True, 1, 'GRCh38', 100, 200, 'test_genome')
+    slice_dict = format_slice('test_name', True, 1, 100, 200, 'test_genome')
 
     assert slice_dict['region']['region_id'] == 'test_genome_test_name'
     assert slice_dict['strand']['code'] == 'forward'
     assert slice_dict['strand']['value'] == 1
-    assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict
     assert slice_dict['default'] is True
 
-    slice_dict = format_slice('test_name', False, -1, 'GRCh38', 100, 200, 'test_genome')
+    slice_dict = format_slice('test_name', False, -1, 100, 200, 'test_genome')
 
     assert slice_dict['region']['region_id'] == 'test_genome_test_name'
     assert slice_dict['strand']['code'] == 'reverse'
     assert slice_dict['strand']['value'] == -1
-    assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict['default'] is False

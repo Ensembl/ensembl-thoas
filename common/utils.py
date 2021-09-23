@@ -152,7 +152,7 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, default_region, strand, assembly,
+def format_slice(region_name, default_region, strand,
                  start, end, genome_id):
     '''
     Creates regular slices with locations and regions
@@ -278,7 +278,7 @@ def infer_introns(exons, transcript):
             'index': index,
             'checksum': None,
             'slice': {
-                'region': exon_one['slice']['region'],
+                'region': exon_one['slice']['region_id'],
                 'location': {
                     'start': intron_start,
                     'end': intron_end,
