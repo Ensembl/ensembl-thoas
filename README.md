@@ -29,6 +29,12 @@ collection =
 
 GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP
 
+If you're developing in PyCharm, you will probably find it useful to create a run 
+configuration so that you can use the debugger.  Create a run configuration that 
+looks like this:
+
+![Uvicorn run config](thoas_run_config.png)
+
 ## Testing and development
 
 Navigate to the root of this repository and set this environment variable:
