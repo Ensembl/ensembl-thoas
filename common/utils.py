@@ -198,7 +198,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly, geno
         'version': exon['version'],
         'so_term': 'exon',
         'slice': format_slice(
-            region_name, default_region, region_strand, assembly,
+            region_name, default_region, region_strand,
             exon['start'], exon['end'], genome_id
         )
     }
@@ -278,7 +278,7 @@ def infer_introns(exons, transcript):
             'index': index,
             'checksum': None,
             'slice': {
-                'region': exon_one['slice']['region_id'],
+                'region_id': exon_one['slice']['region_id'],
                 'location': {
                     'start': intron_start,
                     'end': intron_end,
