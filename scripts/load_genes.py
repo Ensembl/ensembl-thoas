@@ -187,6 +187,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
             # TODO I am assuming here that the region of a transcript is the same as the region of its gene - verify this
             region = common.utils.format_region(gene, genome["id"], assembly)
             if region not in region_buffer:
+                print(f"Adding new region: {region}")
                 region_buffer.append(region)
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -205,6 +206,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     MAX_REGIONS = 1000
     if len(region_buffer) > MAX_REGIONS:
         raise ValueError(f"The number of regions was {len(region_buffer)}, exceeding threshold of {MAX_REGIONS}")
+    print(f"The number of regions is {len(region_buffer)}")
     common.utils.flush_buffer(mongo_client, region_buffer)
 
 
