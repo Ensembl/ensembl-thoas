@@ -179,7 +179,7 @@ def format_slice(region_name, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, genome_id):
+def format_exon(exon, region_name, region_strand, default_region, assembly, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -198,7 +198,7 @@ def format_exon(exon, region_name, region_strand, default_region, genome_id):
         'version': exon['version'],
         'so_term': 'exon',
         'slice': format_slice(
-            region_name, default_region, region_strand,
+            region_name, default_region, region_strand, assembly,
             exon['start'], exon['end'], genome_id
         )
     }
