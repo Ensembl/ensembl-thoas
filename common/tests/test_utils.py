@@ -94,7 +94,7 @@ def test_slice_formatting():
     '''
     slice_dict = format_slice('test_name', True, 1, 100, 200, 'test_genome')
 
-    assert slice_dict['region']['region_id'] == 'test_genome_test_name'
+    assert slice_dict['region_id'] == 'test_genome_test_name'
     assert slice_dict['strand']['code'] == 'forward'
     assert slice_dict['strand']['value'] == 1
     assert slice_dict['location']['start'] == 100
@@ -104,7 +104,7 @@ def test_slice_formatting():
 
     slice_dict = format_slice('test_name', False, -1, 100, 200, 'test_genome')
 
-    assert slice_dict['region']['region_id'] == 'test_genome_test_name'
+    assert slice_dict['region_id'] == 'test_genome_test_name'
     assert slice_dict['strand']['code'] == 'reverse'
     assert slice_dict['strand']['value'] == -1
     assert slice_dict['location']['start'] == 100
@@ -134,7 +134,7 @@ def test_exon_formatting():
     assert exon['stable_id'] == 'ENSE123.1'
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
-    assert exon['slice']['region']['region_id'] == 'test_genome_chr1'
+    assert exon['slice']['region_id'] == 'test_genome_chr1'
     # forego further enumeration of slice properties
 
 
@@ -367,9 +367,7 @@ def test_infer_introns():
                     'start': 10,
                     'end': 30
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -382,9 +380,7 @@ def test_infer_introns():
                     'start': 40,
                     'end': 60
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -397,9 +393,7 @@ def test_infer_introns():
                     'start': 90,
                     'end': 100
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -413,9 +407,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 31,
                     'end': 39,
@@ -437,9 +429,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 2,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 61,
                     'end': 89,
@@ -475,9 +465,7 @@ def test_infer_introns():
                     'start': 90,
                     'end': 100
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -490,9 +478,7 @@ def test_infer_introns():
                     'start': 40,
                     'end': 60
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -505,9 +491,7 @@ def test_infer_introns():
                     'start': 10,
                     'end': 30
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -520,9 +504,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 61,
                     'end': 89,
@@ -544,9 +526,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 2,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 31,
                     'end': 39,

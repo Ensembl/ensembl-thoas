@@ -487,7 +487,6 @@ def format_region(gene, genome_id, assembly):
         "name": gene["seq_region_name"],
         "code": safe_get("code", gene),
         "topology": safe_get("topology", gene),
-        "so_term": safe_get("so_term", gene),
         "length": safe_int(safe_get("length", gene)),
         "assembly": assembly
     }

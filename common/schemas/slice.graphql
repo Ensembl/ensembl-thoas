@@ -22,9 +22,8 @@ type Region {
   name: String!
   code: RegionCode!
   topology: RegionTopology!
-  so_term: String!
   length: Int!
-  assembly: Assembly! #TODO confirm this
+  assembly: Assembly!
 }
 
 type Assembly {
