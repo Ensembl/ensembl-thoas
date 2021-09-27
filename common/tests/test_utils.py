@@ -21,6 +21,9 @@ from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
 
+import json
+
+
 def test_stable_id():
     '''
     Ensure correct formatting depending on arguments
@@ -110,6 +113,24 @@ def test_slice_formatting():
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict['default'] is False
+
+
+def test_format_region():
+    '''
+    Ensure that regions are correctly created from the gene
+    '''
+    test_gene = {
+        "seq_region_name": "13",
+        "assembly": "test_assembly"
+    }
+    region = format_region(test_gene, "test_genome_id", "test_assembly")
+
+    assert region == {
+        "type": "Region",
+        "region_id": "test_genome_id_13",
+        "name": "13",
+        "assembly": "test_assembly"
+    }
 
 
 def test_exon_formatting():
