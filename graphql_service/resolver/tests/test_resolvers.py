@@ -92,6 +92,16 @@ def fixture_transcript_data():
     return Info(collection)
 
 
+@pytest.fixture(name='region_data')
+def fixture_region_data():
+    collection = mongomock.MongoClient().db.collection
+    collection.insert_many([
+        {"type": "Region", "region_id": "plasmodium_falciparum_GCA_000002765_2_13", "name": "13"},
+        {"type": "Region", "region_id": "plasmodium_falciparum_GCA_000002765_2_14", "name": "14"}
+    ])
+    return Info(collection)
+
+
 @pytest.fixture(name='slice_data')
 def fixture_slice_data():
     '''
@@ -275,6 +285,39 @@ def test_resolve_slice(slice_data):
     )
     for hit in result:
         assert hit['stable_id'] in ['ENSG001.1', 'ENSG002.2']
+
+
+@pytest.mark.asyncio
+async def test_resolve_region_happy_case(region_data):
+    slc = {
+        'region_id': 'plasmodium_falciparum_GCA_000002765_2_13',
+        'location':
+            {
+                'start': 624785,
+                'end': 626011,
+                'length': 1227
+             },
+        'strand':
+            {
+                'code': 'forward',
+                'value': 1
+            },
+        'default': True
+    }
+    result = await model.resolve_region(slc, region_data)
+    assert result['region_id'] == 'plasmodium_falciparum_GCA_000002765_2_13'
+
+
+@pytest.mark.asyncio
+async def test_resolve_region_region_not_exist(region_data):
+    slc = {
+        'region_id': 'some_non_existing_region_id',
+    }
+    result = None
+    with pytest.raises(model.RegionNotFoundError) as region_error:
+        result = await model.resolve_region(slc, region_data)
+    assert not result
+    assert region_error.value.extensions['region_id'] == 'some_non_existing_region_id'
 
 
 def test_url_generation(basic_data):

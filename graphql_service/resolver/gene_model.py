@@ -223,19 +223,24 @@ async def resolve_product_by_pgc(pgc, info):
     # ID mappings
     return products[0]
 
-
 @SLICE_TYPE.field('region')
 async def resolve_region(slc, info):
     'Fetch a region that is referenced by a slice'
     if slc['region_id'] is None:
         return
-    loader = info.context['data_loader'].region_dataloader()
-    regions = await loader.load(
-        key=slc["region_id"]
-    )
-    # Data loader returns a list because most data-loads are one-many
-    # ID mappings
-    return regions[0]
+    region_id = slc['region_id']
+
+    query = {
+        'type': 'Region',
+        'region_id': region_id
+    }
+
+    collection = info.context['mongo_db']
+    result = collection.find_one(query)
+
+    if not result:
+        raise RegionNotFoundError(region_id)
+    return result
 
 
 class GeneNotFoundError(GraphQLError):
@@ -272,4 +277,17 @@ class ProductNotFoundError(GraphQLError):
             f"'{stable_id}' for genome '{genome_id}'"
         self.extensions['stable_id'] = stable_id
         self.extensions['genome_id'] = genome_id
+        super().__init__(message, extensions=self.extensions)
+
+
+class RegionNotFoundError(GraphQLError):
+    '''
+    Custom error to be raised if region is not found
+    '''
+    extensions = {"code": "REGION_NOT_FOUND"}
+
+    def __init__(self, region_id):
+        message = 'Failed to find region with region_id '\
+            f"'{region_id}'"
+        self.extensions['region_id'] = region_id
         super().__init__(message, extensions=self.extensions)
