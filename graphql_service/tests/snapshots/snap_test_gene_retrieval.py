@@ -23,7 +23,11 @@ snapshots['test_gene_retrieval_by_id 1'] = {
                 'start': 32315086
             },
             'region': {
-                'name': '13'
+                'name': '13',
+                'assembly': {
+                    'type': 'Assembly',
+                    'id': 'GRCh38.p13'
+                }
             },
             'strand': {
                 'code': 'forward'

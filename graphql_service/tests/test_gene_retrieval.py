@@ -56,6 +56,10 @@ async def test_gene_retrieval_by_id(snapshot):
         slice {
           region {
             name
+            assembly {
+                type
+                id
+            }
           }
           location {
             start

@@ -24,6 +24,7 @@ type Region {
 }
 
 type Assembly {
+  type: String!
   default: Boolean!
   id: String!
   name: String!
