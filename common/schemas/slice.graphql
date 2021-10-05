@@ -20,7 +20,21 @@ type Location {
 type Region {
   # A large contiguous block of assembled sequence, such as a whole chromosome.
   name: String!
+  length: Int!
+  code: RegionCode!
+  topology: RegionTopology!
   assembly: Assembly!
+}
+
+enum RegionCode {
+  chromosome
+  plasmid
+  scaffold
+}
+
+enum RegionTopology {
+  linear
+  circular
 }
 
 type Assembly {

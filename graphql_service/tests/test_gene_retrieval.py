@@ -56,9 +56,17 @@ async def test_gene_retrieval_by_id(snapshot):
         slice {
           region {
             name
+            code
+            length
+            topology
             assembly {
                 type
+                default
                 id
+                name
+                accession_id
+                accessioning_body
+                species
             }
           }
           location {

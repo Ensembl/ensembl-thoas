@@ -96,10 +96,6 @@ def get_stable_id(iid, version):
     return stable_id
 
 
-def get_region_id(region_name, genome_id):
-    return f'{genome_id}_{region_name}'
-
-
 def format_cross_refs(xrefs):
     '''
     "metadata" is all the things that we do not want to model better
@@ -152,7 +148,7 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, default_region, strand,
+def format_slice(region_name, region_code, default_region, strand,
                  start, end, genome_id):
     '''
     Creates regular slices with locations and regions
@@ -165,7 +161,7 @@ def format_slice(region_name, default_region, strand,
     end[int]: End coordinate
     '''
     return {
-        'region_id': get_region_id(region_name, genome_id),
+        'region_id': f'{genome_id}_{region_name}_{region_code}',
         'location': {
             'start': int(start),
             'end': int(end),
@@ -179,7 +175,7 @@ def format_slice(region_name, default_region, strand,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, assembly, genome_id):
+def format_exon(exon, region_name, region_code, region_strand, default_region, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -198,7 +194,7 @@ def format_exon(exon, region_name, region_strand, default_region, assembly, geno
         'version': exon['version'],
         'so_term': 'exon',
         'slice': format_slice(
-            region_name, default_region, region_strand,
+            region_name, region_code, default_region, region_strand,
             exon['start'], exon['end'], genome_id
         )
     }
@@ -479,11 +475,22 @@ def format_protein_domains(protein_features):
     return domains
 
 
-def format_region(gene, genome_id, assembly):
+def get_genome_id(species_name, accession_id):
+    return '_'.join([species_name, accession_id.replace('.', '_')])
+
+
+def circularity_to_topology(circularity):
+    return "circular" if circularity else "linear"
+
+
+def format_region(region_mysql_result, assembly, species):
     return {
         "type": "Region",
-        "region_id": get_region_id(gene["seq_region_name"], genome_id),
-        "name": gene["seq_region_name"],
+        "region_id": f'{get_genome_id(species, region_mysql_result["accession_id"])}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
+        "name": region_mysql_result["name"],
+        "code": region_mysql_result["code"],
+        "length": region_mysql_result["length"],
+        "topology": circularity_to_topology(region_mysql_result["circularity"]),
         "assembly": assembly
     }
 
