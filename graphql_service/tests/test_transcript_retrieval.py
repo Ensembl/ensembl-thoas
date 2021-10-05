@@ -22,7 +22,7 @@ executable_schema, context = setup_test()
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
     """
-    Test retrieval of a transcript from the grapqhl api by id
+    Test retrieval of a transcript from the graphql api by id
     Gets the expected test result from snapshottest
     """
     query = """{
@@ -35,6 +35,10 @@ async def test_transcript_retrieval(snapshot):
             slice {
                 region {
                     name
+                    assembly {
+                        type
+                        id
+                    }
                 }
                 location {
                     start
@@ -69,6 +73,10 @@ async def test_transcript_retrieval(snapshot):
                         slice {
                             region {
                                 name
+                                assembly {
+                                    type
+                                    id
+                                }
                             }
                             location {
                                 start

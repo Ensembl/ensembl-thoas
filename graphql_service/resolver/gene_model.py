@@ -23,6 +23,8 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
+SLICE_TYPE = ObjectType('Slice')
+
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info, byId=None):
@@ -171,7 +173,7 @@ def query_region(context, feature_type):
     query = {
         'genome_id': context['genome_id'],
         'type': feature_type,
-        'slice.region.name': context['slice.region.name'],
+        'slice.region.name': context['slice.region.name'], # TODO replace this with region_id
         'slice.location.start': {'$gt': context['slice.location.start']},
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
@@ -221,6 +223,25 @@ async def resolve_product_by_pgc(pgc, info):
     # ID mappings
     return products[0]
 
+@SLICE_TYPE.field('region')
+async def resolve_region(slc, info):
+    'Fetch a region that is referenced by a slice'
+    if slc['region_id'] is None:
+        return
+    region_id = slc['region_id']
+
+    query = {
+        'type': 'Region',
+        'region_id': region_id
+    }
+
+    collection = info.context['mongo_db']
+    result = collection.find_one(query)
+
+    if not result:
+        raise RegionNotFoundError(region_id)
+    return result
+
 
 class GeneNotFoundError(GraphQLError):
     '''
@@ -256,4 +277,17 @@ class ProductNotFoundError(GraphQLError):
             f"'{stable_id}' for genome '{genome_id}'"
         self.extensions['stable_id'] = stable_id
         self.extensions['genome_id'] = genome_id
+        super().__init__(message, extensions=self.extensions)
+
+
+class RegionNotFoundError(GraphQLError):
+    '''
+    Custom error to be raised if region is not found
+    '''
+    extensions = {"code": "REGION_NOT_FOUND"}
+
+    def __init__(self, region_id):
+        message = 'Failed to find region with region_id '\
+            f"'{region_id}'"
+        self.extensions['region_id'] = region_id
         super().__init__(message, extensions=self.extensions)
