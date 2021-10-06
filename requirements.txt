@@ -11,3 +11,4 @@ snapshottest
 requests
 uvicorn
 psycopg2-binary
+mysql-connector-python
