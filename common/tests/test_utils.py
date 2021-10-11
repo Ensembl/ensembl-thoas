@@ -95,9 +95,9 @@ def test_slice_formatting():
     '''
     Ensure slices are correctly generated from parameters
     '''
-    slice_dict = format_slice('test_name', True, 1, 100, 200, 'test_genome')
+    slice_dict = format_slice('test_name', 'test_code', True, 1, 100, 200, 'test_genome')
 
-    assert slice_dict['region_id'] == 'test_genome_test_name'
+    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
     assert slice_dict['strand']['code'] == 'forward'
     assert slice_dict['strand']['value'] == 1
     assert slice_dict['location']['start'] == 100
@@ -105,9 +105,9 @@ def test_slice_formatting():
     assert slice_dict
     assert slice_dict['default'] is True
 
-    slice_dict = format_slice('test_name', False, -1, 100, 200, 'test_genome')
+    slice_dict = format_slice('test_name', 'test_code', False, -1, 100, 200, 'test_genome')
 
-    assert slice_dict['region_id'] == 'test_genome_test_name'
+    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
     assert slice_dict['strand']['code'] == 'reverse'
     assert slice_dict['strand']['value'] == -1
     assert slice_dict['location']['start'] == 100
@@ -119,17 +119,25 @@ def test_format_region():
     '''
     Ensure that regions are correctly created from the gene
     '''
-    test_gene = {
-        "seq_region_name": "13",
-        "assembly": "test_assembly"
+    test_mysql_result = {
+        'seq_region_id': 559,
+        'length': 4641652,
+        'name': 'test_name',
+        'code': 'test_code',
+        'circularity': '1',
+        'species_name': 'test_species',
+        'accession_id': 'GCA_000005845.2'
     }
-    region = format_region(test_gene, "test_genome_id", "test_assembly")
+    region = format_region(test_mysql_result, "test_assembly", "test_species")
 
     assert region == {
         "type": "Region",
-        "region_id": "test_genome_id_13",
-        "name": "13",
-        "assembly": "test_assembly"
+        "region_id": "test_species_GCA_000005845_2_test_name_test_code",
+        "name": "test_name",
+        "assembly": "test_assembly",
+        "code": "test_code",
+        "length": 4641652,
+        "topology": "circular"
     }
 
 
@@ -145,9 +153,9 @@ def test_exon_formatting():
             'end': 200,
         },
         region_name='chr1',
+        region_code='test_code',
         region_strand=1,
         default_region=True,
-        assembly='GRCh38',
         genome_id='test_genome'
     )
 
@@ -155,7 +163,7 @@ def test_exon_formatting():
     assert exon['stable_id'] == 'ENSE123.1'
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
-    assert exon['slice']['region_id'] == 'test_genome_chr1'
+    assert exon['slice']['region_id'] == 'test_genome_chr1_test_code'
     # forego further enumeration of slice properties
 
 

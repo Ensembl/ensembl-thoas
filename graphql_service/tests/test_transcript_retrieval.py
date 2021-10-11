@@ -35,10 +35,6 @@ async def test_transcript_retrieval(snapshot):
             slice {
                 region {
                     name
-                    assembly {
-                        type
-                        id
-                    }
                 }
                 location {
                     start
@@ -73,10 +69,6 @@ async def test_transcript_retrieval(snapshot):
                         slice {
                             region {
                                 name
-                                assembly {
-                                    type
-                                    id
-                                }
                             }
                             location {
                                 start

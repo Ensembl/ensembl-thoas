@@ -76,7 +76,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     gene_buffer = []
     transcript_buffer = []
     protein_buffer = []
-    region_buffer = []
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -137,6 +136,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 'name': re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
                 'slice': common.utils.format_slice(
                     region_name=gene['seq_region_name'],
+                    region_code=gene['coord_system']['name'],
                     default_region=default_region,
                     strand=int(gene['strand']),
                     start=int(gene['start']),
@@ -183,10 +183,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                                     refget=refget)
                             )
 
-            region = common.utils.format_region(gene, genome["id"], assembly)
-            if region not in region_buffer:
-                region_buffer.append(region)
-
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
@@ -198,12 +194,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
         mongo_client.collection().insert_many(transcript_buffer)
     if len(protein_buffer) > 0:
         mongo_client.collection().insert_many(protein_buffer)
-
-    # The number of regions is expected to be small
-    MAX_REGIONS = 1000
-    if len(region_buffer) > MAX_REGIONS:
-        raise ValueError(f"The number of regions was {len(region_buffer)}, exceeding threshold of {MAX_REGIONS}")
-    mongo_client.collection().insert_many(region_buffer)
 
 
 def format_transcript(
@@ -234,9 +224,9 @@ def format_transcript(
             common.utils.format_exon(
                 exon,
                 region_name=region_name,
+                region_code=exon['coord_system']['name'],
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly['id'],
                 genome_id=genome_id
             )
         )
@@ -270,14 +260,15 @@ def format_transcript(
         ),
         'slice': common.utils.format_slice(
             region_name=region_name,
+            region_code=transcript['coord_system']['name'],
             default_region=default_region,
             strand=int(transcript['strand']),
             start=int(transcript['start']),
             end=int(transcript['end']),
             genome_id=genome_id
         ),
-                'genome_id': genome_id,
-                'external_references': transcript_xrefs,
+        'genome_id': genome_id,
+        'external_references': transcript_xrefs,
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),

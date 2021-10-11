@@ -296,6 +296,9 @@ def build_region():
         "type": "Region",
         "region_id": "homo_sapiens_GCA_000001405_28_13",
         "name": "13",
+        "length": 114364328,
+        "code": "chromosome",
+        "topology": "linear",
         "assembly": {
             "type": "Assembly",
             "default": True,

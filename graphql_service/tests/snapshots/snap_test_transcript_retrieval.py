@@ -55,10 +55,6 @@ snapshots['test_transcript_retrieval 1'] = {
                                 },
                                 'region': {
                                     'name': '13',
-                                    'assembly': {
-                                        'type': 'Assembly',
-                                        'id': 'GRCh38.p13'
-                                    }
                                 },
                                 'strand': {
                                     'code': 'forward'
@@ -79,11 +75,7 @@ snapshots['test_transcript_retrieval 1'] = {
                                     'start': 32375343
                                 },
                                 'region': {
-                                    'name': '13',
-                                    'assembly': {
-                                        'type': 'Assembly',
-                                        'id': 'GRCh38.p13'
-                                    }
+                                    'name': '13'
                                 },
                                 'strand': {
                                     'code': 'forward'
@@ -105,11 +97,7 @@ snapshots['test_transcript_retrieval 1'] = {
                 'start': 32315474
             },
             'region': {
-                'name': '13',
-                'assembly': {
-                    'type': 'Assembly',
-                    'id': 'GRCh38.p13'
-                }
+                'name': '13'
             },
             'strand': {
                 'code': 'forward'
