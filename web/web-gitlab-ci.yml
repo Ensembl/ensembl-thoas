@@ -31,12 +31,10 @@ variables:
 
   script:
     - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
-    - echo $CI_DEPLOY_FREEZE
-    - echo "DEPLOY FREEZE JOB COMPLETED"
-    # - kubectl apply -f web/k8s/thoas_deployment.yaml
+    - kubectl apply -f web/k8s/thoas_deployment.yaml
   
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "freeze-web-deploy"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "master"'
 
 # Run a suite of unit and integration tests
 test:
