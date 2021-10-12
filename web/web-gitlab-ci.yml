@@ -34,7 +34,7 @@ variables:
     - kubectl apply -f web/k8s/thoas_deployment.yaml
   
   rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "freeze-web-deploy"
 
 # Run a suite of unit and integration tests
 test:
