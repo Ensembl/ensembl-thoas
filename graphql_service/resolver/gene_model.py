@@ -42,7 +42,7 @@ def resolve_gene(_, info, byId=None):
     collection = info.context['mongo_db']
     result = collection.find_one(query)
     if not result:
-        raise FeatureNotFoundError(byId=byId, feature_type="gene")
+        raise GeneNotFoundError(byId=byId)
     return result
 
 @QUERY_TYPE.field('genes_by_symbol')
@@ -61,7 +61,7 @@ def resolve_genes(_, info, bySymbol=None):
     #unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(list(result)) == 0:
-        raise FeatureNotFoundError(bySymbol=bySymbol, feature_type="gene")
+        raise GeneNotFoundError(bySymbol=bySymbol)
     return list(result)
 
 
@@ -99,7 +99,7 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
     if not transcript:
-        raise FeatureNotFoundError(bySymbol=bySymbol, byId=byId, feature_type="transcript")
+        raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
     return transcript
 
 @GENE_TYPE.field('transcripts')
@@ -268,6 +268,16 @@ class FeatureNotFoundError(GraphQLError):
             self.extensions['stable_id'] = stable_id
             self.extensions['genome_id'] = genome_id
         super().__init__(message, extensions=self.extensions)
+
+
+class GeneNotFoundError(FeatureNotFoundError):
+    def __init__(self, bySymbol=None, byId=None):
+        super().__init__(bySymbol, byId, feature_type="gene")
+
+
+class TranscriptNotFoundError(FeatureNotFoundError):
+    def __init__(self, bySymbol=None, byId=None):
+        super().__init__(bySymbol, byId, feature_type="transcript")
 
 
 class ProductNotFoundError(GraphQLError):

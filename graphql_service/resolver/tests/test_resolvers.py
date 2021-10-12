@@ -157,7 +157,7 @@ def test_resolve_gene(basic_data):
     assert result['symbol'] == 'banana'
     result = None
 
-    with pytest.raises(model.FeatureNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.GeneNotFoundError) as feature_not_found_error:
         result = model.resolve_gene(
             None,
             basic_data,
@@ -193,7 +193,7 @@ def test_resolve_gene_by_symbol(basic_data):
     assert result[0]['symbol'] == 'banana'
     result = None
 
-    with pytest.raises(model.FeatureNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.GeneNotFoundError) as feature_not_found_error:
         result = model.resolve_genes(
             None,
             basic_data,
@@ -218,7 +218,7 @@ def test_resolve_transcript_by_id(transcript_data):
 
 def test_resolve_transcript_by_id_not_found(transcript_data):
     result = None
-    with pytest.raises(model.FeatureNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.TranscriptNotFoundError) as feature_not_found_error:
         result = model.resolve_transcript(
             None,
             transcript_data,
@@ -242,7 +242,7 @@ def test_resolve_transcript_by_symbol(transcript_data):
 
 def test_resolve_transcript_by_symbol_not_found(transcript_data):
     result = None
-    with pytest.raises(model.FeatureNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.TranscriptNotFoundError) as feature_not_found_error:
         result = model.resolve_transcript(
             None,
             transcript_data,
