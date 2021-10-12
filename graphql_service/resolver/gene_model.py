@@ -42,7 +42,7 @@ def resolve_gene(_, info, byId=None):
     collection = info.context['mongo_db']
     result = collection.find_one(query)
     if not result:
-        raise GeneNotFoundError(byId=byId)
+        raise FeatureNotFoundError(byId=byId, feature_type="gene")
     return result
 
 @QUERY_TYPE.field('genes_by_symbol')
@@ -61,7 +61,7 @@ def resolve_genes(_, info, bySymbol=None):
     #unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(list(result)) == 0:
-        raise GeneNotFoundError(bySymbol=bySymbol)
+        raise FeatureNotFoundError(bySymbol=bySymbol, feature_type="gene")
     return list(result)
 
 
@@ -87,7 +87,7 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         'type': 'Transcript'
     }
     if bySymbol:
-        query['name'] = bySymbol['symbol']
+        query['symbol'] = bySymbol['symbol']
         query['genome_id'] = bySymbol['genome_id']
     if byId:
         query['$or'] = [
@@ -98,6 +98,8 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
 
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
+    if not transcript:
+        raise FeatureNotFoundError(bySymbol=bySymbol, byId=byId, feature_type="transcript")
     return transcript
 
 @GENE_TYPE.field('transcripts')
@@ -243,24 +245,25 @@ async def resolve_region(slc, info):
     return result
 
 
-class GeneNotFoundError(GraphQLError):
+class FeatureNotFoundError(GraphQLError):
     '''
-    Custom error to be raised if gene is not found
+    Custom error to be raised if gene or transcript is not found
     '''
-    extensions = {"code": "GENE_NOT_FOUND"}
-    def __init__(self, bySymbol=None, byId=None):
+    def __init__(self, bySymbol=None, byId=None, feature_type=None):
         message = None
+        code = f'{feature_type}_NOT_FOUND'.upper()
+        self.extensions = {'code': code}
         if bySymbol:
             symbol = bySymbol['symbol']
             genome_id = bySymbol['genome_id']
-            message = 'Failed to find gene with symbol '\
+            message = f'Failed to find {feature_type} with symbol '\
                      f"'{symbol}' for genome '{genome_id}'"
             self.extensions['symbol'] = symbol
             self.extensions['genome_id'] = genome_id
         if byId:
             stable_id = byId['stable_id']
             genome_id = byId['genome_id']
-            message = 'Failed to find gene with stable id '\
+            message = f'Failed to find {feature_type} with stable id '\
                 f"'{stable_id}' for genome '{genome_id}'"
             self.extensions['stable_id'] = stable_id
             self.extensions['genome_id'] = genome_id
