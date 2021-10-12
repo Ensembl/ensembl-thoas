@@ -32,6 +32,9 @@ variables:
   script:
     - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
     - kubectl apply -f web/k8s/thoas_deployment.yaml
+  
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
 
 # Run a suite of unit and integration tests
 test:
@@ -54,53 +57,39 @@ deploy:
   extends: .deploy
   environment:
     name: wp-hx-dev-grp
-  only:
-    - master
 
 # deploy to staging at WP-HX
 staging:wp-hx:
   extends: .deploy
   environment:
     name: wp-hx-staging
-  only:
-    - master
 
 # deploy to staging at WP-HH
 staging:wp-hh:
   extends: .deploy
   environment:
     name: wp-hh-staging
-  only:
-    - master
 
 # deploy to internal at WP-HX
 internal:wp-hx:
   extends: .deploy
   environment:
     name: wp-hx-internal
-  only:
-    - master
 
 # deploy to internal at WP-HH
 internal:wp-hh:
   extends: .deploy
   environment:
     name: wp-hh-internal
-  only:
-    - master
     
  # deploy to live at WP-HX
 live:wp-hx:
   extends: .deploy
   environment:
     name : wp-hx-live
-  only:
-    - master
 
 # deploy to live at WP-HL
 live:wp-hl:
   extends: .deploy
   environment:
     name : wp-hh-live
-  only:
-    - master
