@@ -47,6 +47,9 @@ test:
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
     - pytest
+  after_script:
+    - echo $CI_DEPLOY_FREEZE
+    - echo "DEPLOY FREEZE JOB ENV TEST COMPLETED"
 
 # Build docker image for k8s-deploy branch
 build:
