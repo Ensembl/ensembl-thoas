@@ -490,7 +490,9 @@ def format_region(region_mysql_result, assembly, species):
         "length": region_mysql_result["length"],
         "topology": circularity_to_topology(region_mysql_result["circularity"]),
         "assembly": assembly,
-        "metadata": get_ontology_terms(region_mysql_result["code"])
+        "metadata": {
+            "ontology_terms": get_ontology_terms(region_mysql_result["code"])
+        }
     }
 
 
