@@ -24,6 +24,24 @@ type Region {
   code: RegionCode!
   topology: RegionTopology!
   assembly: Assembly!
+  metadata: Metadata!
+}
+
+type Metadata {
+  ontology_terms: [OntologyTerm!]!
+}
+
+type OntologyTerm {
+  accession_id: String!
+  value: String! # Or should this be RegionCode??
+  url: String!
+  source: OntologySource
+}
+
+type OntologySource {
+  name: String!
+  url: String!
+  description: String!
 }
 
 enum RegionCode {
@@ -37,6 +55,7 @@ enum RegionTopology {
   circular
 }
 
+# TODO make accession_id and accessioning_body nullable as per https://github.com/Ensembl/ensembl-cdm-docs/blob/master/src/docs/assembly.md
 type Assembly {
   type: String!
   default: Boolean!
