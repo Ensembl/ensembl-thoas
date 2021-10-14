@@ -497,9 +497,11 @@ def format_region(region_mysql_result, assembly, species):
 
 
 def get_ontology_terms(region_code):
+    # Species in Thoas only have chromosomes
     if region_code != "chromosome":
         return None
 
+    # TODO confirm that all chromosomes for a given species should have the same ontology metadata
     return [
         {
             "accession_id": "SO:0000340",
