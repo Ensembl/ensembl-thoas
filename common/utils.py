@@ -314,20 +314,20 @@ def format_utr(
             and transcript['end'] == absolute_cds_end
             and transcript['strand'] == 1
             or (
-            downstream is False
-            and transcript['start'] == absolute_cds_start
-            and transcript['strand'] == 1
-    )
+                downstream is False
+                and transcript['start'] == absolute_cds_start
+                and transcript['strand'] == 1
+            )
             or (
-            downstream
-            and transcript['start'] == absolute_cds_start
-            and transcript['strand'] == -1
-    )
+                downstream
+                and transcript['start'] == absolute_cds_start
+                and transcript['strand'] == -1
+            )
             or (
-            downstream is False
-            and transcript['end'] == absolute_cds_end
-            and transcript['strand'] == -1
-    )
+                downstream is False
+                and transcript['end'] == absolute_cds_end
+                and transcript['strand'] == -1
+            )
     ):
         # No UTR here: Move along.
         return None
@@ -379,7 +379,7 @@ def format_cdna(transcript, refget, non_coding=False):
     relative_start = 1
     relative_end = transcript['end'] - transcript['start'] + 1
     # but length must not include the introns
-    length = 0  # temporarily
+    length = 0 # temporarily
     for exon in transcript['exons']:
         length += exon['end'] - exon['start'] + 1
 
@@ -437,9 +437,9 @@ def format_protein(protein, genome_id, product_length, refget):
         'stable_id': stable_id,
         'version': protein['version'],
         # for foreign key behaviour
-        'transcript_id': protein['transcript_id'],  # missing version...
+        'transcript_id': protein['transcript_id'], # missing version...
         'genome_id': genome_id,
-        'so_term': 'polypeptide',  # aka SO:0000104
+        'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
         'protein_domains': format_protein_domains(protein['protein_features']),
         'length': product_length,

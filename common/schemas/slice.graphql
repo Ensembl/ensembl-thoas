@@ -33,7 +33,7 @@ type Metadata {
 
 type OntologyTerm {
   accession_id: String!
-  value: String! # Or should this be RegionCode??
+  value: String!
   url: String!
   source: OntologySource
 }
@@ -55,14 +55,13 @@ enum RegionTopology {
   circular
 }
 
-# TODO make accession_id and accessioning_body nullable as per https://github.com/Ensembl/ensembl-cdm-docs/blob/master/src/docs/assembly.md
 type Assembly {
   type: String!
   default: Boolean!
   id: String!
   name: String!
-  accession_id: String!
-  accessioning_body: String!
+  accession_id: String
+  accessioning_body: String
   species: String!
 }
 
