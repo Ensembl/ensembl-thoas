@@ -497,27 +497,14 @@ def format_region(region_mysql_result, assembly, species):
 
 
 def get_ontology_terms(region_code):
-    so_terms = {
-        "chromosome": {
-            "accession_id": "SO:0000340",
-            "value": "chromosome",
-            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
-        },
-        "scaffold": {
-            "accession_id": "SO:0000148",
-            "value": "scaffold",
-            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000148",
-        },
-        "plasmid": {
-            "accession_id": "SO:0000155",
-            "value": "plasmid",
-            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000155",
-        }
-    }
+    if region_code != "chromosome":
+        return None
 
     return [
         {
-            **so_terms[region_code],
+            "accession_id": "SO:0000340",
+            "value": "chromosome",
+            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
             "source": {
                 "name": "Sequence Ontology",
                 "url": "www.sequenceontology.org",

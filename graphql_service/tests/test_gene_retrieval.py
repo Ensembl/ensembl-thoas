@@ -60,13 +60,25 @@ async def test_gene_retrieval_by_id(snapshot):
             length
             topology
             assembly {
-                type
-                default
-                id
-                name
+              type
+              default
+              id
+              name
+              accession_id
+              accessioning_body
+              species
+            }
+            metadata {
+              ontology_terms {
                 accession_id
-                accessioning_body
-                species
+                value
+                url
+                source {
+                  name
+                  url
+                  description
+                }
+              }
             }
           }
           location {
