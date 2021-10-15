@@ -44,7 +44,7 @@ def build_gene():
             }
         },
         'slice': {
-            'region_id': 'homo_sapiens_GCA_000001405_28_13',
+            'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
             'location': {
                 'start': 32315086,
                 'end': 32400266,
@@ -73,7 +73,7 @@ def build_transcripts():
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'exons': build_exons(),
         'slice': {
-            'region_id': 'homo_sapiens_GCA_000001405_28_13',
+            'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
             'location': {
                 'start': 32315474,
                 'end': 32400266,
@@ -92,7 +92,7 @@ def build_transcripts():
                 'exon': {
                     'stable_id': 'ENSE00002145385.1',
                     'slice': {
-                        'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                        'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                         'location': {
                             'end': 32371100,
                             'length': 130,
@@ -119,7 +119,7 @@ def build_transcripts():
                             'end': 32375406,
                             'length': 64
                         },
-                        'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                        'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                         'strand': {
                             'code': 'forward'
                         }
@@ -153,7 +153,7 @@ def build_transcripts():
                                     'length': 130,
                                     'start': 32370971
                                 },
-                                'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                                'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                                 'strand': {
                                     'code': 'forward'
                                 }
@@ -177,7 +177,7 @@ def build_transcripts():
                                     'length': 64,
                                     'start': 32375343
                                 },
-                                'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                                'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                                 'strand': {
                                     'code': 'forward'
                                 }
@@ -208,7 +208,7 @@ def build_transcripts():
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'exons': build_exons(),
         'slice': {
-            'region_id': 'homo_sapiens_GCA_000001405_28_13',
+            'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
             'strand': {
                 'code': 'forward',
                 'value': 1
@@ -233,7 +233,7 @@ def build_exons():
             'unversioned_stable_id': 'ENSE00002145385',
             'version': 1,
             'slice': {
-                'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                 'strand': {
                     'code': 'forward',
                     'value': 1
@@ -252,7 +252,7 @@ def build_exons():
             'unversioned_stable_id': 'ENSE00002167182',
             'version': 1,
             'slice': {
-                'region_id': 'homo_sapiens_GCA_000001405_28_13',
+                'region_id': 'homo_sapiens_GCA_000001405_28_13_chromosome',
                 'strand': {
                     'code': 'forward',
                     'value': 1
@@ -358,7 +358,7 @@ def build_region():
 
     return {
         "type": "Region",
-        "region_id": "homo_sapiens_GCA_000001405_28_13",
+        "region_id": "homo_sapiens_GCA_000001405_28_13_chromosome",
         "name": "13",
         "length": 114364328,
         "code": "chromosome",

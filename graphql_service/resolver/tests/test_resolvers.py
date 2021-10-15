@@ -110,15 +110,13 @@ def fixture_slice_data():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {
-            'genome_id': 1,
+            'genome_id': "test_genome_id",
             'type': 'Gene',
             'symbol': 'banana',
             'stable_id': 'ENSG001.1',
             'unversioned_stable_id': 'ENSG001',
             'slice': {
-                'region': {
-                    'name': 'chr1'
-                },
+                'region_id': 'test_genome_chr1_chromosome',
                 'location': {
                     'start': 10,
                     'end': 100
@@ -126,15 +124,13 @@ def fixture_slice_data():
             }
         },
         {
-            'genome_id': 1,
+            'genome_id': "test_genome_id",
             'type': 'Gene',
             'symbol': 'durian',
             'stable_id': 'ENSG002.2',
             'unversioned_stable_id': 'ENSG002',
             'slice': {
-                'region': {
-                    'name': 'chr1'
-                },
+                'region_id': 'test_genome_chr1_chromosome',
                 'location': {
                     'start': 110,
                     'end': 200
@@ -142,6 +138,26 @@ def fixture_slice_data():
             }
         }
     ])
+
+    too_many_results = []
+
+    for i in range(1001):
+        too_many_results.append({
+            'genome_id': "test_genome_id",
+            'type': 'Gene',
+            'symbol': 'banana',
+            'stable_id': "test_stable_id." + str(i),
+            'unversioned_stable_id': "test_stable_id." + str(i),
+            'slice': {
+                'region_id': 'test_genome_chr1_chromosome',
+                'location': {
+                    'start': 210,
+                    'end': 300
+                }
+            }
+        })
+    collection.insert_many(too_many_results)
+
     return Info(collection)
 
 
@@ -252,39 +268,53 @@ def test_resolve_slice(slice_data):
     result = model.resolve_slice(
         None,
         slice_data,
-        genome_id=1,
-        region='chr1',
+        genome_id="test_genome",
+        region_name='chr1',
         start=10,
         end=11,
     )
-    assert not result
+    assert result == {'genes': [], 'transcripts': []}
 
+
+def test_query_region_one_result(slice_data):
     context = slice_data.context
     result = model.query_region(
-        {
-            'genome_id': 1,
-            'slice.region.name': 'chr1',
-            'slice.location.start': 1,
-            'slice.location.end': 120,
-            'mongo_db': context["mongo_db"]
-        },
-        'Gene'
+        context=context,
+        region_id='test_genome_chr1_chromosome',
+        start=1,
+        end=120,
+        feature_type='Gene'
     )
-    hit = result.next()
-    assert hit['stable_id'] == 'ENSG001.1'
+    assert [hit['stable_id'] for hit in result] == ['ENSG001.1']
 
+
+def test_query_region_two_results(slice_data):
+    context = slice_data.context
     result = model.query_region(
-        {
-            'genome_id': 1,
-            'slice.region.name': 'chr1',
-            'slice.location.start': 5,
-            'slice.location.end': 205,
-            'mongo_db': context["mongo_db"]
-        },
-        'Gene'
+        context=context,
+        region_id='test_genome_chr1_chromosome',
+        start=5,
+        end=205,
+        feature_type='Gene'
     )
-    for hit in result:
-        assert hit['stable_id'] in ['ENSG001.1', 'ENSG002.2']
+    assert [hit['stable_id'] for hit in result] == ['ENSG001.1', 'ENSG002.2']
+
+
+def test_query_region_too_many_results(slice_data):
+    context = slice_data.context
+    result = None
+    with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:
+        result = model.query_region(
+            context=context,
+            region_id='test_genome_chr1_chromosome',
+            start=205,
+            end=305,
+            feature_type='Gene'
+        )
+    assert not result
+    assert slice_limit_exceeded_error.value.message == "Slice query met size limit of 1000"
+    assert slice_limit_exceeded_error.value.extensions['code'] == "SLICE_RESULT_LIMIT_EXCEEDED"
+
 
 
 @pytest.mark.asyncio

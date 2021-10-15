@@ -3,7 +3,7 @@ type Query {
   genes_by_symbol(bySymbol: SymbolInput): [Gene]
   transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
   product(genome_id: String!, stable_id: String!): Product
-  slice(genome_id: String!, region: String!, start: Int!, end: Int!): Locus
+  slice(genome_id: String!, region_name: String!, start: Int!, end: Int!): Locus
 }
 
 input SymbolInput {
