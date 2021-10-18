@@ -481,7 +481,7 @@ def circularity_to_topology(circularity):
     return "circular" if circularity else "linear"
 
 
-def format_region(region_mysql_result, assembly, species):
+def format_region(region_mysql_result, assembly_id, species):
     return {
         "type": "Region",
         "region_id": f'{get_genome_id(species, region_mysql_result["accession_id"])}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
@@ -489,7 +489,7 @@ def format_region(region_mysql_result, assembly, species):
         "code": region_mysql_result["code"],
         "length": region_mysql_result["length"],
         "topology": circularity_to_topology(region_mysql_result["circularity"]),
-        "assembly": assembly,
+        "assembly_id": assembly_id,
         "metadata": {
             "ontology_terms": get_ontology_terms(region_mysql_result["code"])
         }

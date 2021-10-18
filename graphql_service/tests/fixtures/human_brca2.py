@@ -289,6 +289,7 @@ def build_products():
 
     return [product]
 
+
 def build_region():
     'Build a region'
 
@@ -299,15 +300,7 @@ def build_region():
         "length": 114364328,
         "code": "chromosome",
         "topology": "linear",
-        "assembly": {
-            "type": "Assembly",
-            "default": True,
-            "id": "GRCh38.p13",
-            "name": "GRCh38",
-            "accession_id": "GCA_000001405.28",
-            "accessioning_body": "EGA",
-            "species": "homo_sapiens"
-        },
+        "assembly_id": "GRCh38.p13",
         "metadata": {
             "ontology_terms": [
                 {
@@ -322,4 +315,16 @@ def build_region():
                 }
             ]
         }
+    }
+
+
+def build_assembly():
+    return {
+        "type": "Assembly",
+        "default": True,
+        "id": "GRCh38.p13",
+        "name": "GRCh38",
+        "accession_id": "GCA_000001405.28",
+        "accessioning_body": "EGA",
+        "species": "homo_sapiens"
     }

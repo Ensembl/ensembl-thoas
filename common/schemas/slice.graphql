@@ -24,21 +24,21 @@ type Region {
   code: RegionCode!
   topology: RegionTopology!
   assembly: Assembly!
-  metadata: Metadata!
+  metadata: RegionMetadata!
 }
 
-type Metadata {
-  ontology_terms: [OntologyTerm!]!
+type RegionMetadata {
+  ontology_terms: [RegionOntologyTerm!]!
 }
 
-type OntologyTerm {
+type RegionOntologyTerm implements OntologyTerm {
   accession_id: String!
   value: String!
   url: String!
-  source: OntologySource
+  source: RegionOntologySource
 }
 
-type OntologySource {
+type RegionOntologySource implements OntologySource {
   name: String!
   url: String!
   description: String!
