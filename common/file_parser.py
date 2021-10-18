@@ -1,7 +1,9 @@
+import os
+
 class ChromosomeChecksum:
-    def __init__(self, genome_id):
+    def __init__(self, genome_id, chr_checksums_path):
         self.genome_id = genome_id
-        self.flat_file = "/nfs/services/enswbsites/newsite/data/chromosome_checksums/" + self.genome_id + "/chrom.hashes"
+        self.flat_file = os.path.join(chr_checksums_path, self.genome_id, "chrom.hashes")
         self.results_dict = {}
         with open(self.flat_file) as chrom_hashes_file:
             for line in chrom_hashes_file:
