@@ -14,4 +14,11 @@ class ChromosomeChecksum:
         return self.results_dict.get(chromosome_id, None)
 
 
+class MockChromosomeChecksum:
 
+    def __init__(self, genome_id, chr_checksums_path):
+        self.genome_id = genome_id
+        self.flat_file = chr_checksums_path
+
+    def get_checksum(self, chromosome_id):
+        return '3t6fit96jy015frnh465do005hd885jtki'

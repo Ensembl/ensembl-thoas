@@ -20,6 +20,7 @@ from unittest.mock import MagicMock
 from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
+from common.file_parser import MockChromosomeChecksum as ChromosomeChecksum
 
 import json
 
@@ -128,7 +129,10 @@ def test_format_region():
         'species_name': 'test_species',
         'accession_id': 'GCA_000005845.2'
     }
-    region = format_region(test_mysql_result, "test_assembly", "test_species")
+
+    genome_id = get_genome_id(test_mysql_result['species_name'], test_mysql_result['accession_id'])
+    chromosome_checksums = ChromosomeChecksum(genome_id, '/test_path/')
+    region = format_region(test_mysql_result, "test_assembly", genome_id, chromosome_checksums)
 
     assert region == {
         "type": "Region",
@@ -137,7 +141,17 @@ def test_format_region():
         "assembly": "test_assembly",
         "code": "test_code",
         "length": 4641652,
-        "topology": "circular"
+        "topology": "circular",
+        "sequence": {
+            "alphabet": {
+                "accession_id": "test_dna_accession_id",
+                "value": "test",
+                "label": "test",
+                "definition": "Test - IUPAC notation for dna sequence",
+                "description": None
+            },
+            "checksum": "3t6fit96jy015frnh465do005hd885jtki"
+        }
     }
 
 

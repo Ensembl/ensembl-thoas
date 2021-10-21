@@ -13,7 +13,6 @@
 """
 
 from configparser import ConfigParser
-from common.file_parser import ChromosomeChecksum
 import argparse
 import sys
 import pymongo
@@ -487,11 +486,8 @@ def circularity_to_topology(circularity):
     return "circular" if circularity else "linear"
 
 
-def format_region(region_mysql_result, assembly, species, chr_checksums_path):
+def format_region(region_mysql_result, assembly, genome_id, chromosome_checksums):
 
-    genome_id = get_genome_id(species, region_mysql_result["accession_id"])
-
-    chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
     checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
 
     return {
