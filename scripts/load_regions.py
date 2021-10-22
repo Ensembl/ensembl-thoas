@@ -42,6 +42,7 @@ def load_regions(config, section_name, mongo_client):
                       LEFT JOIN (SELECT seq_region_id, value FROM seq_region_attrib WHERE attrib_type_id = %s) as circular_regions
                           USING (seq_region_id)
                       WHERE species_name.meta_value = %s
+                      AND coord_system.name = 'chromosome'                      
                       LIMIT %s"""
 
     with mysql_client.cursor(dictionary=True) as cursor:
