@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
         # Get extra parameters from the GENERAL section.
         # The per-section parameters will override any GENERAL ones if there is a collision.
-        section_args = {**CONF_PARSER['GENERAL'], **CONF_PARSER['section']}
+        section_args = {**CONF_PARSER['GENERAL'], **CONF_PARSER[section]}
         section_args['config_file'] = CLI_ARGS.config
         section_args['section_name'] = section
         asyncio.run(run_assembly(args=section_args))
