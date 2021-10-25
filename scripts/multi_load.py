@@ -78,10 +78,10 @@ if __name__ == '__main__':
         # one section is MongoDB config, the rest are species info
         if section in ['MONGO DB', 'REFGET DB', 'GENERAL']:
             continue
-        # Insert extra inferred parameters
-        CONF_PARSER[section]['config_file'] = CLI_ARGS.config
-        CONF_PARSER[section]['base_data_path'] = CLI_ARGS.base_data_path
-        CONF_PARSER[section]['release'] = CLI_ARGS.release
-        CONF_PARSER[section]['classifier_path'] = CLI_ARGS.classifier_path
-        CONF_PARSER[section]['section_name'] = section
-        asyncio.run(run_assembly(args=CONF_PARSER[section]))
+
+        # Get extra parameters from the GENERAL section.
+        # The per-section parameters will override any GENERAL ones if there is a collision.
+        section_args = {**CONF_PARSER['GENERAL'], **CONF_PARSER[section]}
+        section_args['config_file'] = CLI_ARGS.config
+        section_args['section_name'] = section
+        asyncio.run(run_assembly(args=section_args))
