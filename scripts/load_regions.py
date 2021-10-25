@@ -3,11 +3,12 @@ import argparse
 from mysql.connector import MySQLConnection, DataError
 
 import common.utils
-from common.utils import format_region
+from common.utils import format_region, get_genome_id
+from common.file_parser import ChromosomeChecksum
 from common.mongo import MongoDbClient
 
 
-def load_regions(config, section_name, mongo_client):
+def load_regions(config, section_name, chr_checksums_path, mongo_client):
 
     assembly = mongo_client.collection().find_one({
         'type': 'Assembly',
@@ -54,7 +55,10 @@ def load_regions(config, section_name, mongo_client):
         cursor.execute(region_query, (circular_attribute_id, species, max_regions))
         region_results = cursor.fetchall()
 
-        formatted_results = [format_region(result, assembly, species) for result in region_results]
+        genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
+        chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
+
+        formatted_results = [format_region(result, assembly, genome_id, chromosome_checksums) for result in region_results]
 
         if len(formatted_results) == max_regions:
             raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")
@@ -74,7 +78,11 @@ if __name__ == "__main__":
         '--section_name',
         help='Section of config file containing MySQL and MongoDB credentials'
     )
+    parser.add_argument(
+        '--chr_checksums_path',
+        help='File path to chromosome checksum hash files'
+    )
     ARGS=parser.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     MONGO_CLIENT = MongoDbClient(CONFIG)
-    load_regions(CONFIG, ARGS.section_name, MONGO_CLIENT)
+    load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path, MONGO_CLIENT)

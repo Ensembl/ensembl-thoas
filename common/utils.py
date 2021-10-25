@@ -399,6 +399,16 @@ def format_cdna(transcript, refget, non_coding=False):
 
 def format_sequence_object(refget, stable_id, sequence_type):
 
+    sequence_checksum = refget.get_checksum(stable_id, sequence_type)
+
+    return {
+        'alphabet': get_alphabet_info('protein') if sequence_type == refget.PEP else get_alphabet_info('dna'),
+        'checksum': sequence_checksum
+    }
+
+
+def get_alphabet_info(sequence_type):
+
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
         'dna': {
@@ -416,14 +426,7 @@ def format_sequence_object(refget, stable_id, sequence_type):
             'description': None
         }
     }
-
-    sequence_checksum = refget.get_checksum(stable_id, sequence_type)
-
-    return {
-        'alphabet': type_to_alphabet.get('protein') if sequence_type == refget.PEP else type_to_alphabet.get('dna'),
-        'checksum': sequence_checksum
-    }
-
+    return type_to_alphabet.get(sequence_type)
 
 def format_protein(protein, genome_id, product_length, refget):
     '''
@@ -483,15 +486,22 @@ def circularity_to_topology(circularity):
     return "circular" if circularity else "linear"
 
 
-def format_region(region_mysql_result, assembly, species):
+def format_region(region_mysql_result, assembly, genome_id, chromosome_checksums):
+
+    checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
+
     return {
         "type": "Region",
-        "region_id": f'{get_genome_id(species, region_mysql_result["accession_id"])}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
+        "region_id": f'{genome_id}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
         "name": region_mysql_result["name"],
         "code": region_mysql_result["code"],
         "length": region_mysql_result["length"],
         "topology": circularity_to_topology(region_mysql_result["circularity"]),
-        "assembly": assembly
+        "assembly": assembly,
+        'sequence': {
+            'alphabet': get_alphabet_info('dna'),
+            'checksum': checksum
+                     }
     }
 
 
