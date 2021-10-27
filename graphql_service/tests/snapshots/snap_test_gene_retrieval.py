@@ -35,6 +35,20 @@ snapshots['test_gene_retrieval_by_id 1'] = {
                     'accession_id': 'GCA_000001405.28',
                     'accessioning_body': 'EGA',
                     'species': 'homo_sapiens'
+                },
+                'metadata': {
+                    'ontology_terms': [
+                        {
+                            'accession_id': 'SO:0000340',
+                            'value': 'chromosome',
+                            'url': 'www.sequenceontology.org/browser/current_release/term/SO:0000340',
+                            'source': {
+                                'name': 'Sequence Ontology',
+                                'url': 'www.sequenceontology.org',
+                                'description': 'The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. '
+                            }
+                        }
+                    ]
                 }
             },
             'strand': {

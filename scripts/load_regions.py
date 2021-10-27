@@ -13,6 +13,7 @@ def load_regions(config, section_name, mongo_client):
         'type': 'Assembly',
         'name': config.get(section_name, 'assembly')
     })
+    assembly_id = assembly["id"]
 
     mysql_client = MySQLConnection(
             host=config.get(section_name, 'host'),
@@ -42,6 +43,7 @@ def load_regions(config, section_name, mongo_client):
                       LEFT JOIN (SELECT seq_region_id, value FROM seq_region_attrib WHERE attrib_type_id = %s) as circular_regions
                           USING (seq_region_id)
                       WHERE species_name.meta_value = %s
+                      AND coord_system.name = 'chromosome'                      
                       LIMIT %s"""
 
     with mysql_client.cursor(dictionary=True) as cursor:
@@ -54,7 +56,7 @@ def load_regions(config, section_name, mongo_client):
         cursor.execute(region_query, (circular_attribute_id, species, max_regions))
         region_results = cursor.fetchall()
 
-        formatted_results = [format_region(result, assembly, species) for result in region_results]
+        formatted_results = [format_region(result, assembly_id, species) for result in region_results]
 
         if len(formatted_results) == max_regions:
             raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")
