@@ -278,16 +278,31 @@ class FieldNotFoundError(GraphQLError):
         super().__init__(message, extensions=self.extensions)
 
 
-class GeneNotFoundError(FieldNotFoundError):
+class FeatureNotFoundError(FieldNotFoundError):
+    '''
+    Custom error to be raised if a gene or transcript cannot be found by id
+    '''
+    def __init__(self, feature_type, bySymbol=None, byId=None):
+        if bySymbol:
+            super().__init__(feature_type, {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
+        if byId:
+            super().__init__(feature_type, {"stable_id": byId['stable_id'], "genome_id": byId['genome_id']})
+
+
+class GeneNotFoundError(FeatureNotFoundError):
     '''
     Custom error to be raised if gene is not found
     '''
-    
     def __init__(self, bySymbol=None, byId=None):
-        if bySymbol:
-            super().__init__("gene", {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
-        if byId:
-            super().__init__("gene", {"stable_id": byId['stable_id'], "genome_id": byId['genome_id']})
+        super().__init__("gene", bySymbol, byId)
+
+
+class TranscriptNotFoundError(FeatureNotFoundError):
+    '''
+    Custom error to be raised if transcript is not found
+    '''
+    def __init__(self, bySymbol=None, byId=None):
+        super().__init__("transcript", bySymbol, byId)
 
 
 class ProductNotFoundError(FieldNotFoundError):

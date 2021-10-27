@@ -157,19 +157,18 @@ def test_resolve_gene(basic_data):
     assert result['symbol'] == 'banana'
     result = None
 
-    with pytest.raises(model.GeneNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_gene(
             None,
             basic_data,
             byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
         )
     assert not result
-    assert feature_not_found_error.value.message == "Failed to find gene with stable " \
-                                                    "id 'BROKEN BROKEN BROKEN' for genome '1'"
-    assert feature_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
-    assert feature_not_found_error.value.extensions['stable_id'] == 'BROKEN BROKEN BROKEN'
-    assert feature_not_found_error.value.extensions['genome_id'] == 1
-    feature_not_found_error = None
+    assert gene_not_found_error.value.message == 'Failed to find gene with ids: stable_id=BROKEN BROKEN BROKEN, genome_id=1'
+    assert gene_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    assert gene_not_found_error.value.extensions['stable_id'] == 'BROKEN BROKEN BROKEN'
+    assert gene_not_found_error.value.extensions['genome_id'] == 1
+    gene_not_found_error = None
 
     # Check unversioned query resolves as well
     result = model.resolve_gene(
@@ -193,17 +192,17 @@ def test_resolve_gene_by_symbol(basic_data):
     assert result[0]['symbol'] == 'banana'
     result = None
 
-    with pytest.raises(model.GeneNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_genes(
             None,
             basic_data,
             bySymbol={'symbol': 'very not here', 'genome_id': 1}
         )
     assert not result
-    assert feature_not_found_error.value.message == "Failed to find gene with symbol 'very not here' for genome '1'"
-    assert feature_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
-    assert feature_not_found_error.value.extensions['symbol'] == 'very not here'
-    assert feature_not_found_error.value.extensions['genome_id'] == 1
+    assert gene_not_found_error.value.message == "Failed to find gene with ids: symbol=very not here, genome_id=1"
+    assert gene_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
+    assert gene_not_found_error.value.extensions['symbol'] == 'very not here'
+    assert gene_not_found_error.value.extensions['genome_id'] == 1
 
 def test_resolve_transcript_by_id(transcript_data):
     'Test fetching of transcripts by stable ID'
@@ -218,18 +217,17 @@ def test_resolve_transcript_by_id(transcript_data):
 
 def test_resolve_transcript_by_id_not_found(transcript_data):
     result = None
-    with pytest.raises(model.TranscriptNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         result = model.resolve_transcript(
             None,
             transcript_data,
             byId={'stable_id': 'FAKEYFAKEYFAKEY', 'genome_id': 1}
         )
     assert not result
-    assert feature_not_found_error.value.message == "Failed to find transcript with stable " \
-                                                    "id 'FAKEYFAKEYFAKEY' for genome '1'"
-    assert feature_not_found_error.value.extensions['code'] == 'TRANSCRIPT_NOT_FOUND'
-    assert feature_not_found_error.value.extensions['stable_id'] == 'FAKEYFAKEYFAKEY'
-    assert feature_not_found_error.value.extensions['genome_id'] == 1
+    assert transcript_not_found_error.value.message == "Failed to find transcript with ids: stable_id=FAKEYFAKEYFAKEY, genome_id=1"
+    assert transcript_not_found_error.value.extensions['code'] == 'TRANSCRIPT_NOT_FOUND'
+    assert transcript_not_found_error.value.extensions['stable_id'] == 'FAKEYFAKEYFAKEY'
+    assert transcript_not_found_error.value.extensions['genome_id'] == 1
 
 def test_resolve_transcript_by_symbol(transcript_data):
     'Test fetching of transcripts by symbol'
@@ -242,17 +240,16 @@ def test_resolve_transcript_by_symbol(transcript_data):
 
 def test_resolve_transcript_by_symbol_not_found(transcript_data):
     result = None
-    with pytest.raises(model.TranscriptNotFoundError) as feature_not_found_error:
+    with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         result = model.resolve_transcript(
             None,
             transcript_data,
             bySymbol={'symbol': 'some not existing symbol', 'genome_id': 1}
         )
-    assert feature_not_found_error.value.message == "Failed to find transcript with symbol " \
-                                                    "'some not existing symbol' for genome '1'"
-    assert feature_not_found_error.value.extensions['code'] == 'TRANSCRIPT_NOT_FOUND'
-    assert feature_not_found_error.value.extensions['symbol'] == 'some not existing symbol'
-    assert feature_not_found_error.value.extensions['genome_id'] == 1
+    assert transcript_not_found_error.value.message == 'Failed to find transcript with ids: symbol=some not existing symbol, genome_id=1'
+    assert transcript_not_found_error.value.extensions['code'] == 'TRANSCRIPT_NOT_FOUND'
+    assert transcript_not_found_error.value.extensions['symbol'] == 'some not existing symbol'
+    assert transcript_not_found_error.value.extensions['genome_id'] == 1
 
 
 @pytest.mark.asyncio
