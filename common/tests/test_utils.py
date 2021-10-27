@@ -123,21 +123,35 @@ def test_format_region():
         'seq_region_id': 559,
         'length': 4641652,
         'name': 'test_name',
-        'code': 'test_code',
+        'code': 'chromosome',
         'circularity': '1',
         'species_name': 'test_species',
         'accession_id': 'GCA_000005845.2'
     }
-    region = format_region(test_mysql_result, "test_assembly", "test_species")
+    region = format_region(test_mysql_result, "test_assembly_id", "test_species")
 
     assert region == {
         "type": "Region",
-        "region_id": "test_species_GCA_000005845_2_test_name_test_code",
+        "region_id": "test_species_GCA_000005845_2_test_name_chromosome",
         "name": "test_name",
-        "assembly": "test_assembly",
-        "code": "test_code",
+        "assembly_id": "test_assembly_id",
+        "code": "chromosome",
         "length": 4641652,
-        "topology": "circular"
+        "topology": "circular",
+        "metadata": {
+            "ontology_terms": [
+                {
+                    "accession_id": "SO:0000340",
+                    "value": "chromosome",
+                    "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                    "source": {
+                        "name": "Sequence Ontology",
+                        "url": "www.sequenceontology.org",
+                        "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+                    }
+                }
+            ]
+        }
     }
 
 

@@ -289,6 +289,7 @@ def build_products():
 
     return [product]
 
+
 def build_region():
     'Build a region'
 
@@ -299,13 +300,31 @@ def build_region():
         "length": 114364328,
         "code": "chromosome",
         "topology": "linear",
-        "assembly": {
-            "type": "Assembly",
-            "default": True,
-            "id": "GRCh38.p13",
-            "name": "GRCh38",
-            "accession_id": "GCA_000001405.28",
-            "accessioning_body": "EGA",
-            "species": "homo_sapiens"
+        "assembly_id": "GRCh38.p13",
+        "metadata": {
+            "ontology_terms": [
+                {
+                    "accession_id": "SO:0000340",
+                    "value": "chromosome",
+                    "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                    "source": {
+                        "name": "Sequence Ontology",
+                        "url": "www.sequenceontology.org",
+                        "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+                    }
+                }
+            ]
         }
+    }
+
+
+def build_assembly():
+    return {
+        "type": "Assembly",
+        "default": True,
+        "id": "GRCh38.p13",
+        "name": "GRCh38",
+        "accession_id": "GCA_000001405.28",
+        "accessioning_body": "EGA",
+        "species": "homo_sapiens"
     }

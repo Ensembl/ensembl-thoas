@@ -18,7 +18,8 @@ from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
 from graphql_service.resolver.data_loaders import DataLoaderCollection
-from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region
+from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region, \
+    build_assembly
 
 def prepare_db():
     'Fill a mock database with data and provide a collection accessor'
@@ -41,6 +42,7 @@ def prepare_db():
     mocked_mongo_collection.insert_many(build_transcripts())
     mocked_mongo_collection.insert_many(build_products())
     mocked_mongo_collection.insert_one(build_region())
+    mocked_mongo_collection.insert_one(build_assembly())
     return context
 
 
