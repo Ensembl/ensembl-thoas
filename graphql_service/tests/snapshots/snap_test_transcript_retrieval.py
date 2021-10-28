@@ -54,7 +54,7 @@ snapshots['test_transcript_retrieval 1'] = {
                                     'start': 32370971
                                 },
                                 'region': {
-                                    'name': '13'
+                                    'name': '13',
                                 },
                                 'strand': {
                                     'code': 'forward'

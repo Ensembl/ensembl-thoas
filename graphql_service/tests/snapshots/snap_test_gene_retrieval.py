@@ -23,7 +23,33 @@ snapshots['test_gene_retrieval_by_id 1'] = {
                 'start': 32315086
             },
             'region': {
-                'name': '13'
+                'name': '13',
+                'length': 114364328,
+                'code': 'chromosome',
+                'topology': 'linear',
+                'assembly': {
+                    'type': 'Assembly',
+                    'id': 'GRCh38.p13',
+                    'default': True,
+                    'name': "GRCh38",
+                    'accession_id': 'GCA_000001405.28',
+                    'accessioning_body': 'EGA',
+                    'species': 'homo_sapiens'
+                },
+                'metadata': {
+                    'ontology_terms': [
+                        {
+                            'accession_id': 'SO:0000340',
+                            'value': 'chromosome',
+                            'url': 'www.sequenceontology.org/browser/current_release/term/SO:0000340',
+                            'source': {
+                                'name': 'Sequence Ontology',
+                                'url': 'www.sequenceontology.org',
+                                'description': 'The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. '
+                            }
+                        }
+                    ]
+                }
             },
             'strand': {
                 'code': 'forward'

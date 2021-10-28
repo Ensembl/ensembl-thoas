@@ -20,7 +20,49 @@ type Location {
 type Region {
   # A large contiguous block of assembled sequence, such as a whole chromosome.
   name: String!
-  assembly: String!
+  length: Int!
+  code: RegionCode!
+  topology: RegionTopology!
+  assembly: Assembly!
+  metadata: RegionMetadata!
+}
+
+type RegionMetadata {
+  ontology_terms: [RegionOntologyTerm!]!
+}
+
+type RegionOntologyTerm implements OntologyTerm {
+  accession_id: String!
+  value: String!
+  url: String!
+  source: RegionOntologySource
+}
+
+type RegionOntologySource implements OntologySource {
+  name: String!
+  url: String!
+  description: String!
+}
+
+enum RegionCode {
+  chromosome
+  plasmid
+  scaffold
+}
+
+enum RegionTopology {
+  linear
+  circular
+}
+
+type Assembly {
+  type: String!
+  default: Boolean!
+  id: String!
+  name: String!
+  accession_id: String
+  accessioning_body: String
+  species: String!
 }
 
 type Strand {

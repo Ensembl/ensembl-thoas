@@ -148,8 +148,8 @@ def format_cross_refs(xrefs):
     return json_xrefs
 
 
-def format_slice(region_name, default_region, strand, assembly,
-                 start, end):
+def format_slice(region_name, region_code, default_region, strand,
+                 start, end, genome_id):
     '''
     Creates regular slices with locations and regions
 
@@ -161,10 +161,7 @@ def format_slice(region_name, default_region, strand, assembly,
     end[int]: End coordinate
     '''
     return {
-        'region': {
-            'name': region_name,
-            'assembly': assembly
-        },
+        'region_id': f'{genome_id}_{region_name}_{region_code}',
         'location': {
             'start': int(start),
             'end': int(end),
@@ -178,7 +175,7 @@ def format_slice(region_name, default_region, strand, assembly,
     }
 
 
-def format_exon(exon, region_name, region_strand, default_region, assembly):
+def format_exon(exon, region_name, region_code, region_strand, default_region, genome_id):
     '''
     Turn transcript-borne information into an Exon entity
 
@@ -197,8 +194,8 @@ def format_exon(exon, region_name, region_strand, default_region, assembly):
         'version': exon['version'],
         'so_term': 'exon',
         'slice': format_slice(
-            region_name, default_region, region_strand,
-            assembly, exon['start'], exon['end']
+            region_name, region_code, default_region, region_strand,
+            exon['start'], exon['end'], genome_id
         )
     }
 
@@ -277,7 +274,7 @@ def infer_introns(exons, transcript):
             'index': index,
             'checksum': None,
             'slice': {
-                'region': exon_one['slice']['region'],
+                'region_id': exon_one['slice']['region_id'],
                 'location': {
                     'start': intron_start,
                     'end': intron_end,
@@ -331,7 +328,7 @@ def format_utr(
                 and transcript['end'] == absolute_cds_end
                 and transcript['strand'] == -1
             )
-        ):
+    ):
         # No UTR here: Move along.
         return None
 
@@ -367,7 +364,6 @@ def format_cdna(transcript, refget, non_coding=False):
     length and so on.
     '''
 
-
     stable_id = get_stable_id(transcript["id"], transcript["version"])
 
     sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.CDNA)
@@ -401,7 +397,6 @@ def format_cdna(transcript, refget, non_coding=False):
 
 
 def format_sequence_object(refget, stable_id, sequence_type):
-
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
         'dna': {
@@ -476,6 +471,50 @@ def format_protein_domains(protein_features):
     #         }
     #     )
     return domains
+
+
+def get_genome_id(species_name, accession_id):
+    return '_'.join([species_name, accession_id.replace('.', '_')])
+
+
+def circularity_to_topology(circularity):
+    return "circular" if circularity else "linear"
+
+
+def format_region(region_mysql_result, assembly_id, species):
+    return {
+        "type": "Region",
+        "region_id": f'{get_genome_id(species, region_mysql_result["accession_id"])}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
+        "name": region_mysql_result["name"],
+        "code": region_mysql_result["code"],
+        "length": region_mysql_result["length"],
+        "topology": circularity_to_topology(region_mysql_result["circularity"]),
+        "assembly_id": assembly_id,
+        "metadata": {
+            "ontology_terms": get_ontology_terms(region_mysql_result["code"])
+        }
+    }
+
+
+def get_ontology_terms(region_code):
+    # Species in Thoas only have chromosomes
+    if region_code != "chromosome":
+        return None
+
+    # TODO confirm that all chromosomes for a given species should have the same ontology metadata
+    return [
+        {
+            "accession_id": "SO:0000340",
+            "value": "chromosome",
+            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+            "source": {
+                "name": "Sequence Ontology",
+                "url": "www.sequenceontology.org",
+                "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+            }
+        }
+    ]
+
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     'Check if a buffer needs flushing, and insert documents when it does'

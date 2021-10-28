@@ -24,6 +24,8 @@ LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
 GENE_METADATA_TYPE = ObjectType('GeneMetadata')
+SLICE_TYPE = ObjectType('Slice')
+REGION_TYPE = ObjectType('Region')
 
 
 @QUERY_TYPE.field('gene')
@@ -191,7 +193,7 @@ def query_region(context, feature_type):
     query = {
         'genome_id': context['genome_id'],
         'type': feature_type,
-        'slice.region.name': context['slice.region.name'],
+        'slice.region.name': context['slice.region.name'], # TODO replace this with region_id
         'slice.location.start': {'$gt': context['slice.location.start']},
         'slice.location.end': {'$lt': context['slice.location.end']}
     }
@@ -241,39 +243,92 @@ async def resolve_product_by_pgc(pgc, info):
     # ID mappings
     return products[0]
 
+@SLICE_TYPE.field('region')
+async def resolve_region(slc, info):
+    'Fetch a region that is referenced by a slice'
+    if slc['region_id'] is None:
+        return
+    region_id = slc['region_id']
 
-class GeneNotFoundError(GraphQLError):
+    query = {
+        'type': 'Region',
+        'region_id': region_id
+    }
+
+    collection = info.context['mongo_db']
+    result = collection.find_one(query)
+
+    if not result:
+        raise RegionNotFoundError(region_id)
+    return result
+
+@REGION_TYPE.field('assembly')
+async def resolve_assembly(region, info):
+    'Fetch an assembly referenced by a region'
+    if region['assembly_id'] is None:
+        return
+    assembly_id = region['assembly_id']
+
+    query = {
+        'type': 'Assembly',
+        'id': region['assembly_id']
+    }
+
+    collection = info.context['mongo_db']
+    result = collection.find_one(query)
+
+    if not result:
+        raise AssemblyNotFoundError(assembly_id)
+    return result
+
+
+class FieldNotFoundError(GraphQLError):
+    '''
+    Custom error to be raised if a field cannot be found by id
+    '''
+
+    def __init__(self, field_type, key_dict):
+        self.extensions = {'code': f'{field_type.upper()}_NOT_FOUND'}
+        ids_string = ", ".join([f'{key}={val}' for key, val in key_dict.items()])
+        message = f'Failed to find {field_type} with ids: {ids_string}'
+        self.extensions.update(key_dict)
+        super().__init__(message, extensions=self.extensions)
+
+
+class GeneNotFoundError(FieldNotFoundError):
     '''
     Custom error to be raised if gene is not found
     '''
-    extensions = {"code": "GENE_NOT_FOUND"}
+
     def __init__(self, bySymbol=None, byId=None):
-        message = None
         if bySymbol:
-            symbol = bySymbol['symbol']
-            genome_id = bySymbol['genome_id']
-            message = 'Failed to find gene with symbol '\
-                     f"'{symbol}' for genome '{genome_id}'"
-            self.extensions['symbol'] = symbol
-            self.extensions['genome_id'] = genome_id
+            super().__init__("gene", {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
         if byId:
-            stable_id = byId['stable_id']
-            genome_id = byId['genome_id']
-            message = 'Failed to find gene with stable id '\
-                f"'{stable_id}' for genome '{genome_id}'"
-            self.extensions['stable_id'] = stable_id
-            self.extensions['genome_id'] = genome_id
-        super().__init__(message, extensions=self.extensions)
+            super().__init__("gene", {"stable_id": byId['stable_id'], "genome_id": byId['genome_id']})
 
 
-class ProductNotFoundError(GraphQLError):
+class ProductNotFoundError(FieldNotFoundError):
     '''
-    Custom error to be raised if gene is not found
+    Custom error to be raised if product is not found
     '''
-    extensions = {"code": "PRODUCT_NOT_FOUND"}
-    def __init__(self, genome_id, stable_id):
-        message = 'Failed to find product with stable id '\
-            f"'{stable_id}' for genome '{genome_id}'"
-        self.extensions['stable_id'] = stable_id
-        self.extensions['genome_id'] = genome_id
-        super().__init__(message, extensions=self.extensions)
+
+    def __init__(self, stable_id, genome_id):
+        super().__init__("product", {'stable_id': stable_id, "genome_id": genome_id})
+
+
+class RegionNotFoundError(FieldNotFoundError):
+    '''
+    Custom error to be raised if region is not found
+    '''
+
+    def __init__(self, region_id):
+        super().__init__("region", {"region_id": region_id})
+
+
+class AssemblyNotFoundError(FieldNotFoundError):
+    '''
+    Custom error to be raised in assembly is not found
+    '''
+
+    def __init__(self, assembly_id):
+        super().__init__("assembly", {"assembly_id": assembly_id})

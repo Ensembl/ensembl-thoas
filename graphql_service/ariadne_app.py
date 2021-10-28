@@ -15,7 +15,7 @@
 import ariadne
 from graphql_service.resolver.gene_model import (
     QUERY_TYPE, GENE_TYPE, TRANSCRIPT_TYPE, LOCUS_TYPE,
-    PGC_TYPE, PRODUCT_TYPE, GENE_METADATA_TYPE
+    PGC_TYPE, PRODUCT_TYPE, SLICE_TYPE, REGION_TYPE, GENE_METADATA_TYPE
 )
 
 def prepare_executable_schema():
@@ -31,7 +31,9 @@ def prepare_executable_schema():
         LOCUS_TYPE,
         PGC_TYPE,
         PRODUCT_TYPE,
-        GENE_METADATA_TYPE
+        GENE_METADATA_TYPE,
+        SLICE_TYPE,
+        REGION_TYPE
     )
 
 def prepare_context_provider(context):

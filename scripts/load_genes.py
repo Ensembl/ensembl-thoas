@@ -28,7 +28,7 @@ lrg_detector = re.compile('^LRG')
 
 def create_index(mongo_client):
     '''
-    Create indexes for searching    useful things on genes, transcripts etc.
+    Create indexes for searching useful things on genes, transcripts etc. and enforcing uniqueness
     '''
     collection = mongo_client.collection()
     collection.create_index([
@@ -136,11 +136,12 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 'name': re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
                 'slice': common.utils.format_slice(
                     region_name=gene['seq_region_name'],
+                    region_code=gene['coord_system']['name'],
                     default_region=default_region,
                     strand=int(gene['strand']),
-                    assembly=assembly['id'],
                     start=int(gene['start']),
-                    end=int(gene['end'])
+                    end=int(gene['end']),
+                    genome_id=genome['id']
                 ),
                 'transcripts': [
                     [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
@@ -223,9 +224,10 @@ def format_transcript(
             common.utils.format_exon(
                 exon,
                 region_name=region_name,
+                region_code=exon['coord_system']['name'],
                 region_strand=int(exon['strand']),
                 default_region=default_region,
-                assembly=assembly['id']
+                genome_id=genome_id
             )
         )
 
@@ -258,14 +260,15 @@ def format_transcript(
         ),
         'slice': common.utils.format_slice(
             region_name=region_name,
+            region_code=transcript['coord_system']['name'],
             default_region=default_region,
             strand=int(transcript['strand']),
-            assembly=assembly['id'],
             start=int(transcript['start']),
-            end=int(transcript['end'])
+            end=int(transcript['end']),
+            genome_id=genome_id
         ),
-                'genome_id': genome_id,
-                'external_references': transcript_xrefs,
+        'genome_id': genome_id,
+        'external_references': transcript_xrefs,
         'product_generating_contexts': [],
         'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
         'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),

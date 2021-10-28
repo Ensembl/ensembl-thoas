@@ -21,6 +21,9 @@ from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
 
+import json
+
+
 def test_stable_id():
     '''
     Ensure correct formatting depending on arguments
@@ -92,25 +95,64 @@ def test_slice_formatting():
     '''
     Ensure slices are correctly generated from parameters
     '''
-    slice_dict = format_slice('test', True, 1, 'GRCh38', 100, 200)
+    slice_dict = format_slice('test_name', 'test_code', True, 1, 100, 200, 'test_genome')
 
-    assert slice_dict['region']['name'] == 'test'
+    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
     assert slice_dict['strand']['code'] == 'forward'
     assert slice_dict['strand']['value'] == 1
-    assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
+    assert slice_dict
     assert slice_dict['default'] is True
 
-    slice_dict = format_slice('test', False, -1, 'GRCh38', 100, 200)
+    slice_dict = format_slice('test_name', 'test_code', False, -1, 100, 200, 'test_genome')
 
-    assert slice_dict['region']['name'] == 'test'
+    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
     assert slice_dict['strand']['code'] == 'reverse'
     assert slice_dict['strand']['value'] == -1
-    assert slice_dict['region']['assembly'] == 'GRCh38'
     assert slice_dict['location']['start'] == 100
     assert slice_dict['location']['end'] == 200
     assert slice_dict['default'] is False
+
+
+def test_format_region():
+    '''
+    Ensure that regions are correctly created from the gene
+    '''
+    test_mysql_result = {
+        'seq_region_id': 559,
+        'length': 4641652,
+        'name': 'test_name',
+        'code': 'chromosome',
+        'circularity': '1',
+        'species_name': 'test_species',
+        'accession_id': 'GCA_000005845.2'
+    }
+    region = format_region(test_mysql_result, "test_assembly_id", "test_species")
+
+    assert region == {
+        "type": "Region",
+        "region_id": "test_species_GCA_000005845_2_test_name_chromosome",
+        "name": "test_name",
+        "assembly_id": "test_assembly_id",
+        "code": "chromosome",
+        "length": 4641652,
+        "topology": "circular",
+        "metadata": {
+            "ontology_terms": [
+                {
+                    "accession_id": "SO:0000340",
+                    "value": "chromosome",
+                    "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                    "source": {
+                        "name": "Sequence Ontology",
+                        "url": "www.sequenceontology.org",
+                        "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+                    }
+                }
+            ]
+        }
+    }
 
 
 def test_exon_formatting():
@@ -125,16 +167,17 @@ def test_exon_formatting():
             'end': 200,
         },
         region_name='chr1',
+        region_code='test_code',
         region_strand=1,
         default_region=True,
-        assembly='GRCh38'
+        genome_id='test_genome'
     )
 
     assert exon['type'] == 'Exon'
     assert exon['stable_id'] == 'ENSE123.1'
     assert exon['unversioned_stable_id'] == 'ENSE123'
     assert exon['version'] == 1
-    assert exon['slice']['region']['name'] == 'chr1'
+    assert exon['slice']['region_id'] == 'test_genome_chr1_test_code'
     # forego further enumeration of slice properties
 
 
@@ -367,9 +410,7 @@ def test_infer_introns():
                     'start': 10,
                     'end': 30
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -382,9 +423,7 @@ def test_infer_introns():
                     'start': 40,
                     'end': 60
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -397,9 +436,7 @@ def test_infer_introns():
                     'start': 90,
                     'end': 100
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': 1
                 }
@@ -413,9 +450,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 31,
                     'end': 39,
@@ -437,9 +472,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 2,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 61,
                     'end': 89,
@@ -475,9 +508,7 @@ def test_infer_introns():
                     'start': 90,
                     'end': 100
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -490,9 +521,7 @@ def test_infer_introns():
                     'start': 40,
                     'end': 60
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -505,9 +534,7 @@ def test_infer_introns():
                     'start': 10,
                     'end': 30
                 },
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'strand': {
                     'value': -1
                 }
@@ -520,9 +547,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 61,
                     'end': 89,
@@ -544,9 +569,7 @@ def test_infer_introns():
             'type': 'Intron',
             'index': 2,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': "test_genome_13",
                 'location': {
                     'start': 31,
                     'end': 39,

@@ -44,9 +44,7 @@ def build_gene():
             }
         },
         'slice': {
-            'region': {
-                'name': '13'
-            },
+            'region_id': 'homo_sapiens_GCA_000001405_28_13',
             'location': {
                 'start': 32315086,
                 'end': 32400266,
@@ -75,9 +73,7 @@ def build_transcripts():
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'exons': build_exons(),
         'slice': {
-            'region': {
-                'name': '13'
-            },
+            'region_id': 'homo_sapiens_GCA_000001405_28_13',
             'location': {
                 'start': 32315474,
                 'end': 32400266,
@@ -96,9 +92,7 @@ def build_transcripts():
                 'exon': {
                     'stable_id': 'ENSE00002145385.1',
                     'slice': {
-                        'region': {
-                            'name': '13'
-                        },
+                        'region_id': 'homo_sapiens_GCA_000001405_28_13',
                         'location': {
                             'end': 32371100,
                             'length': 130,
@@ -125,9 +119,7 @@ def build_transcripts():
                             'end': 32375406,
                             'length': 64
                         },
-                        'region': {
-                            'name': '13'
-                        },
+                        'region_id': 'homo_sapiens_GCA_000001405_28_13',
                         'strand': {
                             'code': 'forward'
                         }
@@ -161,9 +153,7 @@ def build_transcripts():
                                     'length': 130,
                                     'start': 32370971
                                 },
-                                'region': {
-                                    'name': '13'
-                                },
+                                'region_id': 'homo_sapiens_GCA_000001405_28_13',
                                 'strand': {
                                     'code': 'forward'
                                 }
@@ -187,9 +177,7 @@ def build_transcripts():
                                     'length': 64,
                                     'start': 32375343
                                 },
-                                'region': {
-                                    'name': '13'
-                                },
+                                'region_id': 'homo_sapiens_GCA_000001405_28_13',
                                 'strand': {
                                     'code': 'forward'
                                 }
@@ -220,9 +208,7 @@ def build_transcripts():
         'genome_id': 'homo_sapiens_GCA_000001405_28',
         'exons': build_exons(),
         'slice': {
-            'region': {
-                'name': '13'
-            },
+            'region_id': 'homo_sapiens_GCA_000001405_28_13',
             'strand': {
                 'code': 'forward',
                 'value': 1
@@ -247,9 +233,7 @@ def build_exons():
             'unversioned_stable_id': 'ENSE00002145385',
             'version': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': 'homo_sapiens_GCA_000001405_28_13',
                 'strand': {
                     'code': 'forward',
                     'value': 1
@@ -268,9 +252,7 @@ def build_exons():
             'unversioned_stable_id': 'ENSE00002167182',
             'version': 1,
             'slice': {
-                'region': {
-                    'name': '13'
-                },
+                'region_id': 'homo_sapiens_GCA_000001405_28_13',
                 'strand': {
                     'code': 'forward',
                     'value': 1
@@ -306,3 +288,43 @@ def build_products():
     # }
 
     return [product]
+
+
+def build_region():
+    'Build a region'
+
+    return {
+        "type": "Region",
+        "region_id": "homo_sapiens_GCA_000001405_28_13",
+        "name": "13",
+        "length": 114364328,
+        "code": "chromosome",
+        "topology": "linear",
+        "assembly_id": "GRCh38.p13",
+        "metadata": {
+            "ontology_terms": [
+                {
+                    "accession_id": "SO:0000340",
+                    "value": "chromosome",
+                    "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                    "source": {
+                        "name": "Sequence Ontology",
+                        "url": "www.sequenceontology.org",
+                        "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+                    }
+                }
+            ]
+        }
+    }
+
+
+def build_assembly():
+    return {
+        "type": "Assembly",
+        "default": True,
+        "id": "GRCh38.p13",
+        "name": "GRCh38",
+        "accession_id": "GCA_000001405.28",
+        "accessioning_body": "EGA",
+        "species": "homo_sapiens"
+    }
