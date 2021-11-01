@@ -104,7 +104,7 @@ class XrefResolver():
         for ns in self.id_data['payload']['namespaces']:
             self.namespace[ns['prefix']] = ns
 
-    def url_generator(self, xref, dbname):
+    def url_generator(self, xref_acc_id, dbname):
         '''
         Given an xref ID and a dbname, generate a url that resolves to the
         original site page for that xref (fingers crossed)
@@ -115,7 +115,7 @@ class XrefResolver():
             for i in resources:
                 if i['official'] is True:
                     url_base = i['urlPattern']
-                    (url, _) = self.id_substitution.subn(xref, url_base)
+                    (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
             print('*** {} namespace not in idntifiers.org ***'.format(dbname))
@@ -124,7 +124,7 @@ class XrefResolver():
         # Take the first arbitrarily
         if url is None:
             url_base = resources[0]['urlPattern']
-            (url, _) = self.id_substitution.subn(xref, url_base)
+            (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
         return url
 
     def source_information_retriever(self, dbname, field):
@@ -164,7 +164,7 @@ class XrefResolver():
 
         return None
 
-    def url_from_ens_dbname(self, xref, dbname):
+    def url_from_ens_dbname(self, xref_acc_id, dbname):
         '''
         Convert Ensembl dbnames and generate an xref URL
         '''
@@ -181,10 +181,10 @@ class XrefResolver():
         ):
             # Some sources are not in identifiers.org URLs Ensembl needs a URL
             xref_base = self.identifiers_mapping[dbname.lower()]['manual_xref_url']
-            return xref_base + xref
+            return xref_base + xref_acc_id
 
         # Now get the URL from identifiers.org using the namespace and xref_id
-        URL = self.url_generator(xref, namespace)
+        URL = self.url_generator(xref_acc_id, namespace)
 
         return URL
 
@@ -195,8 +195,7 @@ class XrefResolver():
 
         try:
             xref['url'] = self.url_from_ens_dbname(
-                xref['accession_id'],
-                xref['source']['id']
+                xref['accession_id'], xref['source']['id']
             )
             xref['source']['url'] = self.source_information_retriever(
                 self.translate_dbname(xref['source']['id']), 'resourceHomeUrl'
@@ -209,9 +208,21 @@ class XrefResolver():
 
 
     def annotate_gene_names(self, gene_name_metadata):
+        '''
+        Find extra information like URLs and description for a given gene name
+        '''
+
+        source_id = gene_name_metadata['source']['id']
+
+        # If no source id, we cant find any information about the source and also the gene name metadata's URL
+        if source_id is None:
+            gene_name_metadata['source'] = None
+            gene_name_metadata['url'] = None
+            return gene_name_metadata
 
         # Handle Plants genes where source information is projected from another species
-        source_id = self.handle_projected_source_info(gene_name_metadata['source']['id'])
+        source_id = self.handle_projected_source_info(source_id)
+        #source_name = self.handle_projected_source_info(gene_name_metadata['source']['name'])
 
         print(source_id)
 
