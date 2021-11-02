@@ -29,39 +29,41 @@ class XrefResolver():
     A secondary load is required to link Ensembl DB names to identifiers.org
     namespace prefixes
 
-    You probably want to use url_from_ens_dbname() to turn Ensembl cross-refs
+    You probably want to use find_url_using_ens_xref_name() to turn Ensembl cross-refs
     into real URLs to the original
     '''
 
-    def __init__(self, from_file=None, mapping_file=None):
-        self.api_url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
-        if mapping_file:
-            self.mapping_file = mapping_file
+    def __init__(self, from_file=None, internal_mapping_file=None):
+
+        self.identifiers_org_api_url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
+
+        if internal_mapping_file:
+            self.internal_mapping_file = internal_mapping_file
         else:
-            self.mapping_file = 'docs/xref_LOD_mapping.json'
+            self.internal_mapping_file = 'docs/xref_LOD_mapping.json'
 
         if from_file:
-            self.id_data = self._load_from_file(from_file)
+            self.identifiers_org_data = self._load_from_file(from_file)
         else:
-            self.id_data = self._load_from_url(self.api_url)
+            self.identifiers_org_data = self._load_from_url(self.identifiers_org_api_url)
             print('Loaded identifiers.org data via web service')
 
-        self.namespace = {}
-        self._index_namespaces()
+        self.id_org_indexed = {}
+        self._index_identifiers_org_data()
 
         self.id_substitution = re.compile(r'{\$id}')
 
-        self.identifiers_mapping = {}
+        self.internal_mapping_file_indexed = {}
         # Load LOD mappings from file
-        with open(self.mapping_file) as file:
+        with open(self.internal_mapping_file) as file:
             mapping = json.loads(file.read())
             for source in mapping['mappings']:
                 if 'ensembl_db_name' in source:
-                    self.identifiers_mapping[
+                    self.internal_mapping_file_indexed[
                         source['ensembl_db_name'].lower()
                     ] = source
                 else:
-                    self.identifiers_mapping[
+                    self.internal_mapping_file_indexed[
                         source['db_name'].lower()
                     ] = source
 
@@ -96,29 +98,29 @@ class XrefResolver():
 
         return response.json()
 
-    def _index_namespaces(self):
+    def _index_identifiers_org_data(self):
         '''
         Provide prefix-based indexes for the flat list of entities from
         the identifiers.org api
         '''
-        for ns in self.id_data['payload']['namespaces']:
-            self.namespace[ns['prefix']] = ns
+        for ns in self.identifiers_org_data['payload']['namespaces']:
+            self.id_org_indexed[ns['prefix']] = ns
 
-    def url_generator(self, xref_acc_id, dbname):
+    def generate_url_from_id_org_data(self, xref_acc_id, id_org_ns_prefix):
         '''
-        Given an xref ID and a dbname, generate a url that resolves to the
+        Given an xref ID and a identifiers.org Namespace Prefix, generate a url that resolves to the
         original site page for that xref (fingers crossed)
         '''
         url = None
-        if dbname in self.namespace:
-            resources = self.namespace[dbname]['resources']
+        if id_org_ns_prefix in self.id_org_indexed:
+            resources = self.id_org_indexed[id_org_ns_prefix]['resources']
             for i in resources:
                 if i['official'] is True:
                     url_base = i['urlPattern']
                     (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
-            print('*** {} namespace not in idntifiers.org ***'.format(dbname))
+            print('*** {} namespace not in idntifiers.org ***'.format(id_org_ns_prefix))
             return None
         # some sources seemingly have no official entry.
         # Take the first arbitrarily
@@ -135,8 +137,8 @@ class XrefResolver():
         different field values. Unhelpful to us but useful generally.
         '''
         data = None
-        if dbname in self.namespace:
-            resources = self.namespace[dbname]['resources']
+        if dbname in self.id_org_indexed:
+            resources = self.id_org_indexed[dbname]['resources']
             for i in resources:
                 if i['official'] is True:
                     data = i[field]
@@ -148,43 +150,43 @@ class XrefResolver():
             data = resources[0][field]
         return data
 
-    def translate_dbname(self, dbname):
+    def translate_xref_name_to_id_org_ns_prefix(self, xref_name):
         '''
         Turn Ensembl DB names into identifiers.org prefixes where possible
         '''
 
-        if dbname.lower() in self.identifiers_mapping:
-            namespace = self.identifiers_mapping[dbname.lower()]
-            if 'id_namespace' in namespace:
-                return namespace['id_namespace']
+        if xref_name.lower() in self.internal_mapping_file_indexed:
+            mapping_entry = self.internal_mapping_file_indexed[xref_name.lower()]
+            if 'id_namespace' in mapping_entry:
+                return mapping_entry['id_namespace']
             else:
-                print('*** No id_namespace for {} in mapping file ***'.format(dbname.lower()))
+                print('*** No id_namespace for {} in the internal mapping file ***'.format(xref_name.lower()))
         else:
-            print('*** {} not in mapping_file ***'.format(dbname.lower()))
+            print('*** {} not in the internal mapping file ***'.format(xref_name.lower()))
 
         return None
 
-    def url_from_ens_dbname(self, xref_acc_id, dbname):
+    def find_url_using_ens_xref_name(self, xref_acc_id, xref_name):
         '''
-        Convert Ensembl dbnames and generate an xref URL
+        Convert Ensembl xref_name and generate an xref URL
         '''
 
-        # Find identifiers.org namespace for a given ensembl dbname
-        namespace = self.translate_dbname(dbname)
+        # Find identifiers.org prefix for a given ensembl xref_name
+        id_org_ns_prefix = self.translate_xref_name_to_id_org_ns_prefix(xref_name)
 
-        # If there is no namespace defined in mapping file but manual_xref_url is defined,
+        # If there is no id_org_ns_prefix defined in mapping file but manual_xref_url is defined,
         # use this manual_xref_url to generate URL.
         if (
-                namespace is None and
-                dbname.lower() in self.identifiers_mapping and
-                'manual_xref_url' in self.identifiers_mapping[dbname.lower()]
+                id_org_ns_prefix is None and
+                xref_name.lower() in self.internal_mapping_file_indexed and
+                'manual_xref_url' in self.internal_mapping_file_indexed[xref_name.lower()]
         ):
             # Some sources are not in identifiers.org URLs Ensembl needs a URL
-            xref_base = self.identifiers_mapping[dbname.lower()]['manual_xref_url']
+            xref_base = self.internal_mapping_file_indexed[xref_name.lower()]['manual_xref_url']
             return xref_base + xref_acc_id
 
-        # Now get the URL from identifiers.org using the namespace and xref_id
-        URL = self.url_generator(xref_acc_id, namespace)
+        # Now get the URL from identifiers.org using the id_org_ns_prefix and xref_id
+        URL = self.generate_url_from_id_org_data(xref_acc_id, id_org_ns_prefix)
 
         return URL
 
@@ -194,11 +196,11 @@ class XrefResolver():
         '''
 
         try:
-            xref['url'] = self.url_from_ens_dbname(
+            xref['url'] = self.find_url_using_ens_xref_name(
                 xref['accession_id'], xref['source']['id']
             )
             xref['source']['url'] = self.source_information_retriever(
-                self.translate_dbname(xref['source']['id']), 'resourceHomeUrl'
+                self.translate_xref_name_to_id_org_ns_prefix(xref['source']['id']), 'resourceHomeUrl'
             )
             xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
             return xref
@@ -223,16 +225,16 @@ class XrefResolver():
         print(source_id)
 
         try:
-            gene_name_metadata['url'] = self.url_from_ens_dbname(
+            gene_name_metadata['url'] = self.find_url_using_ens_xref_name(
                 gene_name_metadata['accession_id'], source_id
             )
 
             gene_name_metadata['source']['url'] = self.source_information_retriever(
-                self.translate_dbname(source_id), 'resourceHomeUrl'
+                self.translate_xref_name_to_id_org_ns_prefix(source_id), 'resourceHomeUrl'
             )
 
             gene_name_metadata['source']['description'] = self.source_information_retriever(
-                self.translate_dbname(source_id), 'description'
+                self.translate_xref_name_to_id_org_ns_prefix(source_id), 'description'
             )
 
             return gene_name_metadata
