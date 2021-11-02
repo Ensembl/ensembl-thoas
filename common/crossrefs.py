@@ -220,10 +220,6 @@ class XrefResolver():
             gene_name_metadata['url'] = None
             return gene_name_metadata
 
-        # Handle Plants genes where source information is projected from another species
-        source_id = self.handle_projected_source_info(source_id)
-        #source_name = self.handle_projected_source_info(gene_name_metadata['source']['name'])
-
         print(source_id)
 
         try:
@@ -244,13 +240,6 @@ class XrefResolver():
         except:
             # probably log the error somewhere; just don't send it to the client
             raise
-
-    def handle_projected_source_info(self, source_id):
-
-        if source_id.startswith('Projected from'):
-            source_id = source_id.split()[-1]
-
-        return source_id
 
 
     def describe_info_type(self, info_type):
