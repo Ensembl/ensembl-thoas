@@ -102,31 +102,24 @@ def extract_info_using_display_xref_id(gene, gene_name_info, species_display_xre
 def get_species_genes_sql():
 
     return '''
-    select stable_id, display_xref_id, description from gene " \
-                           "join seq_region using (seq_region_id) " \
-                           "join coord_system using (coord_system_id) " \
-                           "join meta using (species_id) " \
-                           "where meta_key='species.production_name' and meta_value='{}'
-                           '''
+    select stable_id, display_xref_id, description from gene 
+    join seq_region using (seq_region_id) 
+    join coord_system using (coord_system_id) 
+    join meta using (species_id) 
+    where meta_key='species.production_name' and meta_value="{}"
+    '''
 
 def get_species_display_xref_sql():
 
     return '''
-    select gene.stable_id as gene_stable_id, " \
-                                "gene.description as gene_description, " \
-                                "xref.dbprimary_acc as xref_primary_acc, " \
-                                "xref.display_label as xref_display_label, " \
-                                "xref.description as xref_description, " \
-                                "external_db.db_name as external_db_name, " \
-                                "external_db.db_release as external_db_release, " \
-                                "external_db.db_display_name as external_db_display_name " \
-                                "from gene " \
-                                "inner join xref " \
-                                "on gene.display_xref_id = xref.xref_id " \
-                                "inner join external_db " \
-                                "on xref.external_db_id = external_db.external_db_id " \
-                                "where gene.stable_id='{}'
-                                '''
+    select gene.stable_id as gene_stable_id, gene.description as gene_description, 
+    xref.dbprimary_acc as xref_primary_acc, xref.display_label as xref_display_label, 
+    xref.description as xref_description, external_db.db_name as external_db_name, 
+    external_db.db_release as external_db_release, external_db.db_display_name as external_db_display_name 
+    from gene inner join xref on gene.display_xref_id = xref.xref_id 
+    inner join external_db on xref.external_db_id = external_db.external_db_id 
+    where gene.stable_id="{}"
+    '''
 
 
 if __name__ == "__main__":
