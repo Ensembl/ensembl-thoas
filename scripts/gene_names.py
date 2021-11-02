@@ -80,6 +80,10 @@ def extract_info_from_description_column(gene, gene_name_info):
                     # Get correct source if source information has extra information like in 'Projected genes'
                     if value.startswith('Projected from'):
                         gene_name_info['external_db_name'] = value.split()[-1]
+
+                    # ExternalDBDisplayName(Source Name) will be same as ExternalDBName(Source ID) when
+                    # we extract source from description
+                    gene_name_info['external_db_display_name'] = gene_name_info['external_db_name']
                 if key == 'Acc':
                     gene_name_info['xref_primary_acc'] = value
     return gene_name_info

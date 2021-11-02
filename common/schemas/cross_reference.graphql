@@ -11,9 +11,7 @@ type ExternalReference {
 type ExternalDB {
   # Some metadata about databases outside of Ensembl
   id: String!
-
-  # Temp Solution: Non-nullable because plants with source info in desc has no name
-  name: String
+  name: String!
   description: String
   url: String
   release: String
