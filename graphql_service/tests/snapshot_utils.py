@@ -27,7 +27,7 @@ def prepare_db():
     mocked_mongo_collection = mongomock.MongoClient().db.collection
     data_loader = DataLoaderCollection(mocked_mongo_collection)
     try:
-        xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+        xref_resolver = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
     except requests.exceptions.ConnectionError:
         print('No network available, tests will fail')
         xref_resolver = None

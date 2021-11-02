@@ -38,7 +38,7 @@ def test_populate_crossrefs(resolver):
     data
     '''
 
-    assert len(resolver.namespace.keys()) > 0
+    assert len(resolver.id_org_indexed.keys()) > 0
 
     # Can't test URI fetching nicely
 
@@ -61,13 +61,13 @@ def test_crossref_url(resolver):
     Test URLs for xrefs based on a source
     '''
 
-    response = resolver.url_generator('17790', 'chebi')
+    response = resolver.generate_url_from_id_org_data('17790', 'chebi')
     assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'
 
-    response = resolver.url_generator('17790', 'place_of_quiet_reflection')
+    response = resolver.generate_url_from_id_org_data('17790', 'place_of_quiet_reflection')
     assert response is None
 
-    response = resolver.url_generator('LRG_357', 'lrg')
+    response = resolver.generate_url_from_id_org_data('LRG_357', 'lrg')
     assert response == 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/LRG_357.xml'
 
 
@@ -76,7 +76,7 @@ def test_identifier_resolution(resolver):
     Verify data being loaded from file, and resolves Ensembl xref dbnames
     '''
 
-    response = resolver.translate_dbname('ChEMBL')
+    response = resolver.translate_xref_name_to_id_org_ns_prefix('ChEMBL')
     assert response == 'chembl.target'
 
 
@@ -85,11 +85,11 @@ def test_combined_resolution(resolver):
     Perform combined Ensembl dbname mapping and xref resolution
     '''
 
-    response = resolver.url_from_ens_dbname('17790', 'CHEBI')
+    response = resolver.find_url_using_ens_xref_name('17790', 'CHEBI')
     assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'
 
     # Check manual override works for sources with overrides
-    response = resolver.url_from_ens_dbname('80', 'DBASS3')
+    response = resolver.find_url_using_ens_xref_name('80', 'DBASS3')
     assert response == 'http://www.dbass.soton.ac.uk/DBASS3/viewlist.aspx?filter=gene&id=80'
 
 
