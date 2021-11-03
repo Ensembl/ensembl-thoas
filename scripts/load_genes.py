@@ -335,8 +335,8 @@ def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
                     refget=refget)
             )
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
-        if len(protein_buffer) > 0:
-            mongo_client.collection().insert_many(protein_buffer)
+    if len(protein_buffer) > 0:
+        mongo_client.collection().insert_many(protein_buffer)
 
 
 def preload_cds_coords(production_name, assembly):

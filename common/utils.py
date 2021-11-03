@@ -441,7 +441,8 @@ def format_protein(protein, genome_id, product_length, refget):
         'genome_id': genome_id,
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
-        'protein_domains': format_protein_domains(protein['protein_features']),
+        'family_matches': format_protein_domains(protein['protein_features']),
+        'mappings': None, # TODO
         'length': product_length,
         'sequence': sequence,
         'sequence_checksum': sequence.get('checksum')
@@ -453,23 +454,49 @@ def format_protein_domains(protein_features):
     Create protein domain representation from a list of protein_features
     '''
 
+    db_to_url = {
+        "Pfam": "https://pfam.xfam.org",
+        "PANTHER": "http://www.pantherdb.org", # TODO this a guess, confirm it
+        "InterProScan": "https://www.ebi.ac.uk/interpro"
+    }
     domains = []
-    # Needs work from production before this can be sorted
-    # for feature in protein_features:
-    #     domains.append(
-    #         {
-    #             'type': 'ProteinDomain',
-    #             'id': feature['name'],
-    #             'name': feature['name'],
-    #             'resource_name': feature['dbname'],
-    #             'location': {
-    #                 'start': feature['start'],
-    #                 'end': feature['end']
-    #             },
-    #             'hit_location': None,
-    #             'score': None
-    #         }
-    #     )
+    for feature in protein_features:
+        domains.append(
+            {
+                "sequence_family": {
+                    "source": {
+                        "id": None, # TODO
+                        "name": feature["dbname"],
+                        "description": feature["description"],
+                        "url": db_to_url[feature["dbname"]],
+                        "release": feature["dbversion"]
+                    }
+                },
+                "via": {
+                    "source": {
+                        "id": None, # TODO
+                        "name": feature["program"],
+                        "description": feature["interpro_description"],
+                        "url": db_to_url[feature["program"]],
+                        "release": feature['program_version'],
+                    },
+                    "accession_id": feature["interpro_ac"],
+                    "url": f"https://www.ebi.ac.uk/interpro/entry/InterPro/{feature['interpro_ac']}/" # TODO another guess, confirm it.
+                },
+                "location": {
+                    "start": feature["start"],
+                    "end": feature["end"],
+                    "length": feature["end"] - feature["start"] + 1 # TODO should we worry about circular regions?
+                },
+                "score": feature["score"],
+                "evalue": feature["evalue"],
+                "hit_location": {
+                    "start": feature["hit_start"],
+                    "end": feature["hit_end"],
+                    "length": feature["hit_end"] - feature["hit_start"] + 1 # TODO should we worry about circular regions?
+                }
+            }
+        )
     return domains
 
 

@@ -1,0 +1,64 @@
+type Product {
+  type: String!
+  stable_id: String!
+  unversioned_stable_id: String!
+  version: Int
+  """
+  the value of the type field is "protein"
+  """
+  so_term: String!
+  """
+  length in amino acids if product is a protein
+  """
+  length: Int!
+  """
+  The value of checksum in the Sequence object can be used to retrieve the sequence from RefGet
+  """
+  sequence: Sequence!
+  sequence_checksum: String! @deprecated
+  external_references: [ExternalReference!]!
+  family_matches: [FamilyMatch!]!
+  mappings: [Mapping!]!
+}
+
+type FamilyMatch {
+  sequence_family: SequenceFamily!
+  via: SequenceFamily!
+  location: Location!
+  score: Float!
+  evalue: Float
+  hit_location: Location!
+}
+
+type SequenceFamily {
+  source: Source!
+  accession_id: String!
+  name: String!
+  url: String
+}
+
+type Source {
+  id: String!
+  name: String!
+  description: String!
+  url: String!
+  release: String!
+}
+
+type Mapping {
+  source: Source!
+  accession_id: String!
+  url: String!
+  name: String!
+  genomic_locations: [GenomicLocation!]!
+  relative_location: Location!
+  hit_location: Location!
+  score: Float!
+  evalue: Float
+}
+
+type GenomicLocation {
+  slice: Slice!
+  cigar_string: String!
+}
+
