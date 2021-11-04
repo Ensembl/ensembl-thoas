@@ -209,41 +209,6 @@ class XrefResolver():
             return None
 
 
-    def annotate_gene_names(self, gene_name_metadata):
-        '''
-        Find extra information like URLs and description for a given gene name
-        '''
-
-        source_id = gene_name_metadata['source']['id']
-
-        # If no source id, we cant find any information about the source and also the gene name metadata's URL
-        if source_id is None:
-            gene_name_metadata['source'] = None
-            gene_name_metadata['url'] = None
-            return gene_name_metadata
-
-        print(source_id)
-
-        try:
-            gene_name_metadata['url'] = self.find_url_using_ens_xref_name(
-                gene_name_metadata['accession_id'], source_id
-            )
-
-            gene_name_metadata['source']['url'] = self.source_information_retriever(
-                self.translate_xref_name_to_id_org_ns_prefix(source_id), 'resourceHomeUrl'
-            )
-
-            gene_name_metadata['source']['description'] = self.source_information_retriever(
-                self.translate_xref_name_to_id_org_ns_prefix(source_id), 'description'
-            )
-
-            return gene_name_metadata
-
-        except:
-            # probably log the error somewhere; just don't send it to the client
-            raise
-
-
     def describe_info_type(self, info_type):
         '''
         Generates a description field for external reference assignment
