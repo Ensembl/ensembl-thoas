@@ -80,10 +80,10 @@ snapshots['test_gene_retrieval_by_id 1'] = {
                 'value': 'BRCA2 DNA repair associated',
                 'url': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:1101',
                 'source': {
-                    'id': 'HGNC Symbol',
-                    'name': 'HGNC',
-                    'description': 'The HGNC is responsible for approving unique symbols and names for human loci, including protein coding genes, ncRNA genes and pseudogenes, to allow unambiguous scientific communication.',
-                    'url': 'https://www.genenames.org/',
+                    'id': 'HGNC',
+                    'name': 'HGNC Symbol',
+                    'description': 'HUGO Genome Nomenclature Committee',
+                    'url': 'https://www.genenames.org',
                     'release': None
                 }
             }
