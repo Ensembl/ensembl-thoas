@@ -29,11 +29,13 @@ async def run_assembly(args):
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
+    collection_param = f'--collection {args["collection"]}' if args["collection"] else ""
+
     shell_command = f'''
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
         python {code}/load_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
-        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
-        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
+        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
+        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]}
     '''
     await asyncio.create_subprocess_shell(shell_command)
