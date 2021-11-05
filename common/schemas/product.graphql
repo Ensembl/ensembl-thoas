@@ -18,7 +18,6 @@ type Product {
   sequence_checksum: String! @deprecated
   external_references: [ExternalReference!]!
   family_matches: [FamilyMatch!]!
-  mappings: [Mapping!]!
 }
 
 type FamilyMatch {

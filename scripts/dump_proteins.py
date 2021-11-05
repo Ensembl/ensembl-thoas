@@ -20,7 +20,7 @@ from common.mongo import MongoDbClient
 from common.mysql import MySQLClient
 
 
-def load_proteins(config, section_name):
+def dump_proteins(config, section_name):
     mysql_client = MySQLClient(config, section_name)
 
     translation_query = """SELECT ifnull(t.stable_id,t.transcript_id) AS transcript_id,
@@ -135,5 +135,4 @@ if __name__ == "__main__":
     )
     ARGS = parser.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
-    MONGO_CLIENT = MongoDbClient(CONFIG)
-    load_proteins(CONFIG, ARGS.section_name)
+    dump_proteins(CONFIG, ARGS.section_name)
