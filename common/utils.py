@@ -442,7 +442,7 @@ def format_protein(protein, genome_id, product_length, refget):
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
         'family_matches': format_protein_domains(protein['protein_features']),
-        'mappings': None, # TODO
+        # 'mappings': TODO
         'length': product_length,
         'sequence': sequence,
         'sequence_checksum': sequence.get('checksum')
@@ -454,46 +454,53 @@ def format_protein_domains(protein_features):
     Create protein domain representation from a list of protein_features
     '''
 
-    db_to_url = {
-        "Pfam": "https://pfam.xfam.org",
-        "PANTHER": "http://www.pantherdb.org", # TODO this a guess, confirm it
-        "InterProScan": "https://www.ebi.ac.uk/interpro"
+    db_details = {
+        "Pfam": {"url": "https://pfam.xfam.org",
+                 "description": "Pfam is a database of protein families that includes their annotations and multiple "
+                                "sequence alignments generated using hidden Markov models."},
+        "PANTHER": {"url": "http://www.pantherdb.org",
+                    "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
+                                   "system is a large curated biological database of gene/protein families and their "
+                                   "functionally related subfamilies that can be used to classify and identify the "
+                                   "function of gene products."},
+        "InterProScan": {"url": "https://www.ebi.ac.uk/interpro",
+                         "description": "InterPro provides functional analysis of proteins by classifying them into "
+                                        "families and predicting domains and important sites."}
     }
+
     domains = []
     for feature in protein_features:
         domains.append(
             {
                 "sequence_family": {
                     "source": {
-                        "id": None, # TODO
                         "name": feature["dbname"],
-                        "description": feature["description"],
-                        "url": db_to_url[feature["dbname"]],
+                        "description": db_details[feature["dbname"]]["description"],
+                        "url": db_details[feature["dbname"]]["url"],
                         "release": feature["dbversion"]
                     }
                 },
                 "via": {
                     "source": {
-                        "id": None, # TODO
                         "name": feature["program"],
-                        "description": feature["interpro_description"],
-                        "url": db_to_url[feature["program"]],
+                        "description": db_details[feature["program"]]["description"],
+                        "url": db_details[feature["program"]]["url"],
                         "release": feature['program_version'],
                     },
                     "accession_id": feature["interpro_ac"],
-                    "url": f"https://www.ebi.ac.uk/interpro/entry/InterPro/{feature['interpro_ac']}/" # TODO another guess, confirm it.
+                    "url": f"https://www.ebi.ac.uk/interpro/entry/InterPro/{feature['interpro_ac']}/"
                 },
                 "location": {
                     "start": feature["start"],
                     "end": feature["end"],
-                    "length": feature["end"] - feature["start"] + 1 # TODO should we worry about circular regions?
+                    "length": feature["end"] - feature["start"] + 1
                 },
                 "score": feature["score"],
                 "evalue": feature["evalue"],
                 "hit_location": {
                     "start": feature["hit_start"],
                     "end": feature["hit_end"],
-                    "length": feature["hit_end"] - feature["hit_start"] + 1 # TODO should we worry about circular regions?
+                    "length": feature["hit_end"] - feature["hit_start"] + 1
                 }
             }
         )

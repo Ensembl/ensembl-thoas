@@ -44,21 +44,3 @@ type Source {
   url: String!
   release: String!
 }
-
-type Mapping {
-  source: Source!
-  accession_id: String!
-  url: String!
-  name: String!
-  genomic_locations: [GenomicLocation!]!
-  relative_location: Location!
-  hit_location: Location!
-  score: Float!
-  evalue: Float
-}
-
-type GenomicLocation {
-  slice: Slice!
-  cigar_string: String!
-}
-

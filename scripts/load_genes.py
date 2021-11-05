@@ -75,7 +75,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
     """
     gene_buffer = []
     transcript_buffer = []
-    protein_buffer = []
 
     # at least until there's a process for alt-alleles etc.
     default_region = True

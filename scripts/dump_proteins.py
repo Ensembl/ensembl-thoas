@@ -1,8 +1,21 @@
+#
+#    See the NOTICE file distributed with this work for additional information
+#    regarding copyright ownership.
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#        http://www.apache.org/licenses/LICENSE-2.0
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+
 import argparse
 import json
-
-
 import common.utils
+
 from common.mongo import MongoDbClient
 from common.mysql import MySQLClient
 
@@ -18,11 +31,9 @@ def load_proteins(config, section_name):
     JOIN translation tl USING (transcript_id)
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    WHERE c.species_id = 1 
-    """  # TODO: is the species_id always 1?
+    WHERE c.name = 'chromosome' AND c.version = %s"""  # TODO: is the species_id always 1?
 
-    domain_query = """SELECT
-    ifnull(tl.stable_id, tl.translation_id) AS translation_id,
+    domain_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS translation_id,
     pf.hit_name AS name,
     pf.hit_description AS description,
     pf.seq_start AS start,
@@ -48,18 +59,18 @@ def load_proteins(config, section_name):
     LEFT JOIN external_db idx ON (ix.external_db_id=idx.external_db_id and idx.db_name='Interpro')
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    WHERE c.species_id = 1 AND a.db in ('Pfam', 'PANTHER')"""
+    WHERE c.name = 'chromosome' AND c.version = %s AND a.db in ('Pfam', 'PANTHER')"""
 
     xrefs_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
-      FROM transcript t
-      JOIN translation tl USING (transcript_id)
-      JOIN object_xref ox         ON (tl.translation_id = ox.ensembl_id AND ox.ensembl_object_type = 'Translation')
-      JOIN xref x                 USING (xref_id)
-      JOIN external_db e          USING (external_db_id)
-      JOIN seq_region s           USING (seq_region_id)
-      JOIN coord_system c         USING (coord_system_id)
-      LEFT JOIN ontology_xref oox USING (object_xref_id)
-      WHERE c.species_id = 1 AND oox.object_xref_id is null"""
+    FROM transcript t
+    JOIN translation tl USING (transcript_id)
+    JOIN object_xref ox ON (tl.translation_id = ox.ensembl_id AND ox.ensembl_object_type = 'Translation')
+    JOIN xref x USING (xref_id)
+    JOIN external_db e USING (external_db_id)
+    JOIN seq_region s USING (seq_region_id)
+    JOIN coord_system c USING (coord_system_id)
+    LEFT JOIN ontology_xref oox USING (object_xref_id)
+    WHERE c.name = 'chromosome' AND c.version = %s AND oox.object_xref_id is null"""
 
     def group_by_id(list_of_dicts, key):
         result = {}
@@ -68,16 +79,18 @@ def load_proteins(config, section_name):
                 result[item[key]].append(item)
             else:
                 result[item[key]] = [item]
-        return result # TODO use Pandas here?
+        return result
 
     with mysql_client.connection.cursor(dictionary=True) as cursor:
-        cursor.execute(translation_query)
+        assembly = config.get(section_name, 'assembly')
+
+        cursor.execute(translation_query, (assembly,))
         translations = cursor.fetchall()
 
-        cursor.execute(domain_query)
+        cursor.execute(domain_query, (assembly,))
         domains = cursor.fetchall()
 
-        cursor.execute(xrefs_query)
+        cursor.execute(xrefs_query, (assembly,))
         xrefs = cursor.fetchall()
 
         def to_json_dump_format(xref):
@@ -94,15 +107,14 @@ def load_proteins(config, section_name):
         indexed_domains = group_by_id(domains, 'translation_id')
         indexed_xrefs = group_by_id(xrefs, 'id')
 
-        indexed_xrefs = {translation_id: list(map(to_json_dump_format, xref_group)) for translation_id, xref_group in
-                         indexed_xrefs.items()}
+        formatted_xrefs = {translation_id: list(map(to_json_dump_format, xref_group)) for translation_id, xref_group
+                             in indexed_xrefs.items()}
 
         for translation in translations:
             translation["protein_features"] = indexed_domains.get(translation["id"], [])
-            translation["xrefs"] = indexed_xrefs.get(translation["id"], [])
+            translation["xrefs"] = formatted_xrefs.get(translation["id"], [])
 
         species = config.get(section_name, 'production_name')
-        assembly = config.get(section_name, 'assembly')
         outpath = f'./{species}_{assembly}_translations.json'
         with open(outpath, 'w+') as outhandle:
             json.dump(translations, outhandle)
@@ -110,7 +122,7 @@ def load_proteins(config, section_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Load protein domain information from MySQL into MongoDB'
+        description='Dump protein domain information from MySQL into a local JSON file'
     )
     parser.add_argument(
         '--config_file',
