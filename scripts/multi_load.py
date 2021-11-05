@@ -29,7 +29,7 @@ async def run_assembly(args):
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
-    collection_param = '' if not args["collection"] else f'--collection {args["collection"]}'
+    collection_param = '' if 'collection' not in args else f'--collection {args["collection"]}'
 
     shell_command = f'''
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
