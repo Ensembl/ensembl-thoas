@@ -16,7 +16,6 @@ import argparse
 import json
 import common.utils
 
-from common.mongo import MongoDbClient
 from common.mysql import MySQLClient
 
 
