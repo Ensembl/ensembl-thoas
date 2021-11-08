@@ -76,7 +76,7 @@ def test_identifier_resolution(resolver):
     Verify data being loaded from file, and resolves Ensembl xref dbnames
     '''
 
-    response = resolver.translate_xref_name_to_id_org_ns_prefix('ChEMBL')
+    response = resolver.translate_xref_db_name_to_id_org_ns_prefix('ChEMBL')
     assert response == 'chembl.target'
 
 
@@ -85,11 +85,11 @@ def test_combined_resolution(resolver):
     Perform combined Ensembl dbname mapping and xref resolution
     '''
 
-    response = resolver.find_url_using_ens_xref_name('17790', 'CHEBI')
+    response = resolver.find_url_using_ens_xref_db_name('17790', 'CHEBI')
     assert response == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17790'
 
     # Check manual override works for sources with overrides
-    response = resolver.find_url_using_ens_xref_name('80', 'DBASS3')
+    response = resolver.find_url_using_ens_xref_db_name('80', 'DBASS3')
     assert response == 'http://www.dbass.soton.ac.uk/DBASS3/viewlist.aspx?filter=gene&id=80'
 
 

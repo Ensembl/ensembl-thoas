@@ -102,15 +102,12 @@ def insert_gene_name_urls(gene_metadata, info):
         return name_metadata
 
     # Try to generate the gene name url
-    if name_metadata.get('accession_id') is not None:
-        name_metadata['url'] = xref_resolver.find_url_using_ens_xref_name(name_metadata.get('accession_id'), source_id)
-
+    name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(name_metadata.get('accession_id'), source_id)
     # Try to get gene name's source url and source description
-    id_org_ns_prefix = xref_resolver.translate_xref_name_to_id_org_ns_prefix(source_id)
-    if id_org_ns_prefix is not None:
-        name_metadata['source']['url'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'resourceHomeUrl')
-        # Source descrption is mostly null in the Ensembl database. So, trying to get it from id.org
-        name_metadata['source']['description'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'description')
+    id_org_ns_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(source_id)
+    name_metadata['source']['url'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'resourceHomeUrl')
+    # Source descrption is mostly null in the Ensembl database. So, trying to get it from id.org
+    name_metadata['source']['description'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'description')
 
     return name_metadata
 
