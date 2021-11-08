@@ -18,11 +18,14 @@ import ijson
 import pymongo
 import os
 import json
+import sys
 
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
+from common.crossrefs import XrefResolver
+from common.logger import ThoasLogging
 
 lrg_detector = re.compile('^LRG')
 
@@ -64,7 +67,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release, gene_name_metadata):
+def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release, gene_name_metadata, xref_resolver, logger):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -118,7 +121,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(CONFIG, gene_name_metadata[gene['id']])
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene_name_metadata[gene['id']], xref_resolver, logger)
             except KeyError as ke:
                 gene_metadata['name'] = None
 
@@ -468,6 +471,9 @@ if __name__ == '__main__':
     METADATA_CLASSIFIER = preload_classifiers(CLASSIFIER_PATH)
     print("Loading Gene Name Metadata")
     GENE_NAME_METADATA = preload_gene_name_metadata(ARGS.species, ARGS.assembly)
+    print("Loading e! xref db name to id.org prefix mappings")
+    XREF_RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
+    LOGGER = ThoasLogging(logger_name='generic_logging', logging_file=sys.stderr)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, LOGGER)
     create_index(MONGO_CLIENT)

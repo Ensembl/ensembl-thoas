@@ -16,6 +16,7 @@ from configparser import ConfigParser
 import argparse
 import sys
 import pymongo
+import requests
 
 
 def load_config(filename):
@@ -581,18 +582,52 @@ def calculate_relative_coords(parent_params, child_params):
     return relative_location
 
 
-def get_gene_name_metadata(config, gene_name_metadata):
+def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 
-    gene_name_metadata = {
+    # Try to generate the gene name url
+    gene_name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(
+        gene_name_metadata.get('accession_id'),
+        gene_name_metadata.get('external_db_name')
+    )
+
+    check_and_log_urls(gene_name_metadata, 'url', logger)
+
+    # Try to generate the gene source url
+    id_org_n_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(gene_name_metadata.get('external_db_name'))
+    gene_name_metadata['source_url'] = xref_resolver.source_information_retriever(
+        id_org_n_prefix,
+        'resourceHomeUrl'
+    )
+
+    check_and_log_urls(gene_name_metadata, 'source_url', logger)
+
+    name_metadata = {
         'accession_id': gene_name_metadata.get('xref_primary_acc'),
         'value': gene_name_metadata.get('xref_description'),
+        # Dont store URLs in the database.
+        #'url': gene_name_metadata.get('url'),
         'url': None,
         'source': {
             'id': gene_name_metadata.get('external_db_name'),
             'name': gene_name_metadata.get('external_db_display_name'),
+            # Dont store URLs in the database.
+            # 'url': gene_name_metadata.get('source_url'),
             'url': None,
             'description': None,
             'release': gene_name_metadata.get('external_db_release'),
         }
     }
-    return gene_name_metadata
+    return name_metadata
+
+
+def check_and_log_urls(data, url_key, logger):
+    try:
+        response = requests.get(data.get(url_key))
+        if response.status_code != 200:
+            data['response_code'] = response.status_code
+            data['url_key'] = url_key
+            logger.url_logger(**data)
+    except:
+        data['error'] = "Unable to check URL"
+        data['url_key'] = url_key
+        logger.url_logger(**data)
