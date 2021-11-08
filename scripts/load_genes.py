@@ -325,7 +325,8 @@ def format_transcript(
 def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
     protein_buffer = []
     with open(product_filepath) as protein_file:
-        for product in ijson.items(protein_file, 'item', use_float=True):
+        for line in protein_file:
+            product = json.loads(line)
             protein_buffer.append(
                 common.utils.format_protein(
                     protein=product,
