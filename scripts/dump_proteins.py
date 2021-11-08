@@ -30,7 +30,7 @@ def dump_proteins(config, section_name):
     JOIN translation tl USING (transcript_id)
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    WHERE c.name = 'chromosome' AND c.version = %s"""  # TODO: is the species_id always 1?
+    WHERE c.name = 'chromosome' AND c.version = %s"""
 
     domain_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS translation_id,
     pf.hit_name AS name,
@@ -109,14 +109,14 @@ def dump_proteins(config, section_name):
         formatted_xrefs = {translation_id: list(map(to_json_dump_format, xref_group)) for translation_id, xref_group
                              in indexed_xrefs.items()}
 
-        for translation in translations:
-            translation["protein_features"] = indexed_domains.get(translation["id"], [])
-            translation["xrefs"] = formatted_xrefs.get(translation["id"], [])
-
         species = config.get(section_name, 'production_name')
         outpath = f'./{species}_{assembly}_translations.json'
+
         with open(outpath, 'w+') as outhandle:
-            json.dump(translations, outhandle)
+            for translation in translations:
+                translation["protein_features"] = indexed_domains.get(translation["id"], [])
+                translation["xrefs"] = formatted_xrefs.get(translation["id"], [])
+                json.dump(translation, outhandle)
 
 
 if __name__ == "__main__":
