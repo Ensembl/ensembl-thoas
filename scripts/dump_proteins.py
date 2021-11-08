@@ -117,6 +117,7 @@ def dump_proteins(config, section_name):
                 translation["protein_features"] = indexed_domains.get(translation["id"], [])
                 translation["xrefs"] = formatted_xrefs.get(translation["id"], [])
                 json.dump(translation, outhandle)
+                outhandle.write('\n')
 
 
 if __name__ == "__main__":
