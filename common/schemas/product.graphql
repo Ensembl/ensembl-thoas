@@ -1,12 +1,11 @@
 type Product {
+  """
+  the value of the type field is "Protein"
+  """
   type: String!
   stable_id: String!
   unversioned_stable_id: String!
   version: Int
-  """
-  the value of the type field is "protein"
-  """
-  so_term: String!
   """
   length in amino acids if product is a protein
   """
@@ -23,7 +22,7 @@ type Product {
 type FamilyMatch {
   sequence_family: SequenceFamily!
   via: SequenceFamily!
-  location: Location!
+  relative_location: Location!
   score: Float!
   evalue: Float
   hit_location: Location!

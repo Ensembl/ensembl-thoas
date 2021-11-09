@@ -15,6 +15,8 @@
 from configparser import ConfigParser
 import argparse
 import sys
+from string import Template
+
 import pymongo
 
 
@@ -441,7 +443,7 @@ def format_protein(protein, genome_id, product_length, refget):
         'genome_id': genome_id,
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
-        'family_matches': format_protein_domains(protein['protein_features']),
+        'family_matches': format_protein_features(protein['protein_features']),
         # 'mappings': TODO
         'length': product_length,
         'sequence': sequence,
@@ -449,61 +451,69 @@ def format_protein(protein, genome_id, product_length, refget):
     }
 
 
-def format_protein_domains(protein_features):
+def format_protein_features(protein_features):
     '''
     Create protein domain representation from a list of protein_features
     '''
 
     db_details = {
-        "Pfam": {"url": "https://pfam.xfam.org",
+        "Pfam": {"source_url": "https://pfam.xfam.org",
+                 "family_url_template": Template("https://pfam.xfam.org/family/$name"),
                  "description": "Pfam is a database of protein families that includes their annotations and multiple "
                                 "sequence alignments generated using hidden Markov models."},
-        "PANTHER": {"url": "http://www.pantherdb.org",
+        "PANTHER": {"source_url": "http://www.pantherdb.org",
+                    "family_url_template": Template("http://www.pantherdb.org/panther/family.do?clsAccession=$name"),
                     "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
                                    "system is a large curated biological database of gene/protein families and their "
                                    "functionally related subfamilies that can be used to classify and identify the "
                                    "function of gene products."},
-        "InterProScan": {"url": "https://www.ebi.ac.uk/interpro",
+        "InterProScan": {"source_url": "https://www.ebi.ac.uk/interpro",
+                         "family_url_template": Template("https://www.ebi.ac.uk/interpro/entry/InterPro/$name"),
                          "description": "InterPro provides functional analysis of proteins by classifying them into "
                                         "families and predicting domains and important sites."}
     }
 
     domains = []
     for feature in protein_features:
-        domains.append(
-            {
-                "sequence_family": {
-                    "source": {
-                        "name": feature["dbname"],
-                        "description": db_details[feature["dbname"]]["description"],
-                        "url": db_details[feature["dbname"]]["url"],
-                        "release": feature["dbversion"]
-                    }
-                },
-                "via": {
-                    "source": {
-                        "name": feature["program"],
-                        "description": db_details[feature["program"]]["description"],
-                        "url": db_details[feature["program"]]["url"],
-                        "release": feature['program_version'],
+        if feature["program"] == "InterProScan":
+            domains.append(
+                {
+                    "sequence_family": {
+                        "source": {
+                            "name": feature["dbname"],
+                            "description": db_details[feature["dbname"]]["description"],
+                            "url": db_details[feature["dbname"]]["source_url"],
+                            "release": feature["dbversion"]
+                        },
+                        "accession_id": feature["name"],
+                        "url": db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
+                        "description": feature["description"]
                     },
-                    "accession_id": feature["interpro_ac"],
-                    "url": f"https://www.ebi.ac.uk/interpro/entry/InterPro/{feature['interpro_ac']}/"
-                },
-                "location": {
-                    "start": feature["start"],
-                    "end": feature["end"],
-                    "length": feature["end"] - feature["start"] + 1
-                },
-                "score": feature["score"],
-                "evalue": feature["evalue"],
-                "hit_location": {
-                    "start": feature["hit_start"],
-                    "end": feature["hit_end"],
-                    "length": feature["hit_end"] - feature["hit_start"] + 1
+                    "via": {
+                        "source": {
+                            "name": "InterProScan",
+                            "description": db_details["InterProScan"]["description"],
+                            "url": db_details["InterProScan"]["source_url"],
+                            "release": feature['program_version'],
+                        },
+                        "accession_id": feature["interpro_ac"],
+                        "url": db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac']),
+                        "description": feature["interpro_description"]
+                    },
+                    "relative_location": {
+                        "start": feature["start"],
+                        "end": feature["end"],
+                        "length": feature["end"] - feature["start"] + 1
+                    },
+                    "score": feature["score"],
+                    "evalue": feature["evalue"],
+                    "hit_location": {
+                        "start": feature["hit_start"],
+                        "end": feature["hit_end"],
+                        "length": feature["hit_end"] - feature["hit_start"] + 1
+                    }
                 }
-            }
-        )
+            )
     return domains
 
 

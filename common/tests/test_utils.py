@@ -708,7 +708,10 @@ def test_protein_formatting():
                         'description': 'Pfam is a database of protein families that includes their annotations and multiple sequence alignments generated using hidden Markov models.',
                         'url': 'https://pfam.xfam.org',
                         'release': '33.1'
-                    }
+                    },
+                    "accession_id": "PF03011",
+                    "url": "https://pfam.xfam.org/family/PF03011",
+                    "description": "PFEMP"
                 },
                 'via': {
                     'source': {
@@ -718,9 +721,10 @@ def test_protein_formatting():
                         'release': '5.48-83.0'
                     },
                     'accession_id': 'IPR004258',
-                    'url': 'https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258/'
+                    'url': 'https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258',
+                    'description': 'Duffy-binding-like domain'
                 },
-                'location': {
+                'relative_location': {
                     'start': 602,
                     'end': 762,
                     'length': 161

@@ -22,7 +22,6 @@ snapshots['test_protein_retrieval_by_transcript 1'] = {
 
 snapshots['test_protein_retrieval 1'] = {
     'product': {
-        'so_term': 'polypeptide',
         'stable_id': 'ENSP00000369497.3',
         'unversioned_stable_id': 'ENSP00000369497',
         'version': 3

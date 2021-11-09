@@ -275,7 +275,6 @@ def build_products():
         'unversioned_stable_id': 'ENSP00000369497',
         'stable_id': 'ENSP00000369497.3',
         'version': 3,
-        'so_term': 'polypeptide',
         'transcript_id': 'ENST00000380152.7',
         'protein_domains': [],
         'genome_id': 'homo_sapiens_GCA_000001405_28'

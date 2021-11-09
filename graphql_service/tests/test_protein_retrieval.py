@@ -30,7 +30,6 @@ async def test_protein_retrieval(snapshot):
             stable_id
             unversioned_stable_id
             version
-            so_term
         }
     }"""
     query_data = {'query': query}

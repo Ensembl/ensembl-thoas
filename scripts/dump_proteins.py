@@ -82,6 +82,7 @@ def dump_proteins(config, section_name):
 
     with mysql_client.connection.cursor(dictionary=True) as cursor:
         assembly = config.get(section_name, 'assembly')
+        species = config.get(section_name, 'production_name')
 
         cursor.execute(translation_query, (assembly,))
         translations = cursor.fetchall()
@@ -109,7 +110,6 @@ def dump_proteins(config, section_name):
         formatted_xrefs = {translation_id: list(map(to_json_dump_format, xref_group)) for translation_id, xref_group
                              in indexed_xrefs.items()}
 
-        species = config.get(section_name, 'production_name')
         outpath = f'./{species}_{assembly}_translations.json'
 
         with open(outpath, 'w+') as outhandle:
