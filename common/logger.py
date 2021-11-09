@@ -9,7 +9,6 @@ class ThoasLogging:
         self.logger_name = logger_name
         self.logging_file = logging_file
         self.logging_handler = logging.FileHandler(self.logging_file)
-        self.logging_handler = logging.StreamHandler(self.logging_file)
 
         logger = logging.getLogger(self.logger_name)
         logger.addHandler(self.logging_handler)
