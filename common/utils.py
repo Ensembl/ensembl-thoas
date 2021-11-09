@@ -457,8 +457,8 @@ def format_protein_features(protein_features):
     '''
 
     db_details = {
-        "Pfam": {"source_url": "https://pfam.xfam.org",
-                 "family_url_template": Template("https://pfam.xfam.org/family/$name"),
+        "Pfam": {"source_url": "http://pfam.xfam.org/",
+                 "family_url_template": Template("http://pfam.xfam.org/family/{$name}"),
                  "description": "Pfam is a database of protein families that includes their annotations and multiple "
                                 "sequence alignments generated using hidden Markov models."},
         "PANTHER": {"source_url": "http://www.pantherdb.org",
