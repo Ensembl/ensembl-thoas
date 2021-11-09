@@ -4,11 +4,12 @@ import sys
 
 class ThoasLogging:
 
-    def __init__(self, logger_name='generic_logging', logging_file=sys.stderr):
+    def __init__(self, logging_file, logger_name='generic_logging'):
 
         self.logger_name = logger_name
         self.logging_file = logging_file
         self.logging_handler = logging.FileHandler(self.logging_file)
+        self.logging_handler = logging.StreamHandler(self.logging_file)
 
         logger = logging.getLogger(self.logger_name)
         logger.addHandler(self.logging_handler)

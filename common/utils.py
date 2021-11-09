@@ -48,6 +48,11 @@ def parse_args():
         '--release',
         help='Release version'
     )
+    parser.add_argument(
+        '--xref_lod_mapping_file',
+        help='Path to file which has Ensembl DB names to ID org namespace mappings'
+    )
+
     return parser.parse_args()
 
 
@@ -586,7 +591,7 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 
     # Try to generate the gene name url
     gene_name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(
-        gene_name_metadata.get('accession_id'),
+        gene_name_metadata.get('xref_primary_acc'),
         gene_name_metadata.get('external_db_name')
     )
 

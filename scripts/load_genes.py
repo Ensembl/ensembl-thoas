@@ -454,6 +454,7 @@ if __name__ == '__main__':
     ASSEMBLY = ARGS.assembly
     CLASSIFIER_PATH = ARGS.classifier_path
     RELEASE = ARGS.release
+    XREF_LOD_MAPPING_FILE = ARGS.xref_lod_mapping_file
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
 
@@ -472,8 +473,8 @@ if __name__ == '__main__':
     print("Loading Gene Name Metadata")
     GENE_NAME_METADATA = preload_gene_name_metadata(ARGS.species, ARGS.assembly)
     print("Loading e! xref db name to id.org prefix mappings")
-    XREF_RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
-    LOGGER = ThoasLogging(logger_name='generic_logging', logging_file=sys.stderr)
+    XREF_RESOLVER = XrefResolver(internal_mapping_file=XREF_LOD_MAPPING_FILE)
+    URL_LOGGER = ThoasLogging(logging_file='url_log', logger_name='url_logger')
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, LOGGER)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
     create_index(MONGO_CLIENT)

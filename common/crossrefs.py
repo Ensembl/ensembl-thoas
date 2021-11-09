@@ -159,6 +159,9 @@ class XrefResolver():
         Turn Ensembl DB names into identifiers.org prefixes where possible
         '''
 
+        if xref_db_name is None:
+            return None
+
         if xref_db_name.lower() in self.internal_mapping_file_indexed:
             mapping_entry = self.internal_mapping_file_indexed[xref_db_name.lower()]
             if 'id_namespace' in mapping_entry:

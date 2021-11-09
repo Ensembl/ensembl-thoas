@@ -35,7 +35,7 @@ async def run_assembly(args):
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
             python {code}/prepare_gene_name_metadata.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]} --collection {args["collection"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
+            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]} --xref_lod_mapping_file {args["xref_lod_mapping_file"]};\
             python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]}
         '''
     else:
@@ -43,7 +43,7 @@ async def run_assembly(args):
             perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
             python {code}/prepare_gene_name_metadata.py --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --database={args["database"]};\
             python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]};\
+            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]} --xref_lod_mapping_file {args["xref_lod_mapping_file"]};\
             python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]}
         '''
     await asyncio.create_subprocess_shell(shell_command)
@@ -68,6 +68,10 @@ if __name__ == '__main__':
     ARG_PARSER.add_argument(
         '--release',
         help='Ensembl release number, 100'
+    )
+    ARG_PARSER.add_argument(
+        '--xref_lod_mapping_file',
+        help = 'Path to file which has Ensembl DB names to ID org namespace mappings'
     )
     CONF_PARSER = configparser.ConfigParser()
 
