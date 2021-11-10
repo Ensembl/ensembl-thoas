@@ -77,11 +77,15 @@ type GeneBiotypeMetadata {
 }
 
 type GeneNameMetadata {
-	accession_id: String!
+    # Temp solution: Nullable because some xrefs doesnt have xref accession id eg: PF3D7_1314600
+	accession_id: String
+
 	# Temp solution: Nullable because some xrefs doesnt have xref description eg: TraesCS1D02G435500
 	value: String
+
 	# Temp solution: Nullable because URLs will be missing for some genes which has no source information
 	url: String
+
 	# Temp solution: Nullable because some genes doesnt have source information in the DB
 	source: ExternalDB
 }
