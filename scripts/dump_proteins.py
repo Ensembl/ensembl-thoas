@@ -30,7 +30,8 @@ def dump_proteins(config, section_name):
     JOIN translation tl USING (transcript_id)
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    WHERE c.name = 'chromosome' AND c.version = %s"""
+    JOIN meta using (species_id) 
+    WHERE c.name = 'chromosome' AND c.version = %s AND meta_key='species.production_name' and meta_value=%s"""
 
     domain_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS translation_id,
     pf.hit_name AS name,
@@ -84,7 +85,7 @@ def dump_proteins(config, section_name):
         assembly = config.get(section_name, 'assembly')
         species = config.get(section_name, 'production_name')
 
-        cursor.execute(translation_query, (assembly,))
+        cursor.execute(translation_query, (assembly, species))
         translations = cursor.fetchall()
 
         cursor.execute(domain_query, (assembly,))

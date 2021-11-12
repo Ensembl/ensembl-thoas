@@ -457,20 +457,26 @@ def format_protein_features(protein_features):
     '''
 
     db_details = {
-        "Pfam": {"source_url": "http://pfam.xfam.org/",
-                 "family_url_template": Template("http://pfam.xfam.org/family/{$name}"),
-                 "description": "Pfam is a database of protein families that includes their annotations and multiple "
-                                "sequence alignments generated using hidden Markov models."},
-        "PANTHER": {"source_url": "http://www.pantherdb.org",
-                    "family_url_template": Template("http://www.pantherdb.org/panther/family.do?clsAccession=$name"),
-                    "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
-                                   "system is a large curated biological database of gene/protein families and their "
-                                   "functionally related subfamilies that can be used to classify and identify the "
-                                   "function of gene products."},
-        "InterProScan": {"source_url": "https://www.ebi.ac.uk/interpro",
-                         "family_url_template": Template("https://www.ebi.ac.uk/interpro/entry/InterPro/$name"),
-                         "description": "InterPro provides functional analysis of proteins by classifying them into "
-                                        "families and predicting domains and important sites."}
+        "Pfam": {
+            "id": "PFAM",
+            "source_url": "http://pfam.xfam.org/",
+            "family_url_template": Template("http://pfam.xfam.org/family/{$name}"),
+            "description": "Pfam is a database of protein families that includes their annotations and multiple "
+                           "sequence alignments generated using hidden Markov models."},
+        "PANTHER": {
+            "id": "PANTHER",
+            "source_url": "http://www.pantherdb.org",
+            "family_url_template": Template("http://www.pantherdb.org/panther/family.do?clsAccession=$name"),
+            "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
+                           "system is a large curated biological database of gene/protein families and their "
+                           "functionally related subfamilies that can be used to classify and identify the "
+                           "function of gene products."},
+        "InterProScan": {
+            "id": "Interpro",
+            "source_url": "https://www.ebi.ac.uk/interpro",
+            "family_url_template": Template("https://www.ebi.ac.uk/interpro/entry/InterPro/$name"),
+            "description": "InterPro provides functional analysis of proteins by classifying them into "
+                           "families and predicting domains and important sites."}
     }
 
     domains = []
@@ -485,6 +491,7 @@ def format_protein_features(protein_features):
                             "url": db_details[feature["dbname"]]["source_url"],
                             "release": feature["dbversion"]
                         },
+                        "name": feature["name"],
                         "accession_id": feature["name"],
                         "url": db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
                         "description": feature["description"]
@@ -498,7 +505,6 @@ def format_protein_features(protein_features):
                         },
                         "accession_id": feature["interpro_ac"],
                         "url": db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac']),
-                        "description": feature["interpro_description"]
                     },
                     "relative_location": {
                         "start": feature["start"],

@@ -21,24 +21,23 @@ type Product {
 
 type FamilyMatch {
   sequence_family: SequenceFamily!
-  via: SequenceFamily!
+  via: ClosestDataProvider
   relative_location: Location!
-  score: Float!
+  hit_location: Location
+  score: Float
   evalue: Float
-  hit_location: Location!
 }
 
 type SequenceFamily {
-  source: Source!
+  source: ExternalDB!
   accession_id: String!
   name: String!
   url: String
+  description: String
 }
 
-type Source {
-  id: String!
-  name: String!
-  description: String!
+type ClosestDataProvider {
+  source: ExternalDB!
+  accession_id: String!
   url: String!
-  release: String!
 }
