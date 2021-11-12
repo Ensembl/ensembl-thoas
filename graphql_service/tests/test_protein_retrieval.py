@@ -26,12 +26,55 @@ async def test_protein_retrieval(snapshot):
     Gets the expected test result from snapshottest
     """
     query = """{
-        product(genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3") {
-            stable_id
-            unversioned_stable_id
-            version
+  product(genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3") {
+    stable_id
+    unversioned_stable_id
+    version
+    length
+    sequence {
+      alphabet {
+        accession_id
+      }
+      checksum
+    }
+    family_matches {
+      sequence_family {
+        source {
+          name
         }
-    }"""
+        name
+        accession_id
+        url
+        description
+      }
+      via {
+        source {
+          name
+        }
+        accession_id
+        url
+      }
+      relative_location {
+        start
+        end
+        length
+      }
+      score
+      evalue
+      hit_location {
+        start
+        end
+        length
+      }
+    }
+    external_references {
+      accession_id
+      source {
+        name
+      }
+    }
+  }
+}"""
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success

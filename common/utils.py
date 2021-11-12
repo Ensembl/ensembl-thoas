@@ -460,7 +460,7 @@ def format_protein_features(protein_features):
         "Pfam": {
             "id": "PFAM",
             "source_url": "http://pfam.xfam.org/",
-            "family_url_template": Template("http://pfam.xfam.org/family/{$name}"),
+            "family_url_template": Template("http://pfam.xfam.org/family/$name"),
             "description": "Pfam is a database of protein families that includes their annotations and multiple "
                            "sequence alignments generated using hidden Markov models."},
         "PANTHER": {
