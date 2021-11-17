@@ -30,8 +30,8 @@ def dump_proteins(config, section_name):
     JOIN translation tl USING (transcript_id)
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    JOIN meta using (species_id) 
-    WHERE c.name = 'chromosome' AND c.version = %s AND meta_key='species.production_name' and meta_value=%s"""
+    JOIN meta USING (species_id) 
+    WHERE c.name = 'chromosome' AND c.version = %s AND meta_key='species.production_name' AND meta_value=%s"""
 
     domain_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS translation_id,
     pf.hit_name AS name,
@@ -59,7 +59,8 @@ def dump_proteins(config, section_name):
     LEFT JOIN external_db idx ON (ix.external_db_id=idx.external_db_id and idx.db_name='Interpro')
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    WHERE c.name = 'chromosome' AND c.version = %s AND a.db in ('Pfam', 'PANTHER')"""
+    JOIN meta USING (species_id)
+    WHERE c.name = 'chromosome' AND c.version = %s AND a.db in ('Pfam', 'PANTHER') AND meta_key='species.production_name' AND meta_value=%s"""
 
     xrefs_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
     FROM transcript t
@@ -70,7 +71,8 @@ def dump_proteins(config, section_name):
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
     LEFT JOIN ontology_xref oox USING (object_xref_id)
-    WHERE c.name = 'chromosome' AND c.version = %s AND oox.object_xref_id is null"""
+    JOIN meta USING (species_id)
+    WHERE c.name = 'chromosome' AND c.version = %s AND oox.object_xref_id is null AND meta_key='species.production_name' AND meta_value=%s"""
 
     def group_by_id(list_of_dicts, key):
         result = {}
@@ -88,10 +90,10 @@ def dump_proteins(config, section_name):
         cursor.execute(translation_query, (assembly, species))
         translations = cursor.fetchall()
 
-        cursor.execute(domain_query, (assembly,))
+        cursor.execute(domain_query, (assembly, species))
         domains = cursor.fetchall()
 
-        cursor.execute(xrefs_query, (assembly,))
+        cursor.execute(xrefs_query, (assembly, species))
         xrefs = cursor.fetchall()
 
         def to_json_dump_format(xref):
