@@ -14,16 +14,16 @@
 
 import argparse, re, json
 from mysql.connector import MySQLConnection, Error
+import common.utils
 
 
-def retrieve_gene_name_metadata(args, mysql_cursor):
+def retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_cursor):
 
     species_genes_sql = get_species_genes_sql()
-    mysql_cursor.execute(species_genes_sql.format(args.species))
+    mysql_cursor.execute(species_genes_sql.format(sp_production_name))
     genes = mysql_cursor.fetchall()
 
     gene_names = []
-    species_display_xref_sql = get_species_display_xref_sql()
 
     for gene in genes:
 
@@ -44,14 +44,14 @@ def retrieve_gene_name_metadata(args, mysql_cursor):
                           }
 
 
-        if args.species == 'triticum_aestivum':
+        if sp_production_name == 'triticum_aestivum':
             gene_name_info = extract_info_from_description_column(gene, gene_name_info)
 
             if gene_name_info.get('external_db_name') is None:
-                gene_name_info = extract_info_using_display_xref_id(gene, gene_name_info, species_display_xref_sql)
+                gene_name_info = extract_info_using_display_xref_id(gene, gene_name_info)
 
         else:
-            gene_name_info = extract_info_using_display_xref_id(gene, gene_name_info, species_display_xref_sql)
+            gene_name_info = extract_info_using_display_xref_id(gene, gene_name_infoqqqqqqq)
 
             if gene_name_info.get('external_db_name') is None:
                 gene_name_info = extract_info_from_description_column(gene, gene_name_info)
@@ -59,7 +59,7 @@ def retrieve_gene_name_metadata(args, mysql_cursor):
         # Add all the possible information retrieved. Also add if no 'display_xref_id' and 'description'.
         gene_names.append(gene_name_info)
 
-    with open(args.species + "_" + args.assembly + "_gene_names.json", "w") as write_file:
+    with open(sp_production_name + "_" + sp_assembly_name + "_gene_names.json", "w") as write_file:
         json.dump(gene_names, write_file)
 
 
@@ -89,8 +89,9 @@ def extract_info_from_description_column(gene, gene_name_info):
     return gene_name_info
 
 
-def extract_info_using_display_xref_id(gene, gene_name_info, species_display_xref_sql):
+def extract_info_using_display_xref_id(gene, gene_name_info):
 
+    species_display_xref_sql = get_species_display_xref_sql()
     if gene.get('display_xref_id') is not None:
         # Get display_xref and external db details if 'display_xref_id' exists
         mysql_cursor.execute(species_display_xref_sql.format(gene.get('stable_id')))
@@ -124,25 +125,35 @@ def get_species_display_xref_sql():
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Create a JSON file with Gene Name Metadata')
-    parser.add_argument('--host', help='DB server host', required=True)
-    parser.add_argument('--user', help='DB user', required=True)
-    parser.add_argument('--port', help='DB port', required=True)
-    parser.add_argument('--species', help='Species name(Production name)', required=True)
-    parser.add_argument('--assembly', help='Assembly name', required=True)
-    parser.add_argument('--database', help='Database name', required=True)
-    parser.add_argument('--collection', help='Is it a collection', default=False)
+    parser = argparse.ArgumentParser(
+        description='Create a JSON file with Gene Name Metadata'
+    )
+
+    parser.add_argument(
+        '--config_file',
+        help='File path to the config file containing MySQL credentials and species information',
+        default='../load.conf'
+    )
+    parser.add_argument(
+        '--section_name',
+        help='Section of the config file containing required credentials'
+    )
 
     args = parser.parse_args()
 
+    config = common.utils.load_config(args.config_file)
+
     conn = MySQLConnection(
-        host=args.host,
-        user=args.user,
+        host=config.get(args.section_name, 'host'),
+        user=config.get(args.section_name, 'user'),
         password="",
-        database=args.database,
-        port=args.port
+        database=config.get(args.section_name, 'database'),
+        port=config.get(args.section_name, 'port')
     )
 
     mysql_cursor = conn.cursor(dictionary=True)
 
-    retrieve_gene_name_metadata(args, mysql_cursor)
+    sp_production_name = config.get(args.section_name, 'production_name')
+    sp_assembly_name = config.get(args.section_name, 'assembly')
+
+    retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_cursor)
