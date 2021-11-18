@@ -33,14 +33,10 @@ class XrefResolver():
     into real URLs to the original
     '''
 
-    def __init__(self, from_file=None, internal_mapping_file=None):
+    def __init__(self, from_file=None, internal_mapping_file='docs/xref_LOD_mapping.json'):
 
+        self.internal_mapping_file = internal_mapping_file
         self.identifiers_org_api_url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
-
-        if internal_mapping_file:
-            self.internal_mapping_file = internal_mapping_file
-        else:
-            self.internal_mapping_file = 'docs/xref_LOD_mapping.json'
 
         if from_file:
             self.identifiers_org_data = self._load_from_file(from_file)
@@ -120,7 +116,7 @@ class XrefResolver():
                     (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
-            print('*** {} namespace not in idntifiers.org ***'.format(id_org_ns_prefix))
+            print('*** {} namespace not in identifiers.org ***'.format(id_org_ns_prefix))
             return None
         # some sources seemingly have no official entry.
         # Take the first arbitrarily

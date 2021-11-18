@@ -37,7 +37,7 @@ def test_extract_info_from_description_column():
         'external_db_release': None
     }
 
-    output = {
+    expected = {
         "gene_stable_id": "TraesCS7D02G209800",
         "gene_description": "Transcription factor PERIANTHIA [Source:Projected from Arabidopsis thaliana (AT1G68640) UniProtKB/Swiss-Prot;Acc:Q9SX27]",
         "xref_primary_acc": "Q9SX27",
@@ -48,5 +48,5 @@ def test_extract_info_from_description_column():
         "external_db_release": None
     }
 
-    info = extract_info_from_description_column(gene, gene_name_info)
-    assert info == output
+    actual = extract_info_from_description_column(gene, gene_name_info)
+    assert actual == expected
