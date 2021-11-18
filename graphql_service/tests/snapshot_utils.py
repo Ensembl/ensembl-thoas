@@ -20,8 +20,7 @@ from graphql_service.ariadne_app import prepare_executable_schema
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region, \
     build_assembly
-from graphql_service.tests.fixtures.wheat import build_with_no_xref_acc_id, build_with_no_xref_description, \
-    build_with_no_externaldb_source_id, build_with_no_externaldb_source_name
+from graphql_service.tests.fixtures.wheat import build_wheat_genes
 
 def prepare_db():
     'Fill a mock database with data and provide a collection accessor'
@@ -45,10 +44,7 @@ def prepare_db():
     mocked_mongo_collection.insert_many(build_products())
     mocked_mongo_collection.insert_one(build_region())
     mocked_mongo_collection.insert_one(build_assembly())
-    mocked_mongo_collection.insert_one(build_with_no_xref_acc_id())
-    mocked_mongo_collection.insert_one(build_with_no_xref_description())
-    mocked_mongo_collection.insert_one(build_with_no_externaldb_source_id())
-    mocked_mongo_collection.insert_one(build_with_no_externaldb_source_name())
+    mocked_mongo_collection.insert_many(build_wheat_genes())
     return context
 
 
