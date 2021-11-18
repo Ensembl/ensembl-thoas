@@ -57,22 +57,6 @@ if __name__ == '__main__':
         help='Config file containing the database and division info for species and MongoDB',
         default='load.conf'
     )
-    ARG_PARSER.add_argument(
-        '--base_data_path',
-        help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps'
-    )
-    ARG_PARSER.add_argument(
-        '--classifier_path',
-        help='Path to JSON files for the gene/transcript metadata classifiers'
-    )
-    ARG_PARSER.add_argument(
-        '--release',
-        help='Ensembl release number, 100'
-    )
-    ARG_PARSER.add_argument(
-        '--xref_lod_mapping_file',
-        help = 'Path to file which has Ensembl DB names to ID org namespace mappings'
-    )
     CONF_PARSER = configparser.ConfigParser()
 
     CLI_ARGS = ARG_PARSER.parse_args()
