@@ -40,8 +40,3 @@ class ThoasLogging:
         format = logging.Formatter('*****\n XYZ debug details \n %(message)s \n*****')
         self.logging_handler.setFormatter(format)
         logger.warning(message)
-
-
-    def some_other_logger_2(self, message):
-        pass
-
