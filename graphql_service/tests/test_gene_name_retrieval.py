@@ -15,14 +15,15 @@
 import pytest
 from ariadne import graphql
 from .snapshot_utils import setup_test
+from string import Template
 
 executable_schema, context = setup_test()
 
 
-@pytest.mark.asyncio
-async def test_no_xref_acc_id(snapshot):
+def get_generic_query_template():
+
     query = """{
-          gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "TraesCS2A02G142500" }) {
+          gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "$stable_id" }) {
             stable_id
             metadata {
               name{
@@ -41,6 +42,15 @@ async def test_no_xref_acc_id(snapshot):
           }
         }"""
 
+    template = Template(query)
+
+    return template
+
+
+@pytest.mark.asyncio
+async def test_no_xref_acc_id(snapshot):
+    template = get_generic_query_template()
+    query = template.substitute(stable_id='TraesCS2A02G142500')
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
@@ -49,26 +59,8 @@ async def test_no_xref_acc_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_xref_description(snapshot):
-    query = """{
-          gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "TraesCS2A02G142501" }) {
-            stable_id
-            metadata {
-              name{
-                accession_id
-                value
-                url
-                source{
-                  id
-                  name
-                  description
-                  url
-                  release
-                }
-              }
-            }
-          }
-        }"""
-
+    template = get_generic_query_template()
+    query = template.substitute(stable_id='TraesCS2A02G142501')
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
@@ -76,26 +68,8 @@ async def test_no_xref_description(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_externaldb_source_id(snapshot):
-    query = """{
-          gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "TraesCS2A02G142502" }) {
-            stable_id
-            metadata {
-              name{
-                accession_id
-                value
-                url
-                source{
-                  id
-                  name
-                  description
-                  url
-                  release
-                }
-              }
-            }
-          }
-        }"""
-
+    template = get_generic_query_template()
+    query = template.substitute(stable_id='TraesCS2A02G142502')
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
@@ -103,26 +77,8 @@ async def test_no_externaldb_source_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_externaldb_source_name(snapshot):
-    query = """{
-          gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "TraesCS2A02G142503" }) {
-            stable_id
-            metadata {
-              name{
-                accession_id
-                value
-                url
-                source{
-                  id
-                  name
-                  description
-                  url
-                  release
-                }
-              }
-            }
-          }
-        }"""
-
+    template = get_generic_query_template()
+    query = template.substitute(stable_id='TraesCS2A02G142503')
     query_data = {'query': query}
     (success, result) = await graphql(executable_schema, query_data, context_value=context)
     assert success
