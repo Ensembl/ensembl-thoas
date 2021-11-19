@@ -1,8 +1,9 @@
 import argparse
 
-from mysql.connector import MySQLConnection, DataError
+from mysql.connector import DataError
 
 import common.utils
+from common.mysql import MySQLClient
 from common.utils import format_region
 from common.mongo import MongoDbClient
 
@@ -15,12 +16,7 @@ def load_regions(config, section_name, mongo_client):
     })
     assembly_id = assembly["id"]
 
-    mysql_client = MySQLConnection(
-            host=config.get(section_name, 'host'),
-            user=config.get(section_name, 'user'),
-            database=config.get(section_name, 'database'),
-            port=config.get(section_name, 'port')
-        )
+    mysql_client = MySQLClient(config, section_name)
 
     circular_attribute_query = """SELECT attrib_type_id FROM attrib_type WHERE code = 'circular_seq'"""
 
@@ -46,7 +42,7 @@ def load_regions(config, section_name, mongo_client):
                       AND coord_system.name = 'chromosome'                      
                       LIMIT %s"""
 
-    with mysql_client.cursor(dictionary=True) as cursor:
+    with mysql_client.connection.cursor(dictionary=True) as cursor:
         cursor.execute(circular_attribute_query)
         circular_attribute_result = cursor.fetchall()
         if len(circular_attribute_result) != 1:
@@ -76,7 +72,7 @@ if __name__ == "__main__":
         '--section_name',
         help='Section of config file containing MySQL and MongoDB credentials'
     )
-    ARGS=parser.parse_args()
+    ARGS = parser.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     MONGO_CLIENT = MongoDbClient(CONFIG)
     load_regions(CONFIG, ARGS.section_name, MONGO_CLIENT)

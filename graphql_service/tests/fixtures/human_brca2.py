@@ -275,10 +275,73 @@ def build_products():
         'unversioned_stable_id': 'ENSP00000369497',
         'stable_id': 'ENSP00000369497.3',
         'version': 3,
-        'so_term': 'polypeptide',
-        'transcript_id': 'ENST00000380152.7',
-        'protein_domains': [],
-        'genome_id': 'homo_sapiens_GCA_000001405_28'
+        'length': 100,
+        'genome_id': 'homo_sapiens_GCA_000001405_28',
+        "sequence": {
+            "alphabet": {
+                "accession_id": "test_protein_accession_id",
+                "value": "test",
+                "label": "test",
+                "definition": "Test - IUPAC notation for protein sequence",
+                "description": None
+            },
+            "checksum": "ca80cf1d4af7cc47aa28f8427d0d8bc6"
+        },
+        "sequence_checksum": "ca80cf1d4af7cc47aa28f8427d0d8bc6",
+        'family_matches': [
+            {
+                'sequence_family': {
+                    'source': {
+                        'name': 'Pfam',
+                        'description': 'Pfam is a database of protein families that includes their annotations and multiple sequence alignments generated using hidden Markov models.',
+                        'url': 'http://pfam.xfam.org/',
+                        'release': '33.1'
+                    },
+                    'name': 'PF03011',
+                    'accession_id': 'PF03011',
+                    'url': 'http://pfam.xfam.org/family/PF03011',
+                    'description': 'PFEMP'
+                },
+                'via': {
+                    'source': {
+                        'name': 'InterProScan',
+                        'description': 'InterPro provides functional analysis of proteins by classifying them into families and predicting domains and important sites.',
+                        'url': 'https://www.ebi.ac.uk/interpro',
+                        'release': '5.48-83.0'
+                    },
+                    'accession_id': 'IPR004258',
+                    'url': 'https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258'
+                },
+                'relative_location': {
+                    'start': 602,
+                    'end': 762,
+                    'length': 161
+                },
+                'score': 212.5,
+                'evalue': 5.1e-63,
+                'hit_location': {
+                    'start': 1,
+                    'end': 157,
+                    'length': 157
+                }
+            }
+        ],
+        'external_references': [
+            {
+                'accession_id': 'Q9NFB6',
+                'name': 'Q9NFB6',
+                'description': None,
+                'assignment_method': {
+                    'type': 'NONE'
+                },
+                'source': {
+                    'name': 'UniProtKB/TrEMBL',
+                    'id': 'Uniprot/SPTREMBL',
+                    'description': None,
+                    'release': None
+                }
+            }
+        ]
     }
 
     # Add mature product example once we know the shape of them
