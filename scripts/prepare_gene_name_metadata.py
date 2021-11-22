@@ -43,18 +43,12 @@ def retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_curs
                           'external_db_release': None
                           }
 
+        extractor, backup_extractor = extract_info_from_description_column, extract_info_using_display_xref_id \
+            if args.species == 'triticum_aestivum' \
+            else extract_info_using_display_xref_id, extract_info_from_description_column
 
-        if sp_production_name == 'triticum_aestivum':
-            gene_name_info = extract_info_from_description_column(gene, gene_name_info)
-
-            if gene_name_info.get('external_db_name') is None:
-                gene_name_info = extract_info_using_display_xref_id(gene, gene_name_info)
-
-        else:
-            gene_name_info = extract_info_using_display_xref_id(gene, gene_name_infoqqqqqqq)
-
-            if gene_name_info.get('external_db_name') is None:
-                gene_name_info = extract_info_from_description_column(gene, gene_name_info)
+        gene_name_info = extractor(gene, gene_name_info)
+        if gene_name_info.get('external_db_name') is None: gene_name_info = backup_extractor(gene, gene_name_info)
 
         # Add all the possible information retrieved. Also add if no 'display_xref_id' and 'description'.
         gene_names.append(gene_name_info)
