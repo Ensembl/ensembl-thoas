@@ -11,8 +11,8 @@
 #    limitations under the License.
 
 import argparse, re, json
-from mysql.connector import MySQLConnection, Error
 import common.utils
+from common.mysql import MySQLClient
 
 
 def retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_cursor):
@@ -135,13 +135,7 @@ if __name__ == "__main__":
 
     config = common.utils.load_config(args.config_file)
 
-    conn = MySQLConnection(
-        host=config.get(args.section_name, 'host'),
-        user=config.get(args.section_name, 'user'),
-        password="",
-        database=config.get(args.section_name, 'database'),
-        port=config.get(args.section_name, 'port')
-    )
+    conn = MySQLClient(config, args.section_name)
 
     mysql_cursor = conn.cursor(dictionary=True)
 
