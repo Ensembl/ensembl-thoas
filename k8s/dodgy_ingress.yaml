@@ -5,6 +5,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/rewrite-target: /
+#   TODO determine Thoas rate limit policy, see https://www.ebi.ac.uk/panda/jira/browse/EA-819
 spec:
   rules:
   - http:
@@ -12,4 +13,4 @@ spec:
         - path: /
           backend:
             serviceName: thoas-server-svc
-            servicePort: 31497
+            servicePort: 8000
