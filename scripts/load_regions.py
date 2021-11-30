@@ -1,10 +1,11 @@
 import argparse
 
-from mysql.connector import MySQLConnection, DataError
+from mysql.connector import DataError
 
 import common.utils
 from common.utils import format_region, get_genome_id
 from common.file_parser import ChromosomeChecksum
+from common.mysql import MySQLClient
 from common.mongo import MongoDbClient
 
 
@@ -14,13 +15,9 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         'type': 'Assembly',
         'name': config.get(section_name, 'assembly')
     })
+    assembly_id = assembly["id"]
 
-    mysql_client = MySQLConnection(
-            host=config.get(section_name, 'host'),
-            user=config.get(section_name, 'user'),
-            database=config.get(section_name, 'database'),
-            port=config.get(section_name, 'port')
-        )
+    mysql_client = MySQLClient(config, section_name)
 
     circular_attribute_query = """SELECT attrib_type_id FROM attrib_type WHERE code = 'circular_seq'"""
 
@@ -43,9 +40,10 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
                       LEFT JOIN (SELECT seq_region_id, value FROM seq_region_attrib WHERE attrib_type_id = %s) as circular_regions
                           USING (seq_region_id)
                       WHERE species_name.meta_value = %s
+                      AND coord_system.name = 'chromosome'                      
                       LIMIT %s"""
 
-    with mysql_client.cursor(dictionary=True) as cursor:
+    with mysql_client.connection.cursor(dictionary=True) as cursor:
         cursor.execute(circular_attribute_query)
         circular_attribute_result = cursor.fetchall()
         if len(circular_attribute_result) != 1:
@@ -58,7 +56,7 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
         chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
 
-        formatted_results = [format_region(result, assembly, genome_id, chromosome_checksums) for result in region_results]
+        formatted_results = [format_region(result, assembly_id, genome_id, chromosome_checksums) for result in region_results]
 
         if len(formatted_results) == max_regions:
             raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")
@@ -82,7 +80,8 @@ if __name__ == "__main__":
         '--chr_checksums_path',
         help='File path to chromosome checksum hash files'
     )
-    ARGS=parser.parse_args()
+    ARGS = parser.parse_args()
+
     CONFIG = common.utils.load_config(ARGS.config_file)
     MONGO_CLIENT = MongoDbClient(CONFIG)
     load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path, MONGO_CLIENT)

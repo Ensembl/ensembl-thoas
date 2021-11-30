@@ -25,6 +25,24 @@ type Region {
   topology: RegionTopology!
   assembly: Assembly!
   sequence: Sequence!
+  metadata: RegionMetadata!
+}
+
+type RegionMetadata {
+  ontology_terms: [RegionOntologyTerm!]!
+}
+
+type RegionOntologyTerm implements OntologyTerm {
+  accession_id: String!
+  value: String!
+  url: String!
+  source: RegionOntologySource
+}
+
+type RegionOntologySource implements OntologySource {
+  name: String!
+  url: String!
+  description: String!
 }
 
 enum RegionCode {
@@ -43,8 +61,8 @@ type Assembly {
   default: Boolean!
   id: String!
   name: String!
-  accession_id: String!
-  accessioning_body: String!
+  accession_id: String
+  accessioning_body: String
   species: String!
 }
 

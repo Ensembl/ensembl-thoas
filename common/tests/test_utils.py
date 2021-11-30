@@ -124,7 +124,7 @@ def test_format_region():
         'seq_region_id': 559,
         'length': 4641652,
         'name': 'test_name',
-        'code': 'test_code',
+        'code': 'chromosome',
         'circularity': '1',
         'species_name': 'test_species',
         'accession_id': 'GCA_000005845.2'
@@ -132,14 +132,15 @@ def test_format_region():
 
     genome_id = get_genome_id(test_mysql_result['species_name'], test_mysql_result['accession_id'])
     chromosome_checksums = ChromosomeChecksum(genome_id, '/test_path/')
-    region = format_region(test_mysql_result, "test_assembly", genome_id, chromosome_checksums)
+    region = format_region(test_mysql_result, "test_assembly_id", genome_id, chromosome_checksums)
+
 
     assert region == {
         "type": "Region",
-        "region_id": "test_species_GCA_000005845_2_test_name_test_code",
+        "region_id": "test_species_GCA_000005845_2_test_name_chromosome",
         "name": "test_name",
-        "assembly": "test_assembly",
-        "code": "test_code",
+        "assembly_id": "test_assembly_id",
+        "code": "chromosome",
         "length": 4641652,
         "topology": "circular",
         "sequence": {
@@ -151,6 +152,20 @@ def test_format_region():
                 "description": None
             },
             "checksum": "3t6fit96jy015frnh465do005hd885jtki"
+        },
+        "metadata": {
+            "ontology_terms": [
+                {
+                    "accession_id": "SO:0000340",
+                    "value": "chromosome",
+                    "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                    "source": {
+                        "name": "Sequence Ontology",
+                        "url": "www.sequenceontology.org",
+                        "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+                    }
+                }
+            ]
         }
     }
 
@@ -630,12 +645,44 @@ def test_protein_formatting():
     '''
 
     protein = {
-        'id': 'ENSP001',
-        'version': 2,
-        'transcript_id': 'ENST001',
-        'xrefs': [],
-        'protein_features': []
+        "transcript_id": "CAB89209",
+        "id": "CAB89209",
+        "version": 2,
+        "ensembl_object_type": "translation",
+        "protein_features": [
+            {
+                "translation_id": "CAB89209",
+                "name": "PF03011",
+                "description": "PFEMP",
+                "start": 602,
+                "end": 762,
+                "score": 212.5,
+                "evalue": 5.1e-63,
+                "hit_start": 1,
+                "hit_end": 157,
+                "program": "InterProScan",
+                "dbname": "Pfam",
+                "program_version": "5.48-83.0",
+                "dbversion": "33.1",
+                "interpro_ac": "IPR004258",
+                "interpro_name": "DBL",
+                "interpro_description": "Duffy-binding-like domain",
+                "ensembl_object_type": "protein_feature"
+            }
+        ],
+        "xrefs": [
+            {
+                "primary_id": "Q9NFB6",
+                "display_id": "Q9NFB6",
+                "dbname": "Uniprot/SPTREMBL",
+                "db_display": "UniProtKB/TrEMBL",
+                "description": None,
+                "info_type": "null",
+                "info_text": ""
+            }
+        ]
     }
+
     refget = RefgetDB()
     result = format_protein(
         protein=protein,
@@ -644,14 +691,83 @@ def test_protein_formatting():
         refget=refget
     )
 
-    assert result['type'] == 'Protein'
-    assert result['unversioned_stable_id'] == 'ENSP001'
-    assert result['stable_id'] == 'ENSP001.2'
-    assert result['version'] == 2
-    assert result['so_term'] == 'polypeptide'
-    assert result['transcript_id'] == 'ENST001'
-    assert result['genome_id'] == 'tralalala'
-    assert result['length'] == 10
+    expected = {
+        'type': 'Protein',
+        'unversioned_stable_id': 'CAB89209',
+        'stable_id': 'CAB89209.2',
+        'version': 2,
+        'transcript_id': 'CAB89209',
+        'genome_id': 'tralalala',
+        'so_term': 'polypeptide',
+        'external_references': [
+            {
+                'accession_id': 'Q9NFB6',
+                'name': 'Q9NFB6',
+                'description': None,
+                'assignment_method': {
+                    'type': 'null'
+                },
+                'source': {
+                    'name': 'UniProtKB/TrEMBL',
+                    'id': 'Uniprot/SPTREMBL',
+                    'description': None,
+                    'release': None
+                }
+            }
+        ],
+        'family_matches': [
+            {
+                'sequence_family': {
+                    'source': {
+                        'name': 'Pfam',
+                        'description': 'Pfam is a database of protein families that includes their annotations and multiple sequence alignments generated using hidden Markov models.',
+                        'url': 'http://pfam.xfam.org/',
+                        'release': '33.1'
+                    },
+                    "accession_id": "PF03011",
+                    "url": "http://pfam.xfam.org/family/PF03011",
+                    "description": "PFEMP",
+                    'name': 'PF03011'
+                },
+                'via': {
+                    'source': {
+                        'name': 'InterProScan',
+                        'description': 'InterPro provides functional analysis of proteins by classifying them into families and predicting domains and important sites.',
+                        'url': 'https://www.ebi.ac.uk/interpro',
+                        'release': '5.48-83.0'
+                    },
+                    'accession_id': 'IPR004258',
+                    'url': 'https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258',
+                },
+                'relative_location': {
+                    'start': 602,
+                    'end': 762,
+                    'length': 161
+                },
+                'score': 212.5,
+                'evalue': 5.1e-63,
+                'hit_location': {
+                    'start': 1,
+                    'end': 157,
+                    'length': 157
+                }
+            }
+        ],
+        'length': 10,
+        'sequence': {
+            'alphabet': {
+                'accession_id': 'test_protein_accession_id',
+                'value': 'test',
+                'label': 'test',
+                'definition': 'Test - IUPAC notation for protein sequence',
+                'description': None
+            },
+            'checksum': '1f47b55923e2d23090f894c439974b55'
+        },
+        'sequence_checksum': '1f47b55923e2d23090f894c439974b55'
+    }
+
+    assert result == expected
 
 
 def test_relative_coords():

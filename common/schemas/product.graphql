@@ -1,0 +1,43 @@
+type Product {
+  """
+  the value of the type field is "Protein"
+  """
+  type: String!
+  stable_id: String!
+  unversioned_stable_id: String!
+  version: Int
+  """
+  length in amino acids if product is a protein
+  """
+  length: Int!
+  """
+  The value of checksum in the Sequence object can be used to retrieve the sequence from RefGet
+  """
+  sequence: Sequence!
+  sequence_checksum: String! @deprecated
+  external_references: [ExternalReference!]!
+  family_matches: [FamilyMatch!]!
+}
+
+type FamilyMatch {
+  sequence_family: SequenceFamily!
+  via: ClosestDataProvider
+  relative_location: Location!
+  hit_location: Location
+  score: Float
+  evalue: Float
+}
+
+type SequenceFamily {
+  source: ExternalDB!
+  accession_id: String!
+  name: String!
+  url: String
+  description: String
+}
+
+type ClosestDataProvider {
+  source: ExternalDB!
+  accession_id: String!
+  url: String!
+}

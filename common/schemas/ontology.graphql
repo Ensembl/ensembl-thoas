@@ -1,0 +1,12 @@
+interface OntologyTerm {
+  accession_id: String!
+  value: String!
+  url: String!
+  source: OntologySource
+}
+
+interface OntologySource {
+  name: String!
+  url: String!
+  description: String!
+}

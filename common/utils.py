@@ -15,6 +15,8 @@
 from configparser import ConfigParser
 import argparse
 import sys
+from string import Template
+
 import pymongo
 
 
@@ -328,7 +330,7 @@ def format_utr(
                 and transcript['end'] == absolute_cds_end
                 and transcript['strand'] == -1
             )
-        ):
+    ):
         # No UTR here: Move along.
         return None
 
@@ -363,7 +365,6 @@ def format_cdna(transcript, refget, non_coding=False):
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
     '''
-
 
     stable_id = get_stable_id(transcript["id"], transcript["version"])
 
@@ -408,7 +409,6 @@ def format_sequence_object(refget, stable_id, sequence_type):
 
 
 def get_alphabet_info(sequence_type):
-
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
         'dna': {
@@ -446,35 +446,83 @@ def format_protein(protein, genome_id, product_length, refget):
         'genome_id': genome_id,
         'so_term': 'polypeptide', # aka SO:0000104
         'external_references': format_cross_refs(protein['xrefs']),
-        'protein_domains': format_protein_domains(protein['protein_features']),
+        'family_matches': format_protein_features(protein['protein_features']),
+        # 'mappings': TODO
         'length': product_length,
         'sequence': sequence,
         'sequence_checksum': sequence.get('checksum')
     }
 
 
-def format_protein_domains(protein_features):
+def format_protein_features(protein_features):
     '''
     Create protein domain representation from a list of protein_features
     '''
 
+    db_details = {
+        "Pfam": {
+            "id": "PFAM",
+            "source_url": "http://pfam.xfam.org/",
+            "family_url_template": Template("http://pfam.xfam.org/family/$name"),
+            "description": "Pfam is a database of protein families that includes their annotations and multiple "
+                           "sequence alignments generated using hidden Markov models."},
+        "PANTHER": {
+            "id": "PANTHER",
+            "source_url": "http://www.pantherdb.org",
+            "family_url_template": Template("http://www.pantherdb.org/panther/family.do?clsAccession=$name"),
+            "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
+                           "system is a large curated biological database of gene/protein families and their "
+                           "functionally related subfamilies that can be used to classify and identify the "
+                           "function of gene products."},
+        "InterProScan": {
+            "id": "Interpro",
+            "source_url": "https://www.ebi.ac.uk/interpro",
+            "family_url_template": Template("https://www.ebi.ac.uk/interpro/entry/InterPro/$name"),
+            "description": "InterPro provides functional analysis of proteins by classifying them into "
+                           "families and predicting domains and important sites."}
+    }
+
     domains = []
-    # Needs work from production before this can be sorted
-    # for feature in protein_features:
-    #     domains.append(
-    #         {
-    #             'type': 'ProteinDomain',
-    #             'id': feature['name'],
-    #             'name': feature['name'],
-    #             'resource_name': feature['dbname'],
-    #             'location': {
-    #                 'start': feature['start'],
-    #                 'end': feature['end']
-    #             },
-    #             'hit_location': None,
-    #             'score': None
-    #         }
-    #     )
+    for feature in protein_features:
+        if feature["program"] == "InterProScan":
+            domains.append(
+                {
+                    "sequence_family": {
+                        "source": {
+                            "name": feature["dbname"],
+                            "description": db_details[feature["dbname"]]["description"],
+                            "url": db_details[feature["dbname"]]["source_url"],
+                            "release": feature["dbversion"]
+                        },
+                        "name": feature["name"],
+                        "accession_id": feature["name"],
+                        "url": db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
+                        "description": feature["description"]
+                    },
+                    "via": {
+                        "source": {
+                            "name": "InterProScan",
+                            "description": db_details["InterProScan"]["description"],
+                            "url": db_details["InterProScan"]["source_url"],
+                            "release": feature['program_version'],
+                        },
+                        "accession_id": feature["interpro_ac"],
+                        "url": db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac']),
+                    },
+                    "relative_location": {
+                        "start": feature["start"],
+                        "end": feature["end"],
+                        "length": feature["end"] - feature["start"] + 1
+                    },
+                    "score": feature["score"],
+                    "evalue": feature["evalue"],
+                    "hit_location": {
+                        "start": feature["hit_start"],
+                        "end": feature["hit_end"],
+                        "length": feature["hit_end"] - feature["hit_start"] + 1
+                    }
+                }
+            )
     return domains
 
 
@@ -486,7 +534,7 @@ def circularity_to_topology(circularity):
     return "circular" if circularity else "linear"
 
 
-def format_region(region_mysql_result, assembly, genome_id, chromosome_checksums):
+def format_region(region_mysql_result, assembly_id, genome_id, chromosome_checksums):
 
     checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
 
@@ -497,12 +545,35 @@ def format_region(region_mysql_result, assembly, genome_id, chromosome_checksums
         "code": region_mysql_result["code"],
         "length": region_mysql_result["length"],
         "topology": circularity_to_topology(region_mysql_result["circularity"]),
-        "assembly": assembly,
         'sequence': {
             'alphabet': get_alphabet_info('dna'),
             'checksum': checksum
-                     }
+                     },
+        "assembly_id": assembly_id,
+        "metadata": {
+            "ontology_terms": get_ontology_terms(region_mysql_result["code"])
+        }
     }
+
+
+def get_ontology_terms(region_code):
+    # Species in Thoas only have chromosomes
+    if region_code != "chromosome":
+        return None
+
+    # TODO confirm that all chromosomes for a given species should have the same ontology metadata
+    return [
+        {
+            "accession_id": "SO:0000340",
+            "value": "chromosome",
+            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
+            "source": {
+                "name": "Sequence Ontology",
+                "url": "www.sequenceontology.org",
+                "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
+            }
+        }
+    ]
 
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
@@ -571,7 +642,6 @@ def calculate_relative_coords(parent_params, child_params):
 
 
 def get_gene_name_metadata(xrefs, config):
-
     for xref in xrefs:
         if xref.get('dbname') == 'HGNC':
             name_metadata = {

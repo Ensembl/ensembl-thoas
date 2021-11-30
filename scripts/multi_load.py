@@ -29,21 +29,15 @@ async def run_assembly(args):
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
-    # Add arguments if the invocation includes a collection.
-    if 'collection' in args:
-        shell_command = f'''
-            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
-            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --collection {args["collection"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}
-        '''
-    else:
-        shell_command = f'''
-            perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
-            python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} --assembly={args["assembly"]} --release={args["release"]};\
-            python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}
-        '''
+    collection_param = '' if 'collection' not in args else f'--collection {args["collection"]}'
+
+    shell_command = f'''
+        perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+        python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
+        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
+        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
+        python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}
+    '''
     await asyncio.create_subprocess_shell(shell_command)
 
 
@@ -67,10 +61,6 @@ if __name__ == '__main__':
         '--release',
         help='Ensembl release number, 100'
     )
-    ARG_PARSER.add_argument(
-        '--chr_checksums_path',
-        help='File path to chromosome checksum hash files'
-    )
     CONF_PARSER = configparser.ConfigParser()
 
     CLI_ARGS = ARG_PARSER.parse_args()
@@ -82,11 +72,10 @@ if __name__ == '__main__':
         # one section is MongoDB config, the rest are species info
         if section in ['MONGO DB', 'REFGET DB', 'GENERAL']:
             continue
-        # Insert extra inferred parameters
-        CONF_PARSER[section]['config_file'] = CLI_ARGS.config
-        CONF_PARSER[section]['base_data_path'] = CLI_ARGS.base_data_path
-        CONF_PARSER[section]['release'] = CLI_ARGS.release
-        CONF_PARSER[section]['classifier_path'] = CLI_ARGS.classifier_path
-        CONF_PARSER[section]['chr_checksums_path'] = CLI_ARGS.chr_checksums_path
-        CONF_PARSER[section]['section_name'] = section
-        asyncio.run(run_assembly(args=CONF_PARSER[section]))
+
+        # Get extra parameters from the GENERAL section.
+        # The per-section parameters will override any GENERAL ones if there is a collision.
+        section_args = {**CONF_PARSER['GENERAL'], **CONF_PARSER[section]}
+        section_args['config_file'] = CLI_ARGS.config
+        section_args['section_name'] = section
+        asyncio.run(run_assembly(args=section_args))

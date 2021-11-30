@@ -64,7 +64,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info, tr_metadata_info, metadata_classifier, release):
+def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, release):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -75,19 +75,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
     """
     gene_buffer = []
     transcript_buffer = []
-    protein_buffer = []
 
-    assembly = mongo_client.collection().find_one({
-        'type': 'Assembly',
-        'name': assembly_name
-    })
-
-    genome = mongo_client.collection().find_one({
-        'type': 'Genome',
-        'name': assembly_name
-    })
-    if not genome or not assembly:
-        raise IOError(f'Failed to fetch {assembly_name} assembly and genome info from MongoDB')
     # at least until there's a process for alt-alleles etc.
     default_region = True
     print('Loaded assembly ' + assembly['name'])
@@ -169,31 +157,28 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly_name, phase_info,
 
                 ))
 
-            # Add products
-            for transcript in gene['transcripts']:
-                if 'translations' in transcript:
-                    for product in transcript['translations']:
-                        # Add mature RNA here
-                        if product['ensembl_object_type'] == 'translation':
-                            protein_buffer.append(
-                                common.utils.format_protein(
-                                    protein=product,
-                                    genome_id=genome['id'],
-                                    product_length=cds_info[transcript['id']]['spliced_length'] // 3,
-                                    refget=refget)
-                            )
-
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
             transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
-            protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:
         mongo_client.collection().insert_many(gene_buffer)
     if len(transcript_buffer) > 0:
         mongo_client.collection().insert_many(transcript_buffer)
-    if len(protein_buffer) > 0:
-        mongo_client.collection().insert_many(protein_buffer)
+
+
+def get_genome_assembly(assembly_name, mongo_client):
+    assembly = mongo_client.collection().find_one({
+        'type': 'Assembly',
+        'name': assembly_name
+    })
+    genome = mongo_client.collection().find_one({
+        'type': 'Genome',
+        'name': assembly_name
+    })
+    if not genome or not assembly:
+        raise IOError(f'Failed to fetch {assembly_name} assembly and genome info from MongoDB')
+    return assembly, genome
 
 
 def format_transcript(
@@ -337,6 +322,23 @@ def format_transcript(
     return new_transcript
 
 
+def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
+    protein_buffer = []
+    with open(product_filepath) as protein_file:
+        for line in protein_file:
+            product = json.loads(line)
+            protein_buffer.append(
+                common.utils.format_protein(
+                    protein=product,
+                    genome_id=genome_id,
+                    product_length=cds_info[product["transcript_id"]]['spliced_length'] // 3,
+                    refget=refget)
+            )
+            protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
+    if len(protein_buffer) > 0:
+        mongo_client.collection().insert_many(protein_buffer)
+
+
 def preload_cds_coords(production_name, assembly):
     '''
     CDS coords will be pre-loaded into a file from the Perl API. Otherwise
@@ -438,16 +440,16 @@ if __name__ == '__main__':
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
         JSON_FILE = f'{ARGS.data_path}{ARGS.species}/{ARGS.species}_genes.json'
-    ASSEMBLY = ARGS.assembly
+    ASSEMBLY_NAME = ARGS.assembly
     CLASSIFIER_PATH = ARGS.classifier_path
     RELEASE = ARGS.release
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
 
     if division in ['plants', 'protists', 'bacteria']:
-        refget = RefgetDB(NV_RELEASE, ASSEMBLY, CONFIG)
+        refget = RefgetDB(NV_RELEASE, ASSEMBLY_NAME, CONFIG)
     if division in ['vertebrates', 'metazoa']:
-        refget = RefgetDB(RELEASE, ASSEMBLY, CONFIG)
+        refget = RefgetDB(RELEASE, ASSEMBLY_NAME, CONFIG)
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
@@ -457,5 +459,9 @@ if __name__ == '__main__':
     print("Loading Metadata Classifiers")
     METADATA_CLASSIFIER = preload_classifiers(CLASSIFIER_PATH)
     print("Loading gene info into Mongo")
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE)
+    ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE)
+
+    TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
+    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
     create_index(MONGO_CLIENT)
