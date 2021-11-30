@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     conn = MySQLClient(config, args.section_name)
 
-    mysql_cursor = conn.cursor(dictionary=True)
+    mysql_cursor = conn.connection.cursor(dictionary=True)
 
     sp_production_name = config.get(args.section_name, 'production_name')
     sp_assembly_name = config.get(args.section_name, 'assembly')
