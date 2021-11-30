@@ -24,6 +24,7 @@ type Region {
   code: RegionCode!
   topology: RegionTopology!
   assembly: Assembly!
+  sequence: Sequence!
   metadata: RegionMetadata!
 }
 

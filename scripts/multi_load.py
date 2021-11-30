@@ -37,7 +37,7 @@ async def run_assembly(args):
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
         python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
-        python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]}
+        python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}
     '''
     await asyncio.create_subprocess_shell(shell_command)
 
