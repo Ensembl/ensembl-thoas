@@ -70,7 +70,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--section_name',
-        help='Section of config file containing MySQL and MongoDB credentials'
+        help='Section of config file containing MySQL credentials'
     )
     ARGS = parser.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)

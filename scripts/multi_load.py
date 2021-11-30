@@ -17,10 +17,13 @@ import asyncio
 import asyncio.subprocess
 import configparser
 import os
+import subprocess
+from datetime import datetime
+
 
 async def run_assembly(args):
     '''
-    Successively run each of the three scripts
+    Successively run all the other loading scripts
     '''
     code = os.path.dirname(os.path.realpath(__file__))
     # Append the correct release number, division, and override the base path for GRCh37
@@ -39,6 +42,14 @@ async def run_assembly(args):
         python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]}
     '''
     await asyncio.create_subprocess_shell(shell_command)
+
+
+def get_default_collection_name():
+    '''Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>,
+    eg graphql_211129152013_876a48b'''
+    current_commit_git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    current_time = datetime.now().strftime("%y%m%d%H%M%S")
+    return "_".join(["graphql", current_time, current_commit_git_hash])
 
 
 if __name__ == '__main__':
