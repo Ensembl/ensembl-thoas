@@ -1,15 +1,16 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: thoas-backdoor-ingress
+  name: ensembl-thoas-ingress-alex
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting
+    # nginx.ingress.kubernetes.io/limit-rpm: "2"
 spec:
   rules:
-  - http:
+  - host: alex-thoas.ensembl.org
+    http:
       paths:
-        - path: /
-          backend:
-            serviceName: thoas-server-svc
-            servicePort: 31497
+      - backend:
+          serviceName: thoas-server-svc
+          servicePort: 8000
+        path: /
