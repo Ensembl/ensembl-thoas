@@ -37,8 +37,6 @@ class MongoDbClient:
             self.collection_name = collection_name
             print(f'Using injected MongoDB collection with name {self.collection_name}')
 
-
-
     def connect_mongo(self, config):
         'Get a MongoDB connection'
 
@@ -64,7 +62,7 @@ class MongoDbClient:
         return self.mongo_db[self.collection_name]
 
 
-class FakeMongoDbClient():
+class FakeMongoDbClient:
     '''
     Sets up a mongomock collection for thoas code to test with
     '''
