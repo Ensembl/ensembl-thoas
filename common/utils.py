@@ -49,6 +49,10 @@ def parse_args():
         '--release',
         help='Release version'
     )
+    parser.add_argument(
+        '--mongo_collection',
+        help='Target Mongo collection for loading scripts'
+    )
     return parser.parse_args()
 
 
