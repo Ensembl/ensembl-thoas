@@ -75,7 +75,7 @@ if __name__ == "__main__":
         '--chr_checksums_path',
         help='File path to chromosome checksum hash files'
     )
-    ARGS = parser.parse_args()
+    ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)
     MONGO_COLLECTION = ARGS.mongo_collection
