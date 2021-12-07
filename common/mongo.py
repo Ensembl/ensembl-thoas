@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from configparser import NoOptionError
 
 import pymongo
 import mongomock
@@ -27,11 +28,10 @@ class MongoDbClient:
         Note that config here is a configparser object
         '''
         self.mongo_db = self.connect_mongo(config)
-        config_collection_name = config.get('MONGO DB', 'collection')
-        if config_collection_name:
-            self.collection_name = config_collection_name
+        try:
+            self.collection_name = config.get('MONGO DB', 'collection')
             print(f'Using MongoDB collection with name {self.collection_name} from config file')
-        else:
+        except NoOptionError:
             if not collection_name:
                 raise IOError("Unable to find a MongoDB collection name")
             self.collection_name = collection_name

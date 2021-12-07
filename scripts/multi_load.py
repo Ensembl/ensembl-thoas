@@ -21,10 +21,18 @@ import subprocess
 from datetime import datetime
 
 
+def get_repo_path():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 def get_default_collection_name():
     '''Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>,
     eg graphql_211129152013_876a48b'''
+    cwd = os.getcwd()
+    repo_path = get_repo_path()
+    os.chdir(repo_path)
     current_commit_git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    os.chdir(cwd)
     current_time = datetime.now().strftime("%y%m%d%H%M%S")
     return "_".join(["graphql", current_time, current_commit_git_hash])
 
@@ -33,7 +41,7 @@ async def run_assembly(args):
     '''
     Successively run all the other loading scripts
     '''
-    code = os.path.dirname(os.path.realpath(__file__))
+    code = get_repo_path()
     # Append the correct release number, division, and override the base path for GRCh37
     if args['assembly'] == 'GRCh37':
         data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
