@@ -64,17 +64,6 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Load Region data from MySQL into MongoDB'
-    )
-    parser.add_argument(
-        '--section_name',
-        help='Section of config file containing MySQL credentials'
-    )
-    parser.add_argument(
-        '--chr_checksums_path',
-        help='File path to chromosome checksum hash files'
-    )
     ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)

@@ -53,6 +53,14 @@ def parse_args():
         '--mongo_collection',
         help='Target Mongo collection for loading scripts'
     )
+    parser.add_argument(
+        '--section_name',
+        help='Section of config file containing MySQL credentials'
+    )
+    parser.add_argument(
+        '--chr_checksums_path',
+        help='File path to chromosome checksum hash files'
+    )
     return parser.parse_args()
 
 
