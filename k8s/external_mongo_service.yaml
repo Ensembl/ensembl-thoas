@@ -5,7 +5,6 @@ metadata:
   name: mongo
   labels:
     app: thoas-mongo-svc
-  namespace: ensembl-apps
 spec:
   type: ClusterIP
   ports:

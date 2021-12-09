@@ -4,7 +4,6 @@ kind: Endpoints
 # Note the name matches the Service
 metadata:
   name: mongo
-  namespace: ensembl-apps
 subsets:
   - addresses:
       - ip: 10.7.51.44

@@ -1,19 +1,22 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: thoas-server-deployment
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: thoas-server
   template:
     metadata:
       labels:
         app: thoas-server
     spec:
       imagePullSecrets:
-        - name: thoas-server-pull-secret
+        - name: thoas-backend-registry-secret
       containers:
         - name: thoas-server
-          image: <DOCKER_IMAGE>
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:7a8004b2
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
