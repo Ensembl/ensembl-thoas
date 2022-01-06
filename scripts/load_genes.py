@@ -435,7 +435,8 @@ if __name__ == '__main__':
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     SPECIES = ARGS.species
-    MONGO_CLIENT = MongoDbClient(CONFIG)
+    MONGO_COLLECTION = ARGS.mongo_collection
+    MONGO_CLIENT = MongoDbClient(CONFIG, MONGO_COLLECTION)
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:
