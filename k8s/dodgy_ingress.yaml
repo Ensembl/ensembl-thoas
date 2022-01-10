@@ -1,13 +1,13 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ensembl-thoas-ingress-alex
+  name: ensembl-thoas-ingress-<DEPLOYMENT TAG>
   annotations:
     # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting
     # nginx.ingress.kubernetes.io/limit-rpm: "2"
 spec:
   rules:
-  - host: alex-thoas.ensembl.org
+  - host: <SUB-DOMAIN>.ensembl.org
     http:
       paths:
       - backend:
