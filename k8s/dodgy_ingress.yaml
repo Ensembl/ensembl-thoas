@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ensembl-thoas-ingress-<DEPLOYMENT TAG>
+  name: ensembl-thoas-ingress-<DEPLOYMENT_TAG>
   annotations:
     # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting
     # nginx.ingress.kubernetes.io/limit-rpm: "2"
