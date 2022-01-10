@@ -54,6 +54,18 @@ def parse_args():
         '--xref_lod_mapping_file',
         help='Path to file which has Ensembl DB names to ID org namespace mappings'
     )
+    parser.add_argument(
+        '--mongo_collection',
+        help='Target Mongo collection for loading scripts'
+    )
+    parser.add_argument(
+        '--section_name',
+        help='Section of config file containing MySQL credentials'
+    )
+    parser.add_argument(
+        '--chr_checksums_path',
+        help='File path to chromosome checksum hash files'
+    )
 
     return parser.parse_args()
 

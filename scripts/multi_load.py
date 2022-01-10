@@ -17,12 +17,31 @@ import asyncio
 import asyncio.subprocess
 import configparser
 import os
+import subprocess
+from datetime import datetime
+
+
+def get_repo_path():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def get_default_collection_name():
+    '''Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>,
+    eg graphql_211129152013_876a48b'''
+    cwd = os.getcwd()
+    repo_path = get_repo_path()
+    os.chdir(repo_path)
+    current_commit_git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    os.chdir(cwd)
+    current_time = datetime.now().strftime("%y%m%d%H%M%S")
+    return "_".join(["graphql", current_time, current_commit_git_hash])
+
 
 async def run_assembly(args):
     '''
-    Successively run each of the three scripts
+    Successively run all the other loading scripts
     '''
-    code = os.path.dirname(os.path.realpath(__file__))
+    code = get_repo_path()
     # Append the correct release number, division, and override the base path for GRCh37
     if args['assembly'] == 'GRCh37':
         data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
@@ -31,13 +50,15 @@ async def run_assembly(args):
 
     collection_param = '' if 'collection' not in args else f'--collection {args["collection"]}'
 
+    mongo_collection_name = get_default_collection_name()
+
     shell_command = f'''
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
         python {code}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
-        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]};\
-        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]};\
-        python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}
+        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
+        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
+        python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}  --mongo_collection={mongo_collection_name}
     '''
     await asyncio.create_subprocess_shell(shell_command)
 

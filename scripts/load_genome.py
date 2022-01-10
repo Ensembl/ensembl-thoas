@@ -15,7 +15,7 @@
 import json
 import pymongo
 
-from common.utils import load_config, parse_args
+import common.utils
 from common.mongo import MongoDbClient
 
 
@@ -77,9 +77,10 @@ def create_index(mongo_client):
 
 if __name__ == '__main__':
 
-    ARGS = parse_args()
-
-    MONGO_CLIENT = MongoDbClient(load_config(ARGS.config_file))
+    ARGS = common.utils.parse_args()
+    CONFIG = common.utils.load_config(ARGS.config_file)
+    MONGO_COLLECTION = ARGS.mongo_collection
+    MONGO_CLIENT = MongoDbClient(CONFIG, MONGO_COLLECTION)
     # Combine arguments to give the path to the relevant $species_genome.json file
     # Directory structure differs if a collection is involved
     if ARGS.collection:

@@ -11,24 +11,31 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from configparser import NoOptionError
 
 import pymongo
 import mongomock
 
 
-class MongoDbClient():
+class MongoDbClient:
     '''
     A pymongo wrapper class to take care of configuration and collection
     management
     '''
 
-    def __init__(self, config):
+    def __init__(self, config, collection_name=None):
         '''
         Note that config here is a configparser object
         '''
         self.mongo_db = self.connect_mongo(config)
-        self.default_collection = config.get('MONGO DB', 'collection')
-        print('MongoDB default collection:' + self.default_collection)
+        try:
+            self.collection_name = config.get('MONGO DB', 'collection')
+            print(f'Using MongoDB collection with name {self.collection_name} from config file')
+        except NoOptionError:
+            if not collection_name:
+                raise IOError("Unable to find a MongoDB collection name")
+            self.collection_name = collection_name
+            print(f'Using injected MongoDB collection with name {self.collection_name}')
 
     def connect_mongo(self, config):
         'Get a MongoDB connection'
@@ -52,10 +59,10 @@ class MongoDbClient():
         '''
         Get the currently set default collection to run queries against
         '''
-        return self.mongo_db[self.default_collection]
+        return self.mongo_db[self.collection_name]
 
 
-class FakeMongoDbClient():
+class FakeMongoDbClient:
     '''
     Sets up a mongomock collection for thoas code to test with
     '''
@@ -63,7 +70,7 @@ class FakeMongoDbClient():
     def __init__(self):
         'Override default setup'
         self.mongo_db = mongomock.MongoClient().db
-        self.default_collection = 'test'
+        self.collection_name = 'test'
 
     def collection(self):
-        return self.mongo_db[self.default_collection]
+        return self.mongo_db[self.collection_name]
