@@ -35,7 +35,7 @@ EXECUTABLE_SCHEMA = prepare_executable_schema()
 # Initialise all data loaders
 DATA_LOADER = DataLoaderCollection(MONGO_CLIENT.collection())
 
-RESOLVER = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
 
 CONTEXT_PROVIDER = prepare_context_provider({
     'mongo_db': MONGO_CLIENT.collection(),

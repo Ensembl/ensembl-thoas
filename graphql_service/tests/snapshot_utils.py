@@ -20,6 +20,7 @@ from graphql_service.ariadne_app import prepare_executable_schema
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region, \
     build_assembly
+from graphql_service.tests.fixtures.wheat import build_wheat_genes
 
 def prepare_db():
     'Fill a mock database with data and provide a collection accessor'
@@ -27,7 +28,7 @@ def prepare_db():
     mocked_mongo_collection = mongomock.MongoClient().db.collection
     data_loader = DataLoaderCollection(mocked_mongo_collection)
     try:
-        xref_resolver = XrefResolver(mapping_file='docs/xref_LOD_mapping.json')
+        xref_resolver = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
     except requests.exceptions.ConnectionError:
         print('No network available, tests will fail')
         xref_resolver = None
@@ -43,6 +44,7 @@ def prepare_db():
     mocked_mongo_collection.insert_many(build_products())
     mocked_mongo_collection.insert_one(build_region())
     mocked_mongo_collection.insert_one(build_assembly())
+    mocked_mongo_collection.insert_many(build_wheat_genes())
     return context
 
 

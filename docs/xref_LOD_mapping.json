@@ -1590,6 +1590,24 @@
       "db_name": "LegioList",
       "manual_source_url" : "http://genolist.pasteur.fr/LegioList",
       "ensembl_db_name": "LegioList"
+    },
+    {
+      "db_name": "UniprotKB/TrEMBL",
+      "example_id": "W5BHN9",
+      "id_namespace": "uniprot",
+      "ensembl_db_name": "UniprotKB/TrEMBL"
+    },
+    {
+      "db_name": "UniProtKB/Swiss-Prot",
+      "example_id": "Q9SX27",
+      "id_namespace": "uniprot",
+      "ensembl_db_name": "UniProtKB/Swiss-Prot"
+    },
+    {
+      "db_name": "TAIR",
+      "example_id": "AT4G01970",
+      "ensembl_db_name": "TAIR",
+      "id_namespace": "tair.locus"
     }
   ]
 }

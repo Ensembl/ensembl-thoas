@@ -18,11 +18,14 @@ import ijson
 import pymongo
 import os
 import json
+import sys
 
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
+from common.crossrefs import XrefResolver
+from common.logger import ThoasLogging
 
 lrg_detector = re.compile('^LRG')
 
@@ -64,7 +67,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, release):
+def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, release, gene_name_metadata, xref_resolver, logger):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -106,7 +109,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene['xrefs'], CONFIG)
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene_name_metadata[gene['id']], xref_resolver, logger)
             except KeyError as ke:
                 gene_metadata['name'] = None
 
@@ -421,6 +424,16 @@ def preload_transcript_meta(production_name, assembly):
             transcript_meta[stable_id] = get_transcript_meta(row)
     return transcript_meta
 
+
+def preload_gene_name_metadata(production_name, assembly):
+    gene_name_metadata = {}
+    with open(production_name + "_" + assembly + "_gene_names.json", "r") as gene_name_metadata_file:
+        gene_name_metadata_load = json.load(gene_name_metadata_file)
+        for gene_name in gene_name_metadata_load:
+            gene_name_metadata[gene_name['gene_stable_id']] = gene_name
+    return gene_name_metadata
+
+
 def preload_classifiers(CLASSIFIER_PATH):
     meta_classifiers = transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
     for classifier in meta_classifiers:
@@ -444,6 +457,7 @@ if __name__ == '__main__':
     ASSEMBLY_NAME = ARGS.assembly
     CLASSIFIER_PATH = ARGS.classifier_path
     RELEASE = ARGS.release
+    XREF_LOD_MAPPING_FILE = ARGS.xref_lod_mapping_file
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
 
@@ -459,10 +473,17 @@ if __name__ == '__main__':
     TRANSCRIPT_METADATA = preload_transcript_meta(ARGS.species, ARGS.assembly)
     print("Loading Metadata Classifiers")
     METADATA_CLASSIFIER = preload_classifiers(CLASSIFIER_PATH)
+    print("Loading Gene Name Metadata")
+    GENE_NAME_METADATA = preload_gene_name_metadata(ARGS.species, ARGS.assembly)
+    print("Loading e! xref db name to id.org prefix mappings")
+    XREF_RESOLVER = XrefResolver(internal_mapping_file=XREF_LOD_MAPPING_FILE)
+    URL_LOGGER = ThoasLogging(logging_file='url_log', logger_name='url_logger')
     print("Loading gene info into Mongo")
+
     ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
     load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
+
     create_index(MONGO_CLIENT)

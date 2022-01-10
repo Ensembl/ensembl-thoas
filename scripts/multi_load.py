@@ -54,9 +54,10 @@ async def run_assembly(args):
 
     shell_command = f'''
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+        python {code}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
-        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
+        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
         python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}  --mongo_collection={mongo_collection_name}
     '''
     await asyncio.create_subprocess_shell(shell_command)
@@ -69,18 +70,6 @@ if __name__ == '__main__':
         '--config',
         help='Config file containing the database and division info for species and MongoDB',
         default='load.conf'
-    )
-    ARG_PARSER.add_argument(
-        '--base_data_path',
-        help='Path to data dumps, e.g. /hps/nobackup2/production/ensembl/ensprod/search_dumps'
-    )
-    ARG_PARSER.add_argument(
-        '--classifier_path',
-        help='Path to JSON files for the gene/transcript metadata classifiers'
-    )
-    ARG_PARSER.add_argument(
-        '--release',
-        help='Ensembl release number, 100'
     )
     CONF_PARSER = configparser.ConfigParser()
 

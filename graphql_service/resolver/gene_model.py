@@ -23,6 +23,7 @@ TRANSCRIPT_TYPE = ObjectType('Transcript')
 LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
+GENE_METADATA_TYPE = ObjectType('GeneMetadata')
 SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
 
@@ -80,6 +81,36 @@ def insert_crossref_urls(feature, info):
     annotated_xrefs = map(resolver.annotate_crossref, xrefs) # might contain None values due to caught exceptions
     xrefs_with_nulls_removed = filter(lambda x: x is not None, annotated_xrefs)
     return list(xrefs_with_nulls_removed)
+
+@GENE_METADATA_TYPE.field('name')
+def insert_gene_name_urls(gene_metadata, info):
+    '''
+    A gene metadata of a gene is given as argument.
+    Using the gene name metadata info we can infer URLs to those resources
+    and inject them into the response
+    '''
+
+    xref_resolver = info.context['XrefResolver']
+    name_metadata = gene_metadata.get('name')
+
+    source_id = name_metadata.get('source').get('id')
+
+    # If a gene does'nt have a source id, we cant find any information about the source and also the gene name URL
+    if source_id is None:
+        name_metadata['source'] = None
+        name_metadata['url'] = None
+        return name_metadata
+
+    # Try to generate the gene name url
+    name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(name_metadata.get('accession_id'), source_id)
+    # Try to get gene name's source url and source description
+    id_org_ns_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(source_id)
+    name_metadata['source']['url'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'resourceHomeUrl')
+    # Source descrption is mostly null in the Ensembl database. So, trying to get it from id.org
+    name_metadata['source']['description'] = xref_resolver.source_information_retriever(id_org_ns_prefix, 'description')
+
+    return name_metadata
+
 
 @QUERY_TYPE.field('transcript')
 def resolve_transcript(_, info, bySymbol=None, byId=None):
