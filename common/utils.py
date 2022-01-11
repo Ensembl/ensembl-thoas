@@ -66,6 +66,11 @@ def parse_args():
         '--chr_checksums_path',
         help='File path to chromosome checksum hash files'
     )
+    parser.add_argument(
+        '--log_faulty_urls',
+        action='store_true',
+        help='Log Faulty URLs'
+    )
 
     return parser.parse_args()
 
@@ -698,6 +703,10 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 
 
 def check_and_log_urls(data, url_key, logger):
+
+    if logger is None:
+        return None
+
     try:
         response = requests.get(data.get(url_key))
         if response.status_code != 200:
