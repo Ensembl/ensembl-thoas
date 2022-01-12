@@ -478,14 +478,13 @@ if __name__ == '__main__':
     print("Loading e! xref db name to id.org prefix mappings")
     XREF_RESOLVER = XrefResolver(internal_mapping_file=XREF_LOD_MAPPING_FILE)
     URL_LOGGER = None
+    ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
 
     if ARGS.log_faulty_urls:
-        URL_LOGGER = ThoasLogging(logging_file='url_log_{}'.format(SPECIES), logger_name='url_logger_{}'.format(SPECIES))
+        URL_LOGGER = ThoasLogging(logging_file='url_log_{}'.format(GENOME['id']), logger_name='url_logger_{}'.format(GENOME['id']))
 
     print("Loading gene info into Mongo")
 
-
-    ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
     load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
