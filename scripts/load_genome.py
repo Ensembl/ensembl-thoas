@@ -53,7 +53,7 @@ def load_genome_info(mongo_client, source_file):
         # remember less between interactions, and ask shorter queries
         mongo_client.collection().insert_one({
             'type': 'Genome',
-            'id': doc['organism']['name'] + '_' + doc['assembly']['accession'].replace('.', '_'),
+            'id': common.utils.get_genome_id(doc['organism']['name'], doc['assembly']['accession']),
             'name': doc['assembly']['default'],
             'assembly': doc['assembly']['name'],
             'species': doc['organism']['name'],
