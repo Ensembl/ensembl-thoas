@@ -33,7 +33,7 @@ class Info():
             'mongo_db': self.collection,
             'data_loader': data_loader.DataLoaderCollection(self.collection),
             'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json'),
-            'genome_id': 1 # This should be added by the top-level resolver on query
+            'genome_id': 1  # This should be added by the top-level resolver on query
         }
 
 
@@ -42,8 +42,10 @@ def fixture_basic_data():
     'Some fake genes'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1', 'unversioned_stable_id': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Gene', 'symbol': 'durian', 'stable_id': 'ENSG002.2', 'unversioned_stable_id': 'ENSG002'},
+        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1',
+         'unversioned_stable_id': 'ENSG001'},
+        {'genome_id': 1, 'type': 'Gene', 'symbol': 'durian', 'stable_id': 'ENSG002.2',
+         'unversioned_stable_id': 'ENSG002'},
     ])
     return Info(collection)
 
@@ -57,7 +59,7 @@ def fixture_transcript_data():
             'genome_id': 1,
             'type': 'Gene',
             'symbol': 'banana',
-            'stable_id': 'ENSG001.1', 
+            'stable_id': 'ENSG001.1',
             'unversioned_stable_id': 'ENSG001'
         },
         {
@@ -163,7 +165,7 @@ def fixture_slice_data():
 
 def test_resolve_gene(basic_data):
     'Test the querying of Mongo by gene symbol'
-    
+
     result = model.resolve_gene(
         None,
         basic_data,
@@ -239,6 +241,7 @@ def test_resolve_transcript(transcript_data):
     )
     assert not result
 
+
 @pytest.mark.asyncio
 async def test_resolve_gene_transcripts(transcript_data):
     'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
@@ -250,6 +253,7 @@ async def test_resolve_gene_transcripts(transcript_data):
     for hit in result:
         assert hit['type'] == 'Transcript'
         assert hit['symbol'] in ['kumquat', 'grape']
+
 
 @pytest.mark.asyncio
 async def test_resolve_gene_from_transcript(transcript_data):
@@ -263,6 +267,7 @@ async def test_resolve_gene_from_transcript(transcript_data):
     assert result['stable_id'] == 'ENSG001.1'
     assert result['symbol'] == 'banana'
 
+
 def test_resolve_slice(slice_data):
     'Check features can be found via coordinates'
     result = model.resolve_slice(
@@ -273,31 +278,31 @@ def test_resolve_slice(slice_data):
         start=10,
         end=11,
     )
-    assert result == {'genes': [], 'transcripts': []}
+    assert {hit['stable_id'] for hit in result['genes']} == {'ENSG001.1'}
 
 
-def test_query_region_one_result(slice_data):
+query_region_expectations = [
+    (1, 5, set()),  # No overlaps
+    (40, 50, {'ENSG001.1'}),  # search region contained in a single feature
+    (5, 105, {'ENSG001.1'}),  # search region contains a feature
+    (5, 15, {'ENSG001.1'}),  # search region contains start of a feature but not the end
+    (95, 105, {'ENSG001.1'}),  # search region contains end of a feature but not the start
+    (5, 205, {'ENSG001.1', 'ENSG002.2'}),  # search region contains two features
+    (50, 150, {'ENSG001.1', 'ENSG002.2'})  # search region overlaps two features
+]
+
+
+@pytest.mark.parametrize("start,end,expected_ids", query_region_expectations)
+def test_query_region(start, end, expected_ids, slice_data):
     context = slice_data.context
     result = model.query_region(
         context=context,
         region_id='test_genome_chr1_chromosome',
-        start=1,
-        end=120,
+        start=start,
+        end=end,
         feature_type='Gene'
     )
-    assert [hit['stable_id'] for hit in result] == ['ENSG001.1']
-
-
-def test_query_region_two_results(slice_data):
-    context = slice_data.context
-    result = model.query_region(
-        context=context,
-        region_id='test_genome_chr1_chromosome',
-        start=5,
-        end=205,
-        feature_type='Gene'
-    )
-    assert [hit['stable_id'] for hit in result] == ['ENSG001.1', 'ENSG002.2']
+    assert {hit['stable_id'] for hit in result} == expected_ids
 
 
 def test_query_region_too_many_results(slice_data):
@@ -316,7 +321,6 @@ def test_query_region_too_many_results(slice_data):
     assert slice_limit_exceeded_error.value.extensions['code'] == "SLICE_RESULT_LIMIT_EXCEEDED"
 
 
-
 @pytest.mark.asyncio
 async def test_resolve_region_happy_case(region_data):
     slc = {
@@ -326,7 +330,7 @@ async def test_resolve_region_happy_case(region_data):
                 'start': 624785,
                 'end': 626011,
                 'length': 1227
-             },
+            },
         'strand':
             {
                 'code': 'forward',
@@ -381,14 +385,15 @@ def test_url_generation(basic_data):
 
     assert result[0]['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:some_molecule'
     assert result[0]['source']['url'] == 'https://www.ebi.ac.uk/chebi/'
-    assert result[0]['assignment_method']['description'] == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
+    assert result[0]['assignment_method'][
+               'description'] == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'
 
 
 @pytest.mark.asyncio
 async def test_resolve_transcript_products(transcript_data):
     'Check the DataLoader for products is working via transcript. Requires event loop for DataLoader'
     result = await model.resolve_product_by_pgc(
-        {'product_id': 'ENSP001.1', 'genome_id':1},
+        {'product_id': 'ENSP001.1', 'genome_id': 1},
         transcript_data
     )
 

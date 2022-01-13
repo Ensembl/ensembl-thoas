@@ -196,8 +196,9 @@ def query_region(context, region_id, start, end, feature_type):
     query = {
         'type': feature_type,
         'slice.region_id': region_id,
-        'slice.location.start': {'$gte': start},
-        'slice.location.end': {'$lte': end}
+        '$or': [{'slice.location.start': {'$gte': start, '$lte': end}},
+                {'slice.location.end': {'$gte': start, '$lte': end}},
+                {'slice.location.start': {'$lte': start}, 'slice.location.end': {'$gte': end}}]
     }
     max_results_size = 1000
     results = list(context["mongo_db"].find(query).limit(max_results_size))
