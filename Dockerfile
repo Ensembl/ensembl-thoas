@@ -8,9 +8,9 @@ RUN pip3 install -r /app/requirements.txt -e /app/
 
 ENV PYTHONPATH=\$PYTHONPATH:/app
 
-# The file must contain MongoDB configuration. 
-# mongo.conf is not in the container by default, and this will fail
-ENV GQL_CONF=/app/mongo.conf
+EXPOSE 8000
 
-ENV WORKER_COUNT=10
-CMD uvicorn --workers $WORKER_COUNT --env GQL_CONF --host=0.0.0.0 graphql_service.server:app
+WORKDIR /app
+
+ENV WORKER_COUNT=2
+CMD uvicorn --workers $WORKER_COUNT --host=0.0.0.0 graphql_service.server:APP
