@@ -268,9 +268,9 @@ async def test_resolve_gene_from_transcript(transcript_data):
     assert result['symbol'] == 'banana'
 
 
-def test_resolve_slice(slice_data):
+def test_resolve_overlap(slice_data):
     'Check features can be found via coordinates'
-    result = model.resolve_slice(
+    result = model.resolve_overlap(
         None,
         slice_data,
         genome_id="test_genome",
@@ -293,9 +293,9 @@ query_region_expectations = [
 
 
 @pytest.mark.parametrize("start,end,expected_ids", query_region_expectations)
-def test_query_region(start, end, expected_ids, slice_data):
+def test_overlap_region(start, end, expected_ids, slice_data):
     context = slice_data.context
-    result = model.query_region(
+    result = model.overlap_region(
         context=context,
         region_id='test_genome_chr1_chromosome',
         start=start,
@@ -305,11 +305,11 @@ def test_query_region(start, end, expected_ids, slice_data):
     assert {hit['stable_id'] for hit in result} == expected_ids
 
 
-def test_query_region_too_many_results(slice_data):
+def test_overlap_region_too_many_results(slice_data):
     context = slice_data.context
     result = None
     with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:
-        result = model.query_region(
+        result = model.overlap_region(
             context=context,
             region_id='test_genome_chr1_chromosome',
             start=205,

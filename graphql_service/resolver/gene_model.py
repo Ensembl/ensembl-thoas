@@ -169,23 +169,20 @@ async def resolve_transcript_gene(transcript, info):
     return gene
 
 
-# Note that this kind of hard boundary search is not often appropriate for
-# genomics. Most usefully we will want any entities overlapping this range
-# rather than entities entirely within the range
-@QUERY_TYPE.field('slice')
-def resolve_slice(_, info, genome_id, region_name, start, end):
+@QUERY_TYPE.field('overlap_region')
+def resolve_overlap(_, info, genome_id, region_name, start, end):
     '''
     Query Mongo for genes and transcripts lying between start and end
     '''
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
     return {
-        "genes": query_region(info.context, region_id, start, end, 'Gene'),
-        "transcripts": query_region(info.context, region_id, start, end, 'Transcript')
+        "genes": overlap_region(info.context, region_id, start, end, 'Gene'),
+        "transcripts": overlap_region(info.context, region_id, start, end, 'Transcript')
     }
 
 
-def query_region(context, region_id, start, end, feature_type):
+def overlap_region(context, region_id, start, end, feature_type):
     '''
     Query backend for a feature type using slice parameters:
     region id
