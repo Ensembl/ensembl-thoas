@@ -6,11 +6,15 @@ from snapshottest import Snapshot
 snapshots = Snapshot()
 
 snapshots['test_slice_retrieval 1'] = {
-    'slice': {
-        'genes': [],
+    'overlap_region': {
+        'genes': [
+            {
+                "stable_id": "ENSG00000139618.15"
+            }
+        ],
         'transcripts': [
             {
-                "stable_id": "ENST00000528762.1"
+                "stable_id": "ENST00000380152.7"
             }
         ]
     }

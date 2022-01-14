@@ -170,12 +170,12 @@ async def resolve_transcript_gene(transcript, info):
 
 
 @QUERY_TYPE.field('overlap_region')
-def resolve_overlap(_, info, genome_id, region_name, start, end):
+def resolve_overlap(_, info, genomeId, regionName, start, end):
     '''
     Query Mongo for genes and transcripts lying between start and end
     '''
     # Thoas only contains "chromosome"-type regions
-    region_id = "_".join([genome_id, region_name, "chromosome"])
+    region_id = "_".join([genomeId, regionName, "chromosome"])
     return {
         "genes": overlap_region(info.context, region_id, start, end, 'Gene'),
         "transcripts": overlap_region(info.context, region_id, start, end, 'Transcript')

@@ -25,11 +25,11 @@ async def test_slice_retrieval(snapshot):
 
     # The start/end parameters in this query only contain the brca2_203 transcript
     query = """query {
-      slice(
-          genome_id: "homo_sapiens_GCA_000001405_28"
-          region_name: "13"
-          start: 32370970,
-          end: 32379496
+      overlap_region(
+          genomeId: "homo_sapiens_GCA_000001405_28"
+          regionName: "13"
+          start: 32379496,
+          end: 32400266
       )
       {
         genes {

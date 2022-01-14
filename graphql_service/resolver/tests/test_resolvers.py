@@ -273,8 +273,8 @@ def test_resolve_overlap(slice_data):
     result = model.resolve_overlap(
         None,
         slice_data,
-        genome_id="test_genome",
-        region_name='chr1',
+        genomeId="test_genome",
+        regionName='chr1',
         start=10,
         end=11,
     )
