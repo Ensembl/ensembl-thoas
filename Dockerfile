@@ -7,6 +7,7 @@ COPY . /app
 RUN pip3 install -r /app/requirements.txt -e /app/
 
 ENV PYTHONPATH=\$PYTHONPATH:/app
+ENV GQL_CONF=/app/mongo.conf
 
 EXPOSE 8000
 
