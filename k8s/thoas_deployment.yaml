@@ -13,10 +13,10 @@ spec:
         app: thoas-server
     spec:
       imagePullSecrets:
-        - name: thoas-backend-registry-secret
+        - name: thoas-docker-deploy
       containers:
         - name: thoas-server
-          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:7a8004b2
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:00dafc50
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
@@ -26,11 +26,11 @@ spec:
                 configMapKeyRef:
                   name: thoas-config-location
                   key: GQL_CONF
-            - name: HTTPS_PROXY
-              valueFrom:
-                configMapKeyRef:
-                  name: thoas-config-location
-                  key: HTTPS_PROXY
+#            - name: HTTPS_PROXY
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: thoas-config-location
+#                  key: HTTPS_PROXY
           command: ["uvicorn"]
           args: [
             "--host",
