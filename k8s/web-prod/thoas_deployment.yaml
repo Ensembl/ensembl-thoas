@@ -1,22 +1,19 @@
-apiVersion: apps/v1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: thoas-server-deployment
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: thoas-server
   template:
     metadata:
       labels:
         app: thoas-server
     spec:
       imagePullSecrets:
-        - name: thoas-docker-deploy
+        - name: thoas-server-pull-secret
       containers:
         - name: thoas-server
-          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:00dafc50
+          image: <DOCKER_IMAGE>
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
@@ -26,11 +23,11 @@ spec:
                 configMapKeyRef:
                   name: thoas-config-location
                   key: GQL_CONF
-#            - name: HTTPS_PROXY
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: thoas-config-location
-#                  key: HTTPS_PROXY
+            - name: HTTPS_PROXY
+              valueFrom:
+                configMapKeyRef:
+                  name: thoas-config-location
+                  key: HTTPS_PROXY
           command: ["uvicorn"]
           args: [
             "--host",

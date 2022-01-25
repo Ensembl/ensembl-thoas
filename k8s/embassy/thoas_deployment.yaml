@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thoas-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thoas-server
+  template:
+    metadata:
+      labels:
+        app: thoas-server
+    spec:
+      imagePullSecrets:
+        - name: thoas-docker-deploy
+      containers:
+        - name: thoas-server
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:00dafc50
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          env:
+            - name: GQL_CONF
+              valueFrom:
+                configMapKeyRef:
+                  name: thoas-config-location
+                  key: GQL_CONF
+          command: ["uvicorn"]
+          args: [
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--env-file",
+            "/env/.env",
+            "graphql_service.server:APP"
+          ]
+          volumeMounts:
+            - mountPath: /conf/
+              name: thoas-configmap
+            - mountPath: /env/.env
+              name: thoas-config-location
+      volumes:
+        - name: thoas-configmap
+          configMap:
+            name: thoas-configmap
+        - name: thoas-config-location
+          configMap:
+            name: thoas-config-location
