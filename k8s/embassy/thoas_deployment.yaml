@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: thoas-server-deployment
+  namespace: thoas
 spec:
   replicas: 1
   selector:
@@ -16,7 +17,7 @@ spec:
         - name: thoas-docker-deploy
       containers:
         - name: thoas-server
-          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:00dafc50
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
@@ -24,7 +25,7 @@ spec:
             - name: GQL_CONF
               valueFrom:
                 configMapKeyRef:
-                  name: thoas-config-location
+                  name: mongo-conf-filepath-cm
                   key: GQL_CONF
           command: ["uvicorn"]
           args: [
@@ -38,13 +39,13 @@ spec:
           ]
           volumeMounts:
             - mountPath: /conf/
-              name: thoas-configmap
+              name: mongo-connection-cm
             - mountPath: /env/.env
-              name: thoas-config-location
+              name: mongo-conf-filepath-cm
       volumes:
-        - name: thoas-configmap
+        - name: mongo-connection-cm
           configMap:
-            name: thoas-configmap
-        - name: thoas-config-location
+            name: mongo-connection-cm
+        - name: mongo-conf-filepath-cm
           configMap:
-            name: thoas-config-location
+            name: mongo-conf-filepath-cm

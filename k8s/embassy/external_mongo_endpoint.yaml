@@ -4,6 +4,7 @@ kind: Endpoints
 # Note the name matches the Service
 metadata:
   name: mongo
+  namespace: thoas
 subsets:
   - addresses:
       - ip: 193.62.194.229

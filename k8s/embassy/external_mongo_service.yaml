@@ -3,6 +3,7 @@ kind: Service
 # A service to receive traffic to external MongoDB
 metadata:
   name: mongo
+  namespace: thoas
   labels:
     app: thoas-mongo-svc
 spec:

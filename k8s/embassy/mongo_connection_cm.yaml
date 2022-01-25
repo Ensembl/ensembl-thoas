@@ -1,0 +1,15 @@
+apiVersion: v1
+# host refers to a Service that routes traffic outside k8s
+data:
+  mongo.conf: |
+    [MONGO DB]
+    user = admin
+    password = password
+    host = mongo
+    port = 27017
+    db = apps_data
+    collection = graphql_211208144911_35ae1ae
+kind: ConfigMap
+metadata:
+  name: mongo-connection-cm
+  namespace: thoas
