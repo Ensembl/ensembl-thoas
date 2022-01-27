@@ -30,8 +30,8 @@ variables:
   image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
 
   script:
-    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/thoas_deployment.yaml
-    - kubectl apply -f k8s/thoas_deployment.yaml
+    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/web-prod/thoas_deployment.yaml
+    - kubectl apply -f k8s/web-prod/thoas_deployment.yaml
 
 # Run a suite of unit and integration tests
 test:

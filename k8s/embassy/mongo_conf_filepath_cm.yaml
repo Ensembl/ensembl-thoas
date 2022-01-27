@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  GQL_CONF: /conf/mongo.conf
+kind: ConfigMap
+metadata:
+  name: mongo-conf-filepath-cm
+  namespace: thoas
