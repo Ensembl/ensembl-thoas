@@ -17,7 +17,7 @@ spec:
         - name: thoas-docker-deploy
       containers:
         - name: thoas-server
-          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:00dafc50
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
@@ -42,6 +42,13 @@ spec:
               name: mongo-connection-cm
             - mountPath: /env/.env
               name: mongo-conf-filepath-cm
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
       volumes:
         - name: mongo-connection-cm
           configMap:
