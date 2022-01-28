@@ -17,14 +17,37 @@ import os
 from ariadne.asgi import GraphQL
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common import mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
+from graphql_service.metrics_view import metrics
 from graphql_service.resolver.data_loaders import DataLoaderCollection
+from prometheus_client import Counter
+
+REQUESTS = Counter(
+    "starlette_requests_total", "Total count of requests by method", ["method"]
+)
 
 print(os.environ)
+
+
+class PrometheusMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        REQUESTS.labels(method=request.method).inc()
+
+        return await call_next(request)
+
 
 CONFIG = load_config(os.getenv('GQL_CONF'))
 
@@ -44,8 +67,10 @@ CONTEXT_PROVIDER = prepare_context_provider({
 })
 
 starlette_middleware = [
-    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST'])
+    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST']),
+    Middleware(PrometheusMiddleware)
 ]
 
 APP = Starlette(debug=True, middleware=starlette_middleware)
+APP.add_route("/metrics/", metrics)
 APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
