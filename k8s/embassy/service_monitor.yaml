@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: thoas-prometheus-service-monitor
+  namespace: thoas
+  labels:
+    release: magnum
+spec:
+  selector:
+    matchLabels:
+      app: thoas-server-svc
+  endpoints:
+    - port: thoas-service-port
