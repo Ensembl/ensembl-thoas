@@ -11,9 +11,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from typing import Dict, Optional, List
 
 from ariadne import QueryType, ObjectType
-from graphql import GraphQLError
+from graphql import GraphQLError, GraphQLResolveInfo
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
@@ -28,7 +29,7 @@ REGION_TYPE = ObjectType('Region')
 
 
 @QUERY_TYPE.field('gene')
-def resolve_gene(_, info, byId=None):
+def resolve_gene(_, info: GraphQLResolveInfo, byId: Optional[Dict[str, str]] = None) -> Dict:
     'Load Gene via stable_id'
 
     query = {
@@ -48,7 +49,7 @@ def resolve_gene(_, info, byId=None):
 
 
 @QUERY_TYPE.field('genes_by_symbol')
-def resolve_genes(_, info, bySymbol=None):
+def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str, str]]=None) -> List:
     'Load Genes via potentially ambiguous symbol'
 
     query = {
@@ -62,9 +63,9 @@ def resolve_genes(_, info, bySymbol=None):
     result = collection.find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
-    if len(list(result)) == 0:
+    if len(result) == 0:
         raise GeneNotFoundError(bySymbol=bySymbol)
-    return list(result)
+    return result
 
 
 @GENE_TYPE.field('external_references')
@@ -81,6 +82,7 @@ def insert_crossref_urls(feature, info):
     annotated_xrefs = map(resolver.annotate_crossref, xrefs)  # might contain None values due to caught exceptions
     xrefs_with_nulls_removed = filter(lambda x: x is not None, annotated_xrefs)
     return list(xrefs_with_nulls_removed)
+
 
 @GENE_METADATA_TYPE.field('name')
 def insert_gene_name_urls(gene_metadata, info):
@@ -113,7 +115,8 @@ def insert_gene_name_urls(gene_metadata, info):
 
 
 @QUERY_TYPE.field('transcript')
-def resolve_transcript(_, info, bySymbol=None, byId=None):
+def resolve_transcript(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str, str]] = None,
+                       byId: Optional[Dict[str, str]] = None) -> Dict:
     'Load Transcripts by symbol or stable_id'
     query = {
         'type': 'Transcript'
@@ -136,7 +139,7 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
 
 
 @GENE_TYPE.field('transcripts')
-async def resolve_gene_transcripts(gene, info):
+async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     'Use a DataLoader to get transcripts for the parent gene'
 
     gene_stable_id = gene['stable_id']
@@ -150,7 +153,7 @@ async def resolve_gene_transcripts(gene, info):
 
 
 @TRANSCRIPT_TYPE.field('product_generating_contexts')
-async def resolve_transcript_pgc(transcript, info):
+async def resolve_transcript_pgc(transcript: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     pgcs = []
     for pgc in transcript['product_generating_contexts']:
         pgc['genome_id'] = transcript['genome_id']
@@ -159,7 +162,7 @@ async def resolve_transcript_pgc(transcript, info):
 
 
 @TRANSCRIPT_TYPE.field('gene')
-async def resolve_transcript_gene(transcript, info):
+async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) -> Dict:
     'Use a DataLoader to get the parent gene of a transcript'
     query = {
         'type': 'Gene',
@@ -168,6 +171,10 @@ async def resolve_transcript_gene(transcript, info):
     }
     collection = info.context['mongo_db']
     gene = collection.find_one(query)
+    if not gene:
+        raise GeneNotFoundError(byId={'genome_id': transcript['genome_id'],
+                                      'stable_id': transcript['gene']
+                                      })
     return gene
 
 
@@ -212,13 +219,13 @@ def overlap_region(context, genome_id, region_id, start, end, feature_type):
 
 
 @PGC_TYPE.field('three_prime_utr')
-def resolve_three_prime_utr(pgc, _):
+def resolve_three_prime_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
     'Convert stored 3` UTR to GraphQL compatible form'
     return pgc['3_prime_utr']
 
 
 @PGC_TYPE.field('five_prime_utr')
-def resolve_utr(pgc, _):
+def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
     'Convert stored 5` UTR to GraphQL compatible form'
     return pgc['5_prime_utr']
 
@@ -277,6 +284,7 @@ async def resolve_region(slc, info):
         raise RegionNotFoundError(region_id)
     return result
 
+
 @REGION_TYPE.field('assembly')
 async def resolve_assembly(region, info):
     'Fetch an assembly referenced by a region'
@@ -301,7 +309,7 @@ class FieldNotFoundError(GraphQLError):
     '''
     Custom error to be raised if a field cannot be found by id
     '''
-    
+
     def __init__(self, field_type, key_dict):
         self.extensions = {'code': f'{field_type.upper()}_NOT_FOUND'}
         ids_string = ", ".join([f'{key}={val}' for key, val in key_dict.items()])
@@ -314,6 +322,7 @@ class FeatureNotFoundError(FieldNotFoundError):
     '''
     Custom error to be raised if a gene or transcript cannot be found by id
     '''
+
     def __init__(self, feature_type, bySymbol=None, byId=None):
         if bySymbol:
             super().__init__(feature_type, {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
@@ -325,6 +334,7 @@ class GeneNotFoundError(FeatureNotFoundError):
     '''
     Custom error to be raised if gene is not found
     '''
+
     def __init__(self, bySymbol=None, byId=None):
         super().__init__("gene", bySymbol, byId)
 
@@ -333,6 +343,7 @@ class TranscriptNotFoundError(FeatureNotFoundError):
     '''
     Custom error to be raised if transcript is not found
     '''
+
     def __init__(self, bySymbol=None, byId=None):
         super().__init__("transcript", bySymbol, byId)
 
