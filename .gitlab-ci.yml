@@ -41,6 +41,7 @@ test:
     - pip3 install -r requirements.txt
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
+    - pylint graphql_service --fail-under=10
     - pytest
 
 # Build docker image for k8s-deploy branch

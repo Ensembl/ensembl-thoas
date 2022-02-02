@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # snapshottest: v1 - https://goo.gl/zC4yUc
+
+"""Test data for gene retrieval tests"""
+
 from __future__ import unicode_literals
 
 from snapshottest import Snapshot
