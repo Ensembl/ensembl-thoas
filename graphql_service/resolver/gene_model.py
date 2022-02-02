@@ -231,7 +231,7 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 
 @QUERY_TYPE.field('product')
-def resolve_product_by_id(_, info, genome_id, stable_id):
+def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id: str) -> Dict:
     'Fetch a product by stable_id, this is almost always a protein'
 
     query = {
@@ -251,7 +251,7 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
 
 
 @PGC_TYPE.field('product')
-async def resolve_product_by_pgc(pgc, info):
+async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     'Fetch product that is referenced by the Product Generating Context'
 
     if pgc['product_id'] is None:
@@ -262,11 +262,14 @@ async def resolve_product_by_pgc(pgc, info):
     )
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
+
+    if not products:
+        raise ProductNotFoundError(stable_id=pgc['product_id'], genome_id=pgc['genome_id'])
     return products[0]
 
 
 @SLICE_TYPE.field('region')
-async def resolve_region(slc, info):
+async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     'Fetch a region that is referenced by a slice'
     if slc['region_id'] is None:
         return
@@ -286,7 +289,7 @@ async def resolve_region(slc, info):
 
 
 @REGION_TYPE.field('assembly')
-async def resolve_assembly(region, info):
+async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     'Fetch an assembly referenced by a region'
     if region['assembly_id'] is None:
         return
@@ -310,7 +313,7 @@ class FieldNotFoundError(GraphQLError):
     Custom error to be raised if a field cannot be found by id
     '''
 
-    def __init__(self, field_type, key_dict):
+    def __init__(self, field_type: str, key_dict: Dict[str, str]):
         self.extensions = {'code': f'{field_type.upper()}_NOT_FOUND'}
         ids_string = ", ".join([f'{key}={val}' for key, val in key_dict.items()])
         message = f'Failed to find {field_type} with ids: {ids_string}'
@@ -323,7 +326,7 @@ class FeatureNotFoundError(FieldNotFoundError):
     Custom error to be raised if a gene or transcript cannot be found by id
     '''
 
-    def __init__(self, feature_type, bySymbol=None, byId=None):
+    def __init__(self, feature_type: str, bySymbol: Optional[Dict[str, str]] = None, byId: Optional[Dict[str, str]] = None):
         if bySymbol:
             super().__init__(feature_type, {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
         if byId:
@@ -335,7 +338,7 @@ class GeneNotFoundError(FeatureNotFoundError):
     Custom error to be raised if gene is not found
     '''
 
-    def __init__(self, bySymbol=None, byId=None):
+    def __init__(self, bySymbol: Optional[Dict[str, str]] = None, byId: Optional[Dict[str, str]] = None):
         super().__init__("gene", bySymbol, byId)
 
 
@@ -344,7 +347,7 @@ class TranscriptNotFoundError(FeatureNotFoundError):
     Custom error to be raised if transcript is not found
     '''
 
-    def __init__(self, bySymbol=None, byId=None):
+    def __init__(self, bySymbol: Optional[Dict[str, str]] = None, byId: Optional[Dict[str, str]] = None):
         super().__init__("transcript", bySymbol, byId)
 
 
@@ -353,7 +356,7 @@ class ProductNotFoundError(FieldNotFoundError):
     Custom error to be raised if product is not found
     '''
 
-    def __init__(self, stable_id, genome_id):
+    def __init__(self, stable_id: str, genome_id: str):
         super().__init__("product", {'stable_id': stable_id, "genome_id": genome_id})
 
 
@@ -362,7 +365,7 @@ class RegionNotFoundError(FieldNotFoundError):
     Custom error to be raised if region is not found
     '''
 
-    def __init__(self, region_id):
+    def __init__(self, region_id: str):
         super().__init__("region", {"region_id": region_id})
 
 
@@ -371,7 +374,7 @@ class AssemblyNotFoundError(FieldNotFoundError):
     Custom error to be raised in assembly is not found
     '''
 
-    def __init__(self, assembly_id):
+    def __init__(self, assembly_id: str):
         super().__init__("assembly", {"assembly_id": assembly_id})
 
 
