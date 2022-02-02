@@ -27,17 +27,18 @@ class MongoDbClient:
         '''
         Note that config here is a configparser object
         '''
-        self.mongo_db = self.connect_mongo(config)
+        self.mongo_db = MongoDbClient.connect_mongo(config)
         try:
             self.collection_name = config.get('MONGO DB', 'collection')
             print(f'Using MongoDB collection with name {self.collection_name} from config file')
-        except NoOptionError:
+        except NoOptionError as no_option_error:
             if not collection_name:
-                raise IOError("Unable to find a MongoDB collection name")
+                raise IOError("Unable to find a MongoDB collection name") from no_option_error
             self.collection_name = collection_name
             print(f'Using injected MongoDB collection with name {self.collection_name}')
 
-    def connect_mongo(self, config):
+    @staticmethod
+    def connect_mongo(config):
         'Get a MongoDB connection'
 
         host = config.get('MONGO DB', 'host')
