@@ -20,7 +20,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from common.utils import load_config
 from common.crossrefs import XrefResolver
-import common.mongo as mongo
+from common import mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 

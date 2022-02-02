@@ -10,10 +10,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import pytest
-from ariadne import graphql
-from .snapshot_utils import setup_test
+"""End-to-end testing of gene name metadata queries"""
+
 from string import Template
+from ariadne import graphql
+import pytest
+from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
 
