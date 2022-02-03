@@ -118,7 +118,7 @@ def fixture_slice_data():
             'stable_id': 'ENSG001.1',
             'unversioned_stable_id': 'ENSG001',
             'slice': {
-                'region_id': 'test_genome_chr1_chromosome',
+                'region_id': 'test_genome_id_chr1_chromosome',
                 'location': {
                     'start': 10,
                     'end': 100
@@ -132,7 +132,7 @@ def fixture_slice_data():
             'stable_id': 'ENSG002.2',
             'unversioned_stable_id': 'ENSG002',
             'slice': {
-                'region_id': 'test_genome_chr1_chromosome',
+                'region_id': 'test_genome_id_chr1_chromosome',
                 'location': {
                     'start': 110,
                     'end': 200
@@ -151,7 +151,7 @@ def fixture_slice_data():
             'stable_id': "test_stable_id." + str(i),
             'unversioned_stable_id': "test_stable_id." + str(i),
             'slice': {
-                'region_id': 'test_genome_chr1_chromosome',
+                'region_id': 'test_genome_id_chr1_chromosome',
                 'location': {
                     'start': 210,
                     'end': 300
@@ -273,7 +273,7 @@ def test_resolve_overlap(slice_data):
     result = model.resolve_overlap(
         None,
         slice_data,
-        genomeId="test_genome",
+        genomeId="test_genome_id",
         regionName='chr1',
         start=10,
         end=11,
@@ -282,7 +282,8 @@ def test_resolve_overlap(slice_data):
 
 
 query_region_expectations = [
-    (1, 5, set()),  # No overlaps
+    (1, 5, set()),  # No overlaps if search region is to the left of all features
+    (305, 310, set()),  # No overlaps if search region is to the left of all features
     (40, 50, {'ENSG001.1'}),  # search region contained in a single feature
     (5, 105, {'ENSG001.1'}),  # search region contains a feature
     (5, 15, {'ENSG001.1'}),  # search region contains start of a feature but not the end
@@ -297,7 +298,8 @@ def test_overlap_region(start, end, expected_ids, slice_data):
     context = slice_data.context
     result = model.overlap_region(
         context=context,
-        region_id='test_genome_chr1_chromosome',
+        genome_id='test_genome_id',
+        region_id='test_genome_id_chr1_chromosome',
         start=start,
         end=end,
         feature_type='Gene'
@@ -311,7 +313,8 @@ def test_overlap_region_too_many_results(slice_data):
     with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:
         result = model.overlap_region(
             context=context,
-            region_id='test_genome_chr1_chromosome',
+            genome_id='test_genome_id',
+            region_id='test_genome_id_chr1_chromosome',
             start=205,
             end=305,
             feature_type='Gene'

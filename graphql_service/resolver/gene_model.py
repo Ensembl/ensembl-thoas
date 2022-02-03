@@ -177,12 +177,12 @@ def resolve_overlap(_, info, genomeId, regionName, start, end):
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genomeId, regionName, "chromosome"])
     return {
-        "genes": overlap_region(info.context, region_id, start, end, 'Gene'),
-        "transcripts": overlap_region(info.context, region_id, start, end, 'Transcript')
+        "genes": overlap_region(info.context, genomeId, region_id, start, end, 'Gene'),
+        "transcripts": overlap_region(info.context, genomeId, region_id, start, end, 'Transcript')
     }
 
 
-def overlap_region(context, region_id, start, end, feature_type):
+def overlap_region(context, genome_id, region_id, start, end, feature_type):
     '''
     Query backend for a feature type using slice parameters:
     region id
@@ -192,10 +192,15 @@ def overlap_region(context, region_id, start, end, feature_type):
     '''
     query = {
         'type': feature_type,
+        'genome_id': genome_id,
         'slice.region_id': region_id,
-        '$or': [{'slice.location.start': {'$gte': start, '$lte': end}},
-                {'slice.location.end': {'$gte': start, '$lte': end}},
-                {'slice.location.start': {'$lte': start}, 'slice.location.end': {'$gte': end}}]
+
+        # A query region does not intersect a slice if, and only if, either the start of the slice is greater than the
+        # end of the query region, or the end of the slice is less than the start of the query region.  Therefore, the
+        # query region does intersect a slice if, and only if, the start of the slice is less than the end of the query
+        # region and the end of the slice is greater than the start of the query region.
+        'slice.location.start': {'$lte': end},
+        'slice.location.end': {'$gte': start}
     }
     max_results_size = 1000
     results = list(context["mongo_db"].find(query).limit(max_results_size))
