@@ -1,4 +1,4 @@
-# TODO coordinate with web team to rename all snake case query parameters to camel case
+# TODO coordinate with web team to rename all camel case query parameters to snake case
 
 type Query {
   gene(byId: IdInput): Gene
