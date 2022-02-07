@@ -20,7 +20,6 @@ from graphql import GraphQLError
 QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType('Gene')
 TRANSCRIPT_TYPE = ObjectType('Transcript')
-LOCUS_TYPE = ObjectType('Locus')
 PGC_TYPE = ObjectType('ProductGeneratingContext')
 PRODUCT_TYPE = ObjectType('Product')
 GENE_METADATA_TYPE = ObjectType('GeneMetadata')
@@ -47,6 +46,7 @@ def resolve_gene(_, info, byId=None):
         raise GeneNotFoundError(byId=byId)
     return result
 
+
 @QUERY_TYPE.field('genes_by_symbol')
 def resolve_genes(_, info, bySymbol=None):
     'Load Genes via potentially ambiguous symbol'
@@ -60,7 +60,7 @@ def resolve_genes(_, info, bySymbol=None):
     collection = info.context['mongo_db']
 
     result = collection.find(query)
-    #unpack cursor into a list. We're guaranteed relatively small results
+    # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(list(result)) == 0:
         raise GeneNotFoundError(bySymbol=bySymbol)
@@ -78,7 +78,7 @@ def insert_crossref_urls(feature, info):
     '''
     resolver = info.context['XrefResolver']
     xrefs = feature['external_references']
-    annotated_xrefs = map(resolver.annotate_crossref, xrefs) # might contain None values due to caught exceptions
+    annotated_xrefs = map(resolver.annotate_crossref, xrefs)  # might contain None values due to caught exceptions
     xrefs_with_nulls_removed = filter(lambda x: x is not None, annotated_xrefs)
     return list(xrefs_with_nulls_removed)
 
@@ -134,6 +134,7 @@ def resolve_transcript(_, info, bySymbol=None, byId=None):
         raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
     return transcript
 
+
 @GENE_TYPE.field('transcripts')
 async def resolve_gene_transcripts(gene, info):
     'Use a DataLoader to get transcripts for the parent gene'
@@ -147,6 +148,7 @@ async def resolve_gene_transcripts(gene, info):
     )
     return transcripts
 
+
 @TRANSCRIPT_TYPE.field('product_generating_contexts')
 async def resolve_transcript_pgc(transcript, info):
     pgcs = []
@@ -154,6 +156,7 @@ async def resolve_transcript_pgc(transcript, info):
         pgc['genome_id'] = transcript['genome_id']
         pgcs.append(pgc)
     return pgcs
+
 
 @TRANSCRIPT_TYPE.field('gene')
 async def resolve_transcript_gene(transcript, info):
@@ -167,51 +170,45 @@ async def resolve_transcript_gene(transcript, info):
     gene = collection.find_one(query)
     return gene
 
-# Note that this kind of hard boundary search is not often appropriate for
-# genomics. Most usefully we will want any entities overlapping this range
-# rather than entities entirely within the range
-@QUERY_TYPE.field('slice')
-def resolve_slice(_, info, genome_id, region, start, end):
+
+@QUERY_TYPE.field('overlap_region')
+def resolve_overlap(_, info, genomeId, regionName, start, end):
     '''
-    Slice on its own only defines parameters for searching for different
-    types. Stash the parameters for nested calls
+    Query Mongo for genes and transcripts lying between start and end
     '''
-    # Caution team, this is global, and might contaminate a second slice
-    # in the same query, depending on the graph descent method
-    info.context['genome_id'] = genome_id
-    info.context['slice.region.name'] = region
-    info.context['slice.start'] = start
-    info.context['slice.end'] = end
+    # Thoas only contains "chromosome"-type regions
+    region_id = "_".join([genomeId, regionName, "chromosome"])
+    return {
+        "genes": overlap_region(info.context, genomeId, region_id, start, end, 'Gene'),
+        "transcripts": overlap_region(info.context, genomeId, region_id, start, end, 'Transcript')
+    }
 
 
-@LOCUS_TYPE.field('genes')
-def resolve_slice_genes(_, info):
-    'Pass the resolved slice parameters to a query'
-    return query_region(info.context, 'Gene')
-
-
-@LOCUS_TYPE.field('transcripts')
-def resolve_slice_transcripts(_, info):
-    'Pass the resolved slice parameters to a query'
-    return query_region(info.context, 'Transcript')
-
-
-def query_region(context, feature_type):
+def overlap_region(context, genome_id, region_id, start, end, feature_type):
     '''
     Query backend for a feature type using slice parameters:
-    genome_id
-    region name
+    region id
     start coordinate
     end coordinate
+    feature type
     '''
     query = {
-        'genome_id': context['genome_id'],
         'type': feature_type,
-        'slice.region.name': context['slice.region.name'], # TODO replace this with region_id
-        'slice.location.start': {'$gt': context['slice.location.start']},
-        'slice.location.end': {'$lt': context['slice.location.end']}
+        'genome_id': genome_id,
+        'slice.region_id': region_id,
+
+        # A query region does not intersect a slice if, and only if, either the start of the slice is greater than the
+        # end of the query region, or the end of the slice is less than the start of the query region.  Therefore, the
+        # query region does intersect a slice if, and only if, the start of the slice is less than the end of the query
+        # region and the end of the slice is greater than the start of the query region.
+        'slice.location.start': {'$lte': end},
+        'slice.location.end': {'$gte': start}
     }
-    return context["mongo_db"].find(query)
+    max_results_size = 1000
+    results = list(context["mongo_db"].find(query).limit(max_results_size))
+    if len(results) == max_results_size:
+        raise SliceLimitExceededError(max_results_size)
+    return results
 
 
 @PGC_TYPE.field('three_prime_utr')
@@ -219,10 +216,12 @@ def resolve_three_prime_utr(pgc, _):
     'Convert stored 3` UTR to GraphQL compatible form'
     return pgc['3_prime_utr']
 
+
 @PGC_TYPE.field('five_prime_utr')
 def resolve_utr(pgc, _):
     'Convert stored 5` UTR to GraphQL compatible form'
     return pgc['5_prime_utr']
+
 
 @QUERY_TYPE.field('product')
 def resolve_product_by_id(_, info, genome_id, stable_id):
@@ -243,6 +242,7 @@ def resolve_product_by_id(_, info, genome_id, stable_id):
         raise ProductNotFoundError(genome_id, stable_id)
     return result
 
+
 @PGC_TYPE.field('product')
 async def resolve_product_by_pgc(pgc, info):
     'Fetch product that is referenced by the Product Generating Context'
@@ -256,6 +256,7 @@ async def resolve_product_by_pgc(pgc, info):
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
     return products[0]
+
 
 @SLICE_TYPE.field('region')
 async def resolve_region(slc, info):
@@ -361,3 +362,14 @@ class AssemblyNotFoundError(FieldNotFoundError):
 
     def __init__(self, assembly_id):
         super().__init__("assembly", {"assembly_id": assembly_id})
+
+
+class SliceLimitExceededError(GraphQLError):
+    '''
+    Custom error to be raised if number of slice results exceeds limit
+    '''
+    extensions = {"code": "SLICE_RESULT_LIMIT_EXCEEDED"}
+
+    def __init__(self, max_results_size):
+        message = f'Slice query met size limit of {max_results_size}'
+        super().__init__(message, extensions=self.extensions)

@@ -1,9 +1,11 @@
+# TODO coordinate with web team to rename all camel case query parameters to snake case
+
 type Query {
   gene(byId: IdInput): Gene
   genes_by_symbol(bySymbol: SymbolInput): [Gene]
   transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
   product(genome_id: String!, stable_id: String!): Product
-  slice(genome_id: String!, region: String!, start: Int!, end: Int!): Locus
+  overlap_region(genomeId: String!, regionName: String!, start: Int!, end: Int!): Locus
 }
 
 input SymbolInput {
