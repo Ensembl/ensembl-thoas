@@ -26,8 +26,8 @@ class TSL:
         "tslNA" : "The transcript was not analysed"
         }
 
-    def __init__(self, str):
-        self._str = str.strip()
+    def __init__(self, string):
+        self._str = string.strip()
         self.value = None
         self.label = None
         self.definition = None
@@ -80,8 +80,8 @@ class APPRIS:
             }
         }
 
-    def __init__(self, str):
-        self._str = str.strip()
+    def __init__(self, string):
+        self._str = string.strip()
         self.value = None
         self.label = None
         self.definition = None
@@ -169,7 +169,7 @@ class Biotype:
     CLASSIFIER_PATH = os.environ['META_CLASSIFIER_PATH']
     biotype_meta_file = os.path.join(CLASSIFIER_PATH,"biotype.json")
     biotype_classifiers = None
-    with open(biotype_meta_file) as json_file:
+    with open(biotype_meta_file, encoding='UTF-8') as json_file:
         biotype_classifiers = json.load(json_file)
     def __init__(self, classifier):
         self.classifier = classifier
@@ -221,11 +221,11 @@ class Classfiers:
     def load_classifiers(self):
         for meta_type in self.meta_types:
             meta_classifier_file = os.path.join(self.classifier_path,f'{meta_type}.json')
-            with open(meta_classifier_file) as json_file:
+            with open(meta_classifier_file, encoding='UTF-8') as json_file:
                 self.classifiers[meta_type] = json.load(json_file)
 
     def get_classfier(self,classifier_type):
         try:
             return self.classifiers[classifier_type]
-        except KeyError as ke:
+        except KeyError:
             return None

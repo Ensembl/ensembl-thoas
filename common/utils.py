@@ -609,18 +609,14 @@ def flush_buffer(mongo_client, buffer, flush_threshold=1000):
             mongo_client.collection().insert_many(buffer)
         except pymongo.errors.DocumentTooLarge:
             print(
-                'One of these borked the pipeline for {}: {}'.format(
-                    buffer[0]['genome_id'],
-                    list(map(lambda x: x['stable_id'], buffer))
-                ),
+                f'One of these borked the pipeline for '
+                f'{buffer[0]["genome_id"]}: {list(map(lambda x: x["stable_id"], buffer))}',
                 file=sys.stderr
             )
         except pymongo.errors.OperationFailure:
             print(
-                'One of these borked the server for {}: {}'.format(
-                    buffer[0]['genome_id'],
-                    list(map(lambda x: x['stable_id'], buffer))
-                ),
+                f'One of these borked the server for '
+                f'{buffer[0]["genome_id"]}: {list(map(lambda x: x["stable_id"], buffer))}',
                 file=sys.stderr
             )
         print('Done')
@@ -705,7 +701,7 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 def check_and_log_urls(data, url_key, logger):
 
     if logger is None:
-        return None
+        return
 
     try:
         response = requests.get(data.get(url_key))
