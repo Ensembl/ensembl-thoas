@@ -3,7 +3,7 @@ ariadne
 configparser
 ijson
 mongomock
-pymongo
+pymongo==3.12.0
 pytest
 pytest-asyncio
 python-dotenv
@@ -12,4 +12,4 @@ requests
 uvicorn
 psycopg2-binary
 mysql-connector-python
-pylint
+pylint==2.12.2
