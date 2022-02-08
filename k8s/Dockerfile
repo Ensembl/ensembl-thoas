@@ -1,4 +1,4 @@
-FROM python:3.8.1-slim as build
+FROM python:3.7.9-slim-stretch as build
 # Contains relevant basics for Python, like GCC and similar by default
 LABEL maintainer="ktaylor@ebi.ac.uk"
 
