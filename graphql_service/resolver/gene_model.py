@@ -71,7 +71,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str, str]
 @GENE_TYPE.field('external_references')
 @TRANSCRIPT_TYPE.field('external_references')
 @PRODUCT_TYPE.field('external_references')
-def insert_crossref_urls(feature, info):
+def insert_crossref_urls(feature: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     '''
     A gene/transcript with cross references in the data model is given as
     argument. Using the crossrefs package we can infer URLs to those resources
@@ -85,7 +85,7 @@ def insert_crossref_urls(feature, info):
 
 
 @GENE_METADATA_TYPE.field('name')
-def insert_gene_name_urls(gene_metadata, info):
+def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict:
     '''
     A gene metadata of a gene is given as argument.
     Using the gene name metadata info we can infer URLs to those resources
@@ -93,9 +93,9 @@ def insert_gene_name_urls(gene_metadata, info):
     '''
 
     xref_resolver = info.context['XrefResolver']
-    name_metadata = gene_metadata.get('name')
+    name_metadata = gene_metadata['name']
 
-    source_id = name_metadata.get('source').get('id')
+    source_id = name_metadata.get('source', {}).get('id')
 
     # If a gene does'nt have a source id, we cant find any information about the source and also the gene name URL
     if source_id is None:
@@ -179,7 +179,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 
 
 @QUERY_TYPE.field('overlap_region')
-def resolve_overlap(_, info, genomeId, regionName, start, end):
+def resolve_overlap(_, info: GraphQLResolveInfo, genomeId: str, regionName: str, start: int, end: int) -> Dict:
     '''
     Query Mongo for genes and transcripts lying between start and end
     '''
@@ -191,7 +191,8 @@ def resolve_overlap(_, info, genomeId, regionName, start, end):
     }
 
 
-def overlap_region(context, genome_id, region_id, start, end, feature_type):
+def overlap_region(context: Dict, genome_id: str, region_id: str, start: int, end: int, feature_type: str) -> \
+        List[Dict]:
     '''
     Query backend for a feature type using slice parameters:
     region id
@@ -384,6 +385,6 @@ class SliceLimitExceededError(GraphQLError):
     '''
     extensions = {"code": "SLICE_RESULT_LIMIT_EXCEEDED"}
 
-    def __init__(self, max_results_size):
+    def __init__(self, max_results_size: int):
         message = f'Slice query met size limit of {max_results_size}'
         super().__init__(message, extensions=self.extensions)
