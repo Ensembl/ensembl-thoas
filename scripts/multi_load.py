@@ -44,7 +44,7 @@ async def run_assembly(args):
     code = get_repo_path()
     # Append the correct release number, division, and override the base path for GRCh37
     if args['assembly'] == 'GRCh37':
-        data = '/nfs/nobackup/ensembl/kamal/search-dump/thoas/vertebrates/json/'
+        data = '/hps/nobackup/flicek/ensembl/apps/shared/thoas/vertebrates/json/'
     else:
         data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
