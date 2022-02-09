@@ -11,7 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLError, GraphQLResolveInfo
@@ -29,7 +29,7 @@ REGION_TYPE = ObjectType('Region')
 
 
 @QUERY_TYPE.field('gene')
-def resolve_gene(_, info: GraphQLResolveInfo, byId: Optional[Dict[str, str]] = None) -> Dict:
+def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
     'Load Gene via stable_id'
 
     query = {
@@ -49,7 +49,7 @@ def resolve_gene(_, info: GraphQLResolveInfo, byId: Optional[Dict[str, str]] = N
 
 
 @QUERY_TYPE.field('genes_by_symbol')
-def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str, str]]=None) -> List:
+def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
     'Load Genes via potentially ambiguous symbol'
 
     query = {
@@ -118,7 +118,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 def resolve_transcript(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str, str]] = None,
                        byId: Optional[Dict[str, str]] = None) -> Dict:
     'Load Transcripts by symbol or stable_id'
-    query = {
+    query: Dict[str, Any] = {
         'type': 'Transcript'
     }
     if bySymbol:
@@ -256,7 +256,7 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
     'Fetch product that is referenced by the Product Generating Context'
 
     if pgc['product_id'] is None:
-        return
+        return None
     loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
     products = await loader.load(
         key=pgc['product_id']
@@ -273,7 +273,7 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     'Fetch a region that is referenced by a slice'
     if slc['region_id'] is None:
-        return
+        return None
     region_id = slc['region_id']
 
     query = {
@@ -293,7 +293,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
 async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     'Fetch an assembly referenced by a region'
     if region['assembly_id'] is None:
-        return
+        return None
     assembly_id = region['assembly_id']
 
     query = {

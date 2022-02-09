@@ -13,7 +13,7 @@
 """
 
 import mongomock
-import requests
+import requests  # type: ignore
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema

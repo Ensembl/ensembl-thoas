@@ -13,7 +13,7 @@
 """
 
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from aiodataloader import DataLoader
 from pymongo.collection import Collection
@@ -35,7 +35,7 @@ class DataLoaderCollection():
     def __init__(self, db_collection: Collection):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
-        self.genome_id = None
+        self.genome_id: Optional[str] = None
 
     async def batch_transcript_load(self, keys: List[str]) -> List[List]:
         '''

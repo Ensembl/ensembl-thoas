@@ -18,7 +18,7 @@ import sys
 from string import Template
 
 import pymongo
-import requests
+import requests  # type: ignore
 
 
 def load_config(filename):
