@@ -15,7 +15,7 @@
 import json
 import re
 
-import requests  # type: ignore
+import requests
 
 
 class XrefResolver():
