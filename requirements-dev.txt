@@ -3,4 +3,5 @@
 pytest==6.2.5
 pytest-asyncio==0.17.2
 snapshottest==0.6.0
+requests==2.27.1
 pylint==2.12.2
