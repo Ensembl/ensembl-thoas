@@ -11,7 +11,7 @@ GraphQL requires a schema (in /common) and implementation of resolver functions 
 ## Installation
 
 Set up Python 3
-pip install -r .
+`pip install -r requirements-dev.txt`
 
 ## Running the service directly
 Put configuration MongoDB configuration in a file e.g. mongo.conf

@@ -4,7 +4,7 @@ LABEL maintainer="ktaylor@ebi.ac.uk"
 
 COPY . /app
 
-RUN pip3 install -r /app/requirements.txt -e /app/
+RUN pip3 install -r /app/requirements-api.txt -e /app/
 
 ENV PYTHONPATH=\$PYTHONPATH:/app
 
