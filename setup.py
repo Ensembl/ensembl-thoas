@@ -33,6 +33,7 @@ setup(
     packages=find_packages(),
     install_requires=import_requirements(),
     license=LICENSE_CT,
+    python_requires=">=3.7",
     package_data={
         # Make sure schema makes it to distro
         "common": ["*.graphql"]
