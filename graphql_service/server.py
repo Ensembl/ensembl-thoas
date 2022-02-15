@@ -21,14 +21,13 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-
+from prometheus_client import Counter
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common import mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 from graphql_service.metrics_view import metrics
 from graphql_service.resolver.data_loaders import DataLoaderCollection
-from prometheus_client import Counter
 
 REQUESTS = Counter(
     "starlette_requests_total", "Total count of requests by method", ["method"]
