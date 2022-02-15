@@ -9,5 +9,9 @@ spec:
   selector:
     matchLabels:
       app: thoas-server-svc
+  namespaceSelector:
+    matchNames:
+      - thoas
   endpoints:
     - port: thoas-service-port
+      path: /metrics/

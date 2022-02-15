@@ -14,3 +14,4 @@ psycopg2-binary
 mysql-connector-python
 pylint==2.12.2
 mypy==0.931
+prometheus-client==0.13.0
