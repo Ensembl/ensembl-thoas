@@ -214,7 +214,6 @@ class XrefResolver():
             # probably log the error somewhere; just don't send it to the client
             return None
 
-
     def describe_info_type(self, info_type):
         '''
         Generates a description field for external reference assignment
@@ -225,4 +224,3 @@ class XrefResolver():
         if info_type not in self.info_types:
             raise KeyError(f'Illegal xref info_type {info_type} used')
         return self.info_types[info_type]
-            

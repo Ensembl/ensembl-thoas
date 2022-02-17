@@ -38,10 +38,11 @@ test:
   image: dockerhub.ebi.ac.uk/ensembl-web/software/python:3.7.9-slim-stretch
   stage: test
   before_script:
-    - pip3 install -r requirements.txt
+    - pip3 install -r requirements-dev.txt
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
     - pylint graphql_service --fail-under=9
+    - mypy graphql_service
     - pytest
 
 # Build docker image for k8s-deploy branch

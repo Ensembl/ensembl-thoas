@@ -41,7 +41,7 @@ test:
   image: python:3.8.1-slim
   stage: test
   before_script:
-    - pip3 install -r requirements.txt
+    - pip3 install -r requirements-dev.txt
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
     - pytest

@@ -434,6 +434,16 @@ async def test_resolve_transcript_products(transcript_data):
 
 
 @pytest.mark.asyncio
+async def test_resolve_transcript_products_product_not_exists(transcript_data):
+    product = {'product_id': 'some not existing id', 'genome_id': 1}
+    result = None
+    with pytest.raises(model.ProductNotFoundError) as product_error:
+        result = await model.resolve_product_by_pgc(product, transcript_data)
+    assert not result
+    assert product_error.value.extensions['stable_id'] == 'some not existing id'
+
+
+@pytest.mark.asyncio
 async def test_resolve_nested_products(transcript_data):
     'Test products inside transcripts inside the gene'
     gene_result = model.resolve_gene(

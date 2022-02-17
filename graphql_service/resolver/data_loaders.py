@@ -13,7 +13,10 @@
 """
 
 from collections import defaultdict
+from typing import List, Dict, Optional
+
 from aiodataloader import DataLoader
+from pymongo.collection import Collection
 
 
 class DataLoaderCollection():
@@ -29,12 +32,12 @@ class DataLoaderCollection():
     data loaders.
     """
 
-    def __init__(self, db_collection):
+    def __init__(self, db_collection: Collection):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
-        self.genome_id = None
+        self.genome_id: Optional[str] = None
 
-    async def batch_transcript_load(self, keys):
+    async def batch_transcript_load(self, keys: List[str]) -> List[List]:
         '''
         Load many transcripts to satisfy a bunch of `await`s
         DataLoader will aggregate many single ID requests into 'keys' so we can
@@ -51,7 +54,7 @@ class DataLoaderCollection():
         data = await self.query_mongo(query)
         return self.collate_dataloader_output('gene', keys, data)
 
-    async def batch_product_load(self, keys):
+    async def batch_product_load(self, keys: List[str]) -> List[List]:
         '''
         Load a bunch of products/proteins by ID
         '''
@@ -66,7 +69,7 @@ class DataLoaderCollection():
         return self.collate_dataloader_output('stable_id', keys, data)
 
     @staticmethod
-    def collate_dataloader_output(foreign_key, original_ids, docs):
+    def collate_dataloader_output(foreign_key: str, original_ids: List[str], docs: List[Dict]) -> List[List]:
         '''
         Query identifier values are in no particular order and so are the query
         results. We must collect them together and return them in the order
@@ -84,8 +87,7 @@ class DataLoaderCollection():
 
         return [grouped_docs[fk] for fk in original_ids]
 
-
-    def gene_transcript_dataloader(self, genome_id, max_batch_size=1000):
+    def gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Transcripts fetched via Genes'
         # How do we get temporary state into class methods with a fixed signature?
         # I didn't want to fork DataLoader in order to add arbitrary arguments
@@ -97,7 +99,7 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    def transcript_product_dataloader(self, genome_id, max_batch_size=1000):
+    def transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Products fetched via Transcripts'
 
         self.genome_id = genome_id
@@ -106,9 +108,9 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    async def query_mongo(self, query):
+    async def query_mongo(self, query: Dict) -> List[Dict]:
         '''
-        Query function that exists solely to satisfy the vagueries of Python async.
+        Query function that exists solely to satisfy the vagaries of Python async.
         batch_transcript_load expects a list of results, and *must* call a single
         function in order to be valid.
         '''
