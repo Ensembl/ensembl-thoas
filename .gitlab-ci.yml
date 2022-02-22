@@ -12,9 +12,9 @@ variables:
 # Template to build docker image
 .build:
   stage: build
-  image: docker
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker
   services:
-    - docker:dind
+    - ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -27,6 +27,8 @@ variables:
 # Template to deploy application to k8s cluster
 .deploy:
   stage: deploy
+  # TODO consider pointing to the Dockerhub/dependency proxy version of this
+  # https://gitlab.ebi.ac.uk/ensembl-apps/thr_k8s/-/blob/fix/docker_limit/.gitlab-ci.yml#L59
   image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
 
   script:
