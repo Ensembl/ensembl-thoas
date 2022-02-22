@@ -16,12 +16,6 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 
-def import_requirements(requirements_file):
-    'Import ``requirements.txt`` file located at the root of the repository.'
-    with open(Path(__file__).parent / requirements_file) as deps:
-        return [line.rstrip() for line in deps.readlines()]
-
-
 with open(Path(__file__).parent / 'LICENSE') as f:
     LICENSE_CT = f.read()
 
@@ -31,8 +25,8 @@ setup(
     description='GraphQL Ariadne-based prototype for Ensembl',
     version="0.1.0",
     packages=find_packages(),
-    install_requires=import_requirements('requirements-dev.txt'),
     license=LICENSE_CT,
+    python_requires=">=3.7",
     package_data={
         # Make sure schema makes it to distro
         "common": ["*.graphql"]
