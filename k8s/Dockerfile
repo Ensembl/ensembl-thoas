@@ -1,6 +1,6 @@
-FROM python:3.7.9-slim-stretch as build
+FROM gitlab.ebi.ac.uk/ensembl-apps/dependency_proxy/containers/python:3.7.9-slim-stretch as build
 # Contains relevant basics for Python, like GCC and similar by default
-LABEL maintainer="ktaylor@ebi.ac.uk"
+LABEL maintainer="ahc@ebi.ac.uk"
 
 COPY . /app
 
