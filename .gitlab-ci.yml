@@ -9,6 +9,7 @@ variables:
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
   # Specifying DOCKER_HOST fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
   DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
 # Template to build docker image
