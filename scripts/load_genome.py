@@ -24,12 +24,12 @@ def load_genome_info(mongo_client, source_file):
     Load assembly, species and organism information from a JSON file
     and create a new collection to put them in. Run before load_genes.py
     '''
-    with open(source_file) as file:
+    with open(source_file, encoding='UTF-8') as file:
         content = file.read()
         try:
             doc = json.loads(content)
         except json.decoder.JSONDecodeError as error:
-            raise IOError(f'Failed to parse genome file at {source_file} with error {error}')
+            raise IOError(f'Failed to parse genome file at {source_file} with error {error}') from error
 
         mongo_client.collection().insert_one({
             'type': 'Assembly',

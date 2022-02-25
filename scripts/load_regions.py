@@ -1,4 +1,16 @@
-import argparse
+"""
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
 
 from mysql.connector import DataError
 
@@ -24,7 +36,7 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
     max_regions = 10000
     species = config.get(section_name, 'production_name')
 
-    region_query = """SELECT distinct(gene.seq_region_id), 
+    region_query = """SELECT distinct(gene.seq_region_id),
                             seq_region.length as length, 
                             seq_region.name, 
                             coord_system.name as code, 
@@ -47,7 +59,7 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         cursor.execute(circular_attribute_query)
         circular_attribute_result = cursor.fetchall()
         if len(circular_attribute_result) != 1:
-            raise DataError(f'Could not find unique circular attribute id')
+            raise DataError('Could not find unique circular attribute id')
         circular_attribute_id = circular_attribute_result[0]['attrib_type_id']
 
         cursor.execute(region_query, (circular_attribute_id, species, max_regions))

@@ -10,7 +10,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import argparse, re, json
+import argparse
+import json
+import re
+
 import common.utils
 from common.mysql import MySQLClient
 
@@ -51,7 +54,7 @@ def retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_curs
         # Add all the possible information retrieved. Also add if no 'display_xref_id' and 'description'.
         gene_names.append(gene_name_info)
 
-    with open(sp_production_name + "_" + sp_assembly_name + "_gene_names.json", "w") as write_file:
+    with open(sp_production_name + "_" + sp_assembly_name + "_gene_names.json", "w", encoding='UTF-8') as write_file:
         json.dump(gene_names, write_file)
 
 

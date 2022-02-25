@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     CLI_ARGS = ARG_PARSER.parse_args()
     CONF_PARSER.read(CLI_ARGS.config)
-    print('Dumping data to {} and loading to MongoDB'.format(os.getcwd()))
+    print(f'Dumping data to {os.getcwd()} and loading to MongoDB')
 
     # each section of the file dictates a particular assembly to work on
     for section in CONF_PARSER.sections():

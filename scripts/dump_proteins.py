@@ -115,7 +115,7 @@ def dump_proteins(config, section_name):
 
         outpath = f'./{species}_{assembly}_translations.json'
 
-        with open(outpath, 'w+') as outhandle:
+        with open(outpath, 'w+', encoding='UTF-8') as outhandle:
             for translation in translations:
                 translation["protein_features"] = indexed_domains.get(translation["id"], [])
                 translation["xrefs"] = formatted_xrefs.get(translation["id"], [])

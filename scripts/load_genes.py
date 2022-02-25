@@ -14,11 +14,11 @@
 
 import re
 import csv
-import ijson
-import pymongo
 import os
 import json
-import sys
+import ijson
+import pymongo
+
 
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
@@ -67,7 +67,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, release, gene_name_metadata, xref_resolver, logger):
+def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, gene_name_metadata, xref_resolver, logger):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -86,7 +86,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
     gene_biotype_classifiers = metadata_classifier['biotype']
 
     required_keys = ('name', 'description')
-    with open(json_file) as file:
+    with open(json_file, encoding='UTF-8') as file:
         print('Chunk')
         for gene in ijson.items(file, 'item'):
 
@@ -153,11 +153,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                     genome_id=genome['id'],
                     cds_info=cds_info,
                     phase_info=phase_info,
-                    tr_metadata_info=tr_metadata_info,
-                    default_region=default_region,
-                    assembly=assembly,
-                    release=release
-
+                    tr_metadata_info=tr_metadata_info
                 ))
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -186,7 +182,7 @@ def get_genome_assembly(assembly_name, mongo_client):
 
 def format_transcript(
         transcript, gene, region_name, genome_id,
-        cds_info, phase_info, tr_metadata_info, default_region, assembly, release
+        cds_info, phase_info, tr_metadata_info
 ):
     '''
     Transform and supplement transcript information
@@ -327,7 +323,7 @@ def format_transcript(
 
 def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
     protein_buffer = []
-    with open(product_filepath) as protein_file:
+    with open(product_filepath, encoding='UTF-8') as protein_file:
         for line in protein_file:
             product = json.loads(line)
             protein_buffer.append(
@@ -349,7 +345,7 @@ def preload_cds_coords(production_name, assembly):
     '''
     cds_buffer = {}
 
-    with open(production_name + '_' + assembly + '.csv') as file:
+    with open(production_name + '_' + assembly + '.csv', encoding='UTF-8') as file:
         reader = csv.reader(file)
         next(reader, None)  # skip header line
         for row in reader:
@@ -372,7 +368,7 @@ def preload_exon_phases(production_name, assembly):
 
     phase_lookup = {}
 
-    with open(production_name + '_' + assembly + '_phase.csv') as file:
+    with open(production_name + '_' + assembly + '_phase.csv', encoding='UTF-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
             transcript = row['transcript ID']
@@ -411,13 +407,13 @@ def get_transcript_meta(row):
         ensembl_canonical = EnsemblCanonical(row["Ensembl_Canonical"])
         if ensembl_canonical.parse_input():
             transcript_meta['canonical'] = ensembl_canonical.to_json()
-    except Exception as ex:
+    except Exception:
         pass
     return transcript_meta
 
 def preload_transcript_meta(production_name, assembly):
     transcript_meta = {}
-    with open(production_name + '_' + assembly + '_attrib.csv') as file:
+    with open(production_name + '_' + assembly + '_attrib.csv', encoding='UTF-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
             stable_id = row['transcript ID']
@@ -427,24 +423,24 @@ def preload_transcript_meta(production_name, assembly):
 
 def preload_gene_name_metadata(production_name, assembly):
     gene_name_metadata = {}
-    with open(production_name + "_" + assembly + "_gene_names.json", "r") as gene_name_metadata_file:
+    with open(production_name + "_" + assembly + "_gene_names.json", "r", encoding='UTF-8') as gene_name_metadata_file:
         gene_name_metadata_load = json.load(gene_name_metadata_file)
         for gene_name in gene_name_metadata_load:
             gene_name_metadata[gene_name['gene_stable_id']] = gene_name
     return gene_name_metadata
 
 
-def preload_classifiers(CLASSIFIER_PATH):
-    meta_classifiers = transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
+def preload_classifiers(classifier_path):
+    meta_classifiers = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
     for classifier in meta_classifiers:
-        classifier_file = os.path.join(CLASSIFIER_PATH,f"{classifier}.json")
-        with open(classifier_file) as raw_classifier_file:
+        classifier_file = os.path.join(classifier_path, f"{classifier}.json")
+        with open(classifier_file, encoding='UTF-8') as raw_classifier_file:
             classifier_items = json.load(raw_classifier_file)
         meta_classifiers[classifier] = classifier_items
     return meta_classifiers
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     SPECIES = ARGS.species
@@ -481,11 +477,11 @@ if __name__ == '__main__':
     ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
 
     if ARGS.log_faulty_urls:
-        URL_LOGGER = ThoasLogging(logging_file='url_log_{}'.format(GENOME['id']), logger_name='url_logger_{}'.format(GENOME['id']))
+        URL_LOGGER = ThoasLogging(logging_file=f'url_log_{GENOME["id"]}', logger_name=f'url_logger_{GENOME["id"]}')
 
     print("Loading gene info into Mongo")
 
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, RELEASE, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
     load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
