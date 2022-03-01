@@ -51,7 +51,7 @@ class XrefResolver():
 
         self.internal_mapping_file_indexed = {}
         # Load LOD mappings from file
-        with open(self.internal_mapping_file) as file:
+        with open(self.internal_mapping_file, encoding='UTF-8') as file:
             mapping = json.loads(file.read())
             for source in mapping['mappings']:
                 if 'ensembl_db_name' in source:
@@ -80,7 +80,7 @@ class XrefResolver():
     def _load_from_file(self, file):
         'Constructor helper to get JSON from file instead of URL'
         data = None
-        with open(file) as raw:
+        with open(file, encoding='UTF-8') as raw:
             content = raw.read()
             data = json.loads(content)
         return data
@@ -116,7 +116,7 @@ class XrefResolver():
                     (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
-            print('*** {} namespace not in identifiers.org ***'.format(id_org_ns_prefix))
+            print(f'*** {id_org_ns_prefix} namespace not in identifiers.org ***')
             return None
         # some sources seemingly have no official entry.
         # Take the first arbitrarily
@@ -162,10 +162,9 @@ class XrefResolver():
             mapping_entry = self.internal_mapping_file_indexed[xref_db_name.lower()]
             if 'id_namespace' in mapping_entry:
                 return mapping_entry['id_namespace']
-            else:
-                print('*** No id_namespace for {} in the internal mapping file ***'.format(xref_db_name.lower()))
+            print(f'*** No id_namespace for {xref_db_name.lower()} in the internal mapping file ***')
         else:
-            print('*** {} not in the internal mapping file ***'.format(xref_db_name.lower()))
+            print(f'*** {xref_db_name.lower()} not in the internal mapping file ***')
 
         return None
 

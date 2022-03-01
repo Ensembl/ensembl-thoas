@@ -1,5 +1,7 @@
+"""Utility class for Refget DB connections"""
 
 import psycopg2
+
 
 class RefgetDB:
     def __init__(self, release, assembly, config):
@@ -14,26 +16,23 @@ class RefgetDB:
         self.password = self._config.get('REFGET DB', 'password')
         self.dbname = self._config.get('REFGET DB', 'db')
 
-        try:
-            with psycopg2.connect(self.connection_info) as connection:
-                self.connection = connection
-        except Exception as e:
-            raise e
+        with psycopg2.connect(self.connection_info) as connection:
+            self.connection = connection
 
     @property
-    def CDNA(self):
+    def cdna(self):
         return 'cdna'
 
     @property
-    def CDS(self):
+    def cds(self):
         return 'cds'
 
     @property
-    def PEP(self):
+    def pep(self):
         return 'protein'
 
     @property
-    def NCRNA(self):
+    def ncrna(self):
         return 'ncrna'
 
     @property
@@ -56,21 +55,22 @@ class RefgetDB:
 
                 result = cur.fetchone()
             return result[0]
-        except Exception as e:
+        except Exception:
             return None
+
 
 class MockRefgetDB:
     @property
-    def CDS(self):
+    def cds(self):
         return 'cds'
 
     @property
-    def CDNA(self):
+    def cdna(self):
         return 'cdna'
 
     @property
-    def PEP(self):
+    def pep(self):
         return 'protein'
 
-    def get_checksum(self, *args, **kwargs):
+    def get_checksum(self, stable_id, sequence_type):
         return '1f47b55923e2d23090f894c439974b55'

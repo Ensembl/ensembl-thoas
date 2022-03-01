@@ -1,3 +1,5 @@
+"""Helper class for creating a MySQL connection"""
+
 from mysql.connector import MySQLConnection
 
 

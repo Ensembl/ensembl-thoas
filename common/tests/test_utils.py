@@ -11,18 +11,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from unittest import mock
-from unittest.mock import MagicMock
-
-from unittest import mock
-from unittest.mock import MagicMock
 
 from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
 from common.file_parser import MockChromosomeChecksum as ChromosomeChecksum
-
-import json
 
 
 def test_stable_id():
@@ -616,7 +609,7 @@ def test_cdna_formatting():
     '''
     transcript = {
     'id': 1,
-    'version': 0.1, 
+    'version': 0.1,
         'start': 1,
         'end': 100,
         'exons': [

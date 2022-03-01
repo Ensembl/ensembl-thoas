@@ -276,7 +276,7 @@ def format_transcript(
         cds_end = cds_info[transcript['id']]['end']
         spliced_length = cds_info[transcript['id']]['spliced_length']
         cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'],
-                                                           sequence_type=refget.CDS)
+                                                           sequence_type=refget.cds)
 
         for translation in transcript['translations']:
             new_transcript['product_generating_contexts'].append(
