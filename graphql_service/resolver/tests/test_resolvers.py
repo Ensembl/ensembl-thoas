@@ -14,7 +14,6 @@
 
 import pytest
 import mongomock
-from graphql import GraphQLError
 
 import graphql_service.resolver.gene_model as model
 import graphql_service.resolver.data_loaders as data_loader
@@ -257,9 +256,8 @@ def test_resolve_transcript_by_symbol(transcript_data):
     assert result['stable_id'] == 'ENST001.1'
 
 def test_resolve_transcript_by_symbol_not_found(transcript_data):
-    result = None
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
-        result = model.resolve_transcript(
+        model.resolve_transcript(
             None,
             transcript_data,
             bySymbol={'symbol': 'some not existing symbol', 'genome_id': 1}
