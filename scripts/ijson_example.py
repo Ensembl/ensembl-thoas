@@ -21,7 +21,7 @@ def get_jsons(infile_name, sample_size):
     counter = 0
     with open(infile_name, encoding='UTF-8') as infile, open('sample_jsons.jsonl', 'w+', encoding='UTF-8') as outfile:
         for gene in ijson.items(infile, 'item'):
-            outfile.write(json.dumps(gene) + "\n")
+            outfile.write(json.dumps(gene, indent=2, sort_keys=True) + "\n")
             counter += 1
             if counter == sample_size:
                 break
