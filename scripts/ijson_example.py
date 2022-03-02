@@ -12,25 +12,34 @@
    limitations under the License.
 """
 
-import gzip
-
-import ijson.backends.python as ijson
-# from jsonslicer import JsonSlicer
-
-with gzip.open('../human_genes.json.gz') as file:
-    for transcript in ijson.items(file, 'item'):
-        print(transcript)
-        if int(transcript['start']) > 1000:
-            pass
+import json
+import argparse
+import ijson
 
 
-with gzip.open('../human_genes.json.gz') as file:
-    for transcript in ijson.items(file, 'item.transcripts.item'):
-        if int(transcript['start']) > 1000:
-            pass
+def get_jsons(infile_name, sample_size):
+    counter = 0
+    with open(infile_name, encoding='UTF-8') as infile, open('sample_jsons.jsonl', 'w+', encoding='UTF-8') as outfile:
+        for gene in ijson.items(infile, 'item'):
+            outfile.write(json.dumps(gene, indent=2, sort_keys=True) + "\n")
+            counter += 1
+            if counter == sample_size:
+                break
 
-# with gzip.open('../human_genes.json.gz') as file:
-#     for start in JsonSlicer(file, (None, 'transcripts', None, 'start')):
-#         # print(thing)
-#         if int(start) > 1000:
-#             pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Get a sample of JSONs and write them to sample_jsons.jsonl.  "
+                                                 "This script is useful for sampling from the production JSON dumps, "
+                                                 "which are dumped as one enormous JSON.  The location of the JSON "
+                                                 "dumps is given by the value of the base_data_path in the "
+                                                 "load.conf file")
+
+    parser.add_argument(
+        '--input_file',
+        help='File to get the JSONs from')
+
+    parser.add_argument('--sample_size', type=int)
+
+    args = parser.parse_args()
+
+    get_jsons(args.input_file, args.sample_size)
