@@ -28,7 +28,11 @@ def get_jsons(infile_name, sample_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Get a sample of jsons and write them to sample_jsons.jsonl")
+    parser = argparse.ArgumentParser(description="Get a sample of jsons and write them to sample_jsons.jsonl.  "
+                                                 "This script is useful for sampling from the production JSON dumps, "
+                                                 "which are dumped as one enormous json.  The location of the JSON "
+                                                 "dumps is given by the value of the base_data_path in the "
+                                                 "load.conf file")
 
     parser.add_argument(
         '--input_file',
