@@ -20,6 +20,8 @@ from string import Template
 import pymongo
 import requests
 
+from scripts.documents import Alphabet, Sequence, OntologyTerm, Source, Region, Metadata
+
 
 def load_config(filename):
     'Load a config, return a ConfigParser object'
@@ -434,21 +436,18 @@ def format_sequence_object(refget, stable_id, sequence_type):
 def get_alphabet_info(sequence_type):
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
-        'dna': {
-            'accession_id': 'test_dna_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for dna sequence',
-            'description': None
-        },
-        'protein': {
-            'accession_id': 'test_protein_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for protein sequence',
-            'description': None
-        }
+        'dna': Alphabet(accession_id='test_dna_accession_id',
+                        value='test',
+                        label='test',
+                        definition='Test - IUPAC notation for dna sequence',
+                        description=None),
+        'protein': Alphabet(accession_id='test_protein_accession_id',
+                            value='test',
+                            label='test',
+                            definition='Test - IUPAC notation for protein sequence',
+                            description=None)
     }
+
     return type_to_alphabet.get(sequence_type)
 
 def format_protein(protein, genome_id, product_length, refget):
@@ -560,23 +559,18 @@ def circularity_to_topology(circularity):
 def format_region(region_mysql_result, assembly_id, genome_id, chromosome_checksums):
 
     checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
+    sequence = Sequence(alphabet=get_alphabet_info('dna'), checksum=checksum)
 
-    return {
-        "type": "Region",
-        "region_id": f'{genome_id}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
-        "name": region_mysql_result["name"],
-        "code": region_mysql_result["code"],
-        "length": region_mysql_result["length"],
-        "topology": circularity_to_topology(region_mysql_result["circularity"]),
-        'sequence': {
-            'alphabet': get_alphabet_info('dna'),
-            'checksum': checksum
-                     },
-        "assembly_id": assembly_id,
-        "metadata": {
-            "ontology_terms": get_ontology_terms(region_mysql_result["code"])
-        }
-    }
+    return Region(type="Region",
+                  region_id=f'{genome_id}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
+                  name=region_mysql_result["name"],
+                  code=region_mysql_result["code"],
+                  length=region_mysql_result["length"],
+                  topology=circularity_to_topology(region_mysql_result["circularity"]),
+                  sequence=sequence,
+                  assembly_id=assembly_id,
+                  metadata=Metadata(ontology_terms=get_ontology_terms(region_mysql_result["code"]))
+                  )
 
 
 def get_ontology_terms(region_code):
@@ -586,16 +580,13 @@ def get_ontology_terms(region_code):
 
     # TODO confirm that all chromosomes for a given species should have the same ontology metadata
     return [
-        {
-            "accession_id": "SO:0000340",
-            "value": "chromosome",
-            "url": "www.sequenceontology.org/browser/current_release/term/SO:0000340",
-            "source": {
-                "name": "Sequence Ontology",
-                "url": "www.sequenceontology.org",
-                "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
-            }
-        }
+        OntologyTerm(accession_id="SO:0000340",
+                     value="chromosome",
+                     url="www.sequenceontology.org/browser/current_release/term/SO:0000340",
+                     source=Source(name="Sequence Ontology",
+                                   url="www.sequenceontology.org",
+                                   description="The Sequence Ontology is a set of terms and relationships used to "
+                                               "describe the features and attributes of biological sequence. "))
     ]
 
 
