@@ -60,7 +60,7 @@ print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MAN
 my $transcript_adaptor;
 my $attribute_adaptor;
 my @transcript_attribute_codes = ('gencode_basic', 'appris', 'TSL', 'MANE_Select','MANE_Plus_Clinical');
-if ($host =~ /mysql-ens-mirror-[3,4]/) {
+if ($host =~ /mysql-ens-sta-6/) {
   my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                        -USER => $meta_user,
                        -DBNAME => $meta_dbname,
@@ -69,8 +69,28 @@ if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
   $gdba->set_ensembl_genomes_release($EG_VERSION);
-  $gdba->set_ensembl_release($ENS_VERSION);
+  #$gdba->set_ensembl_release($ENS_VERSION);
   # Database host, port, user needs to be changed based on where the data is for species/division
+  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
+    -user => $user,
+    -port => $port,
+    -host => $host,
+    -adaptor=>$gdba
+  );
+  my $dbas = $lookup->get_by_name_exact($species);
+  $transcript_adaptor = ${ $dbas }[1]->get_adaptor("Transcript");
+  $attribute_adaptor = ${ $dbas }[1]->get_AttributeAdaptor();
+}
+elsif( ($host =~ /mysql-ens-sta-6/) && ($assembly eq 'GRCh37' ) ){
+my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
+                       -USER => $meta_user,
+                       -DBNAME => 'ensembl_metadata_grch37',
+                       -HOST => $meta_host,
+                       -PORT => $meta_port);
+  my $gdba = $metadata_dba->get_GenomeInfoAdaptor($ENS_VERSION);
+
+  #$gdba->set_ensembl_genomes_release($EG_VERSION);
+  $gdba->set_ensembl_release($ENS_VERSION);
   my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
     -user => $user,
     -port => $port,
@@ -80,7 +100,7 @@ if ($host =~ /mysql-ens-mirror-[3,4]/) {
   my $dbas = $lookup->get_by_name_exact($species);
   $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
   $attribute_adaptor = ${ $dbas }[0]->get_AttributeAdaptor();
-} else {
+}else {
   $registry->load_registry_from_db(
     -host => $host,
     -user => $user,
