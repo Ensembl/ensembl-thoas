@@ -1,8 +1,6 @@
-from mongoengine import Document, StringField, IntField, EmbeddedDocument, EmbeddedDocumentField, ListField
+from mongoengine import StringField, IntField, EmbeddedDocument, EmbeddedDocumentField, ListField
 
-
-class ThoasObject(Document):
-    meta = {'allow_inheritance': True}
+from scripts.mongoengine_documents.base import ThoasDocument
 
 
 class Source(EmbeddedDocument):
@@ -35,7 +33,7 @@ class Sequence(EmbeddedDocument):
     checksum = StringField()
 
 
-class Region(ThoasObject):
+class Region(ThoasDocument):
     type = StringField()  # TODO somehow turn this into a class variable with value "Region"
     region_id = StringField()
     name = StringField()

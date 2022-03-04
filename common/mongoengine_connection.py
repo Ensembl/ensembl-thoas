@@ -1,7 +1,7 @@
 from configparser import NoOptionError
 from mongoengine import connect
 
-from scripts.documents import ThoasObject
+from scripts.mongoengine_documents.base import ThoasDocument
 
 
 def create_mongoengine_connection(config, collection_name=None):
@@ -24,6 +24,6 @@ def create_mongoengine_connection(config, collection_name=None):
 
     def _get_collection_name():
         return collection_name
-    ThoasObject._get_collection_name = _get_collection_name
+    ThoasDocument._get_collection_name = _get_collection_name
 
 

@@ -20,7 +20,7 @@ from string import Template
 import pymongo
 import requests
 
-from scripts.documents import Alphabet, Sequence, OntologyTerm, Source, Region, Metadata
+from scripts.mongoengine_documents.region import Alphabet, Sequence, OntologyTerm, Source, Region, Metadata
 
 
 def load_config(filename):

@@ -1,0 +1,48 @@
+{
+  "has_variations": "false",
+  "division": "EnsemblProtists",
+  "has_peptide_compara": "false",
+  "has_other_alignments": "false",
+  "has_synteny": "false",
+  "species_id": 1,
+  "dbname": "plasmodium_falciparum_core_53_106_1",
+  "reference": null,
+  "has_genome_alignments": "false",
+  "genebuild": "2017-10-ENA",
+  "id": "plasmodium_falciparum",
+  "has_pan_compara": "false",
+  "organism": {
+    "name": "plasmodium_falciparum",
+    "url_name": "Plasmodium_falciparum",
+    "display_name": "Plasmodium falciparum 3D7",
+    "taxonomy_id": 36329,
+    "lineage": [
+      "Plasmodium falciparum",
+      "Plasmodium (Laverania)",
+      "Plasmodium",
+      "Plasmodiidae",
+      "Haemosporida",
+      "Aconoidasida",
+      "Apicomplexa",
+      "Alveolata",
+      "Sar",
+      "Eukaryota",
+      "cellular organisms"
+    ],
+    "scientific_name": "Plasmodium falciparum 3D7",
+    "strain": null,
+    "aliases": [
+      "Plasmodium falciparum 3D7",
+      "plasmodium_falciparum_3d7"
+    ],
+    "serotype": null,
+    "species_taxonomy_id": 5833
+  },
+  "assembly": {
+    "level": "chromosome",
+    "name": "ASM276v2",
+    "ucsc": null,
+    "default": "ASM276v2",
+    "accession": "GCA_000002765.2"
+  }
+}

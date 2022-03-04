@@ -21,12 +21,10 @@ from common.file_parser import MockChromosomeChecksum
 from common.mysql import MySQLClient
 
 
-from scripts.documents import Region
+from scripts.mongoengine_documents.region import Region
 
 
 def load_regions(config, section_name, chr_checksums_path):
-
-    create_mongoengine_connection(config)
 
     # TODO get the assembly_id properly
     assembly_id = "ASM276v2"
@@ -82,4 +80,5 @@ if __name__ == "__main__":
     ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)
+    create_mongoengine_connection(CONFIG, ARGS.mongo_collection)
     load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path)
