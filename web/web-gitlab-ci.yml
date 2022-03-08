@@ -34,7 +34,7 @@ variables:
     - kubectl apply -f web/k8s/thoas_deployment.yaml
   
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
 
 # Run a suite of unit and integration tests
 test:
@@ -50,7 +50,7 @@ test:
 build:
   extends: .build
   only:
-    - master
+    - main
 
 # deploy to dev at WP-HX
 deploy:
