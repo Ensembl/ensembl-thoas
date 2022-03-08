@@ -1,36 +1,17 @@
 from mongoengine import StringField, IntField, EmbeddedDocument, EmbeddedDocumentField, ListField
 
-from scripts.mongoengine_documents.base import ThoasDocument
-
-
-class Source(EmbeddedDocument):
-    name = StringField()
-    url = StringField()
-    description = StringField()
+from scripts.mongoengine_documents.base import ThoasDocument, Sequence, ExternalDB
 
 
 class OntologyTerm(EmbeddedDocument):
     accession_id = StringField()
     value = StringField()
     url = StringField()
-    source = EmbeddedDocumentField(Source)
+    source = EmbeddedDocumentField(ExternalDB)
 
 
 class Metadata(EmbeddedDocument):
     ontology_terms = ListField(EmbeddedDocumentField(OntologyTerm))
-
-
-class Alphabet(EmbeddedDocument):
-    accession_id = StringField()
-    value = StringField()
-    label = StringField()
-    definition = StringField()
-    description = StringField()  # TODO understand how to write null fields
-
-
-class Sequence(EmbeddedDocument):
-    alphabet = EmbeddedDocumentField(Alphabet)
-    checksum = StringField()
 
 
 class Region(ThoasDocument):

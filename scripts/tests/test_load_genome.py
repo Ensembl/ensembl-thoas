@@ -13,7 +13,7 @@ def test_load_genome_info():
     assembly_json = json.loads(Assembly.objects.to_json())
     species_json = json.loads(Species.objects.to_json())
     genome_json = json.loads(Genome.objects.to_json())
-    assert len(assembly_json) == len(species_json) == len(genome_json)
+    assert len(assembly_json) == len(species_json) == len(genome_json) == 1
 
     # No need to test for ids
     del assembly_json[0]['_id']
@@ -41,5 +41,7 @@ def test_load_genome_info():
                             'name': 'ASM276v2',
                             'species': 'plasmodium_falciparum',
                             'type': 'Genome'}]
+
+    # TODO test for create_indices?
 
     disconnect()

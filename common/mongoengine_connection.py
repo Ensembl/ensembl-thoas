@@ -22,6 +22,8 @@ def create_mongoengine_connection(config, collection_name=None):
         collection_name = collection_name
         print(f'Using MongoDB collection name {collection_name}')
 
+    # We need to monkey-patch _get_collection_name so that all subclasses of ThoasDocument get written to the same
+    # collection
     def _get_collection_name():
         return collection_name
     ThoasDocument._get_collection_name = _get_collection_name

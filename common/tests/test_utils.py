@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import json
 
 from common.utils import *
 from common.mongo import FakeMongoDbClient
@@ -48,12 +49,12 @@ def test_xref_formatting():
     ])
 
     first_result = doc_list[0]
-    assert first_result['accession_id'] == 'HGNC:1101'
-    assert first_result['name'] == 'BRCA2'
-    assert first_result['description'] == 'BRCA2 DNA repair associated'
-    assert first_result['source']['name'] == 'HGNC symbol'
-    assert first_result['source']['id'] == 'HGNC'
-    assert first_result['assignment_method']['type'] == 'DIRECT'
+    assert first_result.accession_id == 'HGNC:1101'
+    assert first_result.name == 'BRCA2'
+    assert first_result.description == 'BRCA2 DNA repair associated'
+    assert first_result.source.name == 'HGNC symbol'
+    assert first_result.source.external_db_id == 'HGNC'
+    assert first_result.assignment_method.type == 'DIRECT'
     # Note that assignment_method description is inferred on the fly and cannot be tested
     # without the full resolver chain
 
@@ -67,9 +68,9 @@ def test_xref_formatting():
             'info_text': 'Projected from homo_sapiens'
         }
     ])
-    assert doc_list[0]['accession_id'] == 'GO:0098781'
-    assert doc_list[0]['source']['name'] == 'NOTGO'
-    assert doc_list[0]['source']['id'] == 'NOTGO'
+    assert doc_list[0].accession_id == 'GO:0098781'
+    assert doc_list[0].source.name == 'NOTGO'
+    assert doc_list[0].source.external_db_id == 'NOTGO'
 
     doc_list = format_cross_refs([
         {
@@ -89,24 +90,24 @@ def test_slice_formatting():
     '''
     Ensure slices are correctly generated from parameters
     '''
-    slice_dict = format_slice('test_name', 'test_code', True, 1, 100, 200, 'test_genome')
+    slice_object = format_slice('test_name', 'test_code', True, 1, 100, 200, 'test_genome')
 
-    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
-    assert slice_dict['strand']['code'] == 'forward'
-    assert slice_dict['strand']['value'] == 1
-    assert slice_dict['location']['start'] == 100
-    assert slice_dict['location']['end'] == 200
-    assert slice_dict
-    assert slice_dict['default'] is True
+    assert slice_object.region_id == 'test_genome_test_name_test_code'
+    assert slice_object.strand.code == 'forward'
+    assert slice_object.strand.value == 1
+    assert slice_object.location.start == 100
+    assert slice_object.location.end == 200
+    assert slice_object
+    assert slice_object.default is True
 
-    slice_dict = format_slice('test_name', 'test_code', False, -1, 100, 200, 'test_genome')
+    slice_object = format_slice('test_name', 'test_code', False, -1, 100, 200, 'test_genome')
 
-    assert slice_dict['region_id'] == 'test_genome_test_name_test_code'
-    assert slice_dict['strand']['code'] == 'reverse'
-    assert slice_dict['strand']['value'] == -1
-    assert slice_dict['location']['start'] == 100
-    assert slice_dict['location']['end'] == 200
-    assert slice_dict['default'] is False
+    assert slice_object.region_id == 'test_genome_test_name_test_code'
+    assert slice_object.strand.code == 'reverse'
+    assert slice_object.strand.value == -1
+    assert slice_object.location.start == 100
+    assert slice_object.location.end == 200
+    assert slice_object.default is False
 
 
 def test_format_region():
@@ -127,8 +128,10 @@ def test_format_region():
     chromosome_checksums = ChromosomeChecksum(genome_id, '/test_path/')
     region = format_region(test_mysql_result, "test_assembly_id", genome_id, chromosome_checksums)
 
+    region_json = json.loads(region.to_json())
 
-    assert region == {
+    assert region_json == {
+        '_cls': 'ThoasDocument.Region',
         "type": "Region",
         "region_id": "test_species_GCA_000005845_2_test_name_chromosome",
         "name": "test_name",
@@ -142,7 +145,6 @@ def test_format_region():
                 "value": "test",
                 "label": "test",
                 "definition": "Test - IUPAC notation for dna sequence",
-                "description": None
             },
             "checksum": "3t6fit96jy015frnh465do005hd885jtki"
         },
@@ -181,11 +183,11 @@ def test_exon_formatting():
         genome_id='test_genome'
     )
 
-    assert exon['type'] == 'Exon'
-    assert exon['stable_id'] == 'ENSE123.1'
-    assert exon['unversioned_stable_id'] == 'ENSE123'
-    assert exon['version'] == 1
-    assert exon['slice']['region_id'] == 'test_genome_chr1_test_code'
+    assert exon.type == 'Exon'
+    assert exon.stable_id == 'ENSE123.1'
+    assert exon.unversioned_stable_id == 'ENSE123'
+    assert exon.version == 1
+    assert exon.slice.region_id == 'test_genome_chr1_test_code'
     # forego further enumeration of slice properties
 
 
@@ -195,8 +197,8 @@ def test_phase_calculation():
     list of exons.
     '''
     exon_list = [
-        {'start': 1, 'end': 10, 'stable_id': 'ENSE01', 'unversioned_stable_id': 'ENSE01'},
-        {'start': 21, 'end': 30, 'stable_id': 'ENSE02', 'unversioned_stable_id': 'ENSE02'}
+        Exon(stable_id='ENSE01', unversioned_stable_id='ENSE01'),
+        Exon(stable_id='ENSE02', unversioned_stable_id='ENSE02')
     ]
 
     phase_lookup = {
@@ -231,7 +233,7 @@ def test_splice_formatting():
         'strand': 1
     }
 
-    exon_list = [
+    exon_list_json = [
         {
             'slice': {
                 'location': {'start': 1, 'end': 10}
@@ -247,24 +249,25 @@ def test_splice_formatting():
             'unversioned_stable_id': 'ENSE02'
         }
     ]
+    exon_list = [Exon.from_json(json.dumps(exon)) for exon in exon_list_json]
 
     splicing = splicify_exons(exon_list, transcript)
 
     assert len(splicing) == 2
-    assert splicing[0]['index'] == 1
-    assert splicing[0]['exon'] == exon_list[0]
-    assert splicing[0]['relative_location'] == {
-        'start': 1,
-        'end': 10,
-        'length': 10
-    }
-    assert splicing[1]['index'] == 2
-    assert splicing[1]['exon'] == exon_list[1]
-    assert splicing[1]['relative_location'] == {
-        'start': 21,
-        'end': 30,
-        'length': 10
-    }
+    assert splicing[0].index == 1
+    assert splicing[0].exon == exon_list[0]
+    assert splicing[0].relative_location == Location(
+        start=1,
+        end=10,
+        length=10
+    )
+    assert splicing[1].index == 2
+    assert splicing[1].exon == exon_list[1]
+    assert splicing[1].relative_location == Location(
+        start=21,
+        end=30,
+        length=10
+    )
 
 
 def test_utr_formatting():
@@ -410,7 +413,7 @@ def test_infer_introns():
         'strand': 1
     }
 
-    exons = [
+    exons_json = [
         {
             'stable_id': 'ENSE01.1',
             'slice': {
@@ -452,8 +455,10 @@ def test_infer_introns():
         }
     ]
 
+    exons = [Exon.from_json(json.dumps(exon)) for exon in exons_json]
+
     introns = infer_introns(exons, transcript)
-    target_introns = [
+    target_introns_json = [
         {
             'type': 'Intron',
             'index': 1,
@@ -473,7 +478,7 @@ def test_infer_introns():
                 'end': 30,
                 'length': 9
             },
-            'checksum': None,
+            'sequence_checksum': None,
             'so_term': 'intron'
         },
         {
@@ -495,10 +500,11 @@ def test_infer_introns():
                 'end': 80,
                 'length': 29
             },
-            'checksum': None,
+            'sequence_checksum': None,
             'so_term': 'intron'
         }
     ]
+    target_introns = [Intron.from_json(json.dumps(intron)) for intron in target_introns_json]
     assert len(introns) == len(target_introns)
     for test_intron, target_intron in zip(introns, target_introns):
         assert test_intron == target_intron
@@ -508,7 +514,7 @@ def test_infer_introns():
         'end': 100,
         'strand': -1
     }
-    reverse_exons = [
+    reverse_exons_json = [
         {
             'stable_id': 'ENSE03.1',
             'slice': {
@@ -550,7 +556,9 @@ def test_infer_introns():
         }
     ]
 
-    target_reverse_introns = [
+    reverse_exons = [Exon.from_json(json.dumps(exon)) for exon in reverse_exons_json]
+
+    target_reverse_introns_json = [
         {
             'type': 'Intron',
             'index': 1,
@@ -570,7 +578,7 @@ def test_infer_introns():
                 'end': 40,
                 'length': 29
             },
-            'checksum': None,
+            'sequence_checksum': None,
             'so_term': 'intron'
         },
         {
@@ -592,15 +600,16 @@ def test_infer_introns():
                 'end': 70,
                 'length': 9
             },
-            'checksum': None,
+            'sequence_checksum': None,
             'so_term': 'intron'
         }
     ]
+    target_reverse_introns = [Intron.from_json(json.dumps(intron)) for intron in target_reverse_introns_json]
+
     reverse_introns = infer_introns(reverse_exons, reverse_transcript)
 
     for test_intron, target_intron in zip(reverse_introns, target_reverse_introns):
         assert test_intron == target_intron
-
 
 
 def test_cdna_formatting():
@@ -677,15 +686,16 @@ def test_protein_formatting():
     }
 
     refget = RefgetDB()
-    result = format_protein(
+    result = json.loads(format_protein(
         protein=protein,
         genome_id='tralalala',
         product_length=10,
         refget=refget
-    )
+    ).to_json())
 
     expected = {
         'type': 'Protein',
+        "_cls": "ThoasDocument.Protein",
         'unversioned_stable_id': 'CAB89209',
         'stable_id': 'CAB89209.2',
         'version': 2,
@@ -696,15 +706,12 @@ def test_protein_formatting():
             {
                 'accession_id': 'Q9NFB6',
                 'name': 'Q9NFB6',
-                'description': None,
                 'assignment_method': {
                     'type': 'null'
                 },
                 'source': {
                     'name': 'UniProtKB/TrEMBL',
-                    'id': 'Uniprot/SPTREMBL',
-                    'description': None,
-                    'release': None
+                    'external_db_id': 'Uniprot/SPTREMBL'
                 }
             }
         ],
@@ -753,7 +760,6 @@ def test_protein_formatting():
                 'value': 'test',
                 'label': 'test',
                 'definition': 'Test - IUPAC notation for protein sequence',
-                'description': None
             },
             'checksum': '1f47b55923e2d23090f894c439974b55'
         },
@@ -781,9 +787,9 @@ def test_relative_coords():
         }
     )
 
-    assert rel_coords['start'] == 6
-    assert rel_coords['end'] == 17
-    assert rel_coords['length'] == 12
+    assert rel_coords.start == 6
+    assert rel_coords.end == 17
+    assert rel_coords.length == 12
 
     rel_coords_reverse = calculate_relative_coords(
         parent_params={
@@ -797,9 +803,9 @@ def test_relative_coords():
         }
     )
 
-    assert rel_coords_reverse['start'] == 5
-    assert rel_coords_reverse['end'] == 16
-    assert rel_coords_reverse['length'] == 12
+    assert rel_coords_reverse.start == 5
+    assert rel_coords_reverse.end == 16
+    assert rel_coords_reverse.length == 12
 
     rel_coords = calculate_relative_coords(
         parent_params={
@@ -813,8 +819,8 @@ def test_relative_coords():
         }
     )
 
-    assert rel_coords['start'] == 1
-    assert rel_coords['end'] == 10
+    assert rel_coords.start == 1
+    assert rel_coords.end == 10
 
 
 def test_flush_buffer():

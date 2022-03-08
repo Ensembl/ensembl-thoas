@@ -16,16 +16,21 @@ import re
 import csv
 import os
 import json
+from typing import Dict
+
 import ijson
 import pymongo
 
 
 import common.utils
+from common.mongoengine_connection import create_mongoengine_connection
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
 from common.crossrefs import XrefResolver
 from common.logger import ThoasLogging
+from scripts.mongoengine_documents.gene import Gene
+from scripts.mongoengine_documents.transcript import Transcript, ProductGeneratingContext, CDS, TranscriptMetadata
 
 lrg_detector = re.compile('^LRG')
 
@@ -113,35 +118,33 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
             except KeyError as ke:
                 gene_metadata['name'] = None
 
-            json_gene = {
+            json_gene = Gene(type='Gene',
+                             stable_id=common.utils.get_stable_id(gene["id"], gene["version"]),
+                             unversioned_stable_id=gene['id'],
+                             version=gene['version'],
+                             so_term=gene['biotype'],
+                             symbol=gene['name'],
+                             alternative_symbols=gene['synonyms'] if 'synonyms' in gene else [],
+                             # Note that the description comes the long way via xref
+                             # pipeline and includes a [source: string]
+                             name=re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
+                             slice=common.utils.format_slice(
+                                 region_name=gene['seq_region_name'],
+                                 region_code=gene['coord_system']['name'],
+                                 default_region=default_region,
+                                 strand=int(gene['strand']),
+                                 start=int(gene['start']),
+                                 end=int(gene['end']),
+                                 genome_id=genome['id']
+                             ),
+                             transcripts=[
+                                 [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
+                                  for transcript in gene['transcripts']]
+                             ],
+                             genome_id=genome['id'],
+                             external_references=gene_xrefs,
+                             metadata=gene_metadata)
 
-                'type': 'Gene',
-                'stable_id': common.utils.get_stable_id(gene["id"], gene["version"]),
-                'unversioned_stable_id': gene['id'],
-                'version': gene['version'],
-                'so_term': gene['biotype'],
-                'symbol': gene['name'],
-                'alternative_symbols': gene['synonyms'] if 'synonyms' in gene else [],
-                # Note that the description comes the long way via xref
-                # pipeline and includes a [source: string]
-                'name': re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
-                'slice': common.utils.format_slice(
-                    region_name=gene['seq_region_name'],
-                    region_code=gene['coord_system']['name'],
-                    default_region=default_region,
-                    strand=int(gene['strand']),
-                    start=int(gene['start']),
-                    end=int(gene['end']),
-                    genome_id=genome['id']
-                ),
-                'transcripts': [
-                    [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
-                     for transcript in gene['transcripts']]
-                ],
-                'genome_id': genome['id'],
-                'external_references': gene_xrefs,
-                'metadata' : gene_metadata
-            }
             gene_buffer.append(json_gene)
 
             # Sort out some transcripts while we can see them
@@ -181,9 +184,9 @@ def get_genome_assembly(assembly_name, mongo_client):
 
 
 def format_transcript(
-        transcript, gene, region_name, genome_id,
-        cds_info, phase_info, tr_metadata_info
-):
+        transcript: Dict, gene: Dict, region_name: str, genome_id: str,
+        cds_info: Dict, phase_info: Dict, tr_metadata_info: Dict
+) -> Transcript:
     '''
     Transform and supplement transcript information
     Args:
@@ -222,42 +225,41 @@ def format_transcript(
 
     ####TODO: Type and release version
 
-    new_transcript = {
-        'type': 'Transcript',
-        'gene': common.utils.get_stable_id(gene["id"], gene["version"]),
-        'stable_id': common.utils.get_stable_id(transcript["id"], transcript["version"]),
-        'unversioned_stable_id': transcript['id'],
-        'version': transcript['version'],
-        'so_term': transcript['biotype'],
-        'symbol': transcript['name'] if 'name' in transcript else None,
-        'description': transcript['description'] if 'description' in transcript else None,
-        'relative_location': common.utils.calculate_relative_coords(
-            parent_params={
-                'start': gene['start'],
-                'end': gene['end'],
-                'strand': gene['strand']
-            },
-            child_params={
-                'start': transcript['start'],
-                'end': transcript['end']
-            }
-        ),
-        'slice': common.utils.format_slice(
-            region_name=region_name,
-            region_code=transcript['coord_system']['name'],
-            default_region=default_region,
-            strand=int(transcript['strand']),
-            start=int(transcript['start']),
-            end=int(transcript['end']),
-            genome_id=genome_id
-        ),
-        'genome_id': genome_id,
-        'external_references': transcript_xrefs,
-        'product_generating_contexts': [],
-        'introns': common.utils.infer_introns(ordered_formatted_exons, transcript),
-        'spliced_exons': common.utils.splicify_exons(ordered_formatted_exons, transcript),
-        'metadata': tr_metadata_info[transcript['id']]
-    }
+    new_transcript = Transcript(type='Transcript',
+                                gene=common.utils.get_stable_id(gene["id"], gene["version"]),
+                                stable_id=common.utils.get_stable_id(transcript["id"], transcript["version"]),
+                                unversioned_stable_id=transcript['id'],
+                                version=transcript['version'],
+                                so_term=transcript['biotype'],
+                                symbol=transcript['name'] if 'name' in transcript else None,
+                                description=transcript['description'] if 'description' in transcript else None,
+                                relative_location=common.utils.calculate_relative_coords(
+                                    parent_params={
+                                        'start': gene['start'],
+                                        'end': gene['end'],
+                                        'strand': gene['strand']
+                                    },
+                                    child_params={
+                                        'start': transcript['start'],
+                                        'end': transcript['end']
+                                    }
+                                ),
+                                slice=common.utils.format_slice(
+                                    region_name=region_name,
+                                    region_code=transcript['coord_system']['name'],
+                                    default_region=default_region,
+                                    strand=int(transcript['strand']),
+                                    start=int(transcript['start']),
+                                    end=int(transcript['end']),
+                                    genome_id=genome_id
+                                ),
+                                genome_id=genome_id,
+                                external_references=transcript_xrefs,
+                                product_generating_contexts=[],
+                                introns=common.utils.infer_introns(ordered_formatted_exons, transcript),
+                                spliced_exons=common.utils.splicify_exons(ordered_formatted_exons, transcript),
+                                metadata=TranscriptMetadata.from_json(json.dumps(tr_metadata_info[transcript['id']]))
+                                )
 
     # Insert multiple product handling here when we know what it will look like
     # Pick the first to be default
@@ -275,47 +277,48 @@ def format_transcript(
                                                            sequence_type=refget.cds)
 
         for translation in transcript['translations']:
-            new_transcript['product_generating_contexts'].append(
-                {
-                    'product_type': 'Protein',  # probably
-                    '5_prime_utr': common.utils.format_utr(
-                        transcript, cds_start, cds_end, downstream=False
-                    ),
-                    '3_prime_utr': common.utils.format_utr(
-                        transcript, cds_start, cds_end, downstream=True
-                    ),
-                    'cds': {
-                        'start': cds_start,
-                        'end': cds_end,
-                        'relative_start': relative_cds_start,
-                        'relative_end': relative_cds_end,
-                        'nucleotide_length': spliced_length,
-                        'protein_length': spliced_length // 3,
-                        'sequence': cds_sequence,
-                        'sequence_checksum': cds_sequence.get('checksum')
-                    },
-                    # Infer the "products" in the resolver. This is a join.
-                    'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
-                    'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
-                    # We'll know default later when it becomes relevant
-                    'default': defaults.pop(),
-                    'cdna': common.utils.format_cdna(transcript=transcript, refget=refget)
-                }
+            new_transcript.product_generating_contexts.append(
+                ProductGeneratingContext(product_type='Protein',  # probably
+                                         five_prime_utr=common.utils.format_utr(
+                                             transcript, cds_start, cds_end, downstream=False
+                                         ),
+                                         three_prime_utr=common.utils.format_utr(
+                                             transcript, cds_start, cds_end, downstream=True
+                                         ),
+                                         cds=CDS(start=cds_start,
+                                                 end=cds_end,
+                                                 relative_start=relative_cds_start,
+                                                 relative_end=relative_cds_end,
+                                                 nucleotide_length=spliced_length,
+                                                 protein_length=spliced_length // 3,
+                                                 sequence=cds_sequence,
+                                                 sequence_checksum=cds_sequence.checksum
+                                                 ),
+                                         # Infer the "products" in the resolver. This is a join.
+                                         product_id=common.utils.get_stable_id(translation["id"],
+                                                                               translation["version"]),
+                                         phased_exons=common.utils.phase_exons(ordered_formatted_exons,
+                                                                               transcript['id'], phase_info),
+                                         # We'll know default later when it becomes relevant
+                                         default=defaults.pop(),
+                                         cdna=common.utils.format_cdna(transcript=transcript, refget=refget)
+                                         )
             )
+
     # cds_info has a list of all the coding transcripts. If not in that list, it is a non-coding transcript
     elif transcript['exons']:
-        new_transcript['product_generating_contexts'].append(
-            {
-                'product_type': None,
-                '5_prime_utr': None,
-                '3_prime_utr': None,
-                'cds': None,
-                'product_id': None,
-                'phased_exons': [],
-                # We'll know default later when it becomes relevant
-                'default': defaults.pop(),
-                'cdna': common.utils.format_cdna(transcript=transcript, refget=refget, non_coding = True)
-            }
+        new_transcript.product_generating_contexts.append(
+            ProductGeneratingContext(product_type=None,
+                                     five_prime_utr=None,
+                                     three_prime_utr=None,
+                                     cds=None,
+                                     product_id=None,
+                                     phased_exons=[],
+                                     # We'll know default later when it becomes relevant
+                                     default=defaults.pop(),
+                                     cdna=common.utils.format_cdna(transcript=transcript, refget=refget,
+                                                                   non_coding=True)
+                                     )
         )
 
     return new_transcript
@@ -445,7 +448,7 @@ if __name__ == '__main__':
     CONFIG = common.utils.load_config(ARGS.config_file)
     SPECIES = ARGS.species
     MONGO_COLLECTION = ARGS.mongo_collection
-    MONGO_CLIENT = MongoDbClient(CONFIG, MONGO_COLLECTION)
+    MONGO_CLIENT = create_mongoengine_connection(CONFIG, MONGO_COLLECTION)
     if ARGS.collection:
         JSON_FILE = f'{ARGS.data_path}{ARGS.collection}/{ARGS.species}/{ARGS.species}_genes.json'
     else:

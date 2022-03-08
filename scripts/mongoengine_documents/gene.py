@@ -1,25 +1,38 @@
-from mongoengine import EmbeddedDocument, IntField, StringField, EmbeddedDocumentField, BooleanField, ListField
+from mongoengine import EmbeddedDocument, StringField, EmbeddedDocumentField, BooleanField, ListField, IntField
 
-from scripts.mongoengine_documents.base import ThoasDocument
-
-
-class Location(EmbeddedDocument):
-    start = IntField()
-    end = IntField()
-    length = IntField()
+from scripts.mongoengine_documents.base import ThoasDocument, Location, Strand, Slice, ExternalReference, ExternalDB
 
 
-class Strand(EmbeddedDocument):
-    code = StringField()
-    value = IntField()
+class GeneBiotypeMetadata(EmbeddedDocument):
+    value = StringField()
+    label = StringField()
+    definition = StringField()
+    description = StringField()
 
 
-class Slice(EmbeddedDocument):
-    region_id = StringField()
-    location = EmbeddedDocumentField(Location)
-    strand = EmbeddedDocumentField(Strand)
-    default = BooleanField
+class GeneNameMetadata(EmbeddedDocument):
+    accession_id = StringField()
+    value = StringField()
+    url = StringField()
+    source = EmbeddedDocumentField(ExternalDB)
+
+
+class GeneMetadata(EmbeddedDocument):
+    biotype = EmbeddedDocumentField(GeneBiotypeMetadata)
+    name = EmbeddedDocumentField(GeneNameMetadata)
 
 
 class Gene(ThoasDocument):
+    type = StringField()
+    stable_id = StringField()
+    unversioned_stable_id=StringField()
+    version = IntField()
+    so_term = StringField()
+    symbol = StringField()
+    alternative_symbols = ListField(StringField)
+    name = StringField()
+    slice = EmbeddedDocumentField(Slice)
     transcripts = ListField(ListField(StringField))  # TODO Why the doubly-nested list??
+    genome_id = StringField()
+    external_references = ListField(EmbeddedDocumentField(ExternalReference))
+    metadata = EmbeddedDocumentField(GeneMetadata)

@@ -16,11 +16,16 @@ from configparser import ConfigParser
 import argparse
 import sys
 from string import Template
+from typing import List, Dict, Optional
 
 import pymongo
 import requests
 
-from scripts.mongoengine_documents.region import Alphabet, Sequence, OntologyTerm, Source, Region, Metadata
+from scripts.mongoengine_documents.protein import SequenceFamily, FamilyMatch, ClosestDataProvider, Protein
+from scripts.mongoengine_documents.region import OntologyTerm, Region, Metadata
+from scripts.mongoengine_documents.base import Alphabet, Sequence, ExternalReference, ExternalMethod, ExternalDB, \
+    Location, Slice, Strand
+from scripts.mongoengine_documents.transcript import Exon, Intron, SplicedExon, UTR, PhasedExon, CDNA
 
 
 def load_config(filename):
@@ -141,36 +146,26 @@ def format_cross_refs(xrefs):
             continue
         doc = None
         if 'db_display' not in x:
-            doc = {
-                'accession_id': x['primary_id'],
-                'name': x['display_id'],
-                'description': None,
-                'assignment_method': {
-                    'type': x['info_type']
-                },
-                'source': {
-                    'name': x['dbname'],
-                    'id': x['dbname'],
-                    # No mechanism to provide description and release from data dumps
-                    'description': None,
-                    'release': None
-                }
-            }
+            doc = ExternalReference(accession_id=x['primary_id'],
+                                    name=x['display_id'],
+                                    description=None,
+                                    assignment_method=ExternalMethod(type=x['info_type'],
+                                                                     description=None),
+                                    source=ExternalDB(name=x['dbname'],
+                                                      external_db_id=x['dbname'],
+                                                      # No mechanism to provide description and release from data dumps
+                                                      description=None,
+                                                      release=None))
         else:
-            doc = {
-                'accession_id': x['primary_id'],
-                'name': x['display_id'],
-                'description': x['description'],
-                'assignment_method': {
-                    'type': x['info_type']
-                },
-                'source': {
-                    'name': x['db_display'],
-                    'id': x['dbname'],
-                    'description': None,
-                    'release': None
-                }
-            }
+            doc = ExternalReference(accession_id=x['primary_id'],
+                                    name=x['display_id'],
+                                    description=x['description'],
+                                    assignment_method=ExternalMethod(type=x['info_type'],
+                                                                     description=None),
+                                    source=ExternalDB(name=x['db_display'],
+                                                      external_db_id=x['dbname'],
+                                                      description=None,
+                                                      release=None))
         json_xrefs.append(doc)
     return json_xrefs
 
@@ -187,19 +182,14 @@ def format_slice(region_name, region_code, default_region, strand,
     start[int]: Start coordinate, usually low to high except when circular
     end[int]: End coordinate
     '''
-    return {
-        'region_id': f'{genome_id}_{region_name}_{region_code}',
-        'location': {
-            'start': int(start),
-            'end': int(end),
-            'length': int(end) - int(start) + 1
-        },
-        'strand': {
-            'code': 'forward' if strand > 0 else 'reverse',
-            'value': strand
-        },
-        'default': default_region
-    }
+    strand_code = 'forward' if strand > 0 else 'reverse'
+    return Slice(region_id=f'{genome_id}_{region_name}_{region_code}',
+                 location=Location(start=int(start),
+                                   end=int(end),
+                                   length=int(end) - int(start) + 1),
+                 strand=Strand(code=strand_code,
+                               value=strand),
+                 default=default_region)
 
 
 def format_exon(exon, region_name, region_code, region_strand, default_region, genome_id):
@@ -214,17 +204,15 @@ def format_exon(exon, region_name, region_code, region_strand, default_region, g
     transcript: The transcript that contains this exon
     '''
 
-    return {
-        'type': 'Exon',
-        'stable_id': get_stable_id(exon['id'], exon['version']),
-        'unversioned_stable_id': exon['id'],
-        'version': exon['version'],
-        'so_term': 'exon',
-        'slice': format_slice(
-            region_name, region_code, default_region, region_strand,
-            exon['start'], exon['end'], genome_id
-        )
-    }
+    return Exon(type='Exon',
+                stable_id=get_stable_id(exon['id'], exon['version']),
+                unversioned_stable_id=exon['id'],
+                version=exon['version'],
+                so_term='exon',
+                slice=format_slice(
+                    region_name, region_code, default_region, region_strand,
+                    exon['start'], exon['end'], genome_id)
+                )
 
 
 def exon_sorter(exon):
@@ -232,7 +220,7 @@ def exon_sorter(exon):
     return exon['rank']
 
 
-def phase_exons(exons, transcript_id, phase_lookup):
+def phase_exons(exons: List[Exon], transcript_id: str, phase_lookup: Dict) -> List[PhasedExon]:
     '''
     Given formatted exon data, and a phase lookup, return a spliced exon
     wrapper for each element with start and end phases.
@@ -242,16 +230,16 @@ def phase_exons(exons, transcript_id, phase_lookup):
     splicing = []
     for i, exon in enumerate(exons, start=1):
         (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
-        splicing.append({
-            'start_phase': start_phase,
-            'end_phase': end_phase,
-            'index': i,
-            'exon': exon
-        })
+        splicing.append(PhasedExon(
+            start_phase=start_phase,
+            end_phase=end_phase,
+            index=i,
+            exon=exon
+        ))
     return splicing
 
 
-def splicify_exons(exons, transcript):
+def splicify_exons(exons: List[Exon], transcript: Dict) -> List[SplicedExon]:
     '''
     Given a list of exons and the parent transcript, create a list of spliced
     exons with rank and relative coordinates.
@@ -259,25 +247,23 @@ def splicify_exons(exons, transcript):
     '''
     splicing = []
     for i, exon in enumerate(exons, start=1):
-        splicing.append({
-            'index': i,
-            'exon': exon,
-            'relative_location': calculate_relative_coords(
-                parent_params={
-                    'start': transcript['start'],
-                    'end': transcript['end'],
-                    'strand': transcript['strand']
-                },
-                child_params={
-                    'start': exon['slice']['location']['start'],
-                    'end': exon['slice']['location']['end']
-                }
-            )
-        })
+        splicing.append(SplicedExon(index=i,
+                                    exon=exon,
+                                    relative_location=calculate_relative_coords(
+                                        parent_params={
+                                            'start': transcript['start'],
+                                            'end': transcript['end'],
+                                            'strand': transcript['strand']
+                                        },
+                                        child_params={
+                                            'start': exon.slice.location.start,
+                                            'end': exon.slice.location.end
+                                        }
+                                    )))
     return splicing
 
 
-def infer_introns(exons, transcript):
+def infer_introns(exons: List[Exon], transcript: Dict) -> List[Intron]:
     '''
     Given a list of formatted exons in rank order, we will infer the presence
     of introns.
@@ -290,47 +276,41 @@ def infer_introns(exons, transcript):
         return introns
 
     for index, (exon_one, exon_two) in enumerate(zip(exons[:-1], exons[1:]), start=1):
-        if exon_one['slice']['strand']['value'] == 1:
-            intron_start = exon_one['slice']['location']['end'] + 1
-            intron_end = exon_two['slice']['location']['start'] - 1
+        if exon_one.slice.strand.value == 1:
+            intron_start = exon_one.slice.location.end + 1
+            intron_end = exon_two.slice.location.start - 1
         else:
-            intron_start = exon_two['slice']['location']['end'] + 1
-            intron_end = exon_one['slice']['location']['start'] - 1
+            intron_start = exon_two.slice.location.end + 1
+            intron_end = exon_one.slice.location.start - 1
 
-        introns.append({
-            'index': index,
-            'checksum': None,
-            'slice': {
-                'region_id': exon_one['slice']['region_id'],
-                'location': {
-                    'start': intron_start,
-                    'end': intron_end,
-                    # Note, a cross ori intron is gonna break hard
-                    'length': intron_end - intron_start + 1
-                },
-                'strand': exon_one['slice']['strand']
-            },
-            'so_term': 'intron',
-            'relative_location': calculate_relative_coords(
-                parent_params={
-                    'start': transcript['start'],
-                    'end': transcript['end'],
-                    'strand': transcript['strand']
-                },
-                child_params={
-                    'start': intron_start,
-                    'end': intron_end
-                }
-            ),
-            'type': 'Intron'
-        })
-
+        introns.append(Intron(index=index,
+                              sequence_checksum=None,
+                              slice=Slice(region_id=exon_one.slice.region_id,
+                                          location=Location(start=intron_start,
+                                                            end=intron_end,
+                                                            # Note, a cross ori intron is gonna break hard
+                                                            length=intron_end - intron_start + 1
+                                                            ),
+                                          strand=exon_one.slice.strand),
+                              so_term='intron',
+                              relative_location=calculate_relative_coords(
+                                  parent_params={
+                                      'start': transcript['start'],
+                                      'end': transcript['end'],
+                                      'strand': transcript['strand']
+                                  },
+                                  child_params={
+                                      'start': intron_start,
+                                      'end': intron_end
+                                  }
+                              ),
+                              type='Intron'))
     return introns
 
 
 def format_utr(
-        transcript, absolute_cds_start, absolute_cds_end, downstream
-):
+        transcript: Dict, absolute_cds_start: int, absolute_cds_end: int, downstream: bool
+) -> Optional[UTR]:
     '''
     From one transcript's exons generate an inferred UTR
     downstream  - Boolean, False = 5', True = 3'
@@ -341,20 +321,20 @@ def format_utr(
             and transcript['end'] == absolute_cds_end
             and transcript['strand'] == 1
             or (
-                downstream is False
-                and transcript['start'] == absolute_cds_start
-                and transcript['strand'] == 1
-            )
+            downstream is False
+            and transcript['start'] == absolute_cds_start
+            and transcript['strand'] == 1
+    )
             or (
-                downstream
-                and transcript['start'] == absolute_cds_start
-                and transcript['strand'] == -1
-            )
+            downstream
+            and transcript['start'] == absolute_cds_start
+            and transcript['strand'] == -1
+    )
             or (
-                downstream is False
-                and transcript['end'] == absolute_cds_end
-                and transcript['strand'] == -1
-            )
+            downstream is False
+            and transcript['end'] == absolute_cds_end
+            and transcript['strand'] == -1
+    )
     ):
         # No UTR here: Move along.
         return None
@@ -378,14 +358,12 @@ def format_utr(
         start = absolute_cds_end + 1
         end = transcript['end']
 
-    return {
-        'type': utr_type,
-        'start': start,
-        'end': end
-    }
+    return UTR(type=utr_type,
+               start=start,
+               end=end)
 
 
-def format_cdna(transcript, refget, non_coding=False):
+def format_cdna(transcript: Dict, refget, non_coding: bool = False) -> CDNA:
     '''
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
@@ -406,31 +384,25 @@ def format_cdna(transcript, refget, non_coding=False):
     relative_start = 1
     relative_end = transcript['end'] - transcript['start'] + 1
     # but length must not include the introns
-    length = 0 # temporarily
+    length = 0  # temporarily
     for exon in transcript['exons']:
         length += exon['end'] - exon['start'] + 1
 
-    # Needs sequence too. Add it soon!
-    return {
-        'start': start,
-        'end': end,
-        'relative_start': relative_start,
-        'relative_end': relative_end,
-        'length': length,
-        'type': 'CDNA',
-        'sequence': sequence,
-        'sequence_checksum': sequence.get('checksum')
-    }
+    return CDNA(start=start,
+                end=end,
+                relative_start=relative_start,
+                relative_end=relative_end,
+                length=length,
+                type='CDNA',
+                sequence=sequence,
+                sequence_checksum=sequence.checksum)
 
 
 def format_sequence_object(refget, stable_id, sequence_type):
-
     sequence_checksum = refget.get_checksum(stable_id, sequence_type)
+    alphabet = get_alphabet_info('protein') if sequence_type == refget.pep else get_alphabet_info('dna')
 
-    return {
-        'alphabet': get_alphabet_info('protein') if sequence_type == refget.pep else get_alphabet_info('dna'),
-        'checksum': sequence_checksum
-    }
+    return Sequence(alphabet=alphabet, checksum=sequence_checksum)
 
 
 def get_alphabet_info(sequence_type):
@@ -450,6 +422,7 @@ def get_alphabet_info(sequence_type):
 
     return type_to_alphabet.get(sequence_type)
 
+
 def format_protein(protein, genome_id, product_length, refget):
     '''
     Create a protein representation from limited data
@@ -458,22 +431,20 @@ def format_protein(protein, genome_id, product_length, refget):
     stable_id = get_stable_id(protein['id'], protein['version'])
     sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.pep)
 
-    return {
-        'type': 'Protein',
-        'unversioned_stable_id': protein['id'],
-        'stable_id': stable_id,
-        'version': protein['version'],
-        # for foreign key behaviour
-        'transcript_id': protein['transcript_id'], # missing version...
-        'genome_id': genome_id,
-        'so_term': 'polypeptide', # aka SO:0000104
-        'external_references': format_cross_refs(protein['xrefs']),
-        'family_matches': format_protein_features(protein['protein_features']),
-        # 'mappings': TODO
-        'length': product_length,
-        'sequence': sequence,
-        'sequence_checksum': sequence.get('checksum')
-    }
+    return Protein(type="Protein",
+                   unversioned_stable_id=protein['id'],
+                   stable_id=stable_id,
+                   version=protein['version'],
+                   # for foreign key behaviour
+                   transcript_id=protein['transcript_id'],
+                   genome_id=genome_id,
+                   so_term='polypeptide',
+                   external_references=format_cross_refs(protein['xrefs']),
+                   family_matches=format_protein_features(protein['protein_features']),
+                   # 'mappings': TODO
+                   length=product_length,
+                   sequence=sequence,
+                   sequence_checksum=sequence.checksum)
 
 
 def format_protein_features(protein_features):
@@ -507,44 +478,28 @@ def format_protein_features(protein_features):
     domains = []
     for feature in protein_features:
         if feature["program"] == "InterProScan":
-            domains.append(
-                {
-                    "sequence_family": {
-                        "source": {
-                            "name": feature["dbname"],
-                            "description": db_details[feature["dbname"]]["description"],
-                            "url": db_details[feature["dbname"]]["source_url"],
-                            "release": feature["dbversion"]
-                        },
-                        "name": feature["name"],
-                        "accession_id": feature["name"],
-                        "url": db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
-                        "description": feature["description"]
-                    },
-                    "via": {
-                        "source": {
-                            "name": "InterProScan",
-                            "description": db_details["InterProScan"]["description"],
-                            "url": db_details["InterProScan"]["source_url"],
-                            "release": feature['program_version'],
-                        },
-                        "accession_id": feature["interpro_ac"],
-                        "url": db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac']),
-                    },
-                    "relative_location": {
-                        "start": feature["start"],
-                        "end": feature["end"],
-                        "length": feature["end"] - feature["start"] + 1
-                    },
-                    "score": feature["score"],
-                    "evalue": feature["evalue"],
-                    "hit_location": {
-                        "start": feature["hit_start"],
-                        "end": feature["hit_end"],
-                        "length": feature["hit_end"] - feature["hit_start"] + 1
-                    }
-                }
-            )
+            domains.append(FamilyMatch(sequence_family=SequenceFamily(source=ExternalDB(name=feature["dbname"],
+                                                                                        description=db_details[feature["dbname"]]["description"],
+                                                                                        url=db_details[feature["dbname"]]["source_url"],
+                                                                                        release=feature["dbversion"]),
+                                                                      name=feature["name"],
+                                                                      accession_id=feature["name"],
+                                                                      url=db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
+                                                                      description=feature["description"]),
+                                       via=ClosestDataProvider(source=ExternalDB(name="InterProScan",
+                                                                                 description=db_details["InterProScan"]["description"],
+                                                                                 url=db_details["InterProScan"]["source_url"],
+                                                                                 release=feature['program_version']),
+                                                               accession_id=feature["interpro_ac"],
+                                                               url=db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac'])),
+                                       relative_location=Location(start=feature["start"],
+                                                                  end=feature["end"],
+                                                                  length=feature["end"] - feature["start"] + 1),
+                                       score=feature["score"],
+                                       evalue=feature["evalue"],
+                                       hit_location=Location(start=feature["hit_start"],
+                                                             end=feature["hit_end"],
+                                                             length=feature["hit_end"] - feature["hit_start"] + 1)))
     return domains
 
 
@@ -557,7 +512,6 @@ def circularity_to_topology(circularity):
 
 
 def format_region(region_mysql_result, assembly_id, genome_id, chromosome_checksums):
-
     checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
     sequence = Sequence(alphabet=get_alphabet_info('dna'), checksum=checksum)
 
@@ -583,7 +537,7 @@ def get_ontology_terms(region_code):
         OntologyTerm(accession_id="SO:0000340",
                      value="chromosome",
                      url="www.sequenceontology.org/browser/current_release/term/SO:0000340",
-                     source=Source(name="Sequence Ontology",
+                     source=ExternalDB(name="Sequence Ontology",
                                    url="www.sequenceontology.org",
                                    description="The Sequence Ontology is a set of terms and relationships used to "
                                                "describe the features and attributes of biological sequence. "))
@@ -615,7 +569,7 @@ def flush_buffer(mongo_client, buffer, flush_threshold=1000):
     return buffer
 
 
-def calculate_relative_coords(parent_params, child_params):
+def calculate_relative_coords(parent_params: Dict, child_params: Dict) -> Location:
     '''
     Calculates a tuple of relative start, relative end and length from genomic coords
     of the parent feature and its child. Coords respect reading frame, i.e. a reverse
@@ -634,9 +588,7 @@ def calculate_relative_coords(parent_params, child_params):
     }
     '''
 
-    relative_location = {
-        'length': child_params['end'] - child_params['start'] + 1
-    }
+    length = child_params['end'] - child_params['start'] + 1
 
     if parent_params['strand'] == 1:
         # i.e. 5' offset
@@ -646,13 +598,10 @@ def calculate_relative_coords(parent_params, child_params):
         relative_start = parent_params['end'] - child_params['end'] + 1
         relative_end = parent_params['end'] - child_params['start'] + 1
 
-    relative_location['start'] = relative_start
-    relative_location['end'] = relative_end
-    return relative_location
+    return Location(start=relative_start, end=relative_end, length=length)
 
 
 def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
-
     # Try to generate the gene name url
     gene_name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(
         gene_name_metadata.get('xref_primary_acc'),
@@ -662,7 +611,8 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
     check_and_log_urls(gene_name_metadata, 'url', logger)
 
     # Try to generate the gene source url
-    id_org_n_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(gene_name_metadata.get('external_db_name'))
+    id_org_n_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(
+        gene_name_metadata.get('external_db_name'))
     gene_name_metadata['source_url'] = xref_resolver.source_information_retriever(
         id_org_n_prefix,
         'resourceHomeUrl'
@@ -674,7 +624,7 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
         'accession_id': gene_name_metadata.get('xref_primary_acc'),
         'value': gene_name_metadata.get('xref_description'),
         # Dont store URLs in the database.
-        #'url': gene_name_metadata.get('url'),
+        # 'url': gene_name_metadata.get('url'),
         'url': None,
         'source': {
             'id': gene_name_metadata.get('external_db_name'),
@@ -690,7 +640,6 @@ def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 
 
 def check_and_log_urls(data, url_key, logger):
-
     if logger is None:
         return
 
