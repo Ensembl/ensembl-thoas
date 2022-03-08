@@ -16,6 +16,7 @@ import json
 import pymongo
 
 import common.utils
+from common.mongo import MongoDbClient
 from common.mongoengine_connection import create_mongoengine_connection
 from scripts.mongoengine_documents.genome import Assembly, Species, Genome
 
@@ -78,7 +79,7 @@ if __name__ == '__main__':
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
     MONGO_COLLECTION = ARGS.mongo_collection
-    MONGO_CLIENT = create_mongoengine_connection(CONFIG, ARGS.mongo_collection)
+    MONGO_CLIENT = MongoDbClient(CONFIG, ARGS.mongo_collection)
 
     # Combine arguments to give the path to the relevant $species_genome.json file
     # Directory structure differs if a collection is involved

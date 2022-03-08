@@ -15,6 +15,7 @@
 from mysql.connector import DataError
 
 import common.utils
+from common.mongo import MongoDbClient
 from common.mongoengine_connection import create_mongoengine_connection
 from common.utils import format_region, get_genome_id
 from common.file_parser import MockChromosomeChecksum
@@ -80,5 +81,5 @@ if __name__ == "__main__":
     ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)
-    create_mongoengine_connection(CONFIG, ARGS.mongo_collection)
+    MONGO_CLIENT = MongoDbClient(CONFIG, "funky_collection")
     load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path)
