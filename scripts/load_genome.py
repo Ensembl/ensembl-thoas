@@ -17,7 +17,6 @@ import pymongo
 
 import common.utils
 from common.mongo import MongoDbClient
-from common.mongoengine_connection import create_mongoengine_connection
 from scripts.mongoengine_documents.genome import Assembly, Species, Genome
 
 

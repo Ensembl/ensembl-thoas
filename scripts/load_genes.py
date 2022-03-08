@@ -23,7 +23,6 @@ import pymongo
 
 
 import common.utils
-from common.mongoengine_connection import create_mongoengine_connection
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
