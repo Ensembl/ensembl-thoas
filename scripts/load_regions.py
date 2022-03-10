@@ -15,19 +15,18 @@
 from mysql.connector import DataError
 
 import common.utils
+from common.mongoengine import MongoDbClient
 from common.utils import format_region, get_genome_id
-from common.file_parser import ChromosomeChecksum
+from common.file_parser import MockChromosomeChecksum
 from common.mysql import MySQLClient
-from common.mongo import MongoDbClient
+from scripts.mongoengine_documents.genome import Assembly
+
+from scripts.mongoengine_documents.region import Region
 
 
-def load_regions(config, section_name, chr_checksums_path, mongo_client):
+def load_regions(config, section_name, chr_checksums_path):
 
-    assembly = mongo_client.collection().find_one({
-        'type': 'Assembly',
-        'name': config.get(section_name, 'assembly')
-    })
-    assembly_id = assembly["id"]
+    assembly = Assembly.objects(type='Assembly', name=config.get(section_name, 'assembly'))[0]
 
     mysql_client = MySQLClient(config, section_name)
 
@@ -66,19 +65,19 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         region_results = cursor.fetchall()
 
         genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
-        chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
+        chromosome_checksums = MockChromosomeChecksum(genome_id, chr_checksums_path)
 
-        formatted_results = [format_region(result, assembly_id, genome_id, chromosome_checksums) for result in region_results]
+        formatted_results = [format_region(result, assembly.assembly_id, genome_id, chromosome_checksums) for result in region_results]
 
         if len(formatted_results) == max_regions:
             raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")
-        mongo_client.collection().insert_many(formatted_results)
+
+        Region.objects.insert(formatted_results)
 
 
 if __name__ == "__main__":
     ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)
-    MONGO_COLLECTION = ARGS.mongo_collection
-    MONGO_CLIENT = MongoDbClient(CONFIG, MONGO_COLLECTION)
-    load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path, MONGO_CLIENT)
+    MONGO_CLIENT = MongoDbClient(CONFIG, "funky_collection")
+    load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path)
