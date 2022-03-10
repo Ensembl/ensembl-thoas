@@ -13,8 +13,6 @@
 """
 from configparser import NoOptionError
 
-import pymongo
-import mongomock
 from mongoengine import connect
 
 from scripts.mongoengine_documents.base import ThoasDocument
@@ -76,8 +74,13 @@ class FakeMongoDbClient:
 
     def __init__(self):
         'Override default setup'
-        self.mongo_db = mongomock.MongoClient().db
+        conn = connect('test_db', host='mongomock://localhost')
+        self.mongo_db = conn['test_db']
         self.collection_name = 'test'
+
+        def _get_collection_name():
+            return self.collection_name
+        ThoasDocument._get_collection_name = _get_collection_name
 
     def collection(self):
         return self.mongo_db[self.collection_name]

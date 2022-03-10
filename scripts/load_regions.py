@@ -19,15 +19,14 @@ from common.mongo import MongoDbClient
 from common.utils import format_region, get_genome_id
 from common.file_parser import MockChromosomeChecksum
 from common.mysql import MySQLClient
-
+from scripts.mongoengine_documents.genome import Assembly
 
 from scripts.mongoengine_documents.region import Region
 
 
 def load_regions(config, section_name, chr_checksums_path):
 
-    # TODO get the assembly_id properly
-    assembly_id = "ASM276v2"
+    assembly = Assembly.objects(type='Assembly', name=config.get(section_name, 'assembly'))[0]
 
     mysql_client = MySQLClient(config, section_name)
 
@@ -68,7 +67,7 @@ def load_regions(config, section_name, chr_checksums_path):
         genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
         chromosome_checksums = MockChromosomeChecksum(genome_id, chr_checksums_path)
 
-        formatted_results = [format_region(result, assembly_id, genome_id, chromosome_checksums) for result in region_results]
+        formatted_results = [format_region(result, assembly.assembly_id, genome_id, chromosome_checksums) for result in region_results]
 
         if len(formatted_results) == max_regions:
             raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")

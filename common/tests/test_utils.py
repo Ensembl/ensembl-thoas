@@ -17,6 +17,7 @@ from common.utils import *
 from common.mongo import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
 from common.file_parser import MockChromosomeChecksum as ChromosomeChecksum
+from scripts.mongoengine_documents.gene import Gene
 
 
 def test_stable_id():
@@ -833,14 +834,26 @@ def test_flush_buffer():
     mongo = FakeMongoDbClient()
 
     # empty buffer means no action
-    result = flush_buffer(mongo, [])
+    result = flush_buffer(Gene, [])
     assert not result
 
-    test_data = [{'test': 'a'} for _ in range(10)]
-    result = flush_buffer(mongo, test_data, flush_threshold=9)
+    test_data = [Gene(stable_id='a') for _ in range(10)]
+    result = flush_buffer(Gene, test_data, flush_threshold=9)
     assert not result
 
     result = mongo.collection().find()
     assert mongo.collection().count_documents({}) == 10
 
     # Struggled to meaningfully test exception behaviour
+
+
+def test_format_gene_metadata():
+    test_metadata = {'biotype': {'value': 'protein_coding'},
+                     'name': {'accession_id': None,
+                              'source': {'id': None, 'name': None}}}
+
+    expected = {'biotype': {'metadata_value': 'protein_coding'},
+                     'name': {'accession_id': None,
+                              'source': {'external_db_id': None, 'name': None}}}
+    actual = format_gene_metadata(test_metadata)
+    assert actual == expected

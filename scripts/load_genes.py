@@ -21,17 +21,19 @@ from typing import Dict
 import ijson
 import pymongo
 
-
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
 from common.crossrefs import XrefResolver
 from common.logger import ThoasLogging
-from scripts.mongoengine_documents.gene import Gene
+from scripts.mongoengine_documents.gene import Gene, GeneMetadata
+from scripts.mongoengine_documents.genome import Assembly, Genome
+from scripts.mongoengine_documents.protein import Protein
 from scripts.mongoengine_documents.transcript import Transcript, ProductGeneratingContext, CDS, TranscriptMetadata
 
 lrg_detector = re.compile('^LRG')
+
 
 def create_index(mongo_client):
     '''
@@ -71,7 +73,8 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, gene_name_metadata, xref_resolver, logger):
+def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info,
+                   metadata_classifier, gene_name_metadata, xref_resolver, logger):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -113,9 +116,12 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                 gene_metadata['biotype'] = None
 
             try:
-                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene_name_metadata[gene['id']], xref_resolver, logger)
+                gene_metadata['name'] = common.utils.get_gene_name_metadata(gene_name_metadata[gene['id']],
+                                                                            xref_resolver, logger)
             except KeyError as ke:
                 gene_metadata['name'] = None
+
+            gene_metadata = common.utils.format_gene_metadata(gene_metadata)
 
             json_gene = Gene(type='Gene',
                              stable_id=common.utils.get_stable_id(gene["id"], gene["version"]),
@@ -126,7 +132,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                              alternative_symbols=gene['synonyms'] if 'synonyms' in gene else [],
                              # Note that the description comes the long way via xref
                              # pipeline and includes a [source: string]
-                             name=re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene['description'] is not None else None,
+                             name=re.sub(r'\[.*?\]', '', gene['description']).rstrip() if gene[
+                                                                                              'description'] is not None else None,
                              slice=common.utils.format_slice(
                                  region_name=gene['seq_region_name'],
                                  region_code=gene['coord_system']['name'],
@@ -134,15 +141,16 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                                  strand=int(gene['strand']),
                                  start=int(gene['start']),
                                  end=int(gene['end']),
-                                 genome_id=genome['id']
+                                 genome_id=genome.genome_id
                              ),
                              transcripts=[
                                  [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
                                   for transcript in gene['transcripts']]
                              ],
-                             genome_id=genome['id'],
+                             genome_id=genome.genome_id,
                              external_references=gene_xrefs,
-                             metadata=gene_metadata)
+                             metadata=GeneMetadata.from_json(json.dumps(gene_metadata))
+                             )
 
             gene_buffer.append(json_gene)
 
@@ -152,31 +160,25 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                     transcript=transcript,
                     gene=gene,
                     region_name=gene['seq_region_name'],
-                    genome_id=genome['id'],
+                    genome_id=genome.genome_id,
                     cds_info=cds_info,
                     phase_info=phase_info,
                     tr_metadata_info=tr_metadata_info
                 ))
 
-            gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
-            transcript_buffer = common.utils.flush_buffer(mongo_client, transcript_buffer)
+            gene_buffer = common.utils.flush_buffer(Gene, gene_buffer)
+            transcript_buffer = common.utils.flush_buffer(Transcript, transcript_buffer)
 
     # Flush buffers at end of gene data
     if len(gene_buffer) > 0:
-        mongo_client.collection().insert_many(gene_buffer)
+        Gene.objects.insert(gene_buffer)
     if len(transcript_buffer) > 0:
-        mongo_client.collection().insert_many(transcript_buffer)
+        Transcript.objects.insert(transcript_buffer)
 
 
-def get_genome_assembly(assembly_name, mongo_client):
-    assembly = mongo_client.collection().find_one({
-        'type': 'Assembly',
-        'name': assembly_name
-    })
-    genome = mongo_client.collection().find_one({
-        'type': 'Genome',
-        'name': assembly_name
-    })
+def get_genome_assembly(assembly_name):
+    assembly = Assembly.objects(type='Assembly', name=assembly_name)[0]
+    genome = Genome.objects(type='Genome', name=assembly_name)[0]
     if not genome or not assembly:
         raise IOError(f'Failed to fetch {assembly_name} assembly and genome info from MongoDB')
     return assembly, genome
@@ -323,7 +325,7 @@ def format_transcript(
     return new_transcript
 
 
-def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
+def load_product_info(product_filepath, cds_info, genome_id):
     protein_buffer = []
     with open(product_filepath, encoding='UTF-8') as protein_file:
         for line in protein_file:
@@ -335,9 +337,9 @@ def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
                     product_length=cds_info[product["transcript_id"]]['spliced_length'] // 3,
                     refget=refget)
             )
-            protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
+            protein_buffer = common.utils.flush_buffer(Protein, protein_buffer)
     if len(protein_buffer) > 0:
-        mongo_client.collection().insert_many(protein_buffer)
+        Protein.objects.insert(protein_buffer)
 
 
 def preload_cds_coords(production_name, assembly):
@@ -385,8 +387,10 @@ def preload_exon_phases(production_name, assembly):
 
     return phase_lookup
 
+
 def get_transcript_meta(row):
-    transcript_meta = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
+    transcript_meta = {'appris': None, 'tsl': None, 'mane': None, 'gencode_basic': None, 'biotype': None,
+                       'canonical': None}
     try:
         appris = APPRIS(row['appris'])
         if appris.parse_input():
@@ -413,6 +417,7 @@ def get_transcript_meta(row):
         pass
     return transcript_meta
 
+
 def preload_transcript_meta(production_name, assembly):
     transcript_meta = {}
     with open(production_name + '_' + assembly + '_attrib.csv', encoding='UTF-8') as file:
@@ -433,7 +438,8 @@ def preload_gene_name_metadata(production_name, assembly):
 
 
 def preload_classifiers(classifier_path):
-    meta_classifiers = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
+    meta_classifiers = {'appris': None, 'tsl': None, 'mane': None, 'gencode_basic': None, 'biotype': None,
+                        'canonical': None}
     for classifier in meta_classifiers:
         classifier_file = os.path.join(classifier_path, f"{classifier}.json")
         with open(classifier_file, encoding='UTF-8') as raw_classifier_file:
@@ -476,16 +482,17 @@ if __name__ == '__main__':
     print("Loading e! xref db name to id.org prefix mappings")
     XREF_RESOLVER = XrefResolver(internal_mapping_file=XREF_LOD_MAPPING_FILE)
     URL_LOGGER = None
-    ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
+    ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME)
 
     if ARGS.log_faulty_urls:
         URL_LOGGER = ThoasLogging(logging_file=f'url_log_{GENOME["id"]}', logger_name=f'url_logger_{GENOME["id"]}')
 
     print("Loading gene info into Mongo")
 
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA,
+                   METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
-    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
+    load_product_info(TRANSLATIONS_FILE, CDS_INFO, GENOME.genome_id)
 
     create_index(MONGO_CLIENT)

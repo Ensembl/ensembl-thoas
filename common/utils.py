@@ -16,7 +16,7 @@ from configparser import ConfigParser
 import argparse
 import sys
 from string import Template
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Type
 
 import pymongo
 import requests
@@ -24,7 +24,7 @@ import requests
 from scripts.mongoengine_documents.protein import SequenceFamily, FamilyMatch, ClosestDataProvider, Protein
 from scripts.mongoengine_documents.region import OntologyTerm, Region, Metadata
 from scripts.mongoengine_documents.base import Alphabet, Sequence, ExternalReference, ExternalMethod, ExternalDB, \
-    Location, Slice, Strand
+    Location, Slice, Strand, ThoasDocument
 from scripts.mongoengine_documents.transcript import Exon, Intron, SplicedExon, UTR, PhasedExon, CDNA
 
 
@@ -374,7 +374,7 @@ def format_cdna(transcript: Dict, refget, non_coding: bool = False) -> CDNA:
     sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.cdna)
 
     # Some non-coding transcripts don't have CDNA. Instead fetch NCRNA.
-    if non_coding and sequence.get('checksum') is None:
+    if non_coding and sequence.checksum is None:
         sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.ncrna)
 
     start = transcript['start']
@@ -544,14 +544,15 @@ def get_ontology_terms(region_code):
     ]
 
 
-def flush_buffer(mongo_client, buffer, flush_threshold=1000):
+def flush_buffer(document_type: Type[ThoasDocument], buffer: List[ThoasDocument], flush_threshold: int = 1000) -> \
+        List[ThoasDocument]:
     'Check if a buffer needs flushing, and insert documents when it does'
     if len(buffer) > flush_threshold:
         print('Pushing buffer into Mongo')
         # pymongo can generate size errors, but so can the server which gives
         # rise to a second kind of exception.
         try:
-            mongo_client.collection().insert_many(buffer)
+            document_type.objects.insert(buffer)
         except pymongo.errors.DocumentTooLarge:
             print(
                 f'One of these borked the pipeline for '
@@ -653,3 +654,14 @@ def check_and_log_urls(data, url_key, logger):
         data['error'] = "Unable to check URL"
         data['url_key'] = url_key
         logger.url_logger(**data)
+
+
+def format_gene_metadata(metadata: Dict) -> Dict:
+    """Convert 'id' key to 'external_db_id' in source field"""
+    for metadata_type in metadata:
+        if metadata[metadata_type]:
+            if 'source' in metadata[metadata_type]:
+                metadata[metadata_type]['source']['external_db_id'] = metadata[metadata_type]['source'].pop('id')
+            if 'value' in metadata[metadata_type]:
+                metadata[metadata_type]['metadata_value'] = metadata[metadata_type].pop('value')
+    return metadata
