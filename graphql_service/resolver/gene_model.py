@@ -26,6 +26,9 @@ PRODUCT_TYPE = ObjectType('Product')
 GENE_METADATA_TYPE = ObjectType('GeneMetadata')
 SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
+ASSEMBLY_TYPE = ObjectType('Assembly')
+EXTERNAL_DB_TYPE = ObjectType('ExternalDB')
+NCBI_TRANSCRIPT_TYPE = ObjectType('NCBITranscript')
 
 
 @QUERY_TYPE.field('gene')
@@ -95,7 +98,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
     xref_resolver = info.context['XrefResolver']
     name_metadata = gene_metadata['name']
 
-    source_id = name_metadata.get('source', {}).get('id')
+    source_id = name_metadata.get('source', {}).get('external_db_id')
 
     # If a gene does'nt have a source id, we cant find any information about the source and also the gene name URL
     if source_id is None:
@@ -219,16 +222,21 @@ def overlap_region(context: Dict, genome_id: str, region_id: str, start: int, en
     return results
 
 
-@PGC_TYPE.field('three_prime_utr')
-def resolve_three_prime_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
-    'Convert stored 3` UTR to GraphQL compatible form'
-    return pgc['3_prime_utr']
+# We cannot use 'id' as the name of a field in mongoengine documents, because it will clash with the auto-generated
+# 'id' field.  These methods convert the mongengine id fields to the 'id' field used in the GraphQL schema
+@ASSEMBLY_TYPE.field('id')
+def resolve_assembly_id(assembly: Dict, _: GraphQLResolveInfo) -> str:
+    return assembly['assembly_id']
 
 
-@PGC_TYPE.field('five_prime_utr')
-def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
-    'Convert stored 5` UTR to GraphQL compatible form'
-    return pgc['5_prime_utr']
+@EXTERNAL_DB_TYPE.field('id')
+def resolve_external_db_type(external_db: Dict, _: GraphQLResolveInfo) -> str:
+    return external_db['external_db_id']
+
+
+@NCBI_TRANSCRIPT_TYPE.field('id')
+def resolve_ncbi_transcript(ncbi_transcript: Dict, _: GraphQLResolveInfo) -> str:
+    return ncbi_transcript['ncbi_id']
 
 
 @QUERY_TYPE.field('product')
@@ -298,7 +306,7 @@ async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[D
 
     query = {
         'type': 'Assembly',
-        'id': region['assembly_id']
+        'assembly_id': region['assembly_id']
     }
 
     collection = info.context['mongo_db']

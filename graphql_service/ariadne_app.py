@@ -19,7 +19,8 @@ from starlette.requests import Request
 
 from graphql_service.resolver.gene_model import (
     QUERY_TYPE, GENE_TYPE, TRANSCRIPT_TYPE, PGC_TYPE,
-    PRODUCT_TYPE, SLICE_TYPE, REGION_TYPE, GENE_METADATA_TYPE
+    PRODUCT_TYPE, SLICE_TYPE, REGION_TYPE, GENE_METADATA_TYPE,
+    ASSEMBLY_TYPE, EXTERNAL_DB_TYPE
 )
 
 
@@ -37,7 +38,9 @@ def prepare_executable_schema() -> GraphQLSchema:
         PRODUCT_TYPE,
         GENE_METADATA_TYPE,
         SLICE_TYPE,
-        REGION_TYPE
+        REGION_TYPE,
+        ASSEMBLY_TYPE,
+        EXTERNAL_DB_TYPE
     )
 
 

@@ -202,10 +202,10 @@ class XrefResolver():
 
         try:
             xref['url'] = self.find_url_using_ens_xref_db_name(
-                xref['accession_id'], xref['source']['id']
+                xref['accession_id'], xref['source']['external_db_id']
             )
             xref['source']['url'] = self.source_information_retriever(
-                self.translate_xref_db_name_to_id_org_ns_prefix(xref['source']['id']), 'resourceHomeUrl'
+                self.translate_xref_db_name_to_id_org_ns_prefix(xref['source']['external_db_id']), 'resourceHomeUrl'
             )
             xref['assignment_method']['description'] = self.describe_info_type(xref['assignment_method']['type'])
             return xref

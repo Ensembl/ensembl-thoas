@@ -100,7 +100,7 @@ def test_annotate_function(resolver):
     response = resolver.annotate_crossref({
         'accession_id': '1',
         'source': {
-            'id': 'CHEBI'
+            'external_db_id': 'CHEBI'
         },
         'assignment_method': {
             'type': 'DIRECT',
@@ -108,7 +108,7 @@ def test_annotate_function(resolver):
         }
     })
     assert response['accession_id'] == '1'
-    assert response['source']['id'] == 'CHEBI'
+    assert response['source']['external_db_id'] == 'CHEBI'
     assert response['url'] == 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:1'
     assert response['source']['url'] == 'https://www.ebi.ac.uk/chebi/'
     assert response['assignment_method']['description'] == 'A reference made by an external resource of annotation to an Ensembl feature that Ensembl imports without modification'

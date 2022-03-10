@@ -15,7 +15,7 @@ class Metadata(EmbeddedDocument):
 
 
 class Region(ThoasDocument):
-    type = StringField()  # TODO somehow turn this into a class variable with value "Region"
+    type = StringField(default="Region")
     region_id = StringField()
     name = StringField()
     length = IntField()

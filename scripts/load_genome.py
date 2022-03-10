@@ -16,7 +16,7 @@ import json
 import pymongo
 
 import common.utils
-from common.mongo import MongoDbClient
+from common.mongoengine import MongoDbClient
 from scripts.mongoengine_documents.genome import Assembly, Species, Genome
 
 
@@ -32,8 +32,7 @@ def load_genome_info(source_file):
         except json.decoder.JSONDecodeError as error:
             raise IOError(f'Failed to parse genome file at {source_file} with error {error}') from error
 
-        Assembly(type='Assembly',
-                 default=True,
+        Assembly(default=True,
                  assembly_id=doc['assembly']['name'],
                  name=doc['assembly']['default'],
                  accession_id=doc['assembly']['accession'],
@@ -41,8 +40,7 @@ def load_genome_info(source_file):
                  species=doc['organism']['name']
                  ).save()
 
-        Species(type='Species',
-                species_id=doc['organism']['name'],
+        Species(species_id=doc['organism']['name'],
                 scientific_name=doc['organism']['scientific_name'],
                 taxon_id=doc['organism']['species_taxonomy_id']
                 ).save()
@@ -50,8 +48,7 @@ def load_genome_info(source_file):
         # "Genome" (name to be used quietly), represents the sum of related
         # information that people will want to use together. It allows users
         # remember less between interactions, and ask shorter queries
-        Genome(type='Genome',
-               genome_id=common.utils.get_genome_id(doc['organism']['name'], doc['assembly']['accession']),
+        Genome(genome_id=common.utils.get_genome_id(doc['organism']['name'], doc['assembly']['accession']),
                name=doc['assembly']['default'],
                assembly=doc['assembly']['name'],
                species=doc['organism']['name']

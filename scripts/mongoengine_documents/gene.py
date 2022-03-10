@@ -4,7 +4,7 @@ from scripts.mongoengine_documents.base import ThoasDocument, Location, Strand, 
 
 
 class GeneBiotypeMetadata(EmbeddedDocument):
-    metadata_value = StringField()  # TODO update resolvers
+    value = StringField()
     label = StringField()
     definition = StringField()
     description = StringField()
@@ -12,7 +12,7 @@ class GeneBiotypeMetadata(EmbeddedDocument):
 
 class GeneNameMetadata(EmbeddedDocument):
     accession_id = StringField()
-    metadata_value = StringField()  # TODO update resolvers
+    value = StringField()
     url = StringField()
     source = EmbeddedDocumentField(ExternalDB)
 
@@ -23,7 +23,7 @@ class GeneMetadata(EmbeddedDocument):
 
 
 class Gene(ThoasDocument):
-    type = StringField()
+    type = StringField(default="Gene")
     stable_id = StringField()
     unversioned_stable_id = StringField()
     version = IntField()

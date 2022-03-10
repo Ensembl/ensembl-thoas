@@ -394,7 +394,7 @@ def test_url_generation(basic_data):
         },
         'description': 'Chemistry is the best',
         'source': {
-            'id': 'ChEBI',
+            'external_db_id': 'ChEBI',
             'name': 'Chemical Entities of Biological Interest',
             'description': None,
             'release': 10

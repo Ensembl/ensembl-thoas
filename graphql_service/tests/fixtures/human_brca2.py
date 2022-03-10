@@ -35,7 +35,7 @@ def build_gene():
                 'value': 'BRCA2 DNA repair associated',
                 'url': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:1101',
                 'source': {
-                    'id': 'HGNC',
+                    'external_db_id': 'HGNC',
                     'name': 'HGNC Symbol',
                     'description': 'HUGO Genome Nomenclature Committee',
                     'url': 'https://www.genenames.org/',
@@ -336,7 +336,7 @@ def build_products():
                 },
                 'source': {
                     'name': 'UniProtKB/TrEMBL',
-                    'id': 'Uniprot/SPTREMBL',
+                    'external_db_id': 'Uniprot/SPTREMBL',
                     'description': None,
                     'release': None
                 }
@@ -385,7 +385,7 @@ def build_assembly():
     return {
         "type": "Assembly",
         "default": True,
-        "id": "GRCh38.p13",
+        "assembly_id": "GRCh38.p13",
         "name": "GRCh38",
         "accession_id": "GCA_000001405.28",
         "accessioning_body": "EGA",

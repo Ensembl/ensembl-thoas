@@ -15,7 +15,7 @@
 from mysql.connector import DataError
 
 import common.utils
-from common.mongo import MongoDbClient
+from common.mongoengine import MongoDbClient
 from common.utils import format_region, get_genome_id
 from common.file_parser import MockChromosomeChecksum
 from common.mysql import MySQLClient

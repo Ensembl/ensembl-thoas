@@ -11,7 +11,7 @@ def build_wheat_genes():
                     'value': 'Sulfotransferase [Source:UniProtKB/TrEMBL;Acc:A0A1D5TR86]',
                     'url': None,
                     'source': {
-                        'id': 'UniProtKB/TrEMBL',
+                        'external_db_id': 'UniProtKB/TrEMBL',
                         'name': 'UniProtKB/TrEMBL',
                         'description': None,
                         'url': None,
@@ -30,7 +30,7 @@ def build_wheat_genes():
                     'value': None,
                     'url': None,
                     'source': {
-                        'id': 'UniProtKB/TrEMBL',
+                        'external_db_id': 'UniProtKB/TrEMBL',
                         'name': 'UniProtKB/TrEMBL',
                         'description': None,
                         'url': None,
@@ -49,7 +49,7 @@ def build_wheat_genes():
                     'value': 'Sulfotransferase [Source:UniProtKB/TrEMBL;Acc:A0A1D5TR86]',
                     'url': None,
                     'source': {
-                        'id': None,
+                        'external_db_id': None,
                         'name': 'UniProtKB/TrEMBL',
                         'description': None,
                         'url': None,
@@ -68,7 +68,7 @@ def build_wheat_genes():
                     'value': 'Sulfotransferase [Source:UniProtKB/TrEMBL;Acc:A0A1D5TR86]',
                     'url': None,
                     'source': {
-                        'id': 'UniProtKB/TrEMBL',
+                        'external_db_id': 'UniProtKB/TrEMBL',
                         'name': None,
                         'description': None,
                         'url': None,

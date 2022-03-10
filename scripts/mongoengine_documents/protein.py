@@ -27,7 +27,7 @@ class FamilyMatch(EmbeddedDocument):
 
 
 class Protein(ThoasDocument):
-    type = StringField()
+    type = StringField(default="Protein")
     unversioned_stable_id = StringField()
     stable_id = StringField()
     version = IntField()

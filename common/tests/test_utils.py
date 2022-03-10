@@ -14,7 +14,7 @@
 import json
 
 from common.utils import *
-from common.mongo import FakeMongoDbClient
+from common.mongoengine import FakeMongoDbClient
 from common.refget_postgresql import MockRefgetDB as RefgetDB
 from common.file_parser import MockChromosomeChecksum as ChromosomeChecksum
 from scripts.mongoengine_documents.gene import Gene
@@ -852,7 +852,7 @@ def test_format_gene_metadata():
                      'name': {'accession_id': None,
                               'source': {'id': None, 'name': None}}}
 
-    expected = {'biotype': {'metadata_value': 'protein_coding'},
+    expected = {'biotype': {'value': 'protein_coding'},
                      'name': {'accession_id': None,
                               'source': {'external_db_id': None, 'name': None}}}
     actual = format_gene_metadata(test_metadata)

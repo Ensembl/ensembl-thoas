@@ -16,7 +16,7 @@ class Exon(EmbeddedDocument):
     stable_id = StringField()
     unversioned_stable_id = StringField()
     version = IntField()
-    so_term = StringField() # TODO Try to set this to "exon"
+    so_term = StringField()
     slice = EmbeddedDocumentField(Slice)
 
 
@@ -53,7 +53,7 @@ class CDNA(EmbeddedDocument):
 class ProductGeneratingContext(EmbeddedDocument):
     product_type = StringField()
     five_prime_utr = EmbeddedDocumentField(UTR)
-    three_prime_utr = EmbeddedDocumentField(UTR)  # TODO update resolvers, which expect '3_prime_utr'
+    three_prime_utr = EmbeddedDocumentField(UTR)
     cds = EmbeddedDocumentField(CDS)
     product_id = StringField()
     phased_exons = ListField(EmbeddedDocumentField(PhasedExon))
@@ -65,7 +65,7 @@ class Intron(EmbeddedDocument):
     type = StringField()
     index = IntField()
     slice = EmbeddedDocumentField(Slice)
-    so_term = StringField()  # TODO default to "intron"??
+    so_term = StringField()
     relative_location = EmbeddedDocumentField(Location)
     sequence_checksum = StringField()
 
@@ -83,17 +83,30 @@ class TranscriptMetadataElement(EmbeddedDocument):
     description = StringField()
 
 
+class NCBITranscript(EmbeddedDocument):
+    ncbi_id = StringField()
+    url = StringField()
+
+
+class TranscriptManeMetadataElement(EmbeddedDocument):
+    value = StringField()
+    label = StringField()
+    definition = StringField()
+    description = StringField()
+    ncbi_transcript = EmbeddedDocumentField(NCBITranscript)
+
+
 class TranscriptMetadata(EmbeddedDocument):
     appris = EmbeddedDocumentField(TranscriptMetadataElement)
     tsl = EmbeddedDocumentField(TranscriptMetadataElement)
-    mane = EmbeddedDocumentField(TranscriptMetadataElement)  # TODO do something different for this one, like in the graphql schema?
+    mane = EmbeddedDocumentField(TranscriptManeMetadataElement)
     gencode_basic = EmbeddedDocumentField(TranscriptMetadataElement)
     biotype = EmbeddedDocumentField(TranscriptMetadataElement)
     canonical = EmbeddedDocumentField(TranscriptMetadataElement)
 
 
 class Transcript(ThoasDocument):
-    type = StringField()
+    type = StringField(default="Transcript")
     gene = StringField()
     stable_id = StringField()
     unversioned_stable_id = StringField()

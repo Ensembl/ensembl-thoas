@@ -23,7 +23,7 @@ import pymongo
 
 import common.utils
 from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
-from common.mongo import MongoDbClient
+from common.mongoengine import MongoDbClient
 from common.refget_postgresql import RefgetDB
 from common.crossrefs import XrefResolver
 from common.logger import ThoasLogging
@@ -123,8 +123,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
 
             gene_metadata = common.utils.format_gene_metadata(gene_metadata)
 
-            json_gene = Gene(type='Gene',
-                             stable_id=common.utils.get_stable_id(gene["id"], gene["version"]),
+            json_gene = Gene(stable_id=common.utils.get_stable_id(gene["id"], gene["version"]),
                              unversioned_stable_id=gene['id'],
                              version=gene['version'],
                              so_term=gene['biotype'],
@@ -226,8 +225,7 @@ def format_transcript(
 
     ####TODO: Type and release version
 
-    new_transcript = Transcript(type='Transcript',
-                                gene=common.utils.get_stable_id(gene["id"], gene["version"]),
+    new_transcript = Transcript(gene=common.utils.get_stable_id(gene["id"], gene["version"]),
                                 stable_id=common.utils.get_stable_id(transcript["id"], transcript["version"]),
                                 unversioned_stable_id=transcript['id'],
                                 version=transcript['version'],

@@ -431,8 +431,7 @@ def format_protein(protein, genome_id, product_length, refget):
     stable_id = get_stable_id(protein['id'], protein['version'])
     sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.pep)
 
-    return Protein(type="Protein",
-                   unversioned_stable_id=protein['id'],
+    return Protein(unversioned_stable_id=protein['id'],
                    stable_id=stable_id,
                    version=protein['version'],
                    # for foreign key behaviour
@@ -515,8 +514,7 @@ def format_region(region_mysql_result, assembly_id, genome_id, chromosome_checks
     checksum = chromosome_checksums.get_checksum(region_mysql_result["name"])
     sequence = Sequence(alphabet=get_alphabet_info('dna'), checksum=checksum)
 
-    return Region(type="Region",
-                  region_id=f'{genome_id}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
+    return Region(region_id=f'{genome_id}_{region_mysql_result["name"]}_{region_mysql_result["code"]}',
                   name=region_mysql_result["name"],
                   code=region_mysql_result["code"],
                   length=region_mysql_result["length"],
@@ -662,6 +660,4 @@ def format_gene_metadata(metadata: Dict) -> Dict:
         if metadata[metadata_type]:
             if 'source' in metadata[metadata_type]:
                 metadata[metadata_type]['source']['external_db_id'] = metadata[metadata_type]['source'].pop('id')
-            if 'value' in metadata[metadata_type]:
-                metadata[metadata_type]['metadata_value'] = metadata[metadata_type].pop('value')
     return metadata

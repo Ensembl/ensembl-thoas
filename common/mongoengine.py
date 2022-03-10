@@ -14,7 +14,9 @@
 from configparser import NoOptionError
 
 import pymongo
-import mongomock
+from mongoengine import connect
+
+from scripts.mongoengine_documents.base import ThoasDocument
 
 
 class MongoDbClient:
@@ -35,7 +37,13 @@ class MongoDbClient:
             if not collection_name:
                 raise IOError("Unable to find a MongoDB collection name") from no_option_error
             self.collection_name = collection_name
-            print(f'Using injected MongoDB collection with name {self.collection_name}')
+            print(f'Using MongoDB collection name {self.collection_name}')
+
+        # We need to monkey-patch _get_collection_name so that all subclasses of ThoasDocument get written to the same
+        # collection
+        def _get_collection_name():
+            return self.collection_name
+        ThoasDocument._get_collection_name = _get_collection_name
 
     @staticmethod
     def connect_mongo(config):
@@ -47,12 +55,9 @@ class MongoDbClient:
         password = config.get('MONGO DB', 'password')
         dbname = config.get('MONGO DB', 'db')
 
-        client = pymongo.MongoClient(
-            host,
-            port,
-            read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED
-        )
-        client.admin.authenticate(user, password)
+        client = connect(db=dbname, username=user, password=password, host=host, authentication_source='admin',
+                         port=port, read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED)
+
         print('connected to MongoDB ' + host)
         return client[dbname]
 
@@ -70,8 +75,13 @@ class FakeMongoDbClient:
 
     def __init__(self):
         'Override default setup'
-        self.mongo_db = mongomock.MongoClient().db
+        conn = connect('test_db', host='mongomock://localhost')
+        self.mongo_db = conn['test_db']
         self.collection_name = 'test'
+
+        def _get_collection_name():
+            return self.collection_name
+        ThoasDocument._get_collection_name = _get_collection_name
 
     def collection(self):
         return self.mongo_db[self.collection_name]

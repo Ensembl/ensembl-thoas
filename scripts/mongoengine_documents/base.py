@@ -7,7 +7,7 @@ class ThoasDocument(Document):
 
 class ExternalDB(EmbeddedDocument):
     name = StringField()
-    external_db_id = StringField()  # TODO update resolver
+    external_db_id = StringField()
     description = StringField()
     url = StringField()
     release = StringField()
