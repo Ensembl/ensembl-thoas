@@ -11,20 +11,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from configparser import ConfigParser
 
 from mysql.connector import DataError
 
 import common.utils
 from common.mongoengine import MongoDbClient
 from common.utils import format_region, get_genome_id
-from common.file_parser import MockChromosomeChecksum
+from common.file_parser import ChromosomeChecksum
 from common.mysql import MySQLClient
 from scripts.mongoengine_documents.genome import Assembly
 
 from scripts.mongoengine_documents.region import Region
 
 
-def load_regions(config, section_name, chr_checksums_path):
+def load_regions(config: ConfigParser, section_name: str, chr_checksums_path: str) -> None:
 
     assembly = Assembly.objects(type='Assembly', name=config.get(section_name, 'assembly'))[0]
 
@@ -65,7 +66,7 @@ def load_regions(config, section_name, chr_checksums_path):
         region_results = cursor.fetchall()
 
         genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
-        chromosome_checksums = MockChromosomeChecksum(genome_id, chr_checksums_path)
+        chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
 
         formatted_results = [format_region(result, assembly.assembly_id, genome_id, chromosome_checksums) for result in region_results]
 
@@ -79,5 +80,5 @@ if __name__ == "__main__":
     ARGS = common.utils.parse_args()
 
     CONFIG = common.utils.load_config(ARGS.config_file)
-    MONGO_CLIENT = MongoDbClient(CONFIG, "funky_collection")
+    MONGO_CLIENT = MongoDbClient(CONFIG, ARGS.mongo_collection)
     load_regions(CONFIG, ARGS.section_name, ARGS.chr_checksums_path)
