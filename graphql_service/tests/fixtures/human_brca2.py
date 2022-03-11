@@ -385,7 +385,7 @@ def build_assembly():
     return {
         "type": "Assembly",
         "default": True,
-        "id": "GRCh38.p13",
+        "assembly_id": "GRCh38.p13",
         "name": "GRCh38",
         "accession_id": "GCA_000001405.28",
         "accessioning_body": "EGA",
