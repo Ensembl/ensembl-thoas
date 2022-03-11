@@ -49,7 +49,8 @@ def retrieve_gene_name_metadata(sp_production_name, sp_assembly_name, mysql_curs
                           }
 
         gene_name_info = extractor(gene, gene_name_info)
-        if gene_name_info.get('external_db_name') is None: gene_name_info = backup_extractor(gene, gene_name_info)
+        if gene_name_info.get('external_db_name') is None:
+            gene_name_info = backup_extractor(gene, gene_name_info)
 
         # Add all the possible information retrieved. Also add if no 'display_xref_id' and 'description'.
         gene_names.append(gene_name_info)

@@ -247,7 +247,7 @@ def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id
     result = collection.find_one(query)
 
     if not result:
-        raise ProductNotFoundError(genome_id, stable_id)
+        raise ProductNotFoundError(stable_id, genome_id)
     return result
 
 
