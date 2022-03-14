@@ -74,7 +74,6 @@ if __name__ == '__main__':
 
     ARGS = common.utils.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)
-    MONGO_COLLECTION = ARGS.mongo_collection
     MONGO_CLIENT = MongoDbClient(CONFIG, ARGS.mongo_collection)
 
     # Combine arguments to give the path to the relevant $species_genome.json file
