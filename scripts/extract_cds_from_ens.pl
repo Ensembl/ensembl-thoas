@@ -20,6 +20,7 @@ my $assembly; # Required to differentiate between assemblies of the same species
 my $host = 'ensembldb.ensembl.org'; # Very slow!
 my $user = 'anonymous';
 my $port = 3306;
+my $division; # Required to narrow down the database in case of a multi division species
 my $meta_host = 'mysql-ens-meta-prod-1.ebi.ac.uk';
 my $meta_port = 4483;
 my $meta_dbname = 'ensembl_metadata';
@@ -36,6 +37,7 @@ GetOptions(
   "host=s" => \$host,
   "user=s" => \$user,
   "port=i" => \$port,
+  "division=s" => \$division,
   "meta_host=s" => \$meta_host,
   "meta_port=i" => \$meta_port,
   "meta_dbname=s" => \$meta_dbname,
@@ -60,56 +62,34 @@ print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MAN
 my $transcript_adaptor;
 my $attribute_adaptor;
 my @transcript_attribute_codes = ('gencode_basic', 'appris', 'TSL', 'MANE_Select','MANE_Plus_Clinical');
-if ($host =~ /mysql-ens-sta-6/) {
-  my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
-                       -USER => $meta_user,
-                       -DBNAME => $meta_dbname,
-                       -HOST => $meta_host,
-                       -PORT => $meta_port);
-  my $gdba = $metadata_dba->get_GenomeInfoAdaptor($EG_VERSION);
 
-  $gdba->set_ensembl_genomes_release($EG_VERSION);
-  #$gdba->set_ensembl_release($ENS_VERSION);
-  # Database host, port, user needs to be changed based on where the data is for species/division
-  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
-    -user => $user,
-    -port => $port,
-    -host => $host,
-    -adaptor=>$gdba
-  );
-  my $dbas = $lookup->get_by_name_exact($species);
-  $transcript_adaptor = ${ $dbas }[1]->get_adaptor("Transcript");
-  $attribute_adaptor = ${ $dbas }[1]->get_AttributeAdaptor();
-}
-elsif( ($host =~ /mysql-ens-sta-6/) && ($assembly eq 'GRCh37' ) ){
 my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
-                       -USER => $meta_user,
-                       -DBNAME => 'ensembl_metadata_grch37',
-                       -HOST => $meta_host,
-                       -PORT => $meta_port);
-  my $gdba = $metadata_dba->get_GenomeInfoAdaptor($ENS_VERSION);
+                   -USER => $meta_user,
+                   -DBNAME => $meta_dbname,
+                   -HOST => $meta_host,
+                   -PORT => $meta_port);
 
-  #$gdba->set_ensembl_genomes_release($EG_VERSION);
-  $gdba->set_ensembl_release($ENS_VERSION);
-  my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
-    -user => $user,
-    -port => $port,
-    -host => $host,
-    -adaptor=>$gdba
-  );
-  my $dbas = $lookup->get_by_name_exact($species);
-  $transcript_adaptor = ${ $dbas }[0]->get_adaptor("Transcript");
-  $attribute_adaptor = ${ $dbas }[0]->get_AttributeAdaptor();
-}else {
-  $registry->load_registry_from_db(
-    -host => $host,
-    -user => $user,
-    -species => $species,
-    -port => $port
-  );
-  $transcript_adaptor = $registry->get_adaptor($species, 'core', 'Transcript');
-  $attribute_adaptor = $registry->get_adaptor($species, 'core', 'Attribute');
-}
+my $gdba = $metadata_dba->get_GenomeInfoAdaptor();
+$gdba->set_ensembl_genomes_release($EG_VERSION);
+$gdba->set_ensembl_release($ENS_VERSION);
+
+my $genome_infos = $gdba->fetch_by_any_name($species);
+
+# Pick the correct genomeinfo in case of multi division species like Caenorhabditis elegans
+my ($genome_info) = grep($_->division() eq join('', "Ensembl",ucfirst($division)), @$genome_infos);
+
+# Database host, port, user needs to be changed based on where the data is for species/division
+my $lookup = Bio::EnsEMBL::LookUp::RemoteLookUp->new(
+-user => $user,
+-port => $port,
+-host => $host,
+-adaptor=>$gdba
+);
+
+my $dbas = $lookup->genome_to_dba($genome_info);
+
+$transcript_adaptor = $dbas->get_adaptor("Transcript");
+$attribute_adaptor = $dbas->get_AttributeAdaptor();
 
 my $transcripts = $transcript_adaptor->fetch_all;
 my $x = 0;
