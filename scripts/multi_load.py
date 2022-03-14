@@ -55,7 +55,7 @@ async def run_assembly(args):
     mongo_collection_name = get_default_collection_name()
 
     shell_command = f'''
-        perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]};\
+        perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --division={args["division"]};\
         python {code}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
