@@ -132,13 +132,13 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                     strand=int(gene['strand']),
                     start=int(gene['start']),
                     end=int(gene['end']),
-                    genome_id=genome['id']
+                    genome_id=genome['genome_id']
                 ),
                 'transcripts': [
                     [common.utils.get_stable_id(transcript["id"], transcript["version"]) \
                      for transcript in gene['transcripts']]
                 ],
-                'genome_id': genome['id'],
+                'genome_id': genome['genome_id'],
                 'external_references': gene_xrefs,
                 'metadata' : gene_metadata
             }
@@ -150,7 +150,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                     transcript=transcript,
                     gene=gene,
                     region_name=gene['seq_region_name'],
-                    genome_id=genome['id'],
+                    genome_id=genome['genome_id'],
                     cds_info=cds_info,
                     phase_info=phase_info,
                     tr_metadata_info=tr_metadata_info
@@ -477,13 +477,13 @@ if __name__ == '__main__':
     ASSEMBLY, GENOME = get_genome_assembly(ASSEMBLY_NAME, MONGO_CLIENT)
 
     if ARGS.log_faulty_urls:
-        URL_LOGGER = ThoasLogging(logging_file=f'url_log_{GENOME["id"]}', logger_name=f'url_logger_{GENOME["id"]}')
+        URL_LOGGER = ThoasLogging(logging_file=f'url_log_{GENOME["genome_id"]}', logger_name=f'url_logger_{GENOME["genome_id"]}')
 
     print("Loading gene info into Mongo")
 
     load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
-    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
+    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['genome_id'])
 
     create_index(MONGO_CLIENT)

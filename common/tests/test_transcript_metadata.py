@@ -11,8 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from common.transcript_metadata import TSL, APPRIS, MANE, GencodeBasic, Biotype, EnsemblCanonical
 
-from common.transcript_metadata import *
 
 def test_parse_input_tsl1():
     '''

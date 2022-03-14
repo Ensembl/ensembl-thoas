@@ -27,7 +27,7 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         'type': 'Assembly',
         'name': config.get(section_name, 'assembly')
     })
-    assembly_id = assembly["id"]
+    assembly_id = assembly["assembly_id"]
 
     mysql_client = MySQLClient(config, section_name)
 

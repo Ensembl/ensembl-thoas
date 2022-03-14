@@ -26,6 +26,7 @@ PRODUCT_TYPE = ObjectType('Product')
 GENE_METADATA_TYPE = ObjectType('GeneMetadata')
 SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
+ASSEMBLY_TYPE = ObjectType('Assembly')
 
 
 @QUERY_TYPE.field('gene')
@@ -219,6 +220,13 @@ def overlap_region(context: Dict, genome_id: str, region_id: str, start: int, en
     return results
 
 
+# We cannot use 'id' as the name of a field in mongoengine documents, because it will clash with the auto-generated
+# 'id' field.  This converts the mongengine id fields to the 'id' field used in the GraphQL schema
+@ASSEMBLY_TYPE.field('id')
+def resolve_assembly_id(assembly: Dict, _: GraphQLResolveInfo) -> str:
+    return assembly['assembly_id']
+
+
 @PGC_TYPE.field('three_prime_utr')
 def resolve_three_prime_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
     'Convert stored 3` UTR to GraphQL compatible form'
@@ -247,7 +255,7 @@ def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id
     result = collection.find_one(query)
 
     if not result:
-        raise ProductNotFoundError(genome_id, stable_id)
+        raise ProductNotFoundError(stable_id, genome_id)
     return result
 
 
@@ -298,7 +306,7 @@ async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[D
 
     query = {
         'type': 'Assembly',
-        'id': region['assembly_id']
+        'assembly_id': region['assembly_id']
     }
 
     collection = info.context['mongo_db']
