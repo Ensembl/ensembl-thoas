@@ -458,10 +458,10 @@ if __name__ == '__main__':
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
 
+    REFGET = RefgetDB(RELEASE, ASSEMBLY_NAME, CONFIG)
     if division in ['plants', 'protists', 'bacteria']:
         REFGET = RefgetDB(NV_RELEASE, ASSEMBLY_NAME, CONFIG)
-    if division in ['vertebrates', 'metazoa']:
-        REFGET = RefgetDB(RELEASE, ASSEMBLY_NAME, CONFIG)
+
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
