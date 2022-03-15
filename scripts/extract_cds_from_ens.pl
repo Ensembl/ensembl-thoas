@@ -23,7 +23,7 @@ my $port = 3306;
 my $division; # Required to narrow down the database in case of a multi division species
 my $meta_host = 'mysql-ens-meta-prod-1.ebi.ac.uk';
 my $meta_port = 4483;
-my $meta_dbname = 'ensembl_metadata';
+my $meta_dbname;
 my $meta_user = 'ensro';
 my $help;
 # Set Ensembl/EnsemblGenomes release version.
@@ -62,6 +62,8 @@ print $attrib_fh 'transcript ID,gencode_basic,appris,biotype,TSL,MANE_Select,MAN
 my $transcript_adaptor;
 my $attribute_adaptor;
 my @transcript_attribute_codes = ('gencode_basic', 'appris', 'TSL', 'MANE_Select','MANE_Plus_Clinical');
+
+$meta_dbname =  $assembly eq 'GRCh37' ? 'ensembl_metadata_grch37' : 'ensembl_metadata';
 
 my $metadata_dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
                    -USER => $meta_user,
