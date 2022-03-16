@@ -3,13 +3,10 @@ name: PyTest
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push (all branches) or pull request (on master only) events
-  push:
-    branches:
-      - '**'  # matches every branch (https://stackoverflow.com/a/57903434/4488332)
+  # Triggers the workflow on pull request (on main only) events
   pull_request:
     branches:
-      - master
+      - main
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
