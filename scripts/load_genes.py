@@ -67,7 +67,7 @@ def create_index(mongo_client):
     ], name='protein_fk')
 
 
-def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, gene_name_metadata, xref_resolver, logger):
+def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_info, tr_metadata_info, metadata_classifier, gene_name_metadata, xref_resolver, refget, logger):
     """
     Reads from "custom download" gene JSON dumps and converts to suit
     Core Data Modelling schema.
@@ -153,7 +153,8 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                     genome_id=genome['id'],
                     cds_info=cds_info,
                     phase_info=phase_info,
-                    tr_metadata_info=tr_metadata_info
+                    tr_metadata_info=tr_metadata_info,
+                    refget=refget
                 ))
 
             gene_buffer = common.utils.flush_buffer(mongo_client, gene_buffer)
@@ -182,7 +183,7 @@ def get_genome_assembly(assembly_name, mongo_client):
 
 def format_transcript(
         transcript, gene, region_name, genome_id,
-        cds_info, phase_info, tr_metadata_info
+        cds_info, phase_info, tr_metadata_info, refget
 ):
     '''
     Transform and supplement transcript information
@@ -321,7 +322,7 @@ def format_transcript(
     return new_transcript
 
 
-def load_product_info(mongo_client, product_filepath, cds_info, genome_id):
+def load_product_info(mongo_client, product_filepath, cds_info, genome_id, refget):
     protein_buffer = []
     with open(product_filepath, encoding='UTF-8') as protein_file:
         for line in protein_file:
@@ -457,10 +458,10 @@ if __name__ == '__main__':
     NV_RELEASE = int(RELEASE) - 53
     division = CONFIG.get(SPECIES, 'division')
 
+    REFGET = RefgetDB(RELEASE, ASSEMBLY_NAME, CONFIG)
     if division in ['plants', 'protists', 'bacteria']:
-        refget = RefgetDB(NV_RELEASE, ASSEMBLY_NAME, CONFIG)
-    if division in ['vertebrates', 'metazoa']:
-        refget = RefgetDB(RELEASE, ASSEMBLY_NAME, CONFIG)
+        REFGET = RefgetDB(NV_RELEASE, ASSEMBLY_NAME, CONFIG)
+
     print("Loading CDS data")
     CDS_INFO = preload_cds_coords(ARGS.species, ARGS.assembly)
     print(f'Propagated {len(CDS_INFO)} CDS elements')
@@ -481,9 +482,9 @@ if __name__ == '__main__':
 
     print("Loading gene info into Mongo")
 
-    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, URL_LOGGER)
+    load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, REFGET, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
-    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'])
+    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'], REFGET)
 
     create_index(MONGO_CLIENT)
