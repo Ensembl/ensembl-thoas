@@ -44,9 +44,9 @@ async def run_assembly(args):
     code = get_repo_path()
     # Append the correct release number, division, and override the base path for GRCh37
     if args['assembly'] == 'GRCh37':
-        data = '/hps/nobackup/flicek/ensembl/apps/shared/thoas/vertebrates/json/'
+        data_path = args["grch37_data_path"]
     else:
-        data = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
+        data_path = f'{args["base_data_path"]}/release-{args["release"]}/{args["division"]}/json/'
 
     collection_param = '' if 'collection' not in args else f'--collection {args["collection"]}'
 
@@ -58,8 +58,8 @@ async def run_assembly(args):
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --division={args["division"]};\
         python {code}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
         python {code}/dump_proteins.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
-        python {code}/load_genome.py --data_path {data} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
-        python {code}/load_genes.py --data_path {data} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} --mongo_collection={mongo_collection_name} {log_faulty_urls};\
+        python {code}/load_genome.py --data_path {data_path} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name};\
+        python {code}/load_genes.py --data_path {data_path} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} --mongo_collection={mongo_collection_name} {log_faulty_urls};\
         python {code}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --chr_checksums_path {args["chr_checksums_path"]}  --mongo_collection={mongo_collection_name}
     '''
     await asyncio.create_subprocess_shell(shell_command)
