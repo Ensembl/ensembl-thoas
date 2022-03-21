@@ -20,6 +20,8 @@ import os
 import subprocess
 from datetime import datetime
 
+from scripts.config_validator import validate_config
+
 
 def get_repo_path():
     return os.path.dirname(os.path.realpath(__file__))
@@ -74,6 +76,7 @@ if __name__ == '__main__':
         default='load.conf'
     )
     CONF_PARSER = configparser.ConfigParser()
+    validate_config(CONF_PARSER)
 
     CLI_ARGS = ARG_PARSER.parse_args()
     CONF_PARSER.read(CLI_ARGS.config)
