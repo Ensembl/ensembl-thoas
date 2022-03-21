@@ -76,10 +76,11 @@ if __name__ == '__main__':
         default='load.conf'
     )
     CONF_PARSER = configparser.ConfigParser()
-    validate_config(CONF_PARSER)
 
     CLI_ARGS = ARG_PARSER.parse_args()
     CONF_PARSER.read(CLI_ARGS.config)
+    validate_config(CONF_PARSER)
+
     print(f'Dumping data to {os.getcwd()} and loading to MongoDB')
 
     # each section of the file dictates a particular assembly to work on

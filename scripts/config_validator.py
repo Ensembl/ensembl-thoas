@@ -49,14 +49,14 @@ def validate_config(config_parser: ConfigParser) -> None:
 
 def check_file_path_exists(pathname: str, filepath: str) -> None:
     if not os.path.exists(filepath):
-        raise IOError(f"Error validating path provided for {pathname}.  Corresponding path {filepath} does not exist.")
+        raise IOError(f"Error validating path provided for {pathname}.  Provided path {filepath} does not exist.")
 
 
 def check_required_fields(required_fields: Set[str], given_fields: Set[str], section: str = None) -> None:
     missing_fields = required_fields - given_fields
     if missing_fields:
         if section:
-            raise IOError(f"Required fields missing from section {section}.  Missing fields are: {missing_fields}")
+            raise IOError(f"Required fields missing from {section} section.  Missing fields are: {missing_fields}")
         # if section parameter is not present, assume this function is validating that all required sections exist in a
         # config file
         raise IOError(f"Required section missing from config file.  Missing sections are: {missing_fields}")
