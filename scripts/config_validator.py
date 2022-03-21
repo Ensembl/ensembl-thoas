@@ -1,6 +1,5 @@
 """Basic script to validate Thoas config file.  The script checks that all required sections and fields exist, and that
 file path locations exist"""
-
 import os.path
 from configparser import ConfigParser
 from typing import Set
@@ -8,9 +7,6 @@ from typing import Set
 
 def validate_config(config_parser: ConfigParser) -> None:
     check_required_fields({'GENERAL', 'MONGO DB', 'REFGET DB'}, set(config_parser.sections()))
-
-    def get_section_keys(section: str) -> Set[str]:
-        return {key for key, _ in config_parser.items(section=section)}
 
     for section in config_parser.sections():
         if section == "GENERAL":
@@ -40,7 +36,9 @@ def validate_config(config_parser: ConfigParser) -> None:
                 "user",
             }
 
-        check_required_fields(required_fields, get_section_keys(section), section)
+        section_keys = {key for key, _ in config_parser.items(section=section)}
+
+        check_required_fields(required_fields, section_keys, section)
 
     for pathname in ["base_data_path", "grch37_data_path", "classifier_path", "chr_checksums_path",
                      "xref_lod_mapping_file"]:
