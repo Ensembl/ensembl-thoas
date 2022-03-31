@@ -15,9 +15,11 @@
 import os
 
 from ariadne.asgi import GraphQL
+from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common import mongo
@@ -48,4 +50,4 @@ starlette_middleware = [
 ]
 
 APP = Starlette(debug=True, middleware=starlette_middleware)
-APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
+APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER, extensions=[ApolloTracingExtension]))
