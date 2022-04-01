@@ -19,7 +19,7 @@ from aiodataloader import DataLoader
 from pymongo.collection import Collection
 
 
-class DataLoaderCollection():
+class DataLoaderCollection:
     """
     A collection of bulk data aggregators for "joins" in GraphQL
     They're part of a class so they can be initialised in one go
@@ -32,10 +32,13 @@ class DataLoaderCollection():
     data loaders.
     """
 
-    def __init__(self, db_collection: Collection):
+    def __init__(self, db_collection: Collection, genome_id: Optional[str]):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
-        self.genome_id: Optional[str] = None
+        self.genome_id = genome_id
+        self.gene_transcript_dataloader = self.create_gene_transcript_dataloader(genome_id)
+        self.transcript_product_dataloader = self.create_transcript_product_dataloader(genome_id)
+        self.slice_region_dataloader = self.create_slice_region_dataloader(genome_id)
 
     async def batch_transcript_load(self, keys: List[str]) -> List[List]:
         '''
@@ -97,7 +100,7 @@ class DataLoaderCollection():
 
         return [grouped_docs[fk] for fk in original_ids]
 
-    def gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Transcripts fetched via Genes'
         # How do we get temporary state into class methods with a fixed signature?
         # I didn't want to fork DataLoader in order to add arbitrary arguments
@@ -109,7 +112,7 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    def transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Products fetched via Transcripts'
 
         self.genome_id = genome_id
@@ -118,7 +121,7 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    def slice_region_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_slice_region_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_region_load,
@@ -132,3 +135,8 @@ class DataLoaderCollection():
         function in order to be valid.
         '''
         return list(self.collection.find(query))
+
+    def clear_caches(self) -> None:
+        self.gene_transcript_dataloader.clear_all()
+        self.transcript_product_dataloader.clear_all()
+        self.slice_region_dataloader.clear_all()

@@ -16,7 +16,6 @@ import pytest
 import mongomock
 
 import graphql_service.resolver.gene_model as model
-import graphql_service.resolver.data_loaders as data_loader
 from common.crossrefs import XrefResolver
 
 
@@ -30,9 +29,8 @@ class Info():
         self.context = {
             'stuff': 'Nonsense',
             'mongo_db': self.collection,
-            'data_loader': data_loader.DataLoaderCollection(self.collection),
+            'DataLoaderCollections': {},
             'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json'),
-            'genome_id': 1  # This should be added by the top-level resolver on query
         }
 
 
@@ -272,8 +270,10 @@ def test_resolve_transcript_by_symbol_not_found(transcript_data):
 @pytest.mark.asyncio
 async def test_resolve_gene_transcripts(transcript_data):
     'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
+
+    model.create_or_flush_dataloaders("1", transcript_data)
     result = await model.resolve_gene_transcripts(
-        {'stable_id': 'ENSG001.1', 'genome_id': 1},
+        {'stable_id': 'ENSG001.1', 'genome_id': "1"},
         transcript_data
     )
 
@@ -353,6 +353,7 @@ def test_overlap_region_too_many_results(slice_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region_happy_case(region_data):
+    model.create_or_flush_dataloaders("1", region_data)
     slc = {
         'region_id': 'plasmodium_falciparum_GCA_000002765_2_13',
         'location':
@@ -374,6 +375,7 @@ async def test_resolve_region_happy_case(region_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region_region_not_exist(region_data):
+    model.create_or_flush_dataloaders("1", region_data)
     slc = {
         'region_id': 'some_non_existing_region_id',
     }
@@ -422,6 +424,7 @@ def test_url_generation(basic_data):
 @pytest.mark.asyncio
 async def test_resolve_transcript_products(transcript_data):
     'Check the DataLoader for products is working via transcript. Requires event loop for DataLoader'
+    model.create_or_flush_dataloaders(1, transcript_data)
     result = await model.resolve_product_by_pgc(
         {'product_id': 'ENSP001.1', 'genome_id': 1},
         transcript_data
@@ -433,7 +436,8 @@ async def test_resolve_transcript_products(transcript_data):
 
 @pytest.mark.asyncio
 async def test_resolve_transcript_products_product_not_exists(transcript_data):
-    product = {'product_id': 'some not existing id', 'genome_id': 1}
+    model.create_or_flush_dataloaders("1", transcript_data)
+    product = {'product_id': 'some not existing id', 'genome_id': "1"}
     result = None
     with pytest.raises(model.ProductNotFoundError) as product_error:
         result = await model.resolve_product_by_pgc(product, transcript_data)

@@ -26,7 +26,6 @@ def prepare_db():
     'Fill a mock database with data and provide a collection accessor'
 
     mocked_mongo_collection = mongomock.MongoClient().db.collection
-    data_loader = DataLoaderCollection(mocked_mongo_collection)
     try:
         xref_resolver = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
     except requests.exceptions.ConnectionError:
@@ -35,7 +34,7 @@ def prepare_db():
 
     context = {
         'mongo_db': mocked_mongo_collection,
-        'data_loader': data_loader,
+        'DataLoaderCollections': {},
         'XrefResolver': xref_resolver
     }
 
