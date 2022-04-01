@@ -257,7 +257,8 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
     if pgc['product_id'] is None:
         return None
-    loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
+    # loader = info.context['data_loader'].transcript_product_dataloader(pgc['genome_id'])
+    loader = info.context['loaders']['products']
     products = await loader.load(
         key=pgc['product_id']
     )
@@ -276,17 +277,15 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
         return None
     region_id = slc['region_id']
 
-    query = {
-        'type': 'Region',
-        'region_id': region_id
-    }
+    loader = info.context['loaders']['regions']
 
-    collection = info.context['mongo_db']
-    result = collection.find_one(query)
+    regions = await loader.load(
+        key=region_id
+    )
 
-    if not result:
+    if not regions:
         raise RegionNotFoundError(region_id)
-    return result
+    return regions[0]
 
 
 @REGION_TYPE.field('assembly')

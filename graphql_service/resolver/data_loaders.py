@@ -68,6 +68,16 @@ class DataLoaderCollection():
         data = await self.query_mongo(query)
         return self.collate_dataloader_output('stable_id', keys, data)
 
+    async def batch_region_load(self, keys: List[str]) -> List[List]:
+        query = {
+            'type': 'Region',
+            'region_id': {
+                '$in': keys
+            }
+        }
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output('region_id', keys, data)
+
     @staticmethod
     def collate_dataloader_output(foreign_key: str, original_ids: List[str], docs: List[Dict]) -> List[List]:
         '''
@@ -105,6 +115,13 @@ class DataLoaderCollection():
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_product_load,
+            max_batch_size=max_batch_size
+        )
+
+    def slice_region_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+        self.genome_id = genome_id
+        return DataLoader(
+            batch_load_fn=self.batch_region_load,
             max_batch_size=max_batch_size
         )
 
