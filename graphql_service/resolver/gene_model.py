@@ -32,7 +32,7 @@ REGION_TYPE = ObjectType('Region')
 
 def create_or_flush_dataloaders(genome_id, info):
     """This function ensures that all resolvers have access to a genome_id-specific dataloader.
-    This function must be run inside every root-level resolver method that uses a dataloader"""
+    This function must be run inside every root-level resolver method"""
 
     # The `info` variable exists at the server level, not the request level.  Therefore we need to clear the cache with
     # every new query to avoid a memory leak.  The `info.context['DataLoaderCollections']` dictionary will still grow
