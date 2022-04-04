@@ -16,12 +16,12 @@ from ariadne import graphql
 
 from .snapshot_utils import setup_test
 
-executable_schema, context = setup_test()
-
 
 @pytest.mark.asyncio
 async def test_slice_retrieval(snapshot):
     'Test searching for genes & transcripts by slice'
+
+    executable_schema, context = setup_test()
 
     # The start/end parameters in this query only contain the brca2_203 transcript
     query = """query {

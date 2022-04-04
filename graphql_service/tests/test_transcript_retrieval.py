@@ -16,11 +16,11 @@ import pytest
 from ariadne import graphql
 from .snapshot_utils import setup_test
 
-executable_schema, context = setup_test()
-
 
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
+    executable_schema, context = setup_test()
+
     """
     Test retrieval of a transcript from the graphql api by id
     Gets the expected test result from snapshottest
@@ -92,6 +92,8 @@ async def test_transcript_retrieval(snapshot):
 
 @pytest.mark.asyncio
 async def test_transcript_splicing(snapshot):
+    executable_schema, context = setup_test()
+
     '''
     Run a graphql query checking transcript spliced exons
     '''

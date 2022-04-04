@@ -207,6 +207,9 @@ def resolve_overlap(_, info: GraphQLResolveInfo, genomeId: str, regionName: str,
     '''
     Query Mongo for genes and transcripts lying between start and end
     '''
+
+    create_or_flush_dataloaders(genomeId, info)
+
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genomeId, regionName, "chromosome"])
     return {
@@ -258,6 +261,8 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 @QUERY_TYPE.field('product')
 def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id: str) -> Dict:
     'Fetch a product by stable_id, this is almost always a protein'
+
+    create_or_flush_dataloaders(genome_id, info)
 
     query = {
         'genome_id': genome_id,

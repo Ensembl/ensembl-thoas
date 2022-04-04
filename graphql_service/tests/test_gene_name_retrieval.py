@@ -17,10 +17,9 @@ from ariadne import graphql
 import pytest
 from .snapshot_utils import setup_test
 
-executable_schema, context = setup_test()
-
 
 def get_generic_query_template():
+    executable_schema, context = setup_test()
 
     query = """{
           gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "$stable_id" }) {
@@ -49,6 +48,7 @@ def get_generic_query_template():
 
 @pytest.mark.asyncio
 async def test_no_xref_acc_id(snapshot):
+    executable_schema, context = setup_test()
     template = get_generic_query_template()
     query = template.substitute(stable_id='TraesCS2A02G142500')
     query_data = {'query': query}
@@ -59,6 +59,7 @@ async def test_no_xref_acc_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_xref_description(snapshot):
+    executable_schema, context = setup_test()
     template = get_generic_query_template()
     query = template.substitute(stable_id='TraesCS2A02G142501')
     query_data = {'query': query}
@@ -68,6 +69,7 @@ async def test_no_xref_description(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_externaldb_source_id(snapshot):
+    executable_schema, context = setup_test()
     template = get_generic_query_template()
     query = template.substitute(stable_id='TraesCS2A02G142502')
     query_data = {'query': query}
@@ -77,6 +79,7 @@ async def test_no_externaldb_source_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_no_externaldb_source_name(snapshot):
+    executable_schema, context = setup_test()
     template = get_generic_query_template()
     query = template.substitute(stable_id='TraesCS2A02G142503')
     query_data = {'query': query}

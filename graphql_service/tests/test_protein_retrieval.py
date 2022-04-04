@@ -16,13 +16,12 @@ import pytest
 from ariadne import graphql
 from .snapshot_utils import setup_test
 
-executable_schema, context = setup_test()
-
 
 @pytest.mark.asyncio
 async def test_protein_retrieval(snapshot):
+    executable_schema, context = setup_test()
     """
-    Test retrieval of proteins from the grapqhl api by id
+    Test retrieval of proteins from the graphql api by id
     Gets the expected test result from snapshottest
     """
     query = """{
@@ -84,8 +83,9 @@ async def test_protein_retrieval(snapshot):
 
 @pytest.mark.asyncio
 async def test_protein_retrieval_by_transcript(snapshot):
+    executable_schema, context = setup_test()
     """
-    Test retrieval of proteins from the grapqhl api by transcript
+    Test retrieval of proteins from the graphql api by transcript
     """
     query = """{
         transcript(byId: {stable_id: "ENST00000380152.7", genome_id: "homo_sapiens_GCA_000001405_28"}) {

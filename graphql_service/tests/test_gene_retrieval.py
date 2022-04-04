@@ -16,11 +16,11 @@ import pytest
 from ariadne import graphql
 from .snapshot_utils import setup_test
 
-executable_schema, context = setup_test()
-
 
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_id(snapshot):
+    executable_schema, context = setup_test()
+
     'Test retrieval of a gene from the grapqhl api by id'
     query = """{
       gene(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
@@ -99,6 +99,8 @@ async def test_gene_retrieval_by_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_symbol(snapshot):
+    executable_schema, context = setup_test()
+
     'Test retrieval of a gene from the graphql api by its symbol'
     query = """{
       genes_by_symbol(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
