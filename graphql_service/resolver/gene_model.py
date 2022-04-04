@@ -31,11 +31,12 @@ REGION_TYPE = ObjectType('Region')
 
 
 def create_or_flush_dataloaders(genome_id, info):
-    """This function is ensures that all resolvers have access to a genome_id-specific dataloader.
+    """This function ensures that all resolvers have access to a genome_id-specific dataloader.
     This function must be run inside every root-level resolver method that uses a dataloader"""
 
     # The `info` variable exists at the server level, not the request level.  Therefore we need to clear the cache with
-    # every new query to avoid a memory leak.
+    # every new query to avoid a memory leak.  The `info.context['DataLoaderCollections']` dictionary will still grow
+    # as users request new `genome_id`s, but this should be an acceptable overhead.
     if genome_id in info.context['DataLoaderCollections']:
         info.context['DataLoaderCollections'][genome_id].clear_caches()
     else:
@@ -68,8 +69,7 @@ def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
 def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
     'Load Genes via potentially ambiguous symbol'
 
-    info.context['DataLoaderCollections'][bySymbol['genome_id']] = DataLoaderCollection(info.context['mongo_db'],
-                                                                                        bySymbol['genome_id'])
+    create_or_flush_dataloaders(bySymbol['genome_id'], info)
 
     query = {
         'genome_id': bySymbol['genome_id'],
@@ -300,6 +300,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
         return None
     region_id = slc['region_id']
 
+    # `slice_region_dataloader` doesn't use genome_id so any `DataLoaderCollection` will do
     loader = next(iter(info.context['DataLoaderCollections'].values())).slice_region_dataloader
 
     regions = await loader.load(
