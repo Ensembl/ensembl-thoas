@@ -13,9 +13,11 @@
 """
 import logging
 import os
+from typing import Optional
 
 from ariadne.asgi import GraphQL
 from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
+from ariadne.types import ExtensionList
 from pymongo import monitoring
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -32,10 +34,10 @@ print(os.environ)
 CONFIG = load_config(os.getenv('GQL_CONF'))
 
 DEBUG_MODE = False
-EXTENSIONS = None
+EXTENSIONS: Optional[ExtensionList] = None  # mypy will throw an incompatible type error without this type cast
 
 if DEBUG_MODE:
-    # This will write of MongoDB transactions to `thoas.log`
+    # This will write MongoDB transactions to `thoas.log`
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG, filename='thoas.log', filemode='w')

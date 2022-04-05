@@ -13,7 +13,7 @@
 """
 
 from collections import defaultdict
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from aiodataloader import DataLoader
 from pymongo.collection import Collection
@@ -32,7 +32,7 @@ class DataLoaderCollection:
     data loaders.
     """
 
-    def __init__(self, db_collection: Collection, genome_id: Optional[str]):
+    def __init__(self, db_collection: Collection, genome_id: str):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
         self.genome_id = genome_id

@@ -36,7 +36,8 @@ def create_or_flush_dataloaders(genome_id, info):
 
     # The `info` variable exists at the server level, not the request level.  Therefore we need to clear the cache with
     # every new query to avoid a memory leak.  The `info.context['DataLoaderCollections']` dictionary will still grow
-    # as users request new `genome_id`s, but this should be an acceptable overhead.
+    # as users request new `genome_id`s, but as long as the cache gets cleared with every query this should be an
+    # acceptable overhead.
     if genome_id in info.context['DataLoaderCollections']:
         info.context['DataLoaderCollections'][genome_id].clear_caches()
     else:
@@ -177,7 +178,7 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 
 @TRANSCRIPT_TYPE.field('product_generating_contexts')
-async def resolve_transcript_pgc(transcript: Dict, info: GraphQLResolveInfo) -> List[Dict]:
+async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> List[Dict]:
     pgcs = []
     for pgc in transcript['product_generating_contexts']:
         pgc['genome_id'] = transcript['genome_id']

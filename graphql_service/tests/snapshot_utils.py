@@ -17,7 +17,6 @@ import requests
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import DataLoaderCollection
 from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region, \
     build_assembly
 from graphql_service.tests.fixtures.wheat import build_wheat_genes

@@ -19,12 +19,13 @@ from .snapshot_utils import setup_test
 
 @pytest.mark.asyncio
 async def test_transcript_retrieval(snapshot):
-    executable_schema, context = setup_test()
-
     """
     Test retrieval of a transcript from the graphql api by id
     Gets the expected test result from snapshottest
     """
+
+    executable_schema, context = setup_test()
+
     query = """{
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
             stable_id
@@ -92,11 +93,11 @@ async def test_transcript_retrieval(snapshot):
 
 @pytest.mark.asyncio
 async def test_transcript_splicing(snapshot):
+    """
+    Run a graphql query checking transcript spliced exons
+    """
     executable_schema, context = setup_test()
 
-    '''
-    Run a graphql query checking transcript spliced exons
-    '''
     query = '''
     {
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {

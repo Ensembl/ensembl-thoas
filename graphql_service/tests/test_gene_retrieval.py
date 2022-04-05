@@ -19,9 +19,10 @@ from .snapshot_utils import setup_test
 
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_id(snapshot):
+    """Test retrieval of a gene from the grapqhl api by id"""
+
     executable_schema, context = setup_test()
 
-    'Test retrieval of a gene from the grapqhl api by id'
     query = """{
       gene(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
         symbol
@@ -99,9 +100,9 @@ async def test_gene_retrieval_by_id(snapshot):
 
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_symbol(snapshot):
-    executable_schema, context = setup_test()
+    """Test retrieval of a gene from the graphql api by its symbol"""
 
-    'Test retrieval of a gene from the graphql api by its symbol'
+    executable_schema, context = setup_test()
     query = """{
       genes_by_symbol(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
         symbol

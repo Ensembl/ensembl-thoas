@@ -19,11 +19,12 @@ from .snapshot_utils import setup_test
 
 @pytest.mark.asyncio
 async def test_protein_retrieval(snapshot):
-    executable_schema, context = setup_test()
     """
     Test retrieval of proteins from the graphql api by id
     Gets the expected test result from snapshottest
     """
+
+    executable_schema, context = setup_test()
     query = """{
   product(genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3") {
     stable_id
@@ -83,10 +84,10 @@ async def test_protein_retrieval(snapshot):
 
 @pytest.mark.asyncio
 async def test_protein_retrieval_by_transcript(snapshot):
-    executable_schema, context = setup_test()
     """
     Test retrieval of proteins from the graphql api by transcript
     """
+    executable_schema, context = setup_test()
     query = """{
         transcript(byId: {stable_id: "ENST00000380152.7", genome_id: "homo_sapiens_GCA_000001405_28"}) {
             product_generating_contexts {

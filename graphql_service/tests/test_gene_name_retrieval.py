@@ -19,8 +19,6 @@ from .snapshot_utils import setup_test
 
 
 def get_generic_query_template():
-    executable_schema, context = setup_test()
-
     query = """{
           gene(byId: { genome_id: "triticum_aestivum_GCA_900519105_1", stable_id: "$stable_id" }) {
             stable_id
