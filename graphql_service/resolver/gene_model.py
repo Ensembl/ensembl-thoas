@@ -30,7 +30,7 @@ SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
 
 
-def create_or_flush_dataloaders(genome_id, info):
+def create_or_flush_dataloaders(genome_id: str, info: GraphQLResolveInfo) -> None:
     """This function ensures that all resolvers have access to a genome_id-specific dataloader.
     This function must be run inside every root-level resolver method"""
 
@@ -153,6 +153,9 @@ def resolve_transcript(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str,
         ]
         query['genome_id'] = byId['genome_id']
         genome_id = byId['genome_id']
+
+    if genome_id is None:
+        raise GraphQLError(f"Unable to resolve transcript, genome id is None")
 
     create_or_flush_dataloaders(genome_id, info)
 
