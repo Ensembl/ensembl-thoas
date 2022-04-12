@@ -2,26 +2,6 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import jsonpath from "https://jslib.k6.io/jsonpath/1.0.2/index.js";
 
-/*
-export default function () {
-  const url = 'http://2020.ensembl.org/api/thoas';
-  const payload = JSON.stringify({
-    operationName: null,
-    variables: {},
-    query: "gene(byId: {genome_id: \"saccharomyces_cerevisiae_GCA_000146045_2\", stable_id: \"YDL168W\"}) {\n    stable_id\n    transcripts {\n      stable_id\n    }\n  }\n}\n"
-  });
-
-  const params = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  const res = http.post(url, payload, params);
-  check(res, { 'status was 200': (r) => r.status == 200 });
-}
-*/
-
 export const options = {
   vus: 2,
   duration: '5s',
