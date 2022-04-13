@@ -11,7 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from typing import Dict, Optional, List, Any
+
+from typing import Dict, Optional, List, Any, Union
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLError, GraphQLResolveInfo
@@ -30,25 +31,40 @@ SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
 
 
-def create_or_flush_dataloaders(genome_id: str, info: GraphQLResolveInfo) -> None:
-    """This function ensures that all resolvers have access to a genome_id-specific dataloader.
+def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
+    """This is intended to be used inside a resolver to determine its root query"""
+    current = info.path
+    parent = current.prev
+    while parent is not None:
+        current = parent
+        parent = parent.prev
+    return current.key
+
+
+def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
+    """This function ensures that all resolvers have access to a dataloader specific to their root query.
     This function must be run inside every root-level resolver method"""
 
-    # The `info` variable exists at the server level, not the request level.  Therefore we need to clear the cache with
-    # every new query to avoid a memory leak.  The `info.context['DataLoaderCollections']` dictionary will still grow
-    # as users request new `genome_id`s, but as long as the cache gets cleared with every query this should be an
-    # acceptable overhead.
-    if genome_id in info.context['DataLoaderCollections']:
-        info.context['DataLoaderCollections'][genome_id].clear_caches()
+    key = get_root_key(info)
+    request_state = info.context["request"].state
+    if hasattr(request_state, 'dataloader_collections'):
+        request_state.dataloader_collections[key] = DataLoaderCollection(info.context['mongo_db'],
+                                                                         genome_id)
     else:
-        info.context['DataLoaderCollections'][genome_id] = DataLoaderCollection(info.context['mongo_db'], genome_id)
+        info.context["request"].state.dataloader_collections = {key: DataLoaderCollection(info.context['mongo_db'],
+                                                                                          genome_id)}
+
+
+def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
+    key = get_root_key(info)
+    return info.context["request"].state.dataloader_collections[key]
 
 
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
     'Load Gene via stable_id'
 
-    create_or_flush_dataloaders(byId['genome_id'], info)
+    create_dataloader_collection(byId['genome_id'], info)
 
     query = {
         'type': 'Gene',
@@ -70,7 +86,7 @@ def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
 def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
     'Load Genes via potentially ambiguous symbol'
 
-    create_or_flush_dataloaders(bySymbol['genome_id'], info)
+    create_dataloader_collection(bySymbol['genome_id'], info)
 
     query = {
         'genome_id': bySymbol['genome_id'],
@@ -157,7 +173,7 @@ def resolve_transcript(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str,
     if genome_id is None:
         raise GraphQLError(f"Unable to resolve transcript, genome id is None")
 
-    create_or_flush_dataloaders(genome_id, info)
+    create_dataloader_collection(genome_id, info)
 
     collection = info.context['mongo_db']
     transcript = collection.find_one(query)
@@ -172,7 +188,7 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
     gene_stable_id = gene['stable_id']
     # Get a dataloader from info
-    loader = info.context['DataLoaderCollections'][gene['genome_id']].gene_transcript_dataloader
+    loader = get_dataloader_collection(info).gene_transcript_dataloader
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(
         key=gene_stable_id
@@ -191,7 +207,6 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
 
 @TRANSCRIPT_TYPE.field('gene')
 async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) -> Dict:
-    'Use a DataLoader to get the parent gene of a transcript'
     query = {
         'type': 'Gene',
         'genome_id': transcript['genome_id'],
@@ -212,7 +227,7 @@ def resolve_overlap(_, info: GraphQLResolveInfo, genomeId: str, regionName: str,
     Query Mongo for genes and transcripts lying between start and end
     '''
 
-    create_or_flush_dataloaders(genomeId, info)
+    create_dataloader_collection(genomeId, info)
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genomeId, regionName, "chromosome"])
@@ -266,7 +281,7 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id: str) -> Dict:
     'Fetch a product by stable_id, this is almost always a protein'
 
-    create_or_flush_dataloaders(genome_id, info)
+    create_dataloader_collection(genome_id, info)
 
     query = {
         'genome_id': genome_id,
@@ -290,7 +305,7 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
     if pgc['product_id'] is None:
         return None
-    loader = info.context['DataLoaderCollections'][pgc['genome_id']].transcript_product_dataloader
+    loader = get_dataloader_collection(info).transcript_product_dataloader
     products = await loader.load(
         key=pgc['product_id']
     )
@@ -309,8 +324,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
         return None
     region_id = slc['region_id']
 
-    # `slice_region_dataloader` doesn't use genome_id so any `DataLoaderCollection` will do
-    loader = next(iter(info.context['DataLoaderCollections'].values())).slice_region_dataloader
+    loader = get_dataloader_collection(info).slice_region_dataloader
 
     regions = await loader.load(
         key=region_id
@@ -359,7 +373,8 @@ class FeatureNotFoundError(FieldNotFoundError):
     Custom error to be raised if a gene or transcript cannot be found by id
     '''
 
-    def __init__(self, feature_type: str, bySymbol: Optional[Dict[str, str]] = None, byId: Optional[Dict[str, str]] = None):
+    def __init__(self, feature_type: str, bySymbol: Optional[Dict[str, str]] = None,
+                 byId: Optional[Dict[str, str]] = None):
         if bySymbol:
             super().__init__(feature_type, {"symbol": bySymbol['symbol'], "genome_id": bySymbol['genome_id']})
         if byId:

@@ -28,8 +28,7 @@ class DataLoaderCollection:
     Can't currently support multiple genome_ids in the same query.
     Limitations in the DataLoader design as stateless function
     with fixed arguments mean we can't inject genome_id on calling
-    .load(). Needs a better solution, or better sandboxing of
-    data loaders.
+    .load(). Needs a better solution.
     """
 
     def __init__(self, db_collection: Collection, genome_id: str):
@@ -135,8 +134,3 @@ class DataLoaderCollection:
         function in order to be valid.
         '''
         return list(self.collection.find(query))
-
-    def clear_caches(self) -> None:
-        self.gene_transcript_dataloader.clear_all()
-        self.transcript_product_dataloader.clear_all()
-        self.slice_region_dataloader.clear_all()

@@ -11,27 +11,33 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from unittest.mock import Mock
 
 import pytest
 import mongomock
+from graphql.pyutils import Path
+from starlette.datastructures import State
 
 import graphql_service.resolver.gene_model as model
 from common.crossrefs import XrefResolver
+from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 
-class Info():
+def create_info(collection, path):
     '''
-    Proxy for the Info objects produced by graphql
-    '''
-
-    def __init__(self, collection):
-        self.collection = collection
-        self.context = {
+        Factory for creating the mock  Info objects produced by graphql
+        '''
+    info = Mock()
+    request_mock = Mock()
+    request_mock.state = State()
+    info.context = {
             'stuff': 'Nonsense',
-            'mongo_db': self.collection,
-            'DataLoaderCollections': {},
+            'mongo_db': collection,
             'XrefResolver': XrefResolver(from_file='common/tests/mini_identifiers.json'),
+            'request': request_mock
         }
+    info.path = path
+    return info
 
 
 @pytest.fixture(name='basic_data')
@@ -39,12 +45,12 @@ def fixture_basic_data():
     'Some fake genes'
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1',
+        {'genome_id': "1", 'type': 'Gene', 'symbol': 'banana', 'stable_id': 'ENSG001.1',
          'unversioned_stable_id': 'ENSG001'},
-        {'genome_id': 1, 'type': 'Gene', 'symbol': 'durian', 'stable_id': 'ENSG002.2',
+        {'genome_id': "1", 'type': 'Gene', 'symbol': 'durian', 'stable_id': 'ENSG002.2',
          'unversioned_stable_id': 'ENSG002'},
     ])
-    return Info(collection)
+    return collection
 
 
 @pytest.fixture(name='transcript_data')
@@ -53,14 +59,14 @@ def fixture_transcript_data():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
         {
-            'genome_id': 1,
+            'genome_id': "1",
             'type': 'Gene',
             'symbol': 'banana',
             'stable_id': 'ENSG001.1',
             'unversioned_stable_id': 'ENSG001'
         },
         {
-            'genome_id': 1,
+            'genome_id': "1",
             'type': 'Transcript',
             'symbol': 'kumquat',
             'stable_id': 'ENST001.1',
@@ -74,7 +80,7 @@ def fixture_transcript_data():
             ]
         },
         {
-            'genome_id': 1,
+            'genome_id': "1",
             'type': 'Transcript',
             'symbol': 'grape',
             'stable_id': 'ENST002.2',
@@ -83,12 +89,12 @@ def fixture_transcript_data():
             'product_generating_contexts': []
         },
         {
-            'genome_id': 1,
+            'genome_id': "1",
             'type': 'Protein',
             'stable_id': 'ENSP001.1'
         }
     ])
-    return Info(collection)
+    return collection
 
 
 @pytest.fixture(name='region_data')
@@ -98,7 +104,7 @@ def fixture_region_data():
         {"type": "Region", "region_id": "plasmodium_falciparum_GCA_000002765_2_13", "name": "13"},
         {"type": "Region", "region_id": "plasmodium_falciparum_GCA_000002765_2_14", "name": "14"}
     ])
-    return Info(collection)
+    return collection
 
 
 @pytest.fixture(name='slice_data')
@@ -157,16 +163,18 @@ def fixture_slice_data():
         })
     collection.insert_many(too_many_results)
 
-    return Info(collection)
+    return collection
 
 
 def test_resolve_gene(basic_data):
     'Test the querying of Mongo by gene symbol'
 
+    info = create_info(basic_data, Path(prev=None, key='Gene', typename='Query'))
+
     result = model.resolve_gene(
         None,
-        basic_data,
-        byId={'stable_id': 'ENSG001.1', 'genome_id': 1}
+        info,
+        byId={'stable_id': 'ENSG001.1', 'genome_id': "1"}
     )
 
     assert result['symbol'] == 'banana'
@@ -175,21 +183,21 @@ def test_resolve_gene(basic_data):
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_gene(
             None,
-            basic_data,
-            byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': 1}
+            info,
+            byId={'stable_id': 'BROKEN BROKEN BROKEN', 'genome_id': "1"}
         )
     assert not result
     assert gene_not_found_error.value.message == 'Failed to find gene with ids: stable_id=BROKEN BROKEN BROKEN, genome_id=1'
     assert gene_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
     assert gene_not_found_error.value.extensions['stable_id'] == 'BROKEN BROKEN BROKEN'
-    assert gene_not_found_error.value.extensions['genome_id'] == 1
+    assert gene_not_found_error.value.extensions['genome_id'] == "1"
     gene_not_found_error = None
 
     # Check unversioned query resolves as well
     result = model.resolve_gene(
         None,
-        basic_data,
-        byId={'stable_id': 'ENSG001', 'genome_id': 1}
+        info,
+        byId={'stable_id': 'ENSG001', 'genome_id': "1"}
     )
 
     assert result['symbol'] == 'banana'
@@ -198,10 +206,12 @@ def test_resolve_gene(basic_data):
 def test_resolve_gene_by_symbol(basic_data):
     'Test querying by gene symbol which can be ambiguous'
 
+    info = create_info(basic_data, Path(prev=None, key='Gene', typename='Query'))
+
     result = model.resolve_genes(
         None,
-        basic_data,
-        bySymbol={'symbol': 'banana', 'genome_id': 1}
+        info,
+        bySymbol={'symbol': 'banana', 'genome_id': "1"}
     )
     assert isinstance(result, list)
     assert result[0]['symbol'] == 'banana'
@@ -210,32 +220,37 @@ def test_resolve_gene_by_symbol(basic_data):
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_genes(
             None,
-            basic_data,
-            bySymbol={'symbol': 'very not here', 'genome_id': 1}
+            info,
+            bySymbol={'symbol': 'very not here', 'genome_id': "1"}
         )
     assert not result
     assert gene_not_found_error.value.message == "Failed to find gene with ids: symbol=very not here, genome_id=1"
     assert gene_not_found_error.value.extensions['code'] == 'GENE_NOT_FOUND'
     assert gene_not_found_error.value.extensions['symbol'] == 'very not here'
-    assert gene_not_found_error.value.extensions['genome_id'] == 1
+    assert gene_not_found_error.value.extensions['genome_id'] == "1"
+
 
 def test_resolve_transcript_by_id(transcript_data):
     'Test fetching of transcripts by stable ID'
+
+    info = create_info(transcript_data, Path(prev=None, key='Transcript', typename='Query'))
     result = model.resolve_transcript(
         None,
-        transcript_data,
-        byId={'stable_id': 'ENST001.1', 'genome_id': 1}
+        info,
+        byId={'stable_id': 'ENST001.1', 'genome_id': "1"}
     )
 
     assert result['symbol'] == 'kumquat'
     assert result['stable_id'] == 'ENST001.1'
 
+
 def test_resolve_transcript_by_id_not_found(transcript_data):
     result = None
+    info = create_info(transcript_data, Path(prev=None, key='Transcript', typename='Query'))
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         result = model.resolve_transcript(
             None,
-            transcript_data,
+            info,
             byId={'stable_id': 'FAKEYFAKEYFAKEY', 'genome_id': 1}
         )
     assert not result
@@ -246,24 +261,27 @@ def test_resolve_transcript_by_id_not_found(transcript_data):
 
 def test_resolve_transcript_by_symbol(transcript_data):
     'Test fetching of transcripts by symbol'
+
+    info = create_info(transcript_data, Path(prev=None, key='Transcript', typename='Query'))
     result = model.resolve_transcript(
         None,
-        transcript_data,
-        bySymbol={'symbol': 'kumquat', 'genome_id': 1}
+        info,
+        bySymbol={'symbol': 'kumquat', 'genome_id': "1"}
     )
     assert result['stable_id'] == 'ENST001.1'
 
 def test_resolve_transcript_by_symbol_not_found(transcript_data):
+    info = create_info(transcript_data, Path(prev=None, key='Transcript', typename='Query'))
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         model.resolve_transcript(
             None,
-            transcript_data,
-            bySymbol={'symbol': 'some not existing symbol', 'genome_id': 1}
+            info,
+            bySymbol={'symbol': 'some not existing symbol', 'genome_id': "1"}
         )
     assert transcript_not_found_error.value.message == 'Failed to find transcript with ids: symbol=some not existing symbol, genome_id=1'
     assert transcript_not_found_error.value.extensions['code'] == 'TRANSCRIPT_NOT_FOUND'
     assert transcript_not_found_error.value.extensions['symbol'] == 'some not existing symbol'
-    assert transcript_not_found_error.value.extensions['genome_id'] == 1
+    assert transcript_not_found_error.value.extensions['genome_id'] == "1"
 
 
 
@@ -271,10 +289,12 @@ def test_resolve_transcript_by_symbol_not_found(transcript_data):
 async def test_resolve_gene_transcripts(transcript_data):
     'Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader'
 
-    model.create_or_flush_dataloaders("1", transcript_data)
+    path = Path(prev=Path(prev=None, key='Gene', typename='Query'), key='transcripts', typename='Gene')
+    info = create_info(transcript_data, path)
+    info.context["request"].state.dataloader_collections = {'Gene': DataLoaderCollection(transcript_data, "1")}
     result = await model.resolve_gene_transcripts(
         {'stable_id': 'ENSG001.1', 'genome_id': "1"},
-        transcript_data
+        info
     )
 
     for hit in result:
@@ -285,9 +305,12 @@ async def test_resolve_gene_transcripts(transcript_data):
 @pytest.mark.asyncio
 async def test_resolve_gene_from_transcript(transcript_data):
     'Check the DataLoader for gene is working via transcript. Requires event loop for DataLoader'
+
+    path = Path(prev=Path(prev=None, key='Transcript', typename='Query'), key='genes', typename='Transcript')
+    info = create_info(transcript_data, path)
     result = await model.resolve_transcript_gene(
-        {'gene': 'ENSG001.1', 'genome_id': 1},
-        transcript_data
+        {'gene': 'ENSG001.1', 'genome_id': "1"},
+        info
     )
 
     assert result['type'] == 'Gene'
@@ -297,9 +320,10 @@ async def test_resolve_gene_from_transcript(transcript_data):
 
 def test_resolve_overlap(slice_data):
     'Check features can be found via coordinates'
+    info = create_info(slice_data, path=Path(prev=None, key='overlap_region', typename='Query'))
     result = model.resolve_overlap(
         None,
-        slice_data,
+        info,
         genomeId="test_genome_id",
         regionName='chr1',
         start=10,
@@ -310,7 +334,7 @@ def test_resolve_overlap(slice_data):
 
 query_region_expectations = [
     (1, 5, set()),  # No overlaps if search region is to the left of all features
-    (305, 310, set()),  # No overlaps if search region is to the left of all features
+    (305, 310, set()),  # No overlaps if search region is to the right of all features
     (40, 50, {'ENSG001.1'}),  # search region contained in a single feature
     (5, 105, {'ENSG001.1'}),  # search region contains a feature
     (5, 15, {'ENSG001.1'}),  # search region contains start of a feature but not the end
@@ -322,7 +346,7 @@ query_region_expectations = [
 
 @pytest.mark.parametrize("start,end,expected_ids", query_region_expectations)
 def test_overlap_region(start, end, expected_ids, slice_data):
-    context = slice_data.context
+    context = {"mongo_db": slice_data}
     result = model.overlap_region(
         context=context,
         genome_id='test_genome_id',
@@ -335,7 +359,7 @@ def test_overlap_region(start, end, expected_ids, slice_data):
 
 
 def test_overlap_region_too_many_results(slice_data):
-    context = slice_data.context
+    context = {"mongo_db": slice_data}
     result = None
     with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:
         result = model.overlap_region(
@@ -353,7 +377,10 @@ def test_overlap_region_too_many_results(slice_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region_happy_case(region_data):
-    model.create_or_flush_dataloaders("1", region_data)
+    path = Path(prev=Path(prev=Path(prev=None, key='gene', typename='Query'), key='slice', typename='Gene'),
+                key='region', typename='Slice')
+    info = create_info(region_data, path=path)
+    info.context["request"].state.dataloader_collections = {'gene': DataLoaderCollection(region_data, "1")}
     slc = {
         'region_id': 'plasmodium_falciparum_GCA_000002765_2_13',
         'location':
@@ -369,19 +396,22 @@ async def test_resolve_region_happy_case(region_data):
             },
         'default': True
     }
-    result = await model.resolve_region(slc, region_data)
+    result = await model.resolve_region(slc, info)
     assert result['region_id'] == 'plasmodium_falciparum_GCA_000002765_2_13'
 
 
 @pytest.mark.asyncio
 async def test_resolve_region_region_not_exist(region_data):
-    model.create_or_flush_dataloaders("1", region_data)
+    path = Path(prev=Path(prev=Path(prev=None, key='gene', typename='Query'), key='slice', typename='Gene'),
+                key='region', typename='Slice')
+    info = create_info(region_data, path=path)
+    info.context["request"].state.dataloader_collections = {'gene': DataLoaderCollection(region_data, "1")}
     slc = {
         'region_id': 'some_non_existing_region_id',
     }
     result = None
     with pytest.raises(model.RegionNotFoundError) as region_error:
-        result = await model.resolve_region(slc, region_data)
+        result = await model.resolve_region(slc, info)
     assert not result
     assert region_error.value.extensions['region_id'] == 'some_non_existing_region_id'
 
@@ -403,13 +433,14 @@ def test_url_generation(basic_data):
         }
     }
 
+    info = create_info(basic_data, path=Path(prev=None, key='gene', typename='xrefs'))
     result = model.insert_crossref_urls(
         {
             'external_references': [
                 xref
             ]
         },
-        basic_data
+        info
     )
 
     for key, value in xref.items():
@@ -424,10 +455,16 @@ def test_url_generation(basic_data):
 @pytest.mark.asyncio
 async def test_resolve_transcript_products(transcript_data):
     'Check the DataLoader for products is working via transcript. Requires event loop for DataLoader'
-    model.create_or_flush_dataloaders(1, transcript_data)
+
+    path = Path(prev=Path(
+        prev=Path(prev=Path(prev=None, key='transcript', typename='Query'), key='product_generating_contexts',
+                  typename='Transcript'), key=0, typename=None), key='product', typename='ProductGeneratingContext')
+    info = create_info(transcript_data, path)
+    info.context["request"].state.dataloader_collections = {'transcript': DataLoaderCollection(transcript_data, "1")}
+
     result = await model.resolve_product_by_pgc(
-        {'product_id': 'ENSP001.1', 'genome_id': 1},
-        transcript_data
+        {'product_id': 'ENSP001.1', 'genome_id': "1"},
+        info
     )
 
     assert result['type'] == 'Protein'
@@ -436,11 +473,15 @@ async def test_resolve_transcript_products(transcript_data):
 
 @pytest.mark.asyncio
 async def test_resolve_transcript_products_product_not_exists(transcript_data):
-    model.create_or_flush_dataloaders("1", transcript_data)
+    path = Path(prev=Path(
+        prev=Path(prev=Path(prev=None, key='transcript', typename='Query'), key='product_generating_contexts',
+                  typename='Transcript'), key=0, typename=None), key='product', typename='ProductGeneratingContext')
     product = {'product_id': 'some not existing id', 'genome_id': "1"}
+    info = create_info(transcript_data, path)
+    info.context["request"].state.dataloader_collections = {'transcript': DataLoaderCollection(transcript_data, "1")}
     result = None
     with pytest.raises(model.ProductNotFoundError) as product_error:
-        result = await model.resolve_product_by_pgc(product, transcript_data)
+        result = await model.resolve_product_by_pgc(product, info)
     assert not result
     assert product_error.value.extensions['stable_id'] == 'some not existing id'
 
@@ -448,15 +489,17 @@ async def test_resolve_transcript_products_product_not_exists(transcript_data):
 @pytest.mark.asyncio
 async def test_resolve_nested_products(transcript_data):
     'Test products inside transcripts inside the gene'
+
+    info = create_info(transcript_data, Path(prev=None, key='Gene', typename='Query'))
     gene_result = model.resolve_gene(
-        None, transcript_data, byId={'genome_id': 1, 'stable_id': 'ENSG001.1'}
+        None, info, byId={'genome_id': "1", 'stable_id': 'ENSG001.1'}
     )
     assert gene_result
 
-    transcript_result = await model.resolve_gene_transcripts(gene_result, transcript_data)
+    transcript_result = await model.resolve_gene_transcripts(gene_result, info)
     for i in transcript_result:
         for pgc in i['product_generating_contexts']:
-            pgc['genome_id'] = 1
-            product_result = await model.resolve_product_by_pgc(pgc, transcript_data)
+            pgc['genome_id'] = "1"
+            product_result = await model.resolve_product_by_pgc(pgc, info)
             if 'stable_id' in product_result:
                 assert product_result['stable_id'] == 'ENSP001.1'

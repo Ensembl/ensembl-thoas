@@ -11,9 +11,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from unittest.mock import Mock
 
 import mongomock
 import requests
+from starlette.datastructures import State
+
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
@@ -31,10 +34,12 @@ def prepare_db():
         print('No network available, tests will fail')
         xref_resolver = None
 
+    request_mock = Mock()
+    request_mock.state = State()
     context = {
         'mongo_db': mocked_mongo_collection,
-        'DataLoaderCollections': {},
-        'XrefResolver': xref_resolver
+        'XrefResolver': xref_resolver,
+        'request': request_mock
     }
 
     mocked_mongo_collection.insert_one(build_gene())

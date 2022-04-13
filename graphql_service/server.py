@@ -33,7 +33,7 @@ print(os.environ)
 
 CONFIG = load_config(os.getenv('GQL_CONF'))
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 EXTENSIONS: Optional[ExtensionList] = None  # mypy will throw an incompatible type error without this type cast
 
 if DEBUG_MODE:
@@ -46,6 +46,8 @@ if DEBUG_MODE:
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
+    # To see it in the GraphQL playground, make sure you have `"tracing.hideTracingResponse": false` in the playground
+    # settings
     EXTENSIONS = [ApolloTracingExtension]
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
@@ -57,7 +59,6 @@ RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
 CONTEXT_PROVIDER = prepare_context_provider({
     'mongo_db': MONGO_CLIENT.collection(),
     'XrefResolver': RESOLVER,
-    'DataLoaderCollections': {}
 })
 
 starlette_middleware = [
