@@ -31,8 +31,6 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
 
     mysql_client = MySQLClient(config, section_name)
 
-    circular_attribute_query = """SELECT attrib_type_id FROM attrib_type WHERE code = 'circular_seq'"""
-
     max_regions = 10000
     species = config.get(section_name, 'production_name')
 
@@ -55,13 +53,9 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
                       AND coord_system.name = 'chromosome'                      
                       LIMIT %s"""
 
-    with mysql_client.connection.cursor(dictionary=True) as cursor:
-        cursor.execute(circular_attribute_query)
-        circular_attribute_result = cursor.fetchall()
-        if len(circular_attribute_result) != 1:
-            raise DataError('Could not find unique circular attribute id')
-        circular_attribute_id = circular_attribute_result[0]['attrib_type_id']
+    circular_attribute_id = mysql_client.get_attribute_id_from_code('circular_seq')
 
+    with mysql_client.connection.cursor(dictionary=True) as cursor:
         cursor.execute(region_query, (circular_attribute_id, species, max_regions))
         region_results = cursor.fetchall()
 

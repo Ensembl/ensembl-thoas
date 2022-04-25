@@ -322,7 +322,7 @@ def format_transcript(
     return new_transcript
 
 
-def load_product_info(mongo_client, product_filepath, cds_info, genome_id, refget):
+def load_product_info(mongo_client, product_filepath, genome_id, refget):
     protein_buffer = []
     with open(product_filepath, encoding='UTF-8') as protein_file:
         for line in protein_file:
@@ -331,7 +331,6 @@ def load_product_info(mongo_client, product_filepath, cds_info, genome_id, refge
                 common.utils.format_protein(
                     protein=product,
                     genome_id=genome_id,
-                    product_length=cds_info[product["transcript_id"]]['spliced_length'] // 3,
                     refget=refget)
             )
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
@@ -485,6 +484,6 @@ if __name__ == '__main__':
     load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, REFGET, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
-    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'], REFGET)
+    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, GENOME['id'], REFGET)
 
     create_index(MONGO_CLIENT)

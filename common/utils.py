@@ -451,7 +451,7 @@ def get_alphabet_info(sequence_type):
     }
     return type_to_alphabet.get(sequence_type)
 
-def format_protein(protein, genome_id, product_length, refget):
+def format_protein(protein, genome_id, refget):
     '''
     Create a protein representation from limited data
     '''
@@ -471,7 +471,7 @@ def format_protein(protein, genome_id, product_length, refget):
         'external_references': format_cross_refs(protein['xrefs']),
         'family_matches': format_protein_features(protein['protein_features']),
         # 'mappings': TODO
-        'length': product_length,
+        'length': protein["number_of_residues"],
         'sequence': sequence,
         'sequence_checksum': sequence.get('checksum')
     }

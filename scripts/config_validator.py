@@ -13,7 +13,7 @@
 """
 
 from os import access, R_OK
-from os.path import isfile
+from os.path import isfile, isdir
 from configparser import ConfigParser
 from typing import Set
 
@@ -59,12 +59,12 @@ def validate_config(config_parser: ConfigParser) -> None:
 
     for pathname in ["base_data_path", "grch37_data_path", "classifier_path", "chr_checksums_path",
                      "xref_lod_mapping_file"]:
-        check_file_path_exists(pathname, config_parser.get("GENERAL", pathname))
+        check_path_exists(pathname, config_parser.get("GENERAL", pathname))
 
 
-def check_file_path_exists(pathname: str, filepath: str) -> None:
-    assert isfile(filepath) and access(filepath, R_OK), \
-        f"Error validating path provided for {pathname}.  Provided path {filepath} does not exist or isn't readable."
+def check_path_exists(pathname: str, path: str) -> None:
+    assert (isfile(path) or isdir(path)) and access(path, R_OK), \
+        f"Error validating path provided for {pathname}.  Provided path {path} does not exist or isn't readable."
 
 
 def check_required_fields(required_fields: Set[str], given_fields: Set[str], section: str = None) -> None:

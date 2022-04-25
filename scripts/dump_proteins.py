@@ -14,6 +14,9 @@
 
 import argparse
 import json
+
+from mysql.connector import DataError
+
 import common.utils
 
 from common.mysql import MySQLClient
@@ -25,12 +28,14 @@ def dump_proteins(config, section_name):
     translation_query = """SELECT ifnull(t.stable_id,t.transcript_id) AS transcript_id,
     ifnull(tl.stable_id,tl.translation_id) AS id,
     tl.version AS version,
+    ta.value as number_of_residues,
     'translation' AS ensembl_object_type
     FROM transcript t
     JOIN translation tl USING (transcript_id)
     JOIN seq_region s USING (seq_region_id)
     JOIN coord_system c USING (coord_system_id)
-    JOIN meta USING (species_id) 
+    JOIN meta USING (species_id)
+    JOIN (SELECT translation_id, value FROM translation_attrib WHERE attrib_type_id = %s) as ta USING (translation_id)
     WHERE c.name = 'chromosome' AND c.version = %s AND meta_key='species.production_name' AND meta_value=%s"""
 
     domain_query = """SELECT ifnull(tl.stable_id, tl.translation_id) AS translation_id,
@@ -83,11 +88,13 @@ def dump_proteins(config, section_name):
                 result[item[key]] = [item]
         return result
 
+    num_residues_attribute_id = mysql_client.get_attribute_id_from_code("NumResidues")
+
     with mysql_client.connection.cursor(dictionary=True) as cursor:
         assembly = config.get(section_name, 'assembly')
         species = config.get(section_name, 'production_name')
 
-        cursor.execute(translation_query, (assembly, species))
+        cursor.execute(translation_query, (num_residues_attribute_id, assembly, species))
         translations = cursor.fetchall()
 
         cursor.execute(domain_query, (assembly, species))
