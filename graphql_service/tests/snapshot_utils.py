@@ -11,13 +11,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from unittest.mock import Mock
 
 import mongomock
 import requests
+from starlette.datastructures import State
+
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import DataLoaderCollection
 from graphql_service.tests.fixtures.human_brca2 import build_gene, build_transcripts, build_products, build_region, \
     build_assembly
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
@@ -26,17 +28,18 @@ def prepare_db():
     'Fill a mock database with data and provide a collection accessor'
 
     mocked_mongo_collection = mongomock.MongoClient().db.collection
-    data_loader = DataLoaderCollection(mocked_mongo_collection)
     try:
         xref_resolver = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
     except requests.exceptions.ConnectionError:
         print('No network available, tests will fail')
         xref_resolver = None
 
+    request_mock = Mock()
+    request_mock.state = State()
     context = {
         'mongo_db': mocked_mongo_collection,
-        'data_loader': data_loader,
-        'XrefResolver': xref_resolver
+        'XrefResolver': xref_resolver,
+        'request': request_mock
     }
 
     mocked_mongo_collection.insert_one(build_gene())

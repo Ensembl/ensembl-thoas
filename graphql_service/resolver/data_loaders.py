@@ -13,13 +13,13 @@
 """
 
 from collections import defaultdict
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from aiodataloader import DataLoader
 from pymongo.collection import Collection
 
 
-class DataLoaderCollection():
+class DataLoaderCollection:
     """
     A collection of bulk data aggregators for "joins" in GraphQL
     They're part of a class so they can be initialised in one go
@@ -28,14 +28,16 @@ class DataLoaderCollection():
     Can't currently support multiple genome_ids in the same query.
     Limitations in the DataLoader design as stateless function
     with fixed arguments mean we can't inject genome_id on calling
-    .load(). Needs a better solution, or better sandboxing of
-    data loaders.
+    .load(). Needs a better solution.
     """
 
-    def __init__(self, db_collection: Collection):
+    def __init__(self, db_collection: Collection, genome_id: str):
         'Accepts a MongoDB collection object to provide data'
         self.collection = db_collection
-        self.genome_id: Optional[str] = None
+        self.genome_id = genome_id
+        self.gene_transcript_dataloader = self.create_gene_transcript_dataloader(genome_id)
+        self.transcript_product_dataloader = self.create_transcript_product_dataloader(genome_id)
+        self.slice_region_dataloader = self.create_slice_region_dataloader(genome_id)
 
     async def batch_transcript_load(self, keys: List[str]) -> List[List]:
         '''
@@ -68,6 +70,16 @@ class DataLoaderCollection():
         data = await self.query_mongo(query)
         return self.collate_dataloader_output('stable_id', keys, data)
 
+    async def batch_region_load(self, keys: List[str]) -> List[List]:
+        query = {
+            'type': 'Region',
+            'region_id': {
+                '$in': keys
+            }
+        }
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output('region_id', keys, data)
+
     @staticmethod
     def collate_dataloader_output(foreign_key: str, original_ids: List[str], docs: List[Dict]) -> List[List]:
         '''
@@ -87,7 +99,7 @@ class DataLoaderCollection():
 
         return [grouped_docs[fk] for fk in original_ids]
 
-    def gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Transcripts fetched via Genes'
         # How do we get temporary state into class methods with a fixed signature?
         # I didn't want to fork DataLoader in order to add arbitrary arguments
@@ -99,12 +111,19 @@ class DataLoaderCollection():
             max_batch_size=max_batch_size
         )
 
-    def transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
         'Factory for DataLoaders for Products fetched via Transcripts'
 
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_product_load,
+            max_batch_size=max_batch_size
+        )
+
+    def create_slice_region_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+        self.genome_id = genome_id
+        return DataLoader(
+            batch_load_fn=self.batch_region_load,
             max_batch_size=max_batch_size
         )
 

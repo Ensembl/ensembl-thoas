@@ -25,16 +25,14 @@ async def test_batch_transcript_load():
 
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG001.1'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
-        {'genome_id': 1, 'type': 'Transcript', 'gene': 'ENSG002.2'},
+        {'genome_id': '1', 'type': 'Transcript', 'gene': 'ENSG001.1'},
+        {'genome_id': '1', 'type': 'Transcript', 'gene': 'ENSG001.1'},
+        {'genome_id': '1', 'type': 'Transcript', 'gene': 'ENSG002.2'},
+        {'genome_id': '1', 'type': 'Transcript', 'gene': 'ENSG002.2'},
+        {'genome_id': '1', 'type': 'Transcript', 'gene': 'ENSG002.2'},
     ])
 
-    loader = DataLoaderCollection(collection)
-    # This is normally set by calling gene_transcript_dataloader()
-    loader.genome_id = 1
+    loader = DataLoaderCollection(collection, '1')
 
     response = await loader.batch_transcript_load(
         ['ENSG001.1']
@@ -70,12 +68,12 @@ async def test_batch_product_load():
 
     collection = mongomock.MongoClient().db.collection
     collection.insert_many([
-        {'genome_id': 1, 'type': 'Protein', 'stable_id': 'ENSP001.1'},
-        {'genome_id': 1, 'type': 'Protein', 'stable_id': 'ENSP002.1'}
+        {'genome_id': '1', 'type': 'Protein', 'stable_id': 'ENSP001.1'},
+        {'genome_id': '1', 'type': 'Protein', 'stable_id': 'ENSP002.1'}
     ])
 
-    loader = DataLoaderCollection(collection)
-    loader.genome_id = 1
+    loader = DataLoaderCollection(collection, '1')
+
     response = await loader.batch_product_load(['ENSP001.1'])
 
     assert response[0][0]['stable_id'] == 'ENSP001.1'

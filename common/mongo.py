@@ -15,6 +15,7 @@ from configparser import NoOptionError
 
 import pymongo
 import mongomock
+from pymongo.event_loggers import CommandLogger
 
 
 class MongoDbClient:
