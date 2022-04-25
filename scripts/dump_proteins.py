@@ -15,8 +15,6 @@
 import argparse
 import json
 
-from mysql.connector import DataError
-
 import common.utils
 
 from common.mysql import MySQLClient
