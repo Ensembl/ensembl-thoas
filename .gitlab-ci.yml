@@ -18,7 +18,7 @@ variables:
   # We need to disable TLS (https://about.gitlab.com/blog/2019/07/31/docker-in-docker-with-docker-19-dot-03/#disable-tls)
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
-  DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}
+  DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
 
 # Template to build docker image
 .build:
