@@ -39,24 +39,23 @@ class RefgetDB:
     def connection_info(self):
         return f"host={self.host} dbname={self.dbname} user={self.user} password={self.password}"
 
-    def get_checksum(self, stable_id, sequence_type):
-        try:
-            with self.connection.cursor() as cur:
-                cur.execute("""
-                                select seq.md5 from seq
-                                join molecule using (seq_id)
-                                join release using (release_id)
-                                join mol_type using(mol_type_id)
-                                join species using(species_id)
-                                where release.release=%s and species.assembly=%s and molecule.id=%s and type = %s
-                                limit 10;
-                            """,
-                            (self.release_version, self.assembly.lower(), stable_id, sequence_type))
+    def get_checksum_and_length(self, stable_id, sequence_type):
+        with self.connection.cursor() as cur:
+            cur.execute("""
+                            select seq.md5, seq.size from seq
+                            join molecule using (seq_id)
+                            join release using (release_id)
+                            join mol_type using(mol_type_id)
+                            join species using(species_id)
+                            where release.release=%s and species.assembly=%s and molecule.id=%s and type = %s
+                            limit 1;
+                        """,
+                        (self.release_version, self.assembly.lower(), stable_id, sequence_type))
 
-                result = cur.fetchone()
-            return result[0]
-        except Exception:
-            return None
+            result = cur.fetchone()
+            if result is None:
+                return None, None
+            return result
 
 
 class MockRefgetDB:
@@ -72,5 +71,5 @@ class MockRefgetDB:
     def pep(self):
         return 'protein'
 
-    def get_checksum(self, stable_id, sequence_type):
-        return '1f47b55923e2d23090f894c439974b55'
+    def get_checksum_and_length(self, stable_id, sequence_type):
+        return '1f47b55923e2d23090f894c439974b55', 10

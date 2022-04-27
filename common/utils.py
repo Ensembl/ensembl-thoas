@@ -391,11 +391,15 @@ def format_cdna(transcript, refget, non_coding=False):
 
     stable_id = get_stable_id(transcript["id"], transcript["version"])
 
-    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.cdna)
+    sequence_type = refget.cdna
+    sequence_checksum, _ = refget.get_checksum_and_length(stable_id, sequence_type)
 
     # Some non-coding transcripts don't have CDNA. Instead fetch NCRNA.
-    if non_coding and sequence.get('checksum') is None:
-        sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.ncrna)
+    if non_coding and sequence_checksum is None:
+        sequence_type = refget.ncrna
+        sequence_checksum, _ = refget.get_checksum_and_length(stable_id, sequence_type)
+
+    sequence = format_sequence(refget, sequence_checksum, sequence_type)
 
     start = transcript['start']
     end = transcript['end']
@@ -408,7 +412,6 @@ def format_cdna(transcript, refget, non_coding=False):
     for exon in transcript['exons']:
         length += exon['end'] - exon['start'] + 1
 
-    # Needs sequence too. Add it soon!
     return {
         'start': start,
         'end': end,
@@ -421,10 +424,7 @@ def format_cdna(transcript, refget, non_coding=False):
     }
 
 
-def format_sequence_object(refget, stable_id, sequence_type):
-
-    sequence_checksum = refget.get_checksum(stable_id, sequence_type)
-
+def format_sequence(refget, sequence_checksum, sequence_type):
     return {
         'alphabet': get_alphabet_info('protein') if sequence_type == refget.pep else get_alphabet_info('dna'),
         'checksum': sequence_checksum
@@ -451,13 +451,15 @@ def get_alphabet_info(sequence_type):
     }
     return type_to_alphabet.get(sequence_type)
 
+
 def format_protein(protein, genome_id, refget):
     '''
     Create a protein representation from limited data
     '''
 
     stable_id = get_stable_id(protein['id'], protein['version'])
-    sequence = format_sequence_object(refget, stable_id=stable_id, sequence_type=refget.pep)
+    sequence_checksum, length = refget.get_checksum_and_length(stable_id, refget.pep)
+    sequence = format_sequence(refget, sequence_checksum, refget.pep)
 
     return {
         'type': 'Protein',
@@ -471,7 +473,7 @@ def format_protein(protein, genome_id, refget):
         'external_references': format_cross_refs(protein['xrefs']),
         'family_matches': format_protein_features(protein['protein_features']),
         # 'mappings': TODO
-        'length': protein["number_of_residues"],
+        'length': length,
         'sequence': sequence,
         'sequence_checksum': sequence.get('checksum')
     }

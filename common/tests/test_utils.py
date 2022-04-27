@@ -642,7 +642,6 @@ def test_protein_formatting():
         "id": "CAB89209",
         "version": 2,
         "ensembl_object_type": "translation",
-        "number_of_residues": 10,
         "protein_features": [
             {
                 "translation_id": "CAB89209",

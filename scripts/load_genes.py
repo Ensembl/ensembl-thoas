@@ -272,10 +272,12 @@ def format_transcript(
         cds_start = cds_info[transcript['id']]['start']
         cds_end = cds_info[transcript['id']]['end']
         spliced_length = cds_info[transcript['id']]['spliced_length']
-        cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'],
-                                                           sequence_type=refget.cds)
+        cds_sequence_checksum, _ = refget.get_checksum_and_length(new_transcript['stable_id'], refget.cds)
+        cds_sequence = common.utils.format_sequence(refget, cds_sequence_checksum, refget.cds)
 
         for translation in transcript['translations']:
+            product_id = common.utils.get_stable_id(translation["id"], translation["version"])
+            _, protein_length = refget.get_checksum_and_length(product_id, refget.pep)
             new_transcript['product_generating_contexts'].append(
                 {
                     'product_type': 'Protein',  # probably
@@ -291,12 +293,12 @@ def format_transcript(
                         'relative_start': relative_cds_start,
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
-                        'protein_length': spliced_length // 3,
+                        'protein_length': protein_length,
                         'sequence': cds_sequence,
                         'sequence_checksum': cds_sequence.get('checksum')
                     },
                     # Infer the "products" in the resolver. This is a join.
-                    'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
+                    'product_id': product_id,
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
