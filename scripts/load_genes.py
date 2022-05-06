@@ -272,10 +272,12 @@ def format_transcript(
         cds_start = cds_info[transcript['id']]['start']
         cds_end = cds_info[transcript['id']]['end']
         spliced_length = cds_info[transcript['id']]['spliced_length']
-        cds_sequence = common.utils.format_sequence_object(refget, stable_id=new_transcript['stable_id'],
-                                                           sequence_type=refget.cds)
+        cds_sequence_checksum, _ = refget.get_checksum_and_length(new_transcript['stable_id'], refget.cds)
+        cds_sequence = common.utils.format_sequence(refget, cds_sequence_checksum, refget.cds)
 
         for translation in transcript['translations']:
+            product_id = common.utils.get_stable_id(translation["id"], translation["version"])
+            _, protein_length = refget.get_checksum_and_length(product_id, refget.pep)
             new_transcript['product_generating_contexts'].append(
                 {
                     'product_type': 'Protein',  # probably
@@ -291,12 +293,12 @@ def format_transcript(
                         'relative_start': relative_cds_start,
                         'relative_end': relative_cds_end,
                         'nucleotide_length': spliced_length,
-                        'protein_length': spliced_length // 3,
+                        'protein_length': protein_length,
                         'sequence': cds_sequence,
                         'sequence_checksum': cds_sequence.get('checksum')
                     },
                     # Infer the "products" in the resolver. This is a join.
-                    'product_id': common.utils.get_stable_id(translation["id"], translation["version"]),
+                    'product_id': product_id,
                     'phased_exons': common.utils.phase_exons(ordered_formatted_exons, transcript['id'], phase_info),
                     # We'll know default later when it becomes relevant
                     'default': defaults.pop(),
@@ -322,7 +324,7 @@ def format_transcript(
     return new_transcript
 
 
-def load_product_info(mongo_client, product_filepath, cds_info, genome_id, refget):
+def load_product_info(mongo_client, product_filepath, genome_id, refget):
     protein_buffer = []
     with open(product_filepath, encoding='UTF-8') as protein_file:
         for line in protein_file:
@@ -331,7 +333,6 @@ def load_product_info(mongo_client, product_filepath, cds_info, genome_id, refge
                 common.utils.format_protein(
                     protein=product,
                     genome_id=genome_id,
-                    product_length=cds_info[product["transcript_id"]]['spliced_length'] // 3,
                     refget=refget)
             )
             protein_buffer = common.utils.flush_buffer(mongo_client, protein_buffer)
@@ -485,6 +486,6 @@ if __name__ == '__main__':
     load_gene_info(MONGO_CLIENT, JSON_FILE, CDS_INFO, ASSEMBLY, GENOME, PHASE_INFO, TRANSCRIPT_METADATA, METADATA_CLASSIFIER, GENE_NAME_METADATA, XREF_RESOLVER, REFGET, URL_LOGGER)
 
     TRANSLATIONS_FILE = f'{ARGS.species}_{ARGS.assembly}_translations.json'
-    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, CDS_INFO, GENOME['id'], REFGET)
+    load_product_info(MONGO_CLIENT, TRANSLATIONS_FILE, GENOME['id'], REFGET)
 
     create_index(MONGO_CLIENT)

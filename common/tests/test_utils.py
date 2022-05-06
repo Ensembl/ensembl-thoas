@@ -680,7 +680,6 @@ def test_protein_formatting():
     result = format_protein(
         protein=protein,
         genome_id='tralalala',
-        product_length=10,
         refget=refget
     )
 
