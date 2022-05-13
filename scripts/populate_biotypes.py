@@ -31,7 +31,7 @@ TRANSCRIPT_NAME_MAPPING = {
 }
 
 
-def create_transcript_biotypes(input_tsv, feature_type="transcript"):
+def create_biotypes(input_tsv, feature_type="transcript"):
     biotype_valuesets = {}
     with open(input_tsv, encoding='UTF-8') as handle:
         reader = csv.DictReader(handle, delimiter="\t")
