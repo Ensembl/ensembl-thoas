@@ -177,7 +177,7 @@ class Biotype:
         self.classifier = classifier.lower()  # Normalize classifiers to be lower-case
         self.value = None
         self.label = classifier.replace("_", " ")
-        self.definition = None
+        self.definition = ""
         self.description = None
 
     def parse_input(self):
@@ -186,9 +186,6 @@ class Biotype:
             self.label = self.biotype_classifiers[self.classifier]['label']
             self.definition = self.biotype_classifiers[self.classifier]['definition']
             return True
-        warnings.warn(
-            f"The biotype '{self.classifier}' could not be found in the transcript biotype classifiers file, using "
-            f"inferred label and value instead.  You may need to update the transcript biotype classifiers file.")
         return False
 
     def to_json(self):

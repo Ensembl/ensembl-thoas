@@ -113,11 +113,6 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                 gene_metadata['biotype'] = gene_biotype_classifiers.get(normalised_gene_biotype + "_gene")
 
             # infer biotype valueset if we can't find it in gene_biotype.json
-            if not gene_metadata['biotype']:
-                warnings.warn(
-                    f"Gene with id {gene['id']} has biotype {gene['biotype']} that could not be found in "
-                    f"the gene biotypes file.  Inferring biotype valueset instead.  You may need to update the gene "
-                    f"biotypes file.")
                 gene_metadata['biotype'] = {
                     "value": gene["biotype"].lower(),
                     "label": gene["biotype"].replace("_", " "),
