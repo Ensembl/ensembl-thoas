@@ -187,8 +187,8 @@ class Biotype:
             self.definition = self.biotype_classifiers[self.classifier]['definition']
             return True
         warnings.warn(
-            f"The biotype '{self.classifier}' could not be found in the biotype classifiers file, inferring label and "
-            f"value instead.  You may need to update the biotype classifiers file.")
+            f"The biotype '{self.classifier}' could not be found in the transcript biotype classifiers file, using "
+            f"inferred label and value instead.  You may need to update the transcript biotype classifiers file.")
         return False
 
     def to_json(self):

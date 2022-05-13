@@ -6,7 +6,7 @@ import json
 LNCRNA_LEGACY_TYPES = ["3prime_overlapping_ncrna", "antisense", "bidirectional_promoter_lncrna", "lincrna",
      "macro_lncrna", "non_coding", "processed_transcript", "sense_intronic", "sense_overlapping"]
 
-# The values of this dict are legacy names for the keys
+# The Perl API returns the values of this dict, while the google doc uses the keys
 TRANSCRIPT_NAME_MAPPING = {
     'scrna_gene': 'scrna',
     'scarna_gene': 'scarna',
@@ -29,7 +29,7 @@ def create_transcript_biotypes(input_tsv, feature_type="transcript"):
                                                "definition": row["definition of term (succinct - as few words as possible. )"],
                                                "description": biotype_description_nullable,
                                                }
-            # Duplicate the biotype for transcript legacy names
+            # Duplicate the biotype for values which are different for the Google doc and Perl API
             if feature_type == "transcript" and row['value'] in TRANSCRIPT_NAME_MAPPING:
                 biotype_valuesets[TRANSCRIPT_NAME_MAPPING[row["value"]]] = biotype_valuesets[row['value']]
     # Coalesce legacy biotypes
