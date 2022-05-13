@@ -14,7 +14,7 @@
 import re
 import json
 import os
-import warnings
+
 
 class TSL:
     regex = re.compile("tsl(\d+|NA)")

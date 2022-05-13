@@ -16,7 +16,6 @@ import re
 import csv
 import os
 import json
-import warnings
 
 import ijson
 import pymongo
