@@ -11,7 +11,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import warnings
 from configparser import ConfigParser
 import argparse
 import sys
@@ -715,15 +714,3 @@ def check_and_log_urls(data, url_key, logger):
         data['error'] = "Unable to check URL"
         data['url_key'] = url_key
         logger.url_logger(**data)
-
-
-def check_and_generate_biotype(feature, metadata, feature_type):
-    if not metadata['biotype']:
-        warnings.warn(
-            f"{feature_type} with id {feature['id']} has biotype {feature['biotype']} that could not be found in "
-            f"the biotypes file.  Inferring biotype valueset instead.  You may need to update the biotypes file.")
-        metadata['biotype'] = {
-            "value": feature["biotype"].lower(),
-            "label": feature["biotype"].replace("_", " "),
-            "description": ""
-        }

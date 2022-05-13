@@ -1,3 +1,18 @@
+'''
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+'''
+
+
 import argparse
 import csv
 import json
@@ -18,7 +33,7 @@ TRANSCRIPT_NAME_MAPPING = {
 
 def create_transcript_biotypes(input_tsv, feature_type="transcript"):
     biotype_valuesets = {}
-    with open(input_tsv) as handle:
+    with open(input_tsv, encoding='UTF-8') as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         for row in reader:
             biotype_description = row["description (longer description that can contain nuances)"]
@@ -32,13 +47,13 @@ def create_transcript_biotypes(input_tsv, feature_type="transcript"):
             # Duplicate the biotype for values which are different for the Google doc and Perl API
             if feature_type == "transcript" and row['value'] in TRANSCRIPT_NAME_MAPPING:
                 biotype_valuesets[TRANSCRIPT_NAME_MAPPING[row["value"]]] = biotype_valuesets[row['value']]
-    # Coalesce legacy biotypes
+    # Duplicate valuesets for legacy biotypes which have been coalesced into 'lncrna'
     for biotype in LNCRNA_LEGACY_TYPES:
         if feature_type == "transcript":
             biotype_valuesets[biotype] = biotype_valuesets['lncrna']
         elif feature_type == "gene":
             biotype_valuesets[biotype] = biotype_valuesets['lncrna_gene']
-    with open(feature_type + "_biotype.json", "w+") as handle:
+    with open(feature_type + "_biotype.json", "w+", encoding='UTF-8') as handle:
         json.dump(biotype_valuesets, handle, indent=4)
 
 

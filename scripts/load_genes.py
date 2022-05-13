@@ -28,7 +28,6 @@ from common.mongo import MongoDbClient
 from common.refget_postgresql import RefgetDB
 from common.crossrefs import XrefResolver
 from common.logger import ThoasLogging
-from common.utils import check_and_generate_biotype
 
 lrg_detector = re.compile('^LRG')
 
@@ -239,8 +238,6 @@ def format_transcript(
         transcript_xrefs = []
 
     ####TODO: Type and release version
-
-    check_and_generate_biotype(transcript, tr_metadata_info[transcript['id']], "transcript")
 
     new_transcript = {
         'type': 'Transcript',
