@@ -62,7 +62,7 @@ type TranscriptEnsemblCanonicalMetadata implements ValueSetMetadata {
 
 type TranscriptMetadata {
 	gencode_basic: TranscriptGencodeBasicMetadata
-	biotype : TranscriptBiotypeMetadata
+	biotype : TranscriptBiotypeMetadata!
 	appris: TranscriptApprisMetadata
 	tsl: TranscriptTSLMetadata
 	mane: TranscriptManeMetadata
