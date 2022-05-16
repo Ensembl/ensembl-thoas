@@ -91,6 +91,6 @@ type GeneNameMetadata {
 }
 
 type GeneMetadata {
-	biotype: GeneBiotypeMetadata
+	biotype: GeneBiotypeMetadata!
 	name: GeneNameMetadata
 }
