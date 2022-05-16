@@ -33,7 +33,7 @@ print(os.environ)
 
 CONFIG = load_config(os.getenv('GQL_CONF'))
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 EXTENSIONS: Optional[ExtensionList] = None  # mypy will throw an incompatible type error without this type cast
 
 if DEBUG_MODE:

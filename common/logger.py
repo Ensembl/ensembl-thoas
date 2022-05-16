@@ -55,6 +55,8 @@ class CommandLogger(monitoring.CommandListener):
         self.log.debug(
             "Command %s with request id %s started on server %s",
             event.command_name, event.request_id, event.connection_id)
+        if event.command_name in {'find', 'getMore'}:
+            self.log.debug("Request id: %s, running query: %s", event.request_id, event.command["filter"])
 
     def succeeded(self, event):
         self.log.debug("Command %s with request id %s on server %s succeeded in %s microseconds",
