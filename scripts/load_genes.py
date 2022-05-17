@@ -16,6 +16,7 @@ import re
 import csv
 import os
 import json
+
 import ijson
 import pymongo
 
@@ -83,7 +84,7 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
     default_region = True
     print('Loaded assembly ' + assembly['name'])
 
-    gene_biotype_classifiers = metadata_classifier['biotype']
+    gene_biotype_classifiers = metadata_classifier['gene_biotype']
 
     required_keys = ('name', 'description')
     with open(json_file, encoding='UTF-8') as file:
@@ -102,11 +103,21 @@ def load_gene_info(mongo_client, json_file, cds_info, assembly, genome, phase_in
                 gene_xrefs = common.utils.format_cross_refs(gene['xrefs'])
             except KeyError:
                 gene_xrefs = []
-            gene_metadata = {}
-            try:
-                gene_metadata['biotype'] = gene_biotype_classifiers[gene['biotype']]
-            except KeyError as ke:
-                gene_metadata['biotype'] = None
+
+            normalised_gene_biotype = gene['biotype'].lower()
+            gene_metadata = {'biotype': gene_biotype_classifiers.get(normalised_gene_biotype)}
+
+            # Gene biotypes in data dumps may be missing the "_gene" suffix
+            if not gene_metadata['biotype']:
+                gene_metadata['biotype'] = gene_biotype_classifiers.get(normalised_gene_biotype + "_gene")
+
+            # infer biotype valueset if we can't find it in gene_biotype.json
+            if not gene_metadata['biotype']:
+                gene_metadata['biotype'] = {
+                    "value": gene["biotype"].lower(),
+                    "label": gene["biotype"].replace("_", " "),
+                    "definition": ""
+                }
 
             try:
                 gene_metadata['name'] = common.utils.get_gene_name_metadata(gene_name_metadata[gene['id']], xref_resolver, logger)
@@ -433,7 +444,7 @@ def preload_gene_name_metadata(production_name, assembly):
 
 
 def preload_classifiers(classifier_path):
-    meta_classifiers = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'biotype':None, 'canonical':None}
+    meta_classifiers = {'appris': None, 'tsl': None, 'mane':None, 'gencode_basic':None, 'gene_biotype':None, 'canonical':None}
     for classifier in meta_classifiers:
         classifier_file = os.path.join(classifier_path, f"{classifier}.json")
         with open(classifier_file, encoding='UTF-8') as raw_classifier_file:

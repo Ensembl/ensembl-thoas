@@ -15,6 +15,7 @@ import re
 import json
 import os
 
+
 class TSL:
     regex = re.compile("tsl(\d+|NA)")
     definitions = {
@@ -167,22 +168,23 @@ class GencodeBasic:
 
 class Biotype:
     CLASSIFIER_PATH = os.environ['META_CLASSIFIER_PATH']
-    biotype_meta_file = os.path.join(CLASSIFIER_PATH,"biotype.json")
+    biotype_meta_file = os.path.join(CLASSIFIER_PATH, "transcript_biotype.json")
     biotype_classifiers = None
     with open(biotype_meta_file, encoding='UTF-8') as json_file:
         biotype_classifiers = json.load(json_file)
+
     def __init__(self, classifier):
-        self.classifier = classifier
+        self.classifier = classifier.lower()  # Normalize classifiers to be lower-case
         self.value = None
-        self.label = None
-        self.definition = None
+        self.label = classifier.replace("_", " ")
+        self.definition = ""
         self.description = None
 
     def parse_input(self):
         if self.classifier in self.biotype_classifiers.keys():
-            self.value = self.classifier
-            self.label = self.biotype_classifiers[self.value]['label']
-            self.definition = self.biotype_classifiers[self.value]['definition']
+            self.value = self.biotype_classifiers[self.classifier]['value']
+            self.label = self.biotype_classifiers[self.classifier]['label']
+            self.definition = self.biotype_classifiers[self.classifier]['definition']
             return True
         return False
 
