@@ -55,3 +55,7 @@ docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80
 --publish above is exposing the container's ports to the host network
 
 --env-file is the only apparent way to get any non-uvicorn environment variables into the application. It can point to the file mount of a k8s configmap, but in just a container, this would have to be created manually
+
+## Data loading architecture
+
+![Data loading architecture](loading_architecture.png)
