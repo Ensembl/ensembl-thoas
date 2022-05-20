@@ -57,7 +57,7 @@ EXECUTABLE_SCHEMA = prepare_executable_schema()
 RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
 
 CONTEXT_PROVIDER = prepare_context_provider({
-    'mongo_db': MONGO_CLIENT.collection(),
+    'mongo_db': MONGO_CLIENT.mongo_db,
     'XrefResolver': RESOLVER,
 })
 

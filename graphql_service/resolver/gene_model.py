@@ -19,6 +19,8 @@ from graphql import GraphQLError, GraphQLResolveInfo
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
+from pymongo.collection import Collection
+
 from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 QUERY_TYPE = QueryType()
@@ -29,6 +31,10 @@ PRODUCT_TYPE = ObjectType('Product')
 GENE_METADATA_TYPE = ObjectType('GeneMetadata')
 SLICE_TYPE = ObjectType('Slice')
 REGION_TYPE = ObjectType('Region')
+
+metadata_api_mock = {
+    "saccharomyces_cerevisiae_GCA_000146045_2": "graphql_220513145800_2663c5f"
+}
 
 
 def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
@@ -41,18 +47,27 @@ def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
     return current.key
 
 
-def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
-    """This function ensures that all resolvers have access to a dataloader specific to their root query.
+def setup_query_context(genome_id: str, info: GraphQLResolveInfo) -> None:
+    """This function sets up the genome_id-specific context for a graphql query.  First, it gets the collection from the
+    metadata API.  Then it ensures that all resolvers have access to a dataloader specific to their root query.
     This function must be run inside every root-level resolver method"""
 
-    key = get_root_key(info)
     request_state = info.context["request"].state
+
+    mongo_collection = metadata_api_mock.get(genome_id, "graphql_220513162457_2663c5f")
+
+    key = get_root_key(info)
     if hasattr(request_state, 'dataloader_collections'):
-        request_state.dataloader_collections[key] = DataLoaderCollection(info.context['mongo_db'],
+        request_state.dataloader_collections[key] = DataLoaderCollection(info.context['mongo_db'][mongo_collection],
                                                                          genome_id)
     else:
-        info.context["request"].state.dataloader_collections = {key: DataLoaderCollection(info.context['mongo_db'],
+        request_state.dataloader_collections = {key: DataLoaderCollection(info.context['mongo_db'][mongo_collection],
                                                                                           genome_id)}
+
+    if hasattr(request_state, 'mongo_collections'):
+        request_state.mongo_collections[key] = mongo_collection
+    else:
+        request_state.mongo_collections = {key: mongo_collection}
 
 
 def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
@@ -60,11 +75,17 @@ def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
     return info.context["request"].state.dataloader_collections[key]
 
 
+def get_mongo_collection(info: GraphQLResolveInfo) -> Collection:
+    key = get_root_key(info)
+    collection_name = info.context["request"].state.mongo_collections[key]
+    return info.context["mongo_db"][collection_name]
+
+
 @QUERY_TYPE.field('gene')
 def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
     'Load Gene via stable_id'
 
-    create_dataloader_collection(byId['genome_id'], info)
+    setup_query_context(byId['genome_id'], info)
 
     query = {
         'type': 'Gene',
@@ -75,7 +96,7 @@ def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
         'genome_id': byId['genome_id']
     }
 
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
     result = collection.find_one(query)
     if not result:
         raise GeneNotFoundError(byId=byId)
@@ -86,7 +107,7 @@ def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
 def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
     'Load Genes via potentially ambiguous symbol'
 
-    create_dataloader_collection(bySymbol['genome_id'], info)
+    setup_query_context(bySymbol['genome_id'], info)
 
     query = {
         'genome_id': bySymbol['genome_id'],
@@ -94,7 +115,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List
         'symbol': bySymbol['symbol']
     }
 
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
 
     result = collection.find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
@@ -173,9 +194,9 @@ def resolve_transcript(_, info: GraphQLResolveInfo, bySymbol: Optional[Dict[str,
     if genome_id is None:
         raise GraphQLError(f"Unable to resolve transcript, genome id is None")
 
-    create_dataloader_collection(genome_id, info)
+    setup_query_context(genome_id, info)
 
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
     transcript = collection.find_one(query)
     if not transcript:
         raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
@@ -212,7 +233,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         'genome_id': transcript['genome_id'],
         'stable_id': transcript['gene']
     }
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
     gene = collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(byId={'genome_id': transcript['genome_id'],
@@ -227,7 +248,7 @@ def resolve_overlap(_, info: GraphQLResolveInfo, genomeId: str, regionName: str,
     Query Mongo for genes and transcripts lying between start and end
     '''
 
-    create_dataloader_collection(genomeId, info)
+    setup_query_context(genomeId, info)
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genomeId, regionName, "chromosome"])
@@ -281,7 +302,7 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id: str) -> Dict:
     'Fetch a product by stable_id, this is almost always a protein'
 
-    create_dataloader_collection(genome_id, info)
+    setup_query_context(genome_id, info)
 
     query = {
         'genome_id': genome_id,
@@ -291,7 +312,7 @@ def resolve_product_by_id(_, info: GraphQLResolveInfo, genome_id: str, stable_id
         }
     }
 
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
     result = collection.find_one(query)
 
     if not result:
@@ -347,7 +368,7 @@ async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[D
         'id': region['assembly_id']
     }
 
-    collection = info.context['mongo_db']
+    collection = get_mongo_collection(info)
     result = collection.find_one(query)
 
     if not result:
