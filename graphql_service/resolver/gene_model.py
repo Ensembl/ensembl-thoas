@@ -32,7 +32,46 @@ REGION_TYPE = ObjectType('Region')
 
 
 def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
-    """This is intended to be used inside a resolver to determine its root query"""
+    """This is intended to be used inside a resolver to determine its root query.  For example, suppose we had a query
+    like this:
+
+    query {
+      transcript(byId: {
+        genome_id: "plasmodium_falciparum_GCA_000002765_2",
+        stable_id: "CAD52290"
+      }) {
+        ...
+      }
+      gene(byId: {
+        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
+        stable_id: "YHR055C"
+      }) {
+        ...
+      }
+    }
+
+    Then this function will return "transcript" if it runs inside a resolver processing the transcript query, and "gene"
+    if run inside a resolver processing the gene query.
+
+    The keys are always unique within a graphql query.  If you want to run the same type of query more than once in the
+    same GraphQL request then you need to define aliases.  Here is an example:
+
+    query {
+      firstGene: gene(byId: {
+        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
+        stable_id: "snR41"
+      }) {
+        ...
+      }
+      secondGene: gene(byId: {
+        genome_id: "homo_sapiens_GCA_000001405_28"
+        stable_id: "ENSG00000127720.8"
+      }) {
+        ...
+      }
+    }
+    In this case the keys that could be returned by this function are "firstGene" and "secondGene".
+    """
     current = info.path
     parent = current.prev
     while parent is not None:
@@ -43,7 +82,32 @@ def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
 
 def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
     """This function ensures that all resolvers have access to a dataloader specific to their root query.
-    This function must be run inside every root-level resolver method"""
+    This function must be run inside every root-level resolver method.
+
+    For example, suppose that we are processing a query like this:
+
+    query {
+      firstGene: gene(byId: {
+        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
+        stable_id: "snR41"
+      }) {
+        ...
+      }
+      secondGene: gene(byId: {
+        genome_id: "homo_sapiens_GCA_000001405_28"
+        stable_id: "ENSG00000127720.8"
+      }) {
+        ...
+      }
+    }
+    Provided we run this function inside every root-level resolver, at the end of processing the query the value
+    of info.context["request"].state will be
+    {
+      "firstGene": DataLoaderCollection(<mongo client>, "saccharomyces_cerevisiae_GCA_000146045_2"),
+      "secondGene": DataLoaderCollection(<mongo client>, "homo_sapiens_GCA_000001405_28")
+    }
+    This ensures that we have a separate collection of dataloaders per-request and per-genome_id.
+    """
 
     key = get_root_key(info)
     request_state = info.context["request"].state
@@ -51,7 +115,7 @@ def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> No
         request_state.dataloader_collections[key] = DataLoaderCollection(info.context['mongo_db'],
                                                                          genome_id)
     else:
-        info.context["request"].state.dataloader_collections = {key: DataLoaderCollection(info.context['mongo_db'],
+        request_state.dataloader_collections = {key: DataLoaderCollection(info.context['mongo_db'],
                                                                                           genome_id)}
 
 
