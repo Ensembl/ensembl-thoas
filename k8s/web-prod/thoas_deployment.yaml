@@ -13,7 +13,7 @@ spec:
         - name: thoas-server-pull-secret
       containers:
         - name: thoas-server
-          image: <DOCKER_IMAGE>
+          image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas:latest
           ports:
             - containerPort: 8000
           imagePullPolicy: Always

@@ -116,7 +116,7 @@ class XrefResolver():
                     (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
-            print(f'*** {id_org_ns_prefix} namespace not in identifiers.org ***')
+            # print(f'*** {id_org_ns_prefix} namespace not in identifiers.org ***')
             return None
         # some sources seemingly have no official entry.
         # Take the first arbitrarily
@@ -162,9 +162,9 @@ class XrefResolver():
             mapping_entry = self.internal_mapping_file_indexed[xref_db_name.lower()]
             if 'id_namespace' in mapping_entry:
                 return mapping_entry['id_namespace']
-            print(f'*** No id_namespace for {xref_db_name.lower()} in the internal mapping file ***')
-        else:
-            print(f'*** {xref_db_name.lower()} not in the internal mapping file ***')
+            # print(f'*** No id_namespace for {xref_db_name.lower()} in the internal mapping file ***')
+        # else:
+        #     print(f'*** {xref_db_name.lower()} not in the internal mapping file ***')
 
         return None
 

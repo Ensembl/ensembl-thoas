@@ -12,4 +12,4 @@ EXPOSE 8000
 
 WORKDIR /app
 
-CMD uvicorn --workers 2 --env /app/k8s/k8s-mongo.conf --host=0.0.0.0 graphql_service.server:app
+CMD uvicorn --workers 1 --env /app/k8s/k8s-mongo.conf --host=0.0.0.0 graphql_service.server:app

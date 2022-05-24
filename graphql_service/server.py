@@ -40,7 +40,7 @@ if DEBUG_MODE:
     # This will write MongoDB transactions to `thoas.log`
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG, filename='thoas.log', filemode='w')
+    logging.basicConfig(level=logging.DEBUG)
 
     monitoring.register(CommandLogger(log))
 
@@ -48,7 +48,7 @@ if DEBUG_MODE:
     # https://ariadnegraphql.org/docs/apollo-tracing
     # To see it in the GraphQL playground, make sure you have `"tracing.hideTracingResponse": false` in the playground
     # settings
-    EXTENSIONS = [ApolloTracingExtension]
+    # EXTENSIONS = [ApolloTracingExtension]
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
@@ -66,4 +66,4 @@ starlette_middleware = [
 ]
 
 APP = Starlette(debug=True, middleware=starlette_middleware)
-APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER, extensions=EXTENSIONS))
+APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER, extensions=[]))
