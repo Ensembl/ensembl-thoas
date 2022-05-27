@@ -13,6 +13,7 @@
 """
 import logging
 import os
+import time
 from typing import Optional
 
 from ariadne.asgi import GraphQL
@@ -22,6 +23,7 @@ from pymongo import monitoring
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from common.logger import CommandLogger
 from common.utils import load_config
@@ -30,6 +32,15 @@ from common import mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 
 print(os.environ)
+
+
+class TimerMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        start = time.time()
+        response = await call_next(request)
+        end = time.time()
+        print(f"Time for request is {end - start}")
+        return response
 
 CONFIG = load_config(os.getenv('GQL_CONF'))
 
@@ -62,7 +73,8 @@ CONTEXT_PROVIDER = prepare_context_provider({
 })
 
 starlette_middleware = [
-    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST'])
+    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST']),
+    Middleware(TimerMiddleware)
 ]
 
 APP = Starlette(debug=True, middleware=starlette_middleware)
