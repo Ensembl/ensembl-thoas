@@ -104,7 +104,8 @@ class DataLoaderCollection:
         # How do we get temporary state into class methods with a fixed signature?
         # I didn't want to fork DataLoader in order to add arbitrary arguments
         # There is a danger of cross-contamination here if genome_id changes in
-        # the same thread, but I'm not sure how to do this better.
+        # the same thread, which is why we've taken care to create separate data
+        # loaders per-request and per-genome_id.
         self.genome_id = genome_id
         return DataLoader(
             batch_load_fn=self.batch_transcript_load,
