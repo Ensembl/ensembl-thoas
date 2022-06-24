@@ -8,6 +8,8 @@ This application is implemented with [Ariadne](https://ariadnegraphql.org/), a s
 
 GraphQL requires a schema (in /common) and implementation of resolver functions that know how to interpret specific parts of a GraphQL query. Resolvers are found in /resolver, and may also make use of "data loaders" to overcome inherent deficiencies in GraphQL implementations.
 
+https://www.ebi.ac.uk/seqdb/confluence/display/EA/Thoas+Docs
+
 ## Installation
 Requires Python 3.7+.  
 
@@ -20,7 +22,7 @@ To install dependencies, run:
 `pip install -r requirements-dev.txt` installs everything including dev dependencies like pytest, mypy etc.
 
 ## Running the API locally
-Put configuration MongoDB configuration in a file e.g. mongo.conf
+Put configuration MongoDB configuration `./mongo.conf`
 
 The file follows the following template:
 ```
@@ -67,17 +69,22 @@ At the moment we only enforce type-checking in the API code.  Run this command f
 `mypy graphql_service`
 
 ## Containerisation
+
+Build the image using `./Dockerfile`:
+
 `docker build -t $NAME:$VERSION .`
 
-Designed to be run in a Kubernetes-like environment, so configuration is externalised as a variable to tell it where the config is, and a config file that will be injected from the container environment.
+Run a container with the image (`--publish` below is exposing the container's ports to the host network):
 
-This can be emulated at great effort using docker run's --mount command:
+`docker container run --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION`
 
-`docker container run --env GQL_CONF=/app/mongo.conf -w /app --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION uvicorn --workers 5 --host=0.0.0.0 graphql_service.server:app --env-file /app/$FILE_MOUNT`
+There are two other Dockerfiles in this repo at `k8s/Dockerfile` and `web/Dockerfile`.  These Dockerfiles are intended 
+to be used in Kubernetes, and for those the Mongo configuration is passed in a different way to the `./Dockerfile`.  In 
+`./Dockerfile` the Mongo conf is assumed to exist in the repo as the file `./mongo.conf` and gets built into the Docker 
+image.  For the other Dockerfiles the configuration is not in the image.  Instead it gets externalised as a variable pointing to 
+a location where the config file has been mounted using a k8s object called a config-map.  If we want to emulate this 
+in Docker then we could look into using Docker [bind mounts](https://docs.docker.com/storage/bind-mounts/).
 
-`--publish` above is exposing the container's ports to the host network
-
-`--env-file` is the only apparent way to get any non-uvicorn environment variables into the application. It can point to the file mount of a k8s configmap, but in just a container, this would have to be created manually
 
 ## Data loading
 
