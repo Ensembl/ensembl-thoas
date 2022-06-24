@@ -51,9 +51,10 @@ class MongoDbClient:
         client = pymongo.MongoClient(
             host,
             port,
+            username=user,
+            password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED
         )
-        client.admin.authenticate(user, password)
         print('connected to MongoDB ' + host)
         return client[dbname]
 
