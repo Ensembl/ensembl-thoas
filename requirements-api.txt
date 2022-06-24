@@ -1,5 +1,5 @@
 -r requirements-shared.txt
 aiodataloader==0.2.1
-ariadne===0.14.1
-python-dotenv==0.19.2
-uvicorn==0.17.1
+ariadne==0.15.1
+python-dotenv==0.20.0
+uvicorn==0.18.1
