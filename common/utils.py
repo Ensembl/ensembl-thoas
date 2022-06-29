@@ -708,5 +708,5 @@ def check_and_log_urls(data, url_key, logger):
             logger.url_logger(**data)
     except:
         data["error"] = "Unable to check URL"
-        data["url_key"] = url_key
+        data['url_key'] = url_key
         logger.url_logger(**data)
