@@ -1,5 +1,5 @@
 # Workflow name
-name: PyTest and Black
+name: PyTest
 
 # Controls when the workflow will run
 on:
@@ -16,7 +16,7 @@ jobs:
   # This workflow contains a single job called "test"
   test:
     # The type of runner that the job will run on and timeout in minutes
-    name: Run Python Tests and Black formatter
+    name: Run Python Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
