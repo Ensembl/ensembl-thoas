@@ -22,160 +22,145 @@ import requests
 
 
 def load_config(filename):
-    'Load a config, return a ConfigParser object'
+    "Load a config, return a ConfigParser object"
 
-    cp = ConfigParser(default_section='MONGO DB')
+    cp = ConfigParser(default_section="MONGO DB")
     cp.read(filename)
     return cp
 
 
 def parse_args():
-    '''
+    """
     Common parameter parsing for data loading scripts
-    '''
+    """
     parser = base_parse_args()
     parser.add_argument(
-        '--data_path',
-        help='Path to JSON files from the "Gene search" dumps'
+        "--data_path", help='Path to JSON files from the "Gene search" dumps'
     )
     parser.add_argument(
-        '--classifier_path',
-        help='Path to JSON files for the gene/transcript metadata classifiers'
+        "--classifier_path",
+        help="Path to JSON files for the gene/transcript metadata classifiers",
     )
     parser.add_argument(
-        '--collection',
-        help='If the assembly is kept in a collection by Ensembl, specify the collection name'
+        "--collection",
+        help="If the assembly is kept in a collection by Ensembl, specify the collection name",
+    )
+    parser.add_argument("--release", help="Release version")
+    parser.add_argument(
+        "--xref_lod_mapping_file",
+        help="Path to file which has Ensembl DB names to ID org namespace mappings",
     )
     parser.add_argument(
-        '--release',
-        help='Release version'
+        "--mongo_collection", help="Target Mongo collection for loading scripts"
     )
     parser.add_argument(
-        '--xref_lod_mapping_file',
-        help='Path to file which has Ensembl DB names to ID org namespace mappings'
+        "--section_name", help="Section of config file containing MySQL credentials"
     )
     parser.add_argument(
-        '--mongo_collection',
-        help='Target Mongo collection for loading scripts'
+        "--chr_checksums_path", help="File path to chromosome checksum hash files"
     )
     parser.add_argument(
-        '--section_name',
-        help='Section of config file containing MySQL credentials'
-    )
-    parser.add_argument(
-        '--chr_checksums_path',
-        help='File path to chromosome checksum hash files'
-    )
-    parser.add_argument(
-        '--log_faulty_urls',
-        action='store_true',
-        help='Log Faulty URLs'
+        "--log_faulty_urls", action="store_true", help="Log Faulty URLs"
     )
 
     return parser.parse_args()
 
 
 def base_parse_args():
-    'Base argument setup'
+    "Base argument setup"
     parser = argparse.ArgumentParser(
-        description='Load JSON Search dumps into MongoDB for GraphQL'
+        description="Load JSON Search dumps into MongoDB for GraphQL"
     )
     parser.add_argument(
-        '--config_file',
-        help='File path containing MongoDB credentials',
-        default='../mongo.conf'
+        "--config_file",
+        help="File path containing MongoDB credentials",
+        default="../mongo.conf",
     )
     parser.add_argument(
-        '--species',
-        help='The production name for a (sic) Ensembl species',
-        default='homo_sapiens'
+        "--species",
+        help="The production name for a (sic) Ensembl species",
+        default="homo_sapiens",
     )
     parser.add_argument(
-        '--assembly',
-        help='The assembly name for an Ensembl species',
-        default='GRCh38'
+        "--assembly", help="The assembly name for an Ensembl species", default="GRCh38"
     )
     return parser
 
 
 def wrapper_parse_args():
-    '''
+    """
     Very common parameter parsing for data loading scripts
-    '''
+    """
     parser = base_parse_args()
     parser.add_argument(
-        '--base_data_path',
-        help='Path to JSON files, excluding release and division folders',
-        default='/hps/nobackup2/production/ensembl/ensprod/search_dumps/'
+        "--base_data_path",
+        help="Path to JSON files, excluding release and division folders",
+        default="/hps/nobackup2/production/ensembl/ensprod/search_dumps/",
     )
     parser.add_argument(
-        '--release',
-        help='The current release of Ensembl. Not the EG release'
+        "--release", help="The current release of Ensembl. Not the EG release"
     )
     return parser.parse_args()
 
 
 def get_stable_id(iid, version):
-    'Get a stable_id with or without a version'
-    stable_id = f'{iid}.{str(version)}' if version else iid
+    "Get a stable_id with or without a version"
+    stable_id = f"{iid}.{str(version)}" if version else iid
     return stable_id
 
 
 def format_cross_refs(xrefs):
-    '''
+    """
     "metadata" is all the things that we do not want to model better
     Convert a list of xrefs into schema-compliant sub-documents
 
     Particular sources can be problematic with document size: protein_id, ENA
-    '''
+    """
 
     if not xrefs:
         return []
     json_xrefs = []
     for x in xrefs:
         # GO xrefs (or associated xrefs) are a different format inline
-        if x['dbname'] in ['GO', 'PHI', 'protein_id', 'EMBL']:
+        if x["dbname"] in ["GO", "PHI", "protein_id", "EMBL"]:
             # Add specific handling for ontology terms later
             continue
         doc = None
-        if 'db_display' not in x:
+        if "db_display" not in x:
             doc = {
-                'accession_id': x['primary_id'],
-                'name': x['display_id'],
-                'description': None,
-                'assignment_method': {
-                    'type': x['info_type']
-                },
-                'source': {
-                    'name': x['dbname'],
-                    'id': x['dbname'],
+                "accession_id": x["primary_id"],
+                "name": x["display_id"],
+                "description": None,
+                "assignment_method": {"type": x["info_type"]},
+                "source": {
+                    "name": x["dbname"],
+                    "id": x["dbname"],
                     # No mechanism to provide description and release from data dumps
-                    'description': None,
-                    'release': None
-                }
+                    "description": None,
+                    "release": None,
+                },
             }
         else:
             doc = {
-                'accession_id': x['primary_id'],
-                'name': x['display_id'],
-                'description': x['description'],
-                'assignment_method': {
-                    'type': x['info_type']
+                "accession_id": x["primary_id"],
+                "name": x["display_id"],
+                "description": x["description"],
+                "assignment_method": {"type": x["info_type"]},
+                "source": {
+                    "name": x["db_display"],
+                    "id": x["dbname"],
+                    "description": None,
+                    "release": None,
                 },
-                'source': {
-                    'name': x['db_display'],
-                    'id': x['dbname'],
-                    'description': None,
-                    'release': None
-                }
             }
         json_xrefs.append(doc)
     return json_xrefs
 
 
-def format_slice(region_name, region_code, default_region, strand,
-                 start, end, genome_id):
-    '''
+def format_slice(
+    region_name, region_code, default_region, strand, start, end, genome_id
+):
+    """
     Creates regular slices with locations and regions
 
     region_name: The string representing a region (perhaps chromosome 1)
@@ -184,24 +169,23 @@ def format_slice(region_name, region_code, default_region, strand,
     assembly: A string naming the assembly the region is from
     start[int]: Start coordinate, usually low to high except when circular
     end[int]: End coordinate
-    '''
+    """
     return {
-        'region_id': f'{genome_id}_{region_name}_{region_code}',
-        'location': {
-            'start': int(start),
-            'end': int(end),
-            'length': int(end) - int(start) + 1
+        "region_id": f"{genome_id}_{region_name}_{region_code}",
+        "location": {
+            "start": int(start),
+            "end": int(end),
+            "length": int(end) - int(start) + 1,
         },
-        'strand': {
-            'code': 'forward' if strand > 0 else 'reverse',
-            'value': strand
-        },
-        'default': default_region
+        "strand": {"code": "forward" if strand > 0 else "reverse", "value": strand},
+        "default": default_region,
     }
 
 
-def format_exon(exon, region_name, region_code, region_strand, default_region, genome_id):
-    '''
+def format_exon(
+    exon, region_name, region_code, region_strand, default_region, genome_id
+):
+    """
     Turn transcript-borne information into an Exon entity
 
     exon: The exon to format, containing start, end, version, id
@@ -210,184 +194,188 @@ def format_exon(exon, region_name, region_code, region_strand, default_region, g
     default_region: Is this a good default region, i.e. not a patch
     assembly: A string naming the assembly the region is from
     transcript: The transcript that contains this exon
-    '''
+    """
 
     return {
-        'type': 'Exon',
-        'stable_id': get_stable_id(exon['id'], exon['version']),
-        'unversioned_stable_id': exon['id'],
-        'version': exon['version'],
-        'so_term': 'exon',
-        'slice': format_slice(
-            region_name, region_code, default_region, region_strand,
-            exon['start'], exon['end'], genome_id
-        )
+        "type": "Exon",
+        "stable_id": get_stable_id(exon["id"], exon["version"]),
+        "unversioned_stable_id": exon["id"],
+        "version": exon["version"],
+        "so_term": "exon",
+        "slice": format_slice(
+            region_name,
+            region_code,
+            default_region,
+            region_strand,
+            exon["start"],
+            exon["end"],
+            genome_id,
+        ),
     }
 
 
 def exon_sorter(exon):
-    'Selects the field to compare for sorting exons'
-    return exon['rank']
+    "Selects the field to compare for sorting exons"
+    return exon["rank"]
 
 
 def phase_exons(exons, transcript_id, phase_lookup):
-    '''
+    """
     Given formatted exon data, and a phase lookup, return a spliced exon
     wrapper for each element with start and end phases.
     exons MUST be sorted by rank before calling
-    '''
+    """
 
     splicing = []
     for i, exon in enumerate(exons, start=1):
-        (start_phase, end_phase) = phase_lookup[transcript_id][exon['unversioned_stable_id']]
-        splicing.append({
-            'start_phase': start_phase,
-            'end_phase': end_phase,
-            'index': i,
-            'exon': exon
-        })
+        (start_phase, end_phase) = phase_lookup[transcript_id][
+            exon["unversioned_stable_id"]
+        ]
+        splicing.append(
+            {
+                "start_phase": start_phase,
+                "end_phase": end_phase,
+                "index": i,
+                "exon": exon,
+            }
+        )
     return splicing
 
 
 def splicify_exons(exons, transcript):
-    '''
+    """
     Given a list of exons and the parent transcript, create a list of spliced
     exons with rank and relative coordinates.
     exons MUST be sorted by rank before calling, and are pre-formatted
-    '''
+    """
     splicing = []
     for i, exon in enumerate(exons, start=1):
-        splicing.append({
-            'index': i,
-            'exon': exon,
-            'relative_location': calculate_relative_coords(
-                parent_params={
-                    'start': transcript['start'],
-                    'end': transcript['end'],
-                    'strand': transcript['strand']
-                },
-                child_params={
-                    'start': exon['slice']['location']['start'],
-                    'end': exon['slice']['location']['end']
-                }
-            )
-        })
+        splicing.append(
+            {
+                "index": i,
+                "exon": exon,
+                "relative_location": calculate_relative_coords(
+                    parent_params={
+                        "start": transcript["start"],
+                        "end": transcript["end"],
+                        "strand": transcript["strand"],
+                    },
+                    child_params={
+                        "start": exon["slice"]["location"]["start"],
+                        "end": exon["slice"]["location"]["end"],
+                    },
+                ),
+            }
+        )
     return splicing
 
 
 def infer_introns(exons, transcript):
-    '''
+    """
     Given a list of formatted exons in rank order, we will infer the presence
     of introns.
     transcript must be unformatted, and is required in order to calculate a relative
     location for each intron
-    '''
+    """
 
     introns = []
     if len(exons) == 1:
         return introns
 
     for index, (exon_one, exon_two) in enumerate(zip(exons[:-1], exons[1:]), start=1):
-        if exon_one['slice']['strand']['value'] == 1:
-            intron_start = exon_one['slice']['location']['end'] + 1
-            intron_end = exon_two['slice']['location']['start'] - 1
+        if exon_one["slice"]["strand"]["value"] == 1:
+            intron_start = exon_one["slice"]["location"]["end"] + 1
+            intron_end = exon_two["slice"]["location"]["start"] - 1
         else:
-            intron_start = exon_two['slice']['location']['end'] + 1
-            intron_end = exon_one['slice']['location']['start'] - 1
+            intron_start = exon_two["slice"]["location"]["end"] + 1
+            intron_end = exon_one["slice"]["location"]["start"] - 1
 
-        introns.append({
-            'index': index,
-            'checksum': None,
-            'slice': {
-                'region_id': exon_one['slice']['region_id'],
-                'location': {
-                    'start': intron_start,
-                    'end': intron_end,
-                    # Note, a cross ori intron is gonna break hard
-                    'length': intron_end - intron_start + 1
+        introns.append(
+            {
+                "index": index,
+                "checksum": None,
+                "slice": {
+                    "region_id": exon_one["slice"]["region_id"],
+                    "location": {
+                        "start": intron_start,
+                        "end": intron_end,
+                        # Note, a cross ori intron is gonna break hard
+                        "length": intron_end - intron_start + 1,
+                    },
+                    "strand": exon_one["slice"]["strand"],
                 },
-                'strand': exon_one['slice']['strand']
-            },
-            'so_term': 'intron',
-            'relative_location': calculate_relative_coords(
-                parent_params={
-                    'start': transcript['start'],
-                    'end': transcript['end'],
-                    'strand': transcript['strand']
-                },
-                child_params={
-                    'start': intron_start,
-                    'end': intron_end
-                }
-            ),
-            'type': 'Intron'
-        })
+                "so_term": "intron",
+                "relative_location": calculate_relative_coords(
+                    parent_params={
+                        "start": transcript["start"],
+                        "end": transcript["end"],
+                        "strand": transcript["strand"],
+                    },
+                    child_params={"start": intron_start, "end": intron_end},
+                ),
+                "type": "Intron",
+            }
+        )
 
     return introns
 
 
-def format_utr(
-        transcript, absolute_cds_start, absolute_cds_end, downstream
-):
-    '''
+def format_utr(transcript, absolute_cds_start, absolute_cds_end, downstream):
+    """
     From one transcript's exons generate an inferred UTR
     downstream  - Boolean, False = 5', True = 3'
     Note the arguments are CDS coords, not UTR coords, lots of offsets needed
-    '''
+    """
     if (
+        downstream
+        and transcript["end"] == absolute_cds_end
+        and transcript["strand"] == 1
+        or (
+            downstream is False
+            and transcript["start"] == absolute_cds_start
+            and transcript["strand"] == 1
+        )
+        or (
             downstream
-            and transcript['end'] == absolute_cds_end
-            and transcript['strand'] == 1
-            or (
-                downstream is False
-                and transcript['start'] == absolute_cds_start
-                and transcript['strand'] == 1
-            )
-            or (
-                downstream
-                and transcript['start'] == absolute_cds_start
-                and transcript['strand'] == -1
-            )
-            or (
-                downstream is False
-                and transcript['end'] == absolute_cds_end
-                and transcript['strand'] == -1
-            )
+            and transcript["start"] == absolute_cds_start
+            and transcript["strand"] == -1
+        )
+        or (
+            downstream is False
+            and transcript["end"] == absolute_cds_end
+            and transcript["strand"] == -1
+        )
     ):
         # No UTR here: Move along.
         return None
 
     # Presumably broken crossing ori in circular case,
-    if (downstream and transcript['strand'] == 1):
-        utr_type = '3_prime_utr'
+    if downstream and transcript["strand"] == 1:
+        utr_type = "3_prime_utr"
         start = absolute_cds_end + 1
-        end = transcript['end']
-    elif (downstream and transcript['strand'] == -1):
-        utr_type = '3_prime_utr'
-        start = transcript['start']
+        end = transcript["end"]
+    elif downstream and transcript["strand"] == -1:
+        utr_type = "3_prime_utr"
+        start = transcript["start"]
         end = absolute_cds_start - 1
-    elif (downstream is False and transcript['strand'] == 1):
-        utr_type = '5_prime_utr'
-        start = transcript['start']
+    elif downstream is False and transcript["strand"] == 1:
+        utr_type = "5_prime_utr"
+        start = transcript["start"]
         end = absolute_cds_start - 1
     else:
         # reverse stranded 5'
-        utr_type = '5_prime_utr'
+        utr_type = "5_prime_utr"
         start = absolute_cds_end + 1
-        end = transcript['end']
+        end = transcript["end"]
 
-    return {
-        'type': utr_type,
-        'start': start,
-        'end': end
-    }
+    return {"type": utr_type, "start": start, "end": end}
 
 
 def format_cdna(transcript, refget, non_coding=False):
-    '''
+    """
     With the transcript and exon coordinates, compute the CDNA
     length and so on.
-    '''
+    """
 
     stable_id = get_stable_id(transcript["id"], transcript["version"])
 
@@ -401,88 +389,90 @@ def format_cdna(transcript, refget, non_coding=False):
 
     sequence = format_sequence(refget, sequence_checksum, sequence_type)
 
-    start = transcript['start']
-    end = transcript['end']
+    start = transcript["start"]
+    end = transcript["end"]
 
     # Conveniently, cDNA spans the whole transcript
     relative_start = 1
-    relative_end = transcript['end'] - transcript['start'] + 1
+    relative_end = transcript["end"] - transcript["start"] + 1
     # but length must not include the introns
-    length = 0 # temporarily
-    for exon in transcript['exons']:
-        length += exon['end'] - exon['start'] + 1
+    length = 0  # temporarily
+    for exon in transcript["exons"]:
+        length += exon["end"] - exon["start"] + 1
 
     return {
-        'start': start,
-        'end': end,
-        'relative_start': relative_start,
-        'relative_end': relative_end,
-        'length': length,
-        'type': 'CDNA',
-        'sequence': sequence,
-        'sequence_checksum': sequence.get('checksum')
+        "start": start,
+        "end": end,
+        "relative_start": relative_start,
+        "relative_end": relative_end,
+        "length": length,
+        "type": "CDNA",
+        "sequence": sequence,
+        "sequence_checksum": sequence.get("checksum"),
     }
 
 
 def format_sequence(refget, sequence_checksum, sequence_type):
     return {
-        'alphabet': get_alphabet_info('protein') if sequence_type == refget.pep else get_alphabet_info('dna'),
-        'checksum': sequence_checksum
+        "alphabet": get_alphabet_info("protein")
+        if sequence_type == refget.pep
+        else get_alphabet_info("dna"),
+        "checksum": sequence_checksum,
     }
 
 
 def get_alphabet_info(sequence_type):
     # A temporary dict mapping of type to alphabet. This data to be pulled from e! database of Value Sets in the future.
     type_to_alphabet = {
-        'dna': {
-            'accession_id': 'test_dna_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for dna sequence',
-            'description': None
+        "dna": {
+            "accession_id": "test_dna_accession_id",
+            "value": "test",
+            "label": "test",
+            "definition": "Test - IUPAC notation for dna sequence",
+            "description": None,
         },
-        'protein': {
-            'accession_id': 'test_protein_accession_id',
-            'value': 'test',
-            'label': 'test',
-            'definition': 'Test - IUPAC notation for protein sequence',
-            'description': None
-        }
+        "protein": {
+            "accession_id": "test_protein_accession_id",
+            "value": "test",
+            "label": "test",
+            "definition": "Test - IUPAC notation for protein sequence",
+            "description": None,
+        },
     }
     return type_to_alphabet.get(sequence_type)
 
 
 def format_protein(protein, genome_id, refget):
-    '''
+    """
     Create a protein representation from limited data
-    '''
+    """
 
-    stable_id = get_stable_id(protein['id'], protein['version'])
+    stable_id = get_stable_id(protein["id"], protein["version"])
     sequence_checksum, length = refget.get_checksum_and_length(stable_id, refget.pep)
     sequence = format_sequence(refget, sequence_checksum, refget.pep)
 
     return {
-        'type': 'Protein',
-        'unversioned_stable_id': protein['id'],
-        'stable_id': stable_id,
-        'version': protein['version'],
+        "type": "Protein",
+        "unversioned_stable_id": protein["id"],
+        "stable_id": stable_id,
+        "version": protein["version"],
         # for foreign key behaviour
-        'transcript_id': protein['transcript_id'], # missing version...
-        'genome_id': genome_id,
-        'so_term': 'polypeptide', # aka SO:0000104
-        'external_references': format_cross_refs(protein['xrefs']),
-        'family_matches': format_protein_features(protein['protein_features']),
+        "transcript_id": protein["transcript_id"],  # missing version...
+        "genome_id": genome_id,
+        "so_term": "polypeptide",  # aka SO:0000104
+        "external_references": format_cross_refs(protein["xrefs"]),
+        "family_matches": format_protein_features(protein["protein_features"]),
         # 'mappings': TODO
-        'length': length,
-        'sequence': sequence,
-        'sequence_checksum': sequence.get('checksum')
+        "length": length,
+        "sequence": sequence,
+        "sequence_checksum": sequence.get("checksum"),
     }
 
 
 def format_protein_features(protein_features):
-    '''
+    """
     Create protein domain representation from a list of protein_features
-    '''
+    """
 
     db_details = {
         "Pfam": {
@@ -490,21 +480,28 @@ def format_protein_features(protein_features):
             "source_url": "http://pfam.xfam.org/",
             "family_url_template": Template("http://pfam.xfam.org/family/$name"),
             "description": "Pfam is a database of protein families that includes their annotations and multiple "
-                           "sequence alignments generated using hidden Markov models."},
+            "sequence alignments generated using hidden Markov models.",
+        },
         "PANTHER": {
             "id": "PANTHER",
             "source_url": "http://www.pantherdb.org",
-            "family_url_template": Template("http://www.pantherdb.org/panther/family.do?clsAccession=$name"),
+            "family_url_template": Template(
+                "http://www.pantherdb.org/panther/family.do?clsAccession=$name"
+            ),
             "description": "The PANTHER (protein analysis through evolutionary relationships) classification "
-                           "system is a large curated biological database of gene/protein families and their "
-                           "functionally related subfamilies that can be used to classify and identify the "
-                           "function of gene products."},
+            "system is a large curated biological database of gene/protein families and their "
+            "functionally related subfamilies that can be used to classify and identify the "
+            "function of gene products.",
+        },
         "InterProScan": {
             "id": "Interpro",
             "source_url": "https://www.ebi.ac.uk/interpro",
-            "family_url_template": Template("https://www.ebi.ac.uk/interpro/entry/InterPro/$name"),
+            "family_url_template": Template(
+                "https://www.ebi.ac.uk/interpro/entry/InterPro/$name"
+            ),
             "description": "InterPro provides functional analysis of proteins by classifying them into "
-                           "families and predicting domains and important sites."}
+            "families and predicting domains and important sites.",
+        },
     }
 
     domains = []
@@ -517,42 +514,46 @@ def format_protein_features(protein_features):
                             "name": feature["dbname"],
                             "description": db_details[feature["dbname"]]["description"],
                             "url": db_details[feature["dbname"]]["source_url"],
-                            "release": feature["dbversion"]
+                            "release": feature["dbversion"],
                         },
                         "name": feature["name"],
                         "accession_id": feature["name"],
-                        "url": db_details[feature["dbname"]]["family_url_template"].substitute(name=feature["name"]),
-                        "description": feature["description"]
+                        "url": db_details[feature["dbname"]][
+                            "family_url_template"
+                        ].substitute(name=feature["name"]),
+                        "description": feature["description"],
                     },
                     "via": {
                         "source": {
                             "name": "InterProScan",
                             "description": db_details["InterProScan"]["description"],
                             "url": db_details["InterProScan"]["source_url"],
-                            "release": feature['program_version'],
+                            "release": feature["program_version"],
                         },
                         "accession_id": feature["interpro_ac"],
-                        "url": db_details["InterProScan"]["family_url_template"].substitute(name=feature['interpro_ac']),
+                        "url": db_details["InterProScan"][
+                            "family_url_template"
+                        ].substitute(name=feature["interpro_ac"]),
                     },
                     "relative_location": {
                         "start": feature["start"],
                         "end": feature["end"],
-                        "length": feature["end"] - feature["start"] + 1
+                        "length": feature["end"] - feature["start"] + 1,
                     },
                     "score": feature["score"],
                     "evalue": feature["evalue"],
                     "hit_location": {
                         "start": feature["hit_start"],
                         "end": feature["hit_end"],
-                        "length": feature["hit_end"] - feature["hit_start"] + 1
-                    }
+                        "length": feature["hit_end"] - feature["hit_start"] + 1,
+                    },
                 }
             )
     return domains
 
 
 def get_genome_id(species_name, accession_id):
-    return '_'.join([species_name, accession_id.replace('.', '_')])
+    return "_".join([species_name, accession_id.replace(".", "_")])
 
 
 def circularity_to_topology(circularity):
@@ -570,14 +571,9 @@ def format_region(region_mysql_result, assembly_id, genome_id, chromosome_checks
         "code": region_mysql_result["code"],
         "length": region_mysql_result["length"],
         "topology": circularity_to_topology(region_mysql_result["circularity"]),
-        'sequence': {
-            'alphabet': get_alphabet_info('dna'),
-            'checksum': checksum
-                     },
+        "sequence": {"alphabet": get_alphabet_info("dna"), "checksum": checksum},
         "assembly_id": assembly_id,
-        "metadata": {
-            "ontology_terms": get_ontology_terms(region_mysql_result["code"])
-        }
+        "metadata": {"ontology_terms": get_ontology_terms(region_mysql_result["code"])},
     }
 
 
@@ -595,39 +591,39 @@ def get_ontology_terms(region_code):
             "source": {
                 "name": "Sequence Ontology",
                 "url": "www.sequenceontology.org",
-                "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. "
-            }
+                "description": "The Sequence Ontology is a set of terms and relationships used to describe the features and attributes of biological sequence. ",
+            },
         }
     ]
 
 
 def flush_buffer(mongo_client, buffer, flush_threshold=1000):
-    'Check if a buffer needs flushing, and insert documents when it does'
+    "Check if a buffer needs flushing, and insert documents when it does"
     if len(buffer) > flush_threshold:
-        print('Pushing buffer into Mongo')
+        print("Pushing buffer into Mongo")
         # pymongo can generate size errors, but so can the server which gives
         # rise to a second kind of exception.
         try:
             mongo_client.collection().insert_many(buffer)
         except pymongo.errors.DocumentTooLarge:
             print(
-                f'One of these borked the pipeline for '
+                f"One of these borked the pipeline for "
                 f'{buffer[0]["genome_id"]}: {list(map(lambda x: x["stable_id"], buffer))}',
-                file=sys.stderr
+                file=sys.stderr,
             )
         except pymongo.errors.OperationFailure:
             print(
-                f'One of these borked the server for '
+                f"One of these borked the server for "
                 f'{buffer[0]["genome_id"]}: {list(map(lambda x: x["stable_id"], buffer))}',
-                file=sys.stderr
+                file=sys.stderr,
             )
-        print('Done')
+        print("Done")
         buffer = []
     return buffer
 
 
 def calculate_relative_coords(parent_params, child_params):
-    '''
+    """
     Calculates a tuple of relative start, relative end and length from genomic coords
     of the parent feature and its child. Coords respect reading frame, i.e. a reverse
     stranded feature will have relative coords going from low to high.
@@ -643,59 +639,58 @@ def calculate_relative_coords(parent_params, child_params):
         'start': ...,
         'end': ...
     }
-    '''
+    """
 
-    relative_location = {
-        'length': child_params['end'] - child_params['start'] + 1
-    }
+    relative_location = {"length": child_params["end"] - child_params["start"] + 1}
 
-    if parent_params['strand'] == 1:
+    if parent_params["strand"] == 1:
         # i.e. 5' offset
-        relative_start = child_params['start'] - parent_params['start'] + 1
-        relative_end = child_params['end'] - parent_params['start'] + 1
+        relative_start = child_params["start"] - parent_params["start"] + 1
+        relative_end = child_params["end"] - parent_params["start"] + 1
     else:
-        relative_start = parent_params['end'] - child_params['end'] + 1
-        relative_end = parent_params['end'] - child_params['start'] + 1
+        relative_start = parent_params["end"] - child_params["end"] + 1
+        relative_end = parent_params["end"] - child_params["start"] + 1
 
-    relative_location['start'] = relative_start
-    relative_location['end'] = relative_end
+    relative_location["start"] = relative_start
+    relative_location["end"] = relative_end
     return relative_location
 
 
 def get_gene_name_metadata(gene_name_metadata, xref_resolver, logger):
 
     # Try to generate the gene name url
-    gene_name_metadata['url'] = xref_resolver.find_url_using_ens_xref_db_name(
-        gene_name_metadata.get('xref_primary_acc'),
-        gene_name_metadata.get('external_db_name')
+    gene_name_metadata["url"] = xref_resolver.find_url_using_ens_xref_db_name(
+        gene_name_metadata.get("xref_primary_acc"),
+        gene_name_metadata.get("external_db_name"),
     )
 
-    check_and_log_urls(gene_name_metadata, 'url', logger)
+    check_and_log_urls(gene_name_metadata, "url", logger)
 
     # Try to generate the gene source url
-    id_org_n_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(gene_name_metadata.get('external_db_name'))
-    gene_name_metadata['source_url'] = xref_resolver.source_information_retriever(
-        id_org_n_prefix,
-        'resourceHomeUrl'
+    id_org_n_prefix = xref_resolver.translate_xref_db_name_to_id_org_ns_prefix(
+        gene_name_metadata.get("external_db_name")
+    )
+    gene_name_metadata["source_url"] = xref_resolver.source_information_retriever(
+        id_org_n_prefix, "resourceHomeUrl"
     )
 
-    check_and_log_urls(gene_name_metadata, 'source_url', logger)
+    check_and_log_urls(gene_name_metadata, "source_url", logger)
 
     name_metadata = {
-        'accession_id': gene_name_metadata.get('xref_primary_acc'),
-        'value': gene_name_metadata.get('xref_description'),
+        "accession_id": gene_name_metadata.get("xref_primary_acc"),
+        "value": gene_name_metadata.get("xref_description"),
         # Dont store URLs in the database.
         #'url': gene_name_metadata.get('url'),
-        'url': None,
-        'source': {
-            'id': gene_name_metadata.get('external_db_name'),
-            'name': gene_name_metadata.get('external_db_display_name'),
+        "url": None,
+        "source": {
+            "id": gene_name_metadata.get("external_db_name"),
+            "name": gene_name_metadata.get("external_db_display_name"),
             # Dont store URLs in the database.
             # 'url': gene_name_metadata.get('source_url'),
-            'url': None,
-            'description': None,
-            'release': gene_name_metadata.get('external_db_release'),
-        }
+            "url": None,
+            "description": None,
+            "release": gene_name_metadata.get("external_db_release"),
+        },
     }
     return name_metadata
 
@@ -708,10 +703,10 @@ def check_and_log_urls(data, url_key, logger):
     try:
         response = requests.get(data.get(url_key))
         if response.status_code != 200:
-            data['response_code'] = response.status_code
-            data['url_key'] = url_key
+            data["response_code"] = response.status_code
+            data["url_key"] = url_key
             logger.url_logger(**data)
     except:
-        data['error'] = "Unable to check URL"
-        data['url_key'] = url_key
+        data["error"] = "Unable to check URL"
+        data["url_key"] = url_key
         logger.url_logger(**data)

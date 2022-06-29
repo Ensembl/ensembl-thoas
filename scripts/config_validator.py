@@ -20,8 +20,10 @@ from typing import Set
 
 def validate_config(config_parser: ConfigParser) -> None:
     """Basic function to validate Thoas config file.  The script checks that all required sections and fields exist, and
-     that file path locations exist"""
-    check_required_fields({'GENERAL', 'MONGO DB', 'REFGET DB'}, set(config_parser.sections()))
+    that file path locations exist"""
+    check_required_fields(
+        {"GENERAL", "MONGO DB", "REFGET DB"}, set(config_parser.sections())
+    )
 
     for section in config_parser.sections():
         if section == "GENERAL":
@@ -32,16 +34,10 @@ def validate_config(config_parser: ConfigParser) -> None:
                 "classifier_path",
                 "chr_checksums_path",
                 "xref_lod_mapping_file",
-                "log_faulty_urls"
+                "log_faulty_urls",
             }
         elif section in {"MONGO DB", "REFGET DB"}:
-            required_fields = {
-                "host",
-                "port",
-                "user",
-                "password",
-                "db"
-            }
+            required_fields = {"host", "port", "user", "password", "db"}
         else:
             required_fields = {
                 "production_name",
@@ -50,28 +46,40 @@ def validate_config(config_parser: ConfigParser) -> None:
                 "host",
                 "port",
                 "user",
-                "database"
+                "database",
             }
 
         section_keys = {key for key, _ in config_parser.items(section=section)}
 
         check_required_fields(required_fields, section_keys, section)
 
-    for pathname in ["base_data_path", "grch37_data_path", "classifier_path", "chr_checksums_path",
-                     "xref_lod_mapping_file"]:
+    for pathname in [
+        "base_data_path",
+        "grch37_data_path",
+        "classifier_path",
+        "chr_checksums_path",
+        "xref_lod_mapping_file",
+    ]:
         check_path_exists(pathname, config_parser.get("GENERAL", pathname))
 
 
 def check_path_exists(pathname: str, path: str) -> None:
-    assert (isfile(path) or isdir(path)) and access(path, R_OK), \
-        f"Error validating path provided for {pathname}.  Provided path {path} does not exist or isn't readable."
+    assert (isfile(path) or isdir(path)) and access(
+        path, R_OK
+    ), f"Error validating path provided for {pathname}.  Provided path {path} does not exist or isn't readable."
 
 
-def check_required_fields(required_fields: Set[str], given_fields: Set[str], section: str = None) -> None:
+def check_required_fields(
+    required_fields: Set[str], given_fields: Set[str], section: str = None
+) -> None:
     missing_fields = required_fields - given_fields
     if missing_fields:
         if section:
-            raise IOError(f"Required fields missing from {section} section.  Missing fields are: {missing_fields}")
+            raise IOError(
+                f"Required fields missing from {section} section.  Missing fields are: {missing_fields}"
+            )
         # if section parameter is not present, assume this function is validating that all required sections exist in a
         # config file
-        raise IOError(f"Required section missing from config file.  Missing sections are: {missing_fields}")
+        raise IOError(
+            f"Required section missing from config file.  Missing sections are: {missing_fields}"
+        )

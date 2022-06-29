@@ -75,11 +75,13 @@ async def test_protein_retrieval(snapshot):
     }
   }
 }"""
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
     assert success
-    assert result['data']['product']
-    snapshot.assert_match(result['data'])
+    assert result["data"]["product"]
+    snapshot.assert_match(result["data"])
 
 
 @pytest.mark.asyncio
@@ -98,8 +100,10 @@ async def test_protein_retrieval_by_transcript(snapshot):
             }
         }
     }"""
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
     assert success
-    assert result['data']['transcript']
-    snapshot.assert_match(result['data'])
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"])

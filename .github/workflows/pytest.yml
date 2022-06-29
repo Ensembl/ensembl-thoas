@@ -43,3 +43,8 @@ jobs:
         run: |
           export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
           pytest --exitfirst --verbose --failed-first
+
+      # Check code has been formatted
+      - name: Run Black code formatter
+        run: |
+          black . --check --verbose --diff --color

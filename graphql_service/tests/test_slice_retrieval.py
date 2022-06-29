@@ -21,7 +21,7 @@ executable_schema, context = setup_test()
 
 @pytest.mark.asyncio
 async def test_slice_retrieval(snapshot):
-    'Test searching for genes & transcripts by slice'
+    "Test searching for genes & transcripts by slice"
 
     # The start/end parameters in this query only contain the brca2_203 transcript
     query = """query {
@@ -41,7 +41,9 @@ async def test_slice_retrieval(snapshot):
       }
     }"""
 
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
     assert success
-    snapshot.assert_match(result['data'])
+    snapshot.assert_match(result["data"])

@@ -15,25 +15,25 @@ from scripts.prepare_gene_name_metadata import extract_info_from_description_col
 
 def test_extract_info_from_description_column():
     gene = {
-        'stable_id': 'TraesCS7D02G209800',
-        'description': 'Transcription factor PERIANTHIA [Source:Projected from Arabidopsis thaliana (AT1G68640) UniProtKB/Swiss-Prot;Acc:Q9SX27]',
-        'xref_primary_acc': None,
-        'xref_display_label': None,
-        'xref_description': None,
-        'external_db_name': None,
-        'external_db_display_name': None,
-        'external_db_release': None
+        "stable_id": "TraesCS7D02G209800",
+        "description": "Transcription factor PERIANTHIA [Source:Projected from Arabidopsis thaliana (AT1G68640) UniProtKB/Swiss-Prot;Acc:Q9SX27]",
+        "xref_primary_acc": None,
+        "xref_display_label": None,
+        "xref_description": None,
+        "external_db_name": None,
+        "external_db_display_name": None,
+        "external_db_release": None,
     }
 
     gene_name_info = {
-        'gene_stable_id': gene.get('stable_id'),
-        'gene_description': gene.get('description'),
-        'xref_primary_acc': None,
-        'xref_display_label': None,
-        'xref_description': None,
-        'external_db_name': None,
-        'external_db_display_name': None,
-        'external_db_release': None
+        "gene_stable_id": gene.get("stable_id"),
+        "gene_description": gene.get("description"),
+        "xref_primary_acc": None,
+        "xref_display_label": None,
+        "xref_description": None,
+        "external_db_name": None,
+        "external_db_display_name": None,
+        "external_db_release": None,
     }
 
     expected = {
@@ -44,7 +44,7 @@ def test_extract_info_from_description_column():
         "xref_description": "Transcription factor PERIANTHIA [Source:Projected from Arabidopsis thaliana (AT1G68640) UniProtKB/Swiss-Prot;Acc:Q9SX27]",
         "external_db_name": "UniProtKB/Swiss-Prot",
         "external_db_display_name": "UniProtKB/Swiss-Prot",
-        "external_db_release": None
+        "external_db_release": None,
     }
 
     actual = extract_info_from_description_column(gene, gene_name_info)

@@ -84,8 +84,8 @@ def dump_proteins(config, section_name):
         return result
 
     with mysql_client.connection.cursor(dictionary=True) as cursor:
-        assembly = config.get(section_name, 'assembly')
-        species = config.get(section_name, 'production_name')
+        assembly = config.get(section_name, "assembly")
+        species = config.get(section_name, "production_name")
 
         cursor.execute(translation_query, (assembly, species))
         translations = cursor.fetchall()
@@ -104,37 +104,40 @@ def dump_proteins(config, section_name):
                 "db_display": xref["db_display_name"],
                 "description": xref["description"],
                 "info_type": xref["info_type"],
-                "info_text": xref["info_text"]
+                "info_text": xref["info_text"],
             }
 
-        indexed_domains = group_by_id(domains, 'translation_id')
-        indexed_xrefs = group_by_id(xrefs, 'id')
+        indexed_domains = group_by_id(domains, "translation_id")
+        indexed_xrefs = group_by_id(xrefs, "id")
 
-        formatted_xrefs = {translation_id: list(map(to_json_dump_format, xref_group)) for translation_id, xref_group
-                             in indexed_xrefs.items()}
+        formatted_xrefs = {
+            translation_id: list(map(to_json_dump_format, xref_group))
+            for translation_id, xref_group in indexed_xrefs.items()
+        }
 
-        outpath = f'./{species}_{assembly}_translations.json'
+        outpath = f"./{species}_{assembly}_translations.json"
 
-        with open(outpath, 'w+', encoding='UTF-8') as outhandle:
+        with open(outpath, "w+", encoding="UTF-8") as outhandle:
             for translation in translations:
-                translation["protein_features"] = indexed_domains.get(translation["id"], [])
+                translation["protein_features"] = indexed_domains.get(
+                    translation["id"], []
+                )
                 translation["xrefs"] = formatted_xrefs.get(translation["id"], [])
                 json.dump(translation, outhandle)
-                outhandle.write('\n')
+                outhandle.write("\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Dump protein domain information from MySQL into a local JSON file'
+        description="Dump protein domain information from MySQL into a local JSON file"
     )
     parser.add_argument(
-        '--config_file',
-        help='File path containing MySQL config',
-        default='../load.conf'
+        "--config_file",
+        help="File path containing MySQL config",
+        default="../load.conf",
     )
     parser.add_argument(
-        '--section_name',
-        help='Species-specific section of config file'
+        "--section_name", help="Species-specific section of config file"
     )
     ARGS = parser.parse_args()
     CONFIG = common.utils.load_config(ARGS.config_file)

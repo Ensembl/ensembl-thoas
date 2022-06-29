@@ -16,13 +16,13 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 
-with open(Path(__file__).parent / 'LICENSE') as f:
+with open(Path(__file__).parent / "LICENSE") as f:
     LICENSE_CT = f.read()
 
 
 setup(
-    name='ensembl-graphql',
-    description='GraphQL Ariadne-based prototype for Ensembl',
+    name="ensembl-graphql",
+    description="GraphQL Ariadne-based prototype for Ensembl",
     version="0.1.0",
     packages=find_packages(),
     license=LICENSE_CT,
@@ -30,5 +30,5 @@ setup(
     package_data={
         # Make sure schema makes it to distro
         "common": ["*.graphql"]
-    }
+    },
 )

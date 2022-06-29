@@ -27,20 +27,25 @@ from common.logger import CommandLogger
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common import mongo
-from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
+from graphql_service.ariadne_app import (
+    prepare_executable_schema,
+    prepare_context_provider,
+)
 
 print(os.environ)
 
-CONFIG = load_config(os.getenv('GQL_CONF'))
+CONFIG = load_config(os.getenv("GQL_CONF"))
 
 DEBUG_MODE = False
-EXTENSIONS: Optional[ExtensionList] = None  # mypy will throw an incompatible type error without this type cast
+EXTENSIONS: Optional[
+    ExtensionList
+] = None  # mypy will throw an incompatible type error without this type cast
 
 if DEBUG_MODE:
     # This will write MongoDB transactions to `thoas.log`
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG, filename='thoas.log', filemode='w')
+    logging.basicConfig(level=logging.DEBUG, filename="thoas.log", filemode="w")
 
     monitoring.register(CommandLogger(log))
 
@@ -54,16 +59,26 @@ MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
-RESOLVER = XrefResolver(internal_mapping_file='docs/xref_LOD_mapping.json')
+RESOLVER = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
-CONTEXT_PROVIDER = prepare_context_provider({
-    'mongo_db': MONGO_CLIENT.collection(),
-    'XrefResolver': RESOLVER,
-})
+CONTEXT_PROVIDER = prepare_context_provider(
+    {
+        "mongo_db": MONGO_CLIENT.collection(),
+        "XrefResolver": RESOLVER,
+    }
+)
 
 starlette_middleware = [
-    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST'])
+    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 ]
 
 APP = Starlette(debug=True, middleware=starlette_middleware)
-APP.mount("/", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER, extensions=EXTENSIONS))
+APP.mount(
+    "/",
+    GraphQL(
+        EXECUTABLE_SCHEMA,
+        debug=True,
+        context_value=CONTEXT_PROVIDER,
+        extensions=EXTENSIONS,
+    ),
+)
