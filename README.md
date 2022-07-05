@@ -68,6 +68,12 @@ At the moment we only enforce type-checking in the API code.  Run this command f
 
 `mypy graphql_service`
 
+### Formatting
+
+`black . --check --diff` previews the formatting.
+
+`black .` applies the formatting in-place.
+
 ## Containerisation
 
 Build the image using `./Dockerfile`:

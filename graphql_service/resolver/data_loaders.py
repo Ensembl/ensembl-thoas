@@ -32,57 +32,54 @@ class DataLoaderCollection:
     """
 
     def __init__(self, db_collection: Collection, genome_id: str):
-        'Accepts a MongoDB collection object to provide data'
+        "Accepts a MongoDB collection object to provide data"
         self.collection = db_collection
         self.genome_id = genome_id
-        self.gene_transcript_dataloader = self.create_gene_transcript_dataloader(genome_id)
-        self.transcript_product_dataloader = self.create_transcript_product_dataloader(genome_id)
+        self.gene_transcript_dataloader = self.create_gene_transcript_dataloader(
+            genome_id
+        )
+        self.transcript_product_dataloader = self.create_transcript_product_dataloader(
+            genome_id
+        )
         self.slice_region_dataloader = self.create_slice_region_dataloader(genome_id)
 
     async def batch_transcript_load(self, keys: List[str]) -> List[List]:
-        '''
+        """
         Load many transcripts to satisfy a bunch of `await`s
         DataLoader will aggregate many single ID requests into 'keys' so we can
         perform bulk fetches
-        '''
+        """
         query = {
-            'type': 'Transcript',
-            'genome_id': self.genome_id,
-            'gene': {
-                '$in': sorted(keys)
-            }
+            "type": "Transcript",
+            "genome_id": self.genome_id,
+            "gene": {"$in": sorted(keys)},
         }
 
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output('gene', keys, data)
+        return self.collate_dataloader_output("gene", keys, data)
 
     async def batch_product_load(self, keys: List[str]) -> List[List]:
-        '''
+        """
         Load a bunch of products/proteins by ID
-        '''
+        """
         query = {
-            'type': 'Protein',
-            'genome_id': self.genome_id,
-            'stable_id': {
-                '$in': keys
-            }
+            "type": "Protein",
+            "genome_id": self.genome_id,
+            "stable_id": {"$in": keys},
         }
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output('stable_id', keys, data)
+        return self.collate_dataloader_output("stable_id", keys, data)
 
     async def batch_region_load(self, keys: List[str]) -> List[List]:
-        query = {
-            'type': 'Region',
-            'region_id': {
-                '$in': keys
-            }
-        }
+        query = {"type": "Region", "region_id": {"$in": keys}}
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output('region_id', keys, data)
+        return self.collate_dataloader_output("region_id", keys, data)
 
     @staticmethod
-    def collate_dataloader_output(foreign_key: str, original_ids: List[str], docs: List[Dict]) -> List[List]:
-        '''
+    def collate_dataloader_output(
+        foreign_key: str, original_ids: List[str], docs: List[Dict]
+    ) -> List[List]:
+        """
         Query identifier values are in no particular order and so are the query
         results. We must collect them together and return them in the order
         initially requested for graphql to unite the results with the async routines
@@ -91,7 +88,7 @@ class DataLoaderCollection:
         The return value is therefore a list of lists ordered by the original foreign key
         values, created by building a dictionary of 1..n documents keyed by foreign key and
         selecting out dict items by the original foreign_key list.
-        '''
+        """
 
         grouped_docs = defaultdict(list)
         for doc in docs:
@@ -99,8 +96,10 @@ class DataLoaderCollection:
 
         return [grouped_docs[fk] for fk in original_ids]
 
-    def create_gene_transcript_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
-        'Factory for DataLoaders for Transcripts fetched via Genes'
+    def create_gene_transcript_dataloader(
+        self, genome_id: str, max_batch_size: int = 1000
+    ) -> DataLoader:
+        "Factory for DataLoaders for Transcripts fetched via Genes"
         # How do we get temporary state into class methods with a fixed signature?
         # I didn't want to fork DataLoader in order to add arbitrary arguments
         # There is a danger of cross-contamination here if genome_id changes in
@@ -108,30 +107,31 @@ class DataLoaderCollection:
         # loaders per-request and per-genome_id.
         self.genome_id = genome_id
         return DataLoader(
-            batch_load_fn=self.batch_transcript_load,
-            max_batch_size=max_batch_size
+            batch_load_fn=self.batch_transcript_load, max_batch_size=max_batch_size
         )
 
-    def create_transcript_product_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
-        'Factory for DataLoaders for Products fetched via Transcripts'
+    def create_transcript_product_dataloader(
+        self, genome_id: str, max_batch_size: int = 1000
+    ) -> DataLoader:
+        "Factory for DataLoaders for Products fetched via Transcripts"
 
         self.genome_id = genome_id
         return DataLoader(
-            batch_load_fn=self.batch_product_load,
-            max_batch_size=max_batch_size
+            batch_load_fn=self.batch_product_load, max_batch_size=max_batch_size
         )
 
-    def create_slice_region_dataloader(self, genome_id: str, max_batch_size: int = 1000) -> DataLoader:
+    def create_slice_region_dataloader(
+        self, genome_id: str, max_batch_size: int = 1000
+    ) -> DataLoader:
         self.genome_id = genome_id
         return DataLoader(
-            batch_load_fn=self.batch_region_load,
-            max_batch_size=max_batch_size
+            batch_load_fn=self.batch_region_load, max_batch_size=max_batch_size
         )
 
     async def query_mongo(self, query: Dict) -> List[Dict]:
-        '''
+        """
         Query function that exists solely to satisfy the vagaries of Python async.
         batch_transcript_load expects a list of results, and *must* call a single
         function in order to be valid.
-        '''
+        """
         return list(self.collection.find(query))

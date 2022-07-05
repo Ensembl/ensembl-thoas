@@ -23,18 +23,19 @@ from common.mongo import MongoDbClient
 
 def load_regions(config, section_name, chr_checksums_path, mongo_client):
 
-    assembly = mongo_client.collection().find_one({
-        'type': 'Assembly',
-        'name': config.get(section_name, 'assembly')
-    })
+    assembly = mongo_client.collection().find_one(
+        {"type": "Assembly", "name": config.get(section_name, "assembly")}
+    )
     assembly_id = assembly["id"]
 
     mysql_client = MySQLClient(config, section_name)
 
-    circular_attribute_query = """SELECT attrib_type_id FROM attrib_type WHERE code = 'circular_seq'"""
+    circular_attribute_query = (
+        """SELECT attrib_type_id FROM attrib_type WHERE code = 'circular_seq'"""
+    )
 
     max_regions = 10000
-    species = config.get(section_name, 'production_name')
+    species = config.get(section_name, "production_name")
 
     region_query = """SELECT distinct(gene.seq_region_id),
                             seq_region.length as length, 
@@ -59,19 +60,26 @@ def load_regions(config, section_name, chr_checksums_path, mongo_client):
         cursor.execute(circular_attribute_query)
         circular_attribute_result = cursor.fetchall()
         if len(circular_attribute_result) != 1:
-            raise DataError('Could not find unique circular attribute id')
-        circular_attribute_id = circular_attribute_result[0]['attrib_type_id']
+            raise DataError("Could not find unique circular attribute id")
+        circular_attribute_id = circular_attribute_result[0]["attrib_type_id"]
 
         cursor.execute(region_query, (circular_attribute_id, species, max_regions))
         region_results = cursor.fetchall()
 
-        genome_id = get_genome_id(region_results[0]['species_name'], region_results[0]['accession_id'])
+        genome_id = get_genome_id(
+            region_results[0]["species_name"], region_results[0]["accession_id"]
+        )
         chromosome_checksums = ChromosomeChecksum(genome_id, chr_checksums_path)
 
-        formatted_results = [format_region(result, assembly_id, genome_id, chromosome_checksums) for result in region_results]
+        formatted_results = [
+            format_region(result, assembly_id, genome_id, chromosome_checksums)
+            for result in region_results
+        ]
 
         if len(formatted_results) == max_regions:
-            raise DataError(f"Unexpectedly large number of regions met threshold of {max_regions}")
+            raise DataError(
+                f"Unexpectedly large number of regions met threshold of {max_regions}"
+            )
         mongo_client.collection().insert_many(formatted_results)
 
 

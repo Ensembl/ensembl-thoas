@@ -84,18 +84,21 @@ async def test_transcript_retrieval(snapshot):
             }
         }
     }"""
-    query_data = {'query': query}
-    (success, result) = await graphql(executable_schema, query_data, context_value=context)
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
     assert success
-    assert result['data']['transcript']
-    snapshot.assert_match(result['data'])
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"])
+
 
 @pytest.mark.asyncio
 async def test_transcript_splicing(snapshot):
-    '''
+    """
     Run a graphql query checking transcript spliced exons
-    '''
-    query = '''
+    """
+    query = """
     {
         transcript(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
             spliced_exons {
@@ -105,8 +108,10 @@ async def test_transcript_splicing(snapshot):
                 }
             }
         }
-    }'''
-    (success, result) = await graphql(executable_schema, {'query': query}, context_value=context)
+    }"""
+    (success, result) = await graphql(
+        executable_schema, {"query": query}, context_value=context
+    )
     assert success
-    assert result['data']['transcript']
-    snapshot.assert_match(result['data'])
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"])

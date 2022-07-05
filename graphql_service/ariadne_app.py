@@ -18,8 +18,14 @@ from graphql import GraphQLSchema
 from starlette.requests import Request
 
 from graphql_service.resolver.gene_model import (
-    QUERY_TYPE, GENE_TYPE, TRANSCRIPT_TYPE, PGC_TYPE,
-    PRODUCT_TYPE, SLICE_TYPE, REGION_TYPE, GENE_METADATA_TYPE
+    QUERY_TYPE,
+    GENE_TYPE,
+    TRANSCRIPT_TYPE,
+    PGC_TYPE,
+    PRODUCT_TYPE,
+    SLICE_TYPE,
+    REGION_TYPE,
+    GENE_METADATA_TYPE,
 )
 
 
@@ -27,7 +33,7 @@ def prepare_executable_schema() -> GraphQLSchema:
     """
     Combine schema definitions with corresponding resolvers
     """
-    schema = ariadne.load_schema_from_path('common/schemas')
+    schema = ariadne.load_schema_from_path("common/schemas")
     return ariadne.make_executable_schema(
         schema,
         QUERY_TYPE,
@@ -37,7 +43,7 @@ def prepare_executable_schema() -> GraphQLSchema:
         PRODUCT_TYPE,
         GENE_METADATA_TYPE,
         SLICE_TYPE,
-        REGION_TYPE
+        REGION_TYPE,
     )
 
 
@@ -46,7 +52,9 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
     Returns function for injecting context to graphql executors.
     The context will contain a pre-configured DB client and other goodies.
     """
+
     def context_provider(request: Request) -> Dict:
-        context['request'] = request
+        context["request"] = request
         return context
+
     return context_provider
