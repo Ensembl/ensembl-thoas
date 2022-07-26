@@ -25,13 +25,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.middleware.cors import CORSMiddleware
 
 from common.logger import CommandLogger
-from common.utils import load_config
-from common.crossrefs import XrefResolver
-from common import mongo
-from graphql_service.ariadne_app import (
-    prepare_executable_schema,
-    prepare_context_provider,
-)
 from starlette.requests import Request
 from starlette.responses import Response
 from prometheus_client import Counter
@@ -40,7 +33,6 @@ from common.crossrefs import XrefResolver
 from common import mongo
 from graphql_service.ariadne_app import prepare_executable_schema, prepare_context_provider
 from graphql_service.metrics_view import metrics
-from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 REQUESTS = Counter(
     "starlette_requests_total", "Total count of requests by method", ["method"]
@@ -69,6 +61,7 @@ if DEBUG_MODE:
     # settings
     EXTENSIONS = [ApolloTracingExtension]
 
+
 class PrometheusMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
@@ -95,8 +88,8 @@ CONTEXT_PROVIDER = prepare_context_provider(
 )
 
 starlette_middleware = [
-Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST']),
-Middleware(PrometheusMiddleware)
+    Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['GET', 'POST']),
+    Middleware(PrometheusMiddleware)
 ]
 
 APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)

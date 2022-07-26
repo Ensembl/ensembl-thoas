@@ -5,3 +5,4 @@ aiodataloader==0.2.1
 ariadne==0.15.1
 python-dotenv==0.20.0
 uvicorn==0.18.1
+prometheus-client==0.14.1
