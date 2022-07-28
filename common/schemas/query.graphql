@@ -6,6 +6,7 @@ type Query {
   transcript(bySymbol: SymbolInput, byId: IdInput): Transcript
   product(genome_id: String!, stable_id: String!): Product
   overlap_region(genomeId: String!, regionName: String!, start: Int!, end: Int!): Locus
+  version: Version
 }
 
 input SymbolInput {

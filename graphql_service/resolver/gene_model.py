@@ -82,7 +82,8 @@ def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
 
 def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
     """This function ensures that all resolvers have access to a dataloader specific to their root query.
-    This function must be run inside every root-level resolver method.
+    This function must be run inside every root-level resolver method (except for the version resolver, which doesn't
+    use any dataloaders).
 
     For example, suppose that we are processing a query like this:
 
@@ -249,7 +250,7 @@ def resolve_transcript(
         genome_id = byId["genome_id"]
 
     if genome_id is None:
-        raise GraphQLError(f"Unable to resolve transcript, genome id is None")
+        raise GraphQLError("Unable to resolve transcript, genome id is None")
 
     create_dataloader_collection(genome_id, info)
 
@@ -258,6 +259,11 @@ def resolve_transcript(
     if not transcript:
         raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
     return transcript
+
+
+@QUERY_TYPE.field("version")
+def resolve_api(_: None, info: GraphQLResolveInfo):  # the second argument must be named `info` to avoid a NameError
+    return {"api": {"major": "0", "minor": "1", "patch": "0-beta"}}
 
 
 @GENE_TYPE.field("transcripts")
