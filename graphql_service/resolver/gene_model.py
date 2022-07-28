@@ -262,7 +262,9 @@ def resolve_transcript(
 
 
 @QUERY_TYPE.field("version")
-def resolve_api(_: None, info: GraphQLResolveInfo):  # the second argument must be named `info` to avoid a NameError
+def resolve_api(
+    _: None, info: GraphQLResolveInfo
+):  # the second argument must be named `info` to avoid a NameError
     return {"api": {"major": "0", "minor": "1", "patch": "0-beta"}}
 
 
