@@ -72,12 +72,12 @@ starlette_middleware = [
     Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 ]
 
-APP = Starlette(debug=True, middleware=starlette_middleware)
+APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
 APP.mount(
     "/",
     GraphQL(
         EXECUTABLE_SCHEMA,
-        debug=True,
+        debug=DEBUG_MODE,
         context_value=CONTEXT_PROVIDER,
         extensions=EXTENSIONS,
     ),
