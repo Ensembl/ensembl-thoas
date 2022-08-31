@@ -287,6 +287,8 @@ def resolve_transcript(
         query["genome_id"] = by_id["genome_id"]
         genome_id = by_id["genome_id"]
 
+    assert genome_id is not None
+
     create_dataloader_collection(genome_id, info)
 
     collection = info.context["mongo_db"]
@@ -361,7 +363,7 @@ def resolve_overlap(
 
     assert genome_id and region_name and start and end
 
-    create_dataloader_collection(genomeId, info)
+    create_dataloader_collection(genome_id, info)
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
@@ -432,7 +434,7 @@ def resolve_product_by_id(
         genome_id = by_id["genome_id"]
         stable_id = by_id["stable_id"]
 
-    assert genome_id or stable_id
+    assert genome_id and stable_id
 
     create_dataloader_collection(genome_id, info)
 
