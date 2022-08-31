@@ -47,3 +47,35 @@ async def test_slice_retrieval(snapshot):
     )
     assert success
     snapshot.assert_match(result["data"])
+
+
+@pytest.mark.asyncio
+async def test_slice_retrieval_by_slice_input(snapshot):
+    "Test searching for genes & transcripts by slice using slice_input"
+
+    # The start/end parameters in this query only contain the brca2_203 transcript
+    query = """query {
+      overlap_region(
+          by_slice: {
+              genome_id: "homo_sapiens_GCA_000001405_28",
+              region_name: "13",
+              start: 32379496,
+              end: 32400266
+          }
+      )
+      {
+        genes {
+          stable_id
+        }
+        transcripts {
+          stable_id
+        }
+      }
+    }"""
+
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    snapshot.assert_match(result["data"])

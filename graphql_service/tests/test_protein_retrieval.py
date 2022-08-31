@@ -22,7 +22,7 @@ executable_schema, context = setup_test()
 @pytest.mark.asyncio
 async def test_protein_retrieval(snapshot):
     """
-    Test retrieval of proteins from the grapqhl api by id
+    Test retrieval of proteins from the graphql api by id
     Gets the expected test result from snapshottest
     """
     query = """{
@@ -85,9 +85,73 @@ async def test_protein_retrieval(snapshot):
 
 
 @pytest.mark.asyncio
+async def test_protein_retrieval_by_id_input(snapshot):
+    """
+    Test retrieval of proteins from the graphql api by id_input
+    """
+    query = """{
+      product(by_id: {genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3"}) {
+        stable_id
+        unversioned_stable_id
+        version
+        length
+        sequence {
+          alphabet {
+            accession_id
+          }
+          checksum
+        }
+        family_matches {
+          sequence_family {
+            source {
+              name
+            }
+            name
+            accession_id
+            url
+            description
+          }
+          via {
+            source {
+              name
+            }
+            accession_id
+            url
+          }
+          relative_location {
+            start
+            end
+            length
+          }
+          score
+          evalue
+          hit_location {
+            start
+            end
+            length
+          }
+        }
+        external_references {
+          accession_id
+          source {
+            name
+          }
+        }
+      }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    assert result["data"]["product"]
+    snapshot.assert_match(result["data"])
+
+
+@pytest.mark.asyncio
 async def test_protein_retrieval_by_transcript(snapshot):
     """
-    Test retrieval of proteins from the grapqhl api by transcript
+    Test retrieval of proteins from the graphql api by transcript
     """
     query = """{
         transcript(byId: {stable_id: "ENST00000380152.7", genome_id: "homo_sapiens_GCA_000001405_28"}) {

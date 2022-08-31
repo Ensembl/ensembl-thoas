@@ -14,7 +14,7 @@ snapshots["test_gene_retrieval_by_symbol 1"] = {
     "gene": {"stable_id": "ENSG00000139618.15", "symbol": "BRCA2"}
 }
 
-snapshots["test_gene_retrieval_by_id 1"] = {
+snapshots["test_gene_retrieval_by_id_camel_case 1"] = {
     "gene": {
         "name": "BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]",
         "slice": {
@@ -82,7 +82,13 @@ snapshots["test_gene_retrieval_by_id 1"] = {
     }
 }
 
-snapshots["test_gene_retrieval_by_symbol 1"] = {
+expected_id_and_symbol = {
     "stable_id": "ENSG00000139618.15",
     "symbol": "BRCA2",
 }
+
+snapshots["test_gene_retrieval_by_id_snake_case 1"] = expected_id_and_symbol
+
+snapshots["test_gene_retrieval_by_symbol 1"] = expected_id_and_symbol
+
+snapshots["test_gene_symbol_retrieval_camel_case 1"] = expected_id_and_symbol

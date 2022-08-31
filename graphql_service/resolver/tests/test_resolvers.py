@@ -211,6 +211,12 @@ def test_resolve_gene(basic_data):
 
     assert result["symbol"] == "banana"
 
+    # Check that we can resolve by symbol
+    result = model.resolve_gene(
+        None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
+    )
+    assert result["symbol"] == "banana"
+
 
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
@@ -358,6 +364,7 @@ def test_resolve_overlap(slice_data):
         regionName="chr1",
         start=10,
         end=11,
+        by_slice=None,
     )
     assert {hit["stable_id"] for hit in result["genes"]} == {"ENSG001.1"}
 

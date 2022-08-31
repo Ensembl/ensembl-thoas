@@ -20,7 +20,7 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_transcript_retrieval(snapshot):
+async def test_transcript_retrieval_by_id_camel_case(snapshot):
     """
     Test retrieval of a transcript from the graphql api by id
     Gets the expected test result from snapshottest
@@ -91,6 +91,57 @@ async def test_transcript_retrieval(snapshot):
     assert success
     assert result["data"]["transcript"]
     snapshot.assert_match(result["data"])
+
+
+@pytest.mark.asyncio
+async def test_transcript_retrieval_by_id_snake_case(snapshot):
+    query = """{
+        transcript(by_id: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENST00000380152.7" }) {
+            stable_id
+            symbol
+        }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"]["transcript"])
+
+
+@pytest.mark.asyncio
+async def test_transcript_retrieval_by_symbol_camel_case(snapshot):
+    query = """{
+        transcript(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2-201" }) {
+            stable_id
+            symbol
+        }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"]["transcript"])
+
+
+@pytest.mark.asyncio
+async def test_transcript_retrieval_by_symbol_snake_case(snapshot):
+    query = """{
+        transcript(by_symbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2-201" }) {
+            stable_id
+            symbol
+        }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    assert result["data"]["transcript"]
+    snapshot.assert_match(result["data"]["transcript"])
 
 
 @pytest.mark.asyncio
