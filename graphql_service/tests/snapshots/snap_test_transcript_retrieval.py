@@ -84,8 +84,6 @@ snapshots["test_transcript_retrieval_by_id_snake_case 1"] = expected_id_and_symb
 
 snapshots["test_transcript_retrieval_by_symbol_camel_case 1"] = expected_id_and_symbol
 
-snapshots["test_transcript_retrieval_by_symbol_snake_case"] = expected_id_and_symbol
-
 snapshots["test_transcript_retrieval_by_symbol_snake_case 1"] = expected_id_and_symbol
 
 snapshots["test_transcript_splicing 1"] = {

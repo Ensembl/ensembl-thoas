@@ -20,9 +20,9 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_protein_retrieval(snapshot):
+async def test_protein_retrieval_separate_arguments(snapshot):
     """
-    Test retrieval of proteins from the graphql api by id
+    Test retrieval of proteins from the graphql api by genome_id, stable_id
     Gets the expected test result from snapshottest
     """
     query = """{
@@ -87,7 +87,8 @@ async def test_protein_retrieval(snapshot):
 @pytest.mark.asyncio
 async def test_protein_retrieval_by_id_input(snapshot):
     """
-    Test retrieval of proteins from the graphql api by id_input
+    Test retrieval of proteins from the graphql api by a
+    single argument called `by_id`
     """
     query = """{
       product(by_id: {genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3"}) {
