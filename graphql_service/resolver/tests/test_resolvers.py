@@ -183,10 +183,17 @@ def test_resolve_gene(basic_data):
 
     info = create_info(basic_data, Path(prev=None, key="Gene", typename="Query"))
 
+    # Check we can resolve using byId camelCase
     result = model.resolve_gene(
         None, info, byId={"stable_id": "ENSG001.1", "genome_id": "1"}
     )
+    assert result["symbol"] == "banana"
+    result = None
 
+    # Check we can resolve using by_id snake_case
+    result = model.resolve_gene(
+        None, info, by_id={"stable_id": "ENSG001.1", "genome_id": "1"}
+    )
     assert result["symbol"] == "banana"
     result = None
 
@@ -211,20 +218,23 @@ def test_resolve_gene(basic_data):
 
     assert result["symbol"] == "banana"
 
-    # Check that we can resolve by symbol
-    result = model.resolve_gene(
-        None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
-    )
-    assert result["symbol"] == "banana"
-
 
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
 
     info = create_info(basic_data, Path(prev=None, key="Gene", typename="Query"))
 
+    # Check we can resolve using bySymbol camelCase
     result = model.resolve_genes(
         None, info, bySymbol={"symbol": "banana", "genome_id": "1"}
+    )
+    assert isinstance(result, list)
+    assert result[0]["symbol"] == "banana"
+    result = None
+
+    # Check we can resolve using by_symbol snake_case
+    result = model.resolve_genes(
+        None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
     )
     assert isinstance(result, list)
     assert result[0]["symbol"] == "banana"

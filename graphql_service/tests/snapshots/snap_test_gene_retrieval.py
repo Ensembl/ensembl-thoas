@@ -89,6 +89,6 @@ expected_id_and_symbol = {
 
 snapshots["test_gene_retrieval_by_id_snake_case 1"] = expected_id_and_symbol
 
-snapshots["test_gene_retrieval_by_symbol 1"] = expected_id_and_symbol
+snapshots["test_gene_symbol_retrieval_camel_case 1"] = [expected_id_and_symbol]
 
-snapshots["test_gene_symbol_retrieval_camel_case 1"] = expected_id_and_symbol
+snapshots["test_gene_symbol_retrieval_snake_case 1"] = [expected_id_and_symbol]

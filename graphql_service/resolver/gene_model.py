@@ -132,33 +132,23 @@ def resolve_gene(
     info: GraphQLResolveInfo,
     byId: Optional[Dict[str, str]] = None,
     by_id: Optional[Dict[str, str]] = None,
-    by_symbol: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Gene via stable_id"
 
     if by_id is None:
         by_id = byId
 
-    assert by_id or by_symbol
+    assert by_id
 
-    query = None
-    if by_id:
-        create_dataloader_collection(by_id["genome_id"], info)
-        query = {
-            "type": "Gene",
-            "$or": [
-                {"stable_id": by_id["stable_id"]},
-                {"unversioned_stable_id": by_id["stable_id"]},
-            ],
-            "genome_id": by_id["genome_id"],
-        }
-    elif by_symbol:
-        create_dataloader_collection(by_symbol["genome_id"], info)
-        query = {
-            "genome_id": by_symbol["genome_id"],
-            "type": "Gene",
-            "symbol": by_symbol["symbol"],
-        }
+    create_dataloader_collection(by_id["genome_id"], info)
+    query = {
+        "type": "Gene",
+        "$or": [
+            {"stable_id": by_id["stable_id"]},
+            {"unversioned_stable_id": by_id["stable_id"]},
+        ],
+        "genome_id": by_id["genome_id"],
+    }
 
     collection = info.context["mongo_db"]
     result = collection.find_one(query)
