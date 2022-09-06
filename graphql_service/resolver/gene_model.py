@@ -157,7 +157,7 @@ def resolve_gene(
     return result
 
 
-@QUERY_TYPE.field("genes_by_symbol")
+@QUERY_TYPE.field("genes")
 def resolve_genes(
     _,
     info: GraphQLResolveInfo,
