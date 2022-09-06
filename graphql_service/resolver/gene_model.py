@@ -158,18 +158,8 @@ def resolve_gene(
 
 
 @QUERY_TYPE.field("genes")
-def resolve_genes(
-    _,
-    info: GraphQLResolveInfo,
-    bySymbol: Optional[Dict[str, str]] = None,
-    by_symbol: Optional[Dict[str, str]] = None,
-) -> List:
+def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     "Load Genes via potentially ambiguous symbol"
-
-    if by_symbol is None:
-        by_symbol = bySymbol
-
-    assert by_symbol
 
     create_dataloader_collection(by_symbol["genome_id"], info)
 
@@ -277,7 +267,7 @@ def resolve_transcript(
         query["genome_id"] = by_id["genome_id"]
         genome_id = by_id["genome_id"]
 
-    assert genome_id is not None
+    assert genome_id
 
     create_dataloader_collection(genome_id, info)
 

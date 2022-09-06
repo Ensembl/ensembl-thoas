@@ -224,15 +224,7 @@ def test_resolve_gene_by_symbol(basic_data):
 
     info = create_info(basic_data, Path(prev=None, key="Gene", typename="Query"))
 
-    # Check we can resolve using bySymbol camelCase
-    result = model.resolve_genes(
-        None, info, bySymbol={"symbol": "banana", "genome_id": "1"}
-    )
-    assert isinstance(result, list)
-    assert result[0]["symbol"] == "banana"
-    result = None
-
-    # Check we can resolve using by_symbol snake_case
+    # Check we can resolve using by_symbol
     result = model.resolve_genes(
         None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
     )
@@ -242,7 +234,7 @@ def test_resolve_gene_by_symbol(basic_data):
 
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_genes(
-            None, info, bySymbol={"symbol": "very not here", "genome_id": "1"}
+            None, info, by_symbol={"symbol": "very not here", "genome_id": "1"}
         )
     assert not result
     assert (
