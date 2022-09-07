@@ -183,10 +183,17 @@ def test_resolve_gene(basic_data):
 
     info = create_info(basic_data, Path(prev=None, key="Gene", typename="Query"))
 
+    # Check we can resolve using byId camelCase
     result = model.resolve_gene(
         None, info, byId={"stable_id": "ENSG001.1", "genome_id": "1"}
     )
+    assert result["symbol"] == "banana"
+    result = None
 
+    # Check we can resolve using by_id snake_case
+    result = model.resolve_gene(
+        None, info, by_id={"stable_id": "ENSG001.1", "genome_id": "1"}
+    )
     assert result["symbol"] == "banana"
     result = None
 
@@ -217,8 +224,9 @@ def test_resolve_gene_by_symbol(basic_data):
 
     info = create_info(basic_data, Path(prev=None, key="Gene", typename="Query"))
 
+    # Check we can resolve using by_symbol
     result = model.resolve_genes(
-        None, info, bySymbol={"symbol": "banana", "genome_id": "1"}
+        None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
     )
     assert isinstance(result, list)
     assert result[0]["symbol"] == "banana"
@@ -226,7 +234,7 @@ def test_resolve_gene_by_symbol(basic_data):
 
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
         result = model.resolve_genes(
-            None, info, bySymbol={"symbol": "very not here", "genome_id": "1"}
+            None, info, by_symbol={"symbol": "very not here", "genome_id": "1"}
         )
     assert not result
     assert (
@@ -358,6 +366,7 @@ def test_resolve_overlap(slice_data):
         regionName="chr1",
         start=10,
         end=11,
+        by_slice=None,
     )
     assert {hit["stable_id"] for hit in result["genes"]} == {"ENSG001.1"}
 

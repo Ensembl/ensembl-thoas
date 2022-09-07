@@ -127,37 +127,46 @@ def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
 
 
 @QUERY_TYPE.field("gene")
-def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
+def resolve_gene(
+    _,
+    info: GraphQLResolveInfo,
+    byId: Optional[Dict[str, str]] = None,
+    by_id: Optional[Dict[str, str]] = None,
+) -> Dict:
     "Load Gene via stable_id"
 
-    create_dataloader_collection(byId["genome_id"], info)
+    if by_id is None:
+        by_id = byId
 
+    assert by_id
+
+    create_dataloader_collection(by_id["genome_id"], info)
     query = {
         "type": "Gene",
         "$or": [
-            {"stable_id": byId["stable_id"]},
-            {"unversioned_stable_id": byId["stable_id"]},
+            {"stable_id": by_id["stable_id"]},
+            {"unversioned_stable_id": by_id["stable_id"]},
         ],
-        "genome_id": byId["genome_id"],
+        "genome_id": by_id["genome_id"],
     }
 
     collection = info.context["mongo_db"]
     result = collection.find_one(query)
     if not result:
-        raise GeneNotFoundError(byId=byId)
+        raise GeneNotFoundError(by_id=by_id)
     return result
 
 
-@QUERY_TYPE.field("genes_by_symbol")
-def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
+@QUERY_TYPE.field("genes")
+def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     "Load Genes via potentially ambiguous symbol"
 
-    create_dataloader_collection(bySymbol["genome_id"], info)
+    create_dataloader_collection(by_symbol["genome_id"], info)
 
     query = {
-        "genome_id": bySymbol["genome_id"],
+        "genome_id": by_symbol["genome_id"],
         "type": "Gene",
-        "symbol": bySymbol["symbol"],
+        "symbol": by_symbol["symbol"],
     }
 
     collection = info.context["mongo_db"]
@@ -166,7 +175,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
-        raise GeneNotFoundError(bySymbol=bySymbol)
+        raise GeneNotFoundError(by_symbol=by_symbol)
     return result
 
 
@@ -231,32 +240,41 @@ def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
     bySymbol: Optional[Dict[str, str]] = None,
+    by_symbol: Optional[Dict[str, str]] = None,
     byId: Optional[Dict[str, str]] = None,
+    by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
+
+    if by_symbol is None:
+        by_symbol = bySymbol
+    if by_id is None:
+        by_id = byId
+
+    assert by_id or by_symbol
+
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
-    if bySymbol:
-        query["symbol"] = bySymbol["symbol"]
-        query["genome_id"] = bySymbol["genome_id"]
-        genome_id = bySymbol["genome_id"]
-    if byId:
+    if by_symbol:
+        query["symbol"] = by_symbol["symbol"]
+        query["genome_id"] = by_symbol["genome_id"]
+        genome_id = by_symbol["genome_id"]
+    if by_id:
         query["$or"] = [
-            {"stable_id": byId["stable_id"]},
-            {"unversioned_stable_id": byId["stable_id"]},
+            {"stable_id": by_id["stable_id"]},
+            {"unversioned_stable_id": by_id["stable_id"]},
         ]
-        query["genome_id"] = byId["genome_id"]
-        genome_id = byId["genome_id"]
+        query["genome_id"] = by_id["genome_id"]
+        genome_id = by_id["genome_id"]
 
-    if genome_id is None:
-        raise GraphQLError(f"Unable to resolve transcript, genome id is None")
+    assert genome_id
 
     create_dataloader_collection(genome_id, info)
 
     collection = info.context["mongo_db"]
     transcript = collection.find_one(query)
     if not transcript:
-        raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
+        raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
     return transcript
 
 
@@ -292,27 +310,47 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
     gene = collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
-            byId={"genome_id": transcript["genome_id"], "stable_id": transcript["gene"]}
+            by_id={
+                "genome_id": transcript["genome_id"],
+                "stable_id": transcript["gene"],
+            }
         )
     return gene
 
 
 @QUERY_TYPE.field("overlap_region")
 def resolve_overlap(
-    _, info: GraphQLResolveInfo, genomeId: str, regionName: str, start: int, end: int
+    _,
+    info: GraphQLResolveInfo,
+    genomeId: Optional[str] = None,
+    regionName: Optional[str] = None,
+    start: Optional[int] = None,
+    end: Optional[int] = None,
+    by_slice: Optional[Dict[str, Any]] = None,
 ) -> Dict:
     """
     Query Mongo for genes and transcripts lying between start and end
     """
 
-    create_dataloader_collection(genomeId, info)
+    if by_slice:
+        genome_id = by_slice["genome_id"]
+        region_name = by_slice["region_name"]
+        start = by_slice["start"]
+        end = by_slice["end"]
+    else:
+        genome_id = genomeId
+        region_name = regionName
+
+    assert genome_id and region_name and start and end
+
+    create_dataloader_collection(genome_id, info)
 
     # Thoas only contains "chromosome"-type regions
-    region_id = "_".join([genomeId, regionName, "chromosome"])
+    region_id = "_".join([genome_id, region_name, "chromosome"])
     return {
-        "genes": overlap_region(info.context, genomeId, region_id, start, end, "Gene"),
+        "genes": overlap_region(info.context, genome_id, region_id, start, end, "Gene"),
         "transcripts": overlap_region(
-            info.context, genomeId, region_id, start, end, "Transcript"
+            info.context, genome_id, region_id, start, end, "Transcript"
         ),
     }
 
@@ -364,9 +402,19 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 @QUERY_TYPE.field("product")
 def resolve_product_by_id(
-    _, info: GraphQLResolveInfo, genome_id: str, stable_id: str
+    _,
+    info: GraphQLResolveInfo,
+    genome_id: Optional[str] = None,
+    stable_id: Optional[str] = None,
+    by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Fetch a product by stable_id, this is almost always a protein"
+
+    if by_id:
+        genome_id = by_id["genome_id"]
+        stable_id = by_id["stable_id"]
+
+    assert genome_id and stable_id
 
     create_dataloader_collection(genome_id, info)
 
@@ -478,10 +526,10 @@ class GeneNotFoundError(FeatureNotFoundError):
 
     def __init__(
         self,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
+        by_symbol: Optional[Dict[str, str]] = None,
+        by_id: Optional[Dict[str, str]] = None,
     ):
-        super().__init__("gene", bySymbol, byId)
+        super().__init__("gene", by_symbol, by_id)
 
 
 class TranscriptNotFoundError(FeatureNotFoundError):
@@ -491,10 +539,10 @@ class TranscriptNotFoundError(FeatureNotFoundError):
 
     def __init__(
         self,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
+        by_symbol: Optional[Dict[str, str]] = None,
+        by_id: Optional[Dict[str, str]] = None,
     ):
-        super().__init__("transcript", bySymbol, byId)
+        super().__init__("transcript", by_symbol, by_id)
 
 
 class ProductNotFoundError(FieldNotFoundError):

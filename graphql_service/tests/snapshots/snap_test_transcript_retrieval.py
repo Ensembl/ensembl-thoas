@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # snapshottest: v1 - https://goo.gl/zC4yUc
-
-"""Test data for transcript retrieval tests"""
-
 from __future__ import unicode_literals
 
 from snapshottest import Snapshot
@@ -10,16 +7,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_transcript_splicing 1"] = {
-    "transcript": {
-        "spliced_exons": [
-            {"exon": {"stable_id": "ENSE00002145385.1"}, "index": 1},
-            {"exon": {"stable_id": "ENSE00002167182.1"}, "index": 2},
-        ]
-    }
-}
-
-snapshots["test_transcript_retrieval 1"] = {
+snapshots["test_transcript_retrieval_by_id_camel_case 1"] = {
     "transcript": {
         "gene": {
             "stable_id": "ENSG00000139618.15",
@@ -46,9 +34,7 @@ snapshots["test_transcript_retrieval 1"] = {
                                     "length": 130,
                                     "start": 32370971,
                                 },
-                                "region": {
-                                    "name": "13",
-                                },
+                                "region": {"name": "13"},
                                 "strand": {"code": "forward"},
                             },
                             "stable_id": "ENSE00002145385.1",
@@ -87,5 +73,24 @@ snapshots["test_transcript_retrieval 1"] = {
         "symbol": "BRCA2-201",
         "unversioned_stable_id": "ENST00000380152",
         "version": 7,
+    }
+}
+
+expected_id_and_symbol = {
+    "stable_id": "ENST00000380152.7",
+    "symbol": "BRCA2-201",
+}
+snapshots["test_transcript_retrieval_by_id_snake_case 1"] = expected_id_and_symbol
+
+snapshots["test_transcript_retrieval_by_symbol_camel_case 1"] = expected_id_and_symbol
+
+snapshots["test_transcript_retrieval_by_symbol_snake_case 1"] = expected_id_and_symbol
+
+snapshots["test_transcript_splicing 1"] = {
+    "transcript": {
+        "spliced_exons": [
+            {"exon": {"stable_id": "ENSE00002145385.1"}, "index": 1},
+            {"exon": {"stable_id": "ENSE00002167182.1"}, "index": 2},
+        ]
     }
 }

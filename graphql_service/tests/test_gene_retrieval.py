@@ -20,8 +20,8 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_gene_retrieval_by_id(snapshot):
-    "Test retrieval of a gene from the grapqhl api by id"
+async def test_gene_retrieval_by_id_camel_case(snapshot):
+    "Test `gene` query using byId camelCase"
     query = """{
       gene(byId: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
         symbol
@@ -101,10 +101,10 @@ async def test_gene_retrieval_by_id(snapshot):
 
 
 @pytest.mark.asyncio
-async def test_gene_retrieval_by_symbol(snapshot):
-    "Test retrieval of a gene from the graphql api by its symbol"
+async def test_gene_retrieval_by_id_snake_case(snapshot):
+    "Test `gene` query using by_id snake case"
     query = """{
-      genes_by_symbol(bySymbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
+      gene(by_id: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
         symbol
         stable_id
       }
@@ -114,4 +114,21 @@ async def test_gene_retrieval_by_symbol(snapshot):
         executable_schema, query_data, context_value=context
     )
     assert success
-    snapshot.assert_match(result["data"]["genes_by_symbol"][0])
+    snapshot.assert_match(result["data"]["gene"])
+
+
+@pytest.mark.asyncio
+async def test_gene_retrieval_by_symbol(snapshot):
+    "Test `genes` query using by_symbol snake_case"
+    query = """{
+      genes(by_symbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
+        symbol
+        stable_id
+      }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context
+    )
+    assert success
+    snapshot.assert_match(result["data"]["genes"])
