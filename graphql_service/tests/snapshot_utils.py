@@ -20,6 +20,7 @@ from starlette.datastructures import State
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
+from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.tests.fixtures.human_brca2 import (
     build_gene,
     build_transcripts,
@@ -40,12 +41,9 @@ def prepare_db():
         print("No network available, tests will fail")
         xref_resolver = None
 
-    request_mock = Mock()
-    request_mock.state = State()
     context = {
         "mongo_db": mocked_mongo_collection,
         "XrefResolver": xref_resolver,
-        "request": request_mock,
     }
 
     mocked_mongo_collection.insert_one(build_gene())
@@ -54,6 +52,13 @@ def prepare_db():
     mocked_mongo_collection.insert_one(build_region())
     mocked_mongo_collection.insert_one(build_assembly())
     mocked_mongo_collection.insert_many(build_wheat_genes())
+    return context
+
+
+def add_loaders_to_context(context):
+    """This must be run per-request"""
+
+    context["loaders"] = BatchLoaders(context["mongo_db"])
     return context
 
 

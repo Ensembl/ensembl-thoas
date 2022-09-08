@@ -17,6 +17,7 @@ import ariadne
 from graphql import GraphQLSchema
 from starlette.requests import Request
 
+from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.resolver.gene_model import (
     QUERY_TYPE,
     GENE_TYPE,
@@ -61,6 +62,14 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
     def context_provider(request: Request) -> Dict:
         """We must return a new object with every request,
         otherwise the requests will pollute each other's state"""
-        return {"request": request, **context}
+        mongo_db = context["mongo_db"]
+        xref_resolver = context["XrefResolver"]
+        batch_loaders = BatchLoaders(mongo_db)
+        return {
+            "request": request,
+            "mongo_db": mongo_db,
+            "XrefResolver": xref_resolver,
+            "loaders": batch_loaders,
+        }
 
     return context_provider

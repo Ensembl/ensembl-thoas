@@ -466,6 +466,7 @@ def format_protein(protein, genome_id, refget):
         "length": length,
         "sequence": sequence,
         "sequence_checksum": sequence.get("checksum"),
+        "product_primary_key": genome_id + "_" + stable_id,
     }
 
 

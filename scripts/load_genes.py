@@ -69,7 +69,7 @@ def create_index(mongo_client):
         name="location_index",
     )
     collection.create_index(
-        [("genome_id", pymongo.ASCENDING), ("gene", pymongo.ASCENDING)],
+        [("gene_foreign_key", pymongo.ASCENDING)],
         name="gene_foreign_key",
     )
     collection.create_index(
@@ -84,8 +84,12 @@ def create_index(mongo_client):
         name="cross_refs",
     )
     collection.create_index(
-        [("genome_id", pymongo.ASCENDING), ("protein_id", pymongo.ASCENDING)],
-        name="protein_fk",
+        [("product_primary_key", pymongo.ASCENDING)],
+        name="product_primary_key",
+    )
+    collection.create_index(
+        [("region_id", pymongo.ASCENDING)],
+        name="region_id",
     )
 
 
@@ -164,9 +168,10 @@ def load_gene_info(
             except KeyError as ke:
                 gene_metadata["name"] = None
 
+            gene_stable_id = common.utils.get_stable_id(gene["id"], gene["version"])
             json_gene = {
                 "type": "Gene",
-                "stable_id": common.utils.get_stable_id(gene["id"], gene["version"]),
+                "stable_id": gene_stable_id,
                 "unversioned_stable_id": gene["id"],
                 "version": gene["version"],
                 "so_term": gene["biotype"],
@@ -197,6 +202,7 @@ def load_gene_info(
                 "genome_id": genome["id"],
                 "external_references": gene_xrefs,
                 "metadata": gene_metadata,
+                "gene_primary_key": genome["id"] + "_" + gene_stable_id,
             }
             gene_buffer.append(json_gene)
 
@@ -289,9 +295,10 @@ def format_transcript(
 
     ####TODO: Type and release version
 
+    gene_stable_id = common.utils.get_stable_id(gene["id"], gene["version"])
     new_transcript = {
         "type": "Transcript",
-        "gene": common.utils.get_stable_id(gene["id"], gene["version"]),
+        "gene": gene_stable_id,
         "stable_id": common.utils.get_stable_id(
             transcript["id"], transcript["version"]
         ),
@@ -327,6 +334,7 @@ def format_transcript(
             ordered_formatted_exons, transcript
         ),
         "metadata": tr_metadata_info[transcript["id"]],
+        "gene_foreign_key": genome_id + "_" + gene_stable_id,
     }
 
     # Insert multiple product handling here when we know what it will look like
@@ -352,6 +360,7 @@ def format_transcript(
             product_id = common.utils.get_stable_id(
                 translation["id"], translation["version"]
             )
+            product_foreign_key = genome_id + "_" + product_id
             _, protein_length = refget.get_checksum_and_length(product_id, refget.pep)
             new_transcript["product_generating_contexts"].append(
                 {
@@ -372,8 +381,9 @@ def format_transcript(
                         "sequence": cds_sequence,
                         "sequence_checksum": cds_sequence.get("checksum"),
                     },
-                    # Infer the "products" in the resolver. This is a join.
                     "product_id": product_id,
+                    # Infer the "products" in the resolver. This is a join.
+                    "product_foreign_key": product_foreign_key,
                     "phased_exons": common.utils.phase_exons(
                         ordered_formatted_exons, transcript["id"], phase_info
                     ),
