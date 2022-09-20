@@ -202,7 +202,9 @@ def load_gene_info(
                 "genome_id": genome["id"],
                 "external_references": gene_xrefs,
                 "metadata": gene_metadata,
-                "gene_primary_key": genome["id"] + "_" + gene_stable_id,
+                "gene_primary_key": common.utils.get_mongo_key(
+                    genome["id"], gene_stable_id
+                ),
             }
             gene_buffer.append(json_gene)
 
@@ -334,7 +336,7 @@ def format_transcript(
             ordered_formatted_exons, transcript
         ),
         "metadata": tr_metadata_info[transcript["id"]],
-        "gene_foreign_key": genome_id + "_" + gene_stable_id,
+        "gene_foreign_key": common.utils.get_mongo_key(genome_id, gene_stable_id),
     }
 
     # Insert multiple product handling here when we know what it will look like
@@ -360,7 +362,7 @@ def format_transcript(
             product_id = common.utils.get_stable_id(
                 translation["id"], translation["version"]
             )
-            product_foreign_key = genome_id + "_" + product_id
+            product_foreign_key = common.utils.get_mongo_key(genome_id, product_id)
             _, protein_length = refget.get_checksum_and_length(product_id, refget.pep)
             new_transcript["product_generating_contexts"].append(
                 {
