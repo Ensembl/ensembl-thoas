@@ -24,6 +24,7 @@ def build_gene():
         "version": 15,
         "so_term": "protein_coding",
         "genome_id": "homo_sapiens_GCA_000001405_28",
+        "gene_primary_key": "homo_sapiens_GCA_000001405_28_ENSG00000139618.15",
         "metadata": {
             "biotype": {
                 "label": "Protein coding",
@@ -65,6 +66,7 @@ def build_transcripts():
         "type": "Transcript",
         "symbol": "BRCA2-201",
         "gene": "ENSG00000139618.15",
+        "gene_foreign_key": "homo_sapiens_GCA_000001405_28_ENSG00000139618.15",
         "stable_id": "ENST00000380152.7",
         "unversioned_stable_id": "ENST00000380152",
         "version": 7,
@@ -166,6 +168,7 @@ def build_transcripts():
                     },
                 ],
                 "product_id": "ENSP00000369497.3",
+                "product_foreign_key": "homo_sapiens_GCA_000001405_28_ENSP00000369497.3",
             }
         ],
     }
@@ -173,6 +176,7 @@ def build_transcripts():
         "type": "Transcript",
         "symbol": "BRCA2-203",
         "gene": "ENSG00000139618.15",
+        "gene_foreign_key": "homo_sapiens_GCA_000001405_28_ENSG00000139618.15",
         "stable_id": "ENST00000528762.1",
         "unversioned_stable_id": "ENST00000528762",
         "version": 1,
@@ -239,6 +243,7 @@ def build_products():
         "type": "Protein",
         "unversioned_stable_id": "ENSP00000369497",
         "stable_id": "ENSP00000369497.3",
+        "product_primary_key": "homo_sapiens_GCA_000001405_28_ENSP00000369497.3",
         "version": 3,
         "length": 100,
         "genome_id": "homo_sapiens_GCA_000001405_28",

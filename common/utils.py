@@ -466,6 +466,7 @@ def format_protein(protein, genome_id, refget):
         "length": length,
         "sequence": sequence,
         "sequence_checksum": sequence.get("checksum"),
+        "product_primary_key": get_mongo_key(genome_id, stable_id),
     }
 
 
@@ -710,3 +711,7 @@ def check_and_log_urls(data, url_key, logger):
         data["error"] = "Unable to check URL"
         data["url_key"] = url_key
         logger.url_logger(**data)
+
+
+def get_mongo_key(genome_id, stable_id):
+    return genome_id + "_" + stable_id

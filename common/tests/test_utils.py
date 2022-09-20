@@ -624,6 +624,7 @@ def test_protein_formatting():
             }
         ],
         "length": 10,
+        "product_primary_key": "tralalala_CAB89209.2",
         "sequence": {
             "alphabet": {
                 "accession_id": "test_protein_accession_id",

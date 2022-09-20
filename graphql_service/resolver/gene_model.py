@@ -12,14 +12,13 @@
    limitations under the License.
 """
 
-from typing import Dict, Optional, List, Any, Union
+from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLError, GraphQLResolveInfo
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
-from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType("Gene")
@@ -29,101 +28,6 @@ PRODUCT_TYPE = ObjectType("Product")
 GENE_METADATA_TYPE = ObjectType("GeneMetadata")
 SLICE_TYPE = ObjectType("Slice")
 REGION_TYPE = ObjectType("Region")
-
-
-def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
-    """This is intended to be used inside a resolver to determine its root query.  For example, suppose we had a query
-    like this:
-
-    query {
-      transcript(byId: {
-        genome_id: "plasmodium_falciparum_GCA_000002765_2",
-        stable_id: "CAD52290"
-      }) {
-        ...
-      }
-      gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "YHR055C"
-      }) {
-        ...
-      }
-    }
-
-    Then this function will return "transcript" if it runs inside a resolver processing the transcript query, and "gene"
-    if run inside a resolver processing the gene query.
-
-    The keys are always unique within a graphql query.  If you want to run the same type of query more than once in the
-    same GraphQL request then you need to define aliases.  Here is an example:
-
-    query {
-      firstGene: gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "snR41"
-      }) {
-        ...
-      }
-      secondGene: gene(byId: {
-        genome_id: "homo_sapiens_GCA_000001405_28"
-        stable_id: "ENSG00000127720.8"
-      }) {
-        ...
-      }
-    }
-    In this case the keys that could be returned by this function are "firstGene" and "secondGene".
-    """
-    current = info.path
-    parent = current.prev
-    while parent is not None:
-        current = parent
-        parent = parent.prev
-    return current.key
-
-
-def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
-    """This function ensures that all resolvers have access to a dataloader specific to their root query.
-    This function must be run inside every root-level resolver method.
-
-    For example, suppose that we are processing a query like this:
-
-    query {
-      firstGene: gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "snR41"
-      }) {
-        ...
-      }
-      secondGene: gene(byId: {
-        genome_id: "homo_sapiens_GCA_000001405_28"
-        stable_id: "ENSG00000127720.8"
-      }) {
-        ...
-      }
-    }
-    Provided we run this function inside every root-level resolver, at the end of processing the query the value
-    of info.context["request"].state will be
-    {
-      "firstGene": DataLoaderCollection(<mongo client>, "saccharomyces_cerevisiae_GCA_000146045_2"),
-      "secondGene": DataLoaderCollection(<mongo client>, "homo_sapiens_GCA_000001405_28")
-    }
-    This ensures that we have a separate collection of dataloaders per-request and per-genome_id.
-    """
-
-    key = get_root_key(info)
-    request_state = info.context["request"].state
-    if hasattr(request_state, "dataloader_collections"):
-        request_state.dataloader_collections[key] = DataLoaderCollection(
-            info.context["mongo_db"], genome_id
-        )
-    else:
-        request_state.dataloader_collections = {
-            key: DataLoaderCollection(info.context["mongo_db"], genome_id)
-        }
-
-
-def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
-    key = get_root_key(info)
-    return info.context["request"].state.dataloader_collections[key]
 
 
 @QUERY_TYPE.field("gene")
@@ -140,7 +44,6 @@ def resolve_gene(
 
     assert by_id
 
-    create_dataloader_collection(by_id["genome_id"], info)
     query = {
         "type": "Gene",
         "$or": [
@@ -160,8 +63,6 @@ def resolve_gene(
 @QUERY_TYPE.field("genes")
 def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     "Load Genes via potentially ambiguous symbol"
-
-    create_dataloader_collection(by_symbol["genome_id"], info)
 
     query = {
         "genome_id": by_symbol["genome_id"],
@@ -269,8 +170,6 @@ def resolve_transcript(
 
     assert genome_id
 
-    create_dataloader_collection(genome_id, info)
-
     collection = info.context["mongo_db"]
     transcript = collection.find_one(query)
     if not transcript:
@@ -282,11 +181,11 @@ def resolve_transcript(
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     "Use a DataLoader to get transcripts for the parent gene"
 
-    gene_stable_id = gene["stable_id"]
+    gene_primary_key = gene["gene_primary_key"]
     # Get a dataloader from info
-    loader = get_dataloader_collection(info).gene_transcript_dataloader
+    loader = info.context["loaders"].transcript_loader
     # Tell DataLoader to get this request done when it feels like it
-    transcripts = await loader.load(key=gene_stable_id)
+    transcripts = await loader.load(key=gene_primary_key)
     return transcripts
 
 
@@ -342,8 +241,6 @@ def resolve_overlap(
         region_name = regionName
 
     assert genome_id and region_name and start and end
-
-    create_dataloader_collection(genome_id, info)
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
@@ -416,8 +313,6 @@ def resolve_product_by_id(
 
     assert genome_id and stable_id
 
-    create_dataloader_collection(genome_id, info)
-
     query = {
         "genome_id": genome_id,
         "stable_id": stable_id,
@@ -438,14 +333,15 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
     if pgc["product_id"] is None:
         return None
-    loader = get_dataloader_collection(info).transcript_product_dataloader
-    products = await loader.load(key=pgc["product_id"])
+    loader = info.context["loaders"].product_loader
+    products = await loader.load(key=pgc["product_foreign_key"])
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
 
     if not products:
-        raise ProductNotFoundError(
-            stable_id=pgc["product_id"], genome_id=pgc["genome_id"]
+        raise FieldNotFoundError(
+            field_type="product_foreign_key",
+            key_dict={"product_foreign_key": pgc["product_foreign_key"]},
         )
     return products[0]
 
@@ -457,7 +353,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
         return None
     region_id = slc["region_id"]
 
-    loader = get_dataloader_collection(info).slice_region_dataloader
+    loader = info.context["loaders"].region_loader
 
     regions = await loader.load(key=region_id)
 
@@ -550,8 +446,8 @@ class ProductNotFoundError(FieldNotFoundError):
     Custom error to be raised if product is not found
     """
 
-    def __init__(self, stable_id: str, genome_id: str):
-        super().__init__("product", {"stable_id": stable_id, "genome_id": genome_id})
+    def __init__(self, product_id: str, genome_id: str):
+        super().__init__("product", {"product_id": product_id, "genome_id": genome_id})
 
 
 class RegionNotFoundError(FieldNotFoundError):

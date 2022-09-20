@@ -19,29 +19,14 @@ from aiodataloader import DataLoader
 from pymongo.collection import Collection
 
 
-class DataLoaderCollection:
-    """
-    A collection of bulk data aggregators for "joins" in GraphQL
-    They're part of a class so they can be initialised in one go
-    outside of the static methods they will be called in.
+class BatchLoaders:
+    """A collection of bulk data aggregators for "joins" in GraphQL"""
 
-    Can't currently support multiple genome_ids in the same query.
-    Limitations in the DataLoader design as stateless function
-    with fixed arguments mean we can't inject genome_id on calling
-    .load(). Needs a better solution.
-    """
-
-    def __init__(self, db_collection: Collection, genome_id: str):
-        "Accepts a MongoDB collection object to provide data"
-        self.collection = db_collection
-        self.genome_id = genome_id
-        self.gene_transcript_dataloader = self.create_gene_transcript_dataloader(
-            genome_id
-        )
-        self.transcript_product_dataloader = self.create_transcript_product_dataloader(
-            genome_id
-        )
-        self.slice_region_dataloader = self.create_slice_region_dataloader(genome_id)
+    def __init__(self, mongo_client):
+        self.mongo_client = mongo_client
+        self.transcript_loader = DataLoader(batch_load_fn=self.batch_transcript_load)
+        self.product_loader = DataLoader(batch_load_fn=self.batch_product_load)
+        self.region_loader = DataLoader(batch_load_fn=self.batch_region_load)
 
     async def batch_transcript_load(self, keys: List[str]) -> List[List]:
         """
@@ -51,12 +36,11 @@ class DataLoaderCollection:
         """
         query = {
             "type": "Transcript",
-            "genome_id": self.genome_id,
-            "gene": {"$in": sorted(keys)},
+            "gene_foreign_key": {"$in": sorted(keys)},
         }
 
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output("gene", keys, data)
+        return self.collate_dataloader_output("gene_foreign_key", keys, data)
 
     async def batch_product_load(self, keys: List[str]) -> List[List]:
         """
@@ -64,11 +48,10 @@ class DataLoaderCollection:
         """
         query = {
             "type": "Protein",
-            "genome_id": self.genome_id,
-            "stable_id": {"$in": keys},
+            "product_primary_key": {"$in": keys},
         }
         data = await self.query_mongo(query)
-        return self.collate_dataloader_output("stable_id", keys, data)
+        return self.collate_dataloader_output("product_primary_key", keys, data)
 
     async def batch_region_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Region", "region_id": {"$in": keys}}
@@ -96,42 +79,10 @@ class DataLoaderCollection:
 
         return [grouped_docs[fk] for fk in original_ids]
 
-    def create_gene_transcript_dataloader(
-        self, genome_id: str, max_batch_size: int = 1000
-    ) -> DataLoader:
-        "Factory for DataLoaders for Transcripts fetched via Genes"
-        # How do we get temporary state into class methods with a fixed signature?
-        # I didn't want to fork DataLoader in order to add arbitrary arguments
-        # There is a danger of cross-contamination here if genome_id changes in
-        # the same thread, which is why we've taken care to create separate data
-        # loaders per-request and per-genome_id.
-        self.genome_id = genome_id
-        return DataLoader(
-            batch_load_fn=self.batch_transcript_load, max_batch_size=max_batch_size
-        )
-
-    def create_transcript_product_dataloader(
-        self, genome_id: str, max_batch_size: int = 1000
-    ) -> DataLoader:
-        "Factory for DataLoaders for Products fetched via Transcripts"
-
-        self.genome_id = genome_id
-        return DataLoader(
-            batch_load_fn=self.batch_product_load, max_batch_size=max_batch_size
-        )
-
-    def create_slice_region_dataloader(
-        self, genome_id: str, max_batch_size: int = 1000
-    ) -> DataLoader:
-        self.genome_id = genome_id
-        return DataLoader(
-            batch_load_fn=self.batch_region_load, max_batch_size=max_batch_size
-        )
-
     async def query_mongo(self, query: Dict) -> List[Dict]:
         """
         Query function that exists solely to satisfy the vagaries of Python async.
         batch_transcript_load expects a list of results, and *must* call a single
         function in order to be valid.
         """
-        return list(self.collection.find(query))
+        return list(self.mongo_client.find(query))

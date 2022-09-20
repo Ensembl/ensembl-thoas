@@ -14,7 +14,9 @@
 
 import pytest
 from ariadne import graphql
-from .snapshot_utils import setup_test
+
+from graphql_service.resolver.data_loaders import BatchLoaders
+from .snapshot_utils import setup_test, add_loaders_to_context
 
 executable_schema, context = setup_test()
 
@@ -94,7 +96,7 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
 
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
     )
     assert success
     snapshot.assert_match(result["data"])
@@ -103,6 +105,7 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_id_snake_case(snapshot):
     "Test `gene` query using by_id snake case"
+
     query = """{
       gene(by_id: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
         symbol
@@ -111,7 +114,7 @@ async def test_gene_retrieval_by_id_snake_case(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
     )
     assert success
     snapshot.assert_match(result["data"]["gene"])
@@ -120,6 +123,8 @@ async def test_gene_retrieval_by_id_snake_case(snapshot):
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_symbol(snapshot):
     "Test `genes` query using by_symbol snake_case"
+    context["loaders"] = BatchLoaders(context["mongo_db"])
+
     query = """{
       genes(by_symbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
         symbol
@@ -128,7 +133,7 @@ async def test_gene_retrieval_by_symbol(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
     )
     assert success
     snapshot.assert_match(result["data"]["genes"])
