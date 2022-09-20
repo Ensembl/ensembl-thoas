@@ -89,7 +89,9 @@ if __name__ == "__main__":
     CONF_PARSER.read(CLI_ARGS.config)
     validate_config(CONF_PARSER)
 
-    mongo_collection_name = get_default_collection_name(CONF_PARSER["GENERAL"]["release"])
+    mongo_collection_name = get_default_collection_name(
+        CONF_PARSER["GENERAL"]["release"]
+    )
     print(f"Dumping data to {os.getcwd()} and loading to MongoDB")
 
     # each section of the file dictates a particular assembly to work on
