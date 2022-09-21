@@ -21,13 +21,11 @@ snapshots["test_gene_retrieval_by_id_camel_case 1"] = {
                 "code": "chromosome",
                 "topology": "linear",
                 "assembly": {
-                    "type": "Assembly",
                     "id": "GRCh38.p13",
                     "default": True,
                     "name": "GRCh38",
                     "accession_id": "GCA_000001405.28",
                     "accessioning_body": "EGA",
-                    "species": "homo_sapiens",
                 },
                 "metadata": {
                     "ontology_terms": [

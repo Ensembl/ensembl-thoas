@@ -27,6 +27,9 @@ from graphql_service.resolver.gene_model import (
     SLICE_TYPE,
     REGION_TYPE,
     GENE_METADATA_TYPE,
+    ASSEMBLY_TYPE,
+    ORGANISM_TYPE,
+    SPECIES_TYPE,
 )
 
 
@@ -45,6 +48,9 @@ def prepare_executable_schema() -> GraphQLSchema:
         GENE_METADATA_TYPE,
         SLICE_TYPE,
         REGION_TYPE,
+        ASSEMBLY_TYPE,
+        ORGANISM_TYPE,
+        SPECIES_TYPE,
     )
 
 

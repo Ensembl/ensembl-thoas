@@ -61,13 +61,15 @@ async def test_batch_transcript_load():
 
     loaders = BatchLoaders(collection)
 
-    response = await loaders.batch_transcript_load(["1_ENSG001.1"])
+    response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
     assert len(response) == 1
     # There are two hits that match the one requested ID
     assert len(response[0]) == 2
 
-    response = await loaders.batch_transcript_load(["1_ENSG001.1", "1_ENSG002.2"])
+    response = await loaders.batch_transcript_by_gene_load(
+        ["1_ENSG001.1", "1_ENSG002.2"]
+    )
     # This broadly proves that data emerges in lists ordered
     # by the input IDs
     assert len(response) == 2
@@ -76,7 +78,7 @@ async def test_batch_transcript_load():
     assert response[1][0]["gene"] == "ENSG002.2"
 
     # Try for absent data
-    response = await loaders.batch_transcript_load(["nonsense"])
+    response = await loaders.batch_transcript_by_gene_load(["nonsense"])
 
     # No results in the structure that is returned
     assert not response[0]

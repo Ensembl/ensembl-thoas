@@ -24,11 +24,24 @@ class BatchLoaders:
 
     def __init__(self, mongo_client):
         self.mongo_client = mongo_client
-        self.transcript_loader = DataLoader(batch_load_fn=self.batch_transcript_load)
+        self.transcript_loader = DataLoader(
+            batch_load_fn=self.batch_transcript_by_gene_load
+        )
         self.product_loader = DataLoader(batch_load_fn=self.batch_product_load)
         self.region_loader = DataLoader(batch_load_fn=self.batch_region_load)
+        self.region_by_assembly_loader = DataLoader(
+            batch_load_fn=self.batch_region_by_assembly_load
+        )
+        self.organism_loader = DataLoader(batch_load_fn=self.batch_organism_load)
+        self.assembly_by_organism_loader = DataLoader(
+            batch_load_fn=self.batch_assembly_by_organism_load
+        )
+        self.species_loader = DataLoader(batch_load_fn=self.batch_species_load)
+        self.organism_by_species_loader = DataLoader(
+            batch_load_fn=self.batch_organism_by_species_load
+        )
 
-    async def batch_transcript_load(self, keys: List[str]) -> List[List]:
+    async def batch_transcript_by_gene_load(self, keys: List[str]) -> List[List]:
         """
         Load many transcripts to satisfy a bunch of `await`s
         DataLoader will aggregate many single ID requests into 'keys' so we can
@@ -57,6 +70,31 @@ class BatchLoaders:
         query = {"type": "Region", "region_id": {"$in": keys}}
         data = await self.query_mongo(query)
         return self.collate_dataloader_output("region_id", keys, data)
+
+    async def batch_region_by_assembly_load(self, keys: List[str]) -> List[List]:
+        query = {"type": "Region", "assembly_id": {"$in": keys}}
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output("assembly_id", keys, data)
+
+    async def batch_organism_load(self, keys: List[str]) -> List[List]:
+        query = {"type": "Organism", "organism_primary_key": {"$in": keys}}
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output("organism_primary_key", keys, data)
+
+    async def batch_assembly_by_organism_load(self, keys: List[str]) -> List[List]:
+        query = {"type": "Assembly", "organism_foreign_key": {"$in": keys}}
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output("organism_foreign_key", keys, data)
+
+    async def batch_species_load(self, keys: List[str]) -> List[List]:
+        query = {"type": "Species", "species_primary_key": {"$in": keys}}
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output("species_primary_key", keys, data)
+
+    async def batch_organism_by_species_load(self, keys: List[str]) -> List[List]:
+        query = {"type": "Organism", "species_foreign_key": {"$in": keys}}
+        data = await self.query_mongo(query)
+        return self.collate_dataloader_output("species_foreign_key", keys, data)
 
     @staticmethod
     def collate_dataloader_output(

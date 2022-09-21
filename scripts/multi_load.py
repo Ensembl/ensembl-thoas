@@ -20,7 +20,9 @@ import os
 import subprocess
 from datetime import datetime
 
-from scripts.config_validator import validate_config
+from common.mongo import MongoDbClient
+from scripts.config_validator import validate_config, check_path_exists
+from scripts.load_metadata import load_metadata
 
 
 def get_repo_path():
@@ -86,6 +88,8 @@ if __name__ == "__main__":
     CONF_PARSER = configparser.ConfigParser()
 
     CLI_ARGS = ARG_PARSER.parse_args()
+
+    check_path_exists("config file path", CLI_ARGS.config)
     CONF_PARSER.read(CLI_ARGS.config)
     validate_config(CONF_PARSER)
 
@@ -94,10 +98,13 @@ if __name__ == "__main__":
     )
     print(f"Dumping data to {os.getcwd()} and loading to MongoDB")
 
+    MONGO_CLIENT = MongoDbClient(CONF_PARSER, mongo_collection_name)
+    load_metadata(CONF_PARSER, MONGO_CLIENT)
+
     # each section of the file dictates a particular assembly to work on
     for section in CONF_PARSER.sections():
         # one section is MongoDB config, the rest are species info
-        if section in ["MONGO DB", "REFGET DB", "GENERAL"]:
+        if section in ["MONGO DB", "REFGET DB", "GENERAL", "METADATA DB", "TAXON DB"]:
             continue
 
         # Get extra parameters from the GENERAL section.

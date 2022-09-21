@@ -17,6 +17,21 @@ from typing import Dict, Optional, List, Any
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLError, GraphQLResolveInfo
 
+from graphql_service.resolver.exceptions import (
+    GeneNotFoundError,
+    TranscriptNotFoundError,
+    ProductNotFoundError,
+    FieldNotFoundError,
+    RegionNotFoundError,
+    AssemblyNotFoundError,
+    SliceLimitExceededError,
+    RegionsFromAssemblyNotFound,
+    OrganismFromAssemblyNotFound,
+    AssembliesFromOrganismNotFound,
+    SpeciesFromOrganismNotFound,
+    OrganismsFromSpeciesNotFound,
+)
+
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
 
@@ -28,6 +43,9 @@ PRODUCT_TYPE = ObjectType("Product")
 GENE_METADATA_TYPE = ObjectType("GeneMetadata")
 SLICE_TYPE = ObjectType("Slice")
 REGION_TYPE = ObjectType("Region")
+ASSEMBLY_TYPE = ObjectType("Assembly")
+ORGANISM_TYPE = ObjectType("Organism")
+SPECIES_TYPE = ObjectType("Species")
 
 
 @QUERY_TYPE.field("gene")
@@ -363,7 +381,9 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
 
 
 @REGION_TYPE.field("assembly")
-async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
+async def resolve_assembly_from_region(
+    region: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
     "Fetch an assembly referenced by a region"
     if region["assembly_id"] is None:
         return None
@@ -372,109 +392,69 @@ async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[D
     query = {"type": "Assembly", "id": region["assembly_id"]}
 
     collection = info.context["mongo_db"]
-    result = collection.find_one(query)
+    assembly = collection.find_one(query)
 
-    if not result:
+    if not assembly:
         raise AssemblyNotFoundError(assembly_id)
-    return result
+    return assembly
 
 
-class FieldNotFoundError(GraphQLError):
-    """
-    Custom error to be raised if a field cannot be found by id
-    """
+@ASSEMBLY_TYPE.field("regions")
+async def resolve_regions_from_assembly(
+    assembly: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].region_by_assembly_loader
 
-    def __init__(self, field_type: str, key_dict: Dict[str, str]):
-        self.extensions = {"code": f"{field_type.upper()}_NOT_FOUND"}
-        ids_string = ", ".join([f"{key}={val}" for key, val in key_dict.items()])
-        message = f"Failed to find {field_type} with ids: {ids_string}"
-        self.extensions.update(key_dict)
-        super().__init__(message, extensions=self.extensions)
+    regions = await loader.load(key=assembly["id"])
 
-
-class FeatureNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if a gene or transcript cannot be found by id
-    """
-
-    def __init__(
-        self,
-        feature_type: str,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
-    ):
-        if bySymbol:
-            super().__init__(
-                feature_type,
-                {"symbol": bySymbol["symbol"], "genome_id": bySymbol["genome_id"]},
-            )
-        if byId:
-            super().__init__(
-                feature_type,
-                {"stable_id": byId["stable_id"], "genome_id": byId["genome_id"]},
-            )
+    if not regions:
+        raise RegionsFromAssemblyNotFound(assembly["id"])
+    return regions
 
 
-class GeneNotFoundError(FeatureNotFoundError):
-    """
-    Custom error to be raised if gene is not found
-    """
+@ASSEMBLY_TYPE.field("organism")
+async def resolve_organism_from_assembly(
+    assembly: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
+    loader = info.context["loaders"].organism_loader
 
-    def __init__(
-        self,
-        by_symbol: Optional[Dict[str, str]] = None,
-        by_id: Optional[Dict[str, str]] = None,
-    ):
-        super().__init__("gene", by_symbol, by_id)
-
-
-class TranscriptNotFoundError(FeatureNotFoundError):
-    """
-    Custom error to be raised if transcript is not found
-    """
-
-    def __init__(
-        self,
-        by_symbol: Optional[Dict[str, str]] = None,
-        by_id: Optional[Dict[str, str]] = None,
-    ):
-        super().__init__("transcript", by_symbol, by_id)
+    organisms = await loader.load(key=assembly["organism_foreign_key"])
+    if not organisms:
+        raise OrganismFromAssemblyNotFound(assembly["organism_foreign_key"])
+    return organisms[0]
 
 
-class ProductNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if product is not found
-    """
+@ORGANISM_TYPE.field("assemblies")
+async def resolve_assemblies_from_organism(
+    organism: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].assembly_by_organism_loader
 
-    def __init__(self, product_id: str, genome_id: str):
-        super().__init__("product", {"product_id": product_id, "genome_id": genome_id})
-
-
-class RegionNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if region is not found
-    """
-
-    def __init__(self, region_id: str):
-        super().__init__("region", {"region_id": region_id})
+    assemblies = await loader.load(key=organism["organism_primary_key"])
+    if not assemblies:
+        raise AssembliesFromOrganismNotFound(organism["organism_primary_key"])
+    return assemblies
 
 
-class AssemblyNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised in assembly is not found
-    """
+@ORGANISM_TYPE.field("species")
+async def resolve_species_from_organism(
+    organism: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].species_loader
 
-    def __init__(self, assembly_id: str):
-        super().__init__("assembly", {"assembly_id": assembly_id})
+    species = await loader.load(key=organism["species_foreign_key"])
+    if not species:
+        raise SpeciesFromOrganismNotFound(species_id=organism["species_foreign_key"])
+    return species[0]
 
 
-class SliceLimitExceededError(GraphQLError):
-    """
-    Custom error to be raised if number of slice results exceeds limit
-    """
+@SPECIES_TYPE.field("organisms")
+async def resolve_organisms_from_species(
+    species: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].organism_by_species_loader
 
-    extensions = {"code": "SLICE_RESULT_LIMIT_EXCEEDED"}
-
-    def __init__(self, max_results_size: int):
-        message = f"Slice query met size limit of {max_results_size}"
-        super().__init__(message, extensions=self.extensions)
+    organisms = await loader.load(key=species["species_primary_key"])
+    if not organisms:
+        raise OrganismsFromSpeciesNotFound(species_id=species["species_primary_key"])
+    return organisms
