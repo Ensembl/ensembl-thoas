@@ -27,9 +27,9 @@ def get_repo_path():
     return os.path.dirname(os.path.realpath(__file__))
 
 
-def get_default_collection_name():
-    """Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>,
-    eg graphql_211129152013_876a48b"""
+def get_default_collection_name(release):
+    """Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>_<release number>,
+    eg graphql_211129152013_876a48b_104"""
     cwd = os.getcwd()
     repo_path = get_repo_path()
     os.chdir(repo_path)
@@ -40,7 +40,7 @@ def get_default_collection_name():
     )
     os.chdir(cwd)
     current_time = datetime.now().strftime("%y%m%d%H%M%S")
-    return "_".join(["graphql", current_time, current_commit_git_hash])
+    return "_".join(["graphql", current_time, current_commit_git_hash, release])
 
 
 async def run_assembly(args):
@@ -63,8 +63,6 @@ async def run_assembly(args):
         if "log_faulty_urls" in args and args["log_faulty_urls"] == "True"
         else ""
     )
-
-    mongo_collection_name = get_default_collection_name()
 
     shell_command = f"""
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --division={args["division"]};\
@@ -91,6 +89,9 @@ if __name__ == "__main__":
     CONF_PARSER.read(CLI_ARGS.config)
     validate_config(CONF_PARSER)
 
+    mongo_collection_name = get_default_collection_name(
+        CONF_PARSER["GENERAL"]["release"]
+    )
     print(f"Dumping data to {os.getcwd()} and loading to MongoDB")
 
     # each section of the file dictates a particular assembly to work on
