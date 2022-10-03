@@ -33,25 +33,17 @@ def load_genome_info(mongo_client, source_file):
                 f"Failed to parse genome file at {source_file} with error {error}"
             ) from error
 
-        mongo_client.collection().insert_one(
+        mongo_client.collection().update_one(
+            {"type": "Assembly", "id": doc["assembly"]["name"]},
             {
-                "type": "Assembly",
-                "default": True,
-                "id": doc["assembly"]["name"],
-                "name": doc["assembly"]["default"],
-                "accession_id": doc["assembly"]["accession"],
-                "accessioning_body": "EGA",
-                "species": doc["organism"]["name"],
-            }
-        )
-
-        mongo_client.collection().insert_one(
-            {
-                "type": "Species",
-                "id": doc["organism"]["name"],
-                "scientific_name": doc["organism"]["scientific_name"],
-                "taxon_id": doc["organism"]["species_taxonomy_id"],
-            }
+                "$set": {
+                    "default": True,
+                    "name": doc["assembly"]["default"],
+                    "accession_id": doc["assembly"]["accession"],
+                    "accessioning_body": "EGA",
+                    "species": doc["organism"]["name"],
+                }
+            },
         )
 
         # "Genome" (name to be used quietly), represents the sum of related

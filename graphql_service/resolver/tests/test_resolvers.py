@@ -192,6 +192,57 @@ def fixture_slice_data():
     return collection
 
 
+@pytest.fixture(name="genome_data")
+def fixture_genome_data():
+    collection = mongomock.MongoClient().db.collection
+    collection.insert_many(
+        [
+            {
+                "type": "Assembly",
+                "id": "test_assembly_id_1",
+                "name": "banana assembly",
+                "organism_foreign_key": "test_organism_id_1",
+            },
+            {
+                "type": "Assembly",
+                "id": "test_assembly_id_2",
+                "name": "other banana assembly",
+                "organism_foreign_key": "test_organism_id_1",
+            },
+            {
+                "type": "Organism",
+                "scientific_name": "banana",
+                "organism_primary_key": "test_organism_id_1",
+                "species_foreign_key": "test_species_id_1",
+            },
+            {
+                "type": "Organism",
+                "scientific_name": "other banana",
+                "organism_primary_key": "test_organism_id_2",
+                "species_foreign_key": "test_species_id_1",
+            },
+            {
+                "type": "Species",
+                "scientific_name": "banana",
+                "species_primary_key": "test_species_id_1",
+            },
+            {
+                "type": "Region",
+                "region_id": "test_region_id_1",
+                "assembly_id": "test_assembly_id_1",
+                "name": "I",
+            },
+            {
+                "type": "Region",
+                "region_id": "test_region_id_2",
+                "assembly_id": "test_assembly_id_1",
+                "name": "II",
+            },
+        ]
+    )
+    return collection
+
+
 def test_resolve_gene(basic_data):
     "Test the querying of Mongo by gene symbol"
 
@@ -323,11 +374,6 @@ def test_resolve_transcript_by_symbol_not_found(transcript_data):
 async def test_resolve_gene_transcripts(transcript_data):
     "Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader"
 
-    path = Path(
-        prev=Path(prev=None, key="Gene", typename="Query"),
-        key="transcripts",
-        typename="Gene",
-    )
     info = create_info(transcript_data)
     result = await model.resolve_gene_transcripts(
         {"stable_id": "ENSG001.1", "genome_id": "1", "gene_primary_key": "1_ENSG001.1"},
@@ -343,11 +389,6 @@ async def test_resolve_gene_transcripts(transcript_data):
 async def test_resolve_gene_from_transcript(transcript_data):
     "Check the DataLoader for gene is working via transcript. Requires event loop for DataLoader"
 
-    path = Path(
-        prev=Path(prev=None, key="Transcript", typename="Query"),
-        key="genes",
-        typename="Transcript",
-    )
     info = create_info(transcript_data)
     result = await model.resolve_transcript_gene(
         {"gene": "ENSG001.1", "genome_id": "1"}, info
@@ -534,3 +575,247 @@ async def test_resolve_nested_products(transcript_data):
             product_result = await model.resolve_product_by_pgc(pgc, info)
             if "stable_id" in product_result:
                 assert product_result["stable_id"] == "ENSP001.1"
+
+
+@pytest.mark.asyncio
+async def test_resolve_assembly_from_region(genome_data):
+    info = create_info(genome_data)
+
+    region = {
+        "type": "Region",
+        "assembly_id": "test_assembly_id_1",
+    }
+    assembly_result = await model.resolve_assembly_from_region(region, info)
+    assert remove_ids(assembly_result) == {
+        "type": "Assembly",
+        "id": "test_assembly_id_1",
+        "name": "banana assembly",
+        "organism_foreign_key": "test_organism_id_1",
+    }
+
+
+@pytest.mark.asyncio
+async def test_resolve_assembly_from_region_not_exists(genome_data):
+    info = create_info(genome_data)
+
+    region = {
+        "type": "Region",
+        "region_id": "test_region_id_1",
+        "assembly_id": "kjhbkjhgkhj",
+        "name": "I",
+    }
+
+    result = None
+    with pytest.raises(model.AssemblyNotFoundError) as assembly_not_found_error:
+        result = await model.resolve_assembly_from_region(region, info)
+    assert not result
+    assert assembly_not_found_error.value.extensions["assembly_id"] == "kjhbkjhgkhj"
+
+
+@pytest.mark.asyncio
+async def test_resolve_regions_from_assembly(genome_data):
+    info = create_info(genome_data)
+
+    assembly = {
+        "type": "Assembly",
+        "id": "test_assembly_id_1",
+    }
+    regions_result = await model.resolve_regions_from_assembly(assembly, info)
+    regions_result = sorted(regions_result, key=lambda r: r["assembly_id"])
+    assert remove_ids(regions_result) == [
+        {
+            "type": "Region",
+            "region_id": "test_region_id_1",
+            "assembly_id": "test_assembly_id_1",
+            "name": "I",
+        },
+        {
+            "type": "Region",
+            "region_id": "test_region_id_2",
+            "assembly_id": "test_assembly_id_1",
+            "name": "II",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resolve_regions_from_assembly_not_exists(genome_data):
+    info = create_info(genome_data)
+
+    assembly = {
+        "type": "Assembly",
+        "id": "blah blah",
+    }
+
+    result = None
+    with pytest.raises(model.RegionsFromAssemblyNotFound) as regions_not_found_error:
+        result = await model.resolve_regions_from_assembly(assembly, info)
+    assert not result
+    assert regions_not_found_error.value.extensions["assembly_id"] == "blah blah"
+
+
+@pytest.mark.asyncio
+async def test_resolve_organism_from_assembly(genome_data):
+    info = create_info(genome_data)
+
+    assembly = {"type": "Assembly", "organism_foreign_key": "test_organism_id_1"}
+
+    organism_result = await model.resolve_organism_from_assembly(assembly, info)
+
+    assert remove_ids(organism_result) == {
+        "type": "Organism",
+        "scientific_name": "banana",
+        "organism_primary_key": "test_organism_id_1",
+        "species_foreign_key": "test_species_id_1",
+    }
+
+
+@pytest.mark.asyncio
+async def test_resolve_organism_from_assembly_not_exists(genome_data):
+    info = create_info(genome_data)
+
+    assembly = {"type": "Assembly", "organism_foreign_key": "blah blah"}
+
+    result = None
+    with pytest.raises(model.OrganismFromAssemblyNotFound) as organism_not_found_error:
+        result = await model.resolve_organism_from_assembly(assembly, info)
+    assert not result
+    assert organism_not_found_error.value.extensions["organism_id"] == "blah blah"
+
+
+@pytest.mark.asyncio
+async def test_resolve_assemblies_from_organism(genome_data):
+    info = create_info(genome_data)
+
+    organism = {
+        "type": "Organism",
+        "scientific_name": "banana",
+        "organism_primary_key": "test_organism_id_1",
+        "species_foreign_key": "test_species_id_1",
+    }
+
+    assemblies_result = await model.resolve_assemblies_from_organism(organism, info)
+
+    assert remove_ids(assemblies_result) == [
+        {
+            "type": "Assembly",
+            "id": "test_assembly_id_1",
+            "name": "banana assembly",
+            "organism_foreign_key": "test_organism_id_1",
+        },
+        {
+            "type": "Assembly",
+            "id": "test_assembly_id_2",
+            "name": "other banana assembly",
+            "organism_foreign_key": "test_organism_id_1",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resolve_assemblies_from_organism_not_exists(genome_data):
+    info = create_info(genome_data)
+    organism = {
+        "type": "Organism",
+        "scientific_name": "banana",
+        "organism_primary_key": "blah blah",
+    }
+
+    result = None
+    with pytest.raises(
+        model.AssembliesFromOrganismNotFound
+    ) as assemblies_not_found_error:
+        result = await model.resolve_assemblies_from_organism(organism, info)
+    assert not result
+    assert assemblies_not_found_error.value.extensions["organism_id"] == "blah blah"
+
+
+@pytest.mark.asyncio
+async def test_resolve_species_from_organism(genome_data):
+    info = create_info(genome_data)
+
+    organism = {
+        "type": "Organism",
+        "scientific_name": "banana",
+        "organism_primary_key": "test_organism_id_1",
+        "species_foreign_key": "test_species_id_1",
+    }
+
+    species_result = await model.resolve_species_from_organism(organism, info)
+
+    assert remove_ids(species_result) == {
+        "type": "Species",
+        "scientific_name": "banana",
+        "species_primary_key": "test_species_id_1",
+    }
+
+
+@pytest.mark.asyncio
+async def test_resolve_species_from_organism_not_exists(genome_data):
+    info = create_info(genome_data)
+
+    organism = {
+        "type": "Organism",
+        "scientific_name": "banana",
+        "species_foreign_key": "blah blah",
+    }
+
+    result = None
+    with pytest.raises(model.SpeciesFromOrganismNotFound) as species_not_found_error:
+        result = await model.resolve_species_from_organism(organism, info)
+    assert not result
+    assert species_not_found_error.value.extensions["species_id"] == "blah blah"
+
+
+@pytest.mark.asyncio
+async def test_resolve_organisms_from_species(genome_data):
+    info = create_info(genome_data)
+
+    species = {
+        "type": "Species",
+        "scientific_name": "banana",
+        "species_primary_key": "test_species_id_1",
+    }
+
+    organisms_result = await model.resolve_organisms_from_species(species, info)
+
+    assert remove_ids(organisms_result) == [
+        {
+            "type": "Organism",
+            "scientific_name": "banana",
+            "organism_primary_key": "test_organism_id_1",
+            "species_foreign_key": "test_species_id_1",
+        },
+        {
+            "type": "Organism",
+            "scientific_name": "other banana",
+            "organism_primary_key": "test_organism_id_2",
+            "species_foreign_key": "test_species_id_1",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resolve_organisms_from_species_not_exists(genome_data):
+    info = create_info(genome_data)
+
+    species = {
+        "type": "Species",
+        "scientific_name": "banana",
+        "species_primary_key": "blah blah",
+    }
+    result = None
+    with pytest.raises(model.OrganismsFromSpeciesNotFound) as organisms_not_found_error:
+        result = await model.resolve_organisms_from_species(species, info)
+    assert not result
+    assert organisms_not_found_error.value.extensions["species_id"] == "blah blah"
+
+
+def remove_ids(test_output):
+    if isinstance(test_output, dict):
+        del test_output["_id"]
+    elif isinstance(test_output, list):
+        for output in test_output:
+            del output["_id"]
+
+    return test_output

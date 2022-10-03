@@ -350,4 +350,26 @@ def build_assembly():
         "accession_id": "GCA_000001405.28",
         "accessioning_body": "EGA",
         "species": "homo_sapiens",
+        "organism_foreign_key": 1,
+    }
+
+
+def build_organism():
+    return {
+        "type": "Organism",
+        "scientific_name": "Homo sapiens",
+        "scientific_parlance_name": "Homo sapiens",
+        "is_reference_organism": False,
+        "organism_primary_key": 1,
+        "species_foreign_key": 1,
+    }
+
+
+def build_species():
+    return {
+        "type": "Species",
+        "scientific_name": "Homo sapiens",
+        "taxon_id": 9606,
+        "ncbi_common_name": "Human",
+        "species_primary_key": 1,
     }

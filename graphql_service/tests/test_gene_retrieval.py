@@ -62,13 +62,11 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
             length
             topology
             assembly {
-              type
               default
               id
               name
               accession_id
               accessioning_body
-              species
             }
             metadata {
               ontology_terms {

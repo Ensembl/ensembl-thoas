@@ -27,6 +27,8 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_products,
     build_region,
     build_assembly,
+    build_organism,
+    build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
 
@@ -51,6 +53,8 @@ def prepare_db():
     mocked_mongo_collection.insert_many(build_products())
     mocked_mongo_collection.insert_one(build_region())
     mocked_mongo_collection.insert_one(build_assembly())
+    mocked_mongo_collection.insert_one(build_organism())
+    mocked_mongo_collection.insert_one(build_species())
     mocked_mongo_collection.insert_many(build_wheat_genes())
     return context
 
