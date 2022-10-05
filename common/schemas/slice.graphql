@@ -56,16 +56,6 @@ enum RegionTopology {
   circular
 }
 
-type Assembly {
-  type: String!
-  default: Boolean!
-  id: String!
-  name: String!
-  accession_id: String
-  accessioning_body: String
-  species: String!
-}
-
 type Strand {
   # The direction of reading sense w.r.t. the assembly. 1 = 5'->3', -1 = 3'-5'
   code: String

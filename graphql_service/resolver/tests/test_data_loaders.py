@@ -14,7 +14,7 @@
 
 import mongomock
 import pytest
-from graphql_service.resolver.data_loaders import DataLoaderCollection
+from graphql_service.resolver.data_loaders import BatchLoaders
 
 
 @pytest.mark.asyncio
@@ -26,23 +26,50 @@ async def test_batch_transcript_load():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many(
         [
-            {"genome_id": "1", "type": "Transcript", "gene": "ENSG001.1"},
-            {"genome_id": "1", "type": "Transcript", "gene": "ENSG001.1"},
-            {"genome_id": "1", "type": "Transcript", "gene": "ENSG002.2"},
-            {"genome_id": "1", "type": "Transcript", "gene": "ENSG002.2"},
-            {"genome_id": "1", "type": "Transcript", "gene": "ENSG002.2"},
+            {
+                "genome_id": "1",
+                "type": "Transcript",
+                "gene": "ENSG001.1",
+                "gene_foreign_key": "1_ENSG001.1",
+            },
+            {
+                "genome_id": "1",
+                "type": "Transcript",
+                "gene": "ENSG001.1",
+                "gene_foreign_key": "1_ENSG001.1",
+            },
+            {
+                "genome_id": "1",
+                "type": "Transcript",
+                "gene": "ENSG002.2",
+                "gene_foreign_key": "1_ENSG002.2",
+            },
+            {
+                "genome_id": "1",
+                "type": "Transcript",
+                "gene": "ENSG002.2",
+                "gene_foreign_key": "1_ENSG002.2",
+            },
+            {
+                "genome_id": "1",
+                "type": "Transcript",
+                "gene": "ENSG002.2",
+                "gene_foreign_key": "1_ENSG002.2",
+            },
         ]
     )
 
-    loader = DataLoaderCollection(collection, "1")
+    loaders = BatchLoaders(collection)
 
-    response = await loader.batch_transcript_load(["ENSG001.1"])
+    response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
     assert len(response) == 1
     # There are two hits that match the one requested ID
     assert len(response[0]) == 2
 
-    response = await loader.batch_transcript_load(["ENSG001.1", "ENSG002.2"])
+    response = await loaders.batch_transcript_by_gene_load(
+        ["1_ENSG001.1", "1_ENSG002.2"]
+    )
     # This broadly proves that data emerges in lists ordered
     # by the input IDs
     assert len(response) == 2
@@ -51,7 +78,7 @@ async def test_batch_transcript_load():
     assert response[1][0]["gene"] == "ENSG002.2"
 
     # Try for absent data
-    response = await loader.batch_transcript_load(["nonsense"])
+    response = await loaders.batch_transcript_by_gene_load(["nonsense"])
 
     # No results in the structure that is returned
     assert not response[0]
@@ -66,13 +93,23 @@ async def test_batch_product_load():
     collection = mongomock.MongoClient().db.collection
     collection.insert_many(
         [
-            {"genome_id": "1", "type": "Protein", "stable_id": "ENSP001.1"},
-            {"genome_id": "1", "type": "Protein", "stable_id": "ENSP002.1"},
+            {
+                "genome_id": "1",
+                "type": "Protein",
+                "stable_id": "ENSP001.1",
+                "product_primary_key": "1_ENSP001.1",
+            },
+            {
+                "genome_id": "1",
+                "type": "Protein",
+                "stable_id": "ENSP002.1",
+                "product_primary_key": "1_ENSP002.1",
+            },
         ]
     )
 
-    loader = DataLoaderCollection(collection, "1")
+    loader = BatchLoaders(collection)
 
-    response = await loader.batch_product_load(["ENSP001.1"])
+    response = await loader.batch_product_load(["1_ENSP001.1"])
 
     assert response[0][0]["stable_id"] == "ENSP001.1"

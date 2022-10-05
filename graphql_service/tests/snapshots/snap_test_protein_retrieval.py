@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 # snapshottest: v1 - https://goo.gl/zC4yUc
-
-
-"""Test data for protein retrieval tests"""
-
 from __future__ import unicode_literals
 
 from snapshottest import Snapshot
@@ -11,15 +7,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_protein_retrieval_by_transcript 1"] = {
-    "transcript": {
-        "product_generating_contexts": [
-            {"product": {"stable_id": "ENSP00000369497.3"}, "product_type": "protein"}
-        ]
-    }
-}
-
-snapshots["test_protein_retrieval 1"] = {
+expected_protein = {
     "product": {
         "external_references": [
             {"accession_id": "Q9NFB6", "source": {"name": "UniProtKB/TrEMBL"}}
@@ -52,5 +40,16 @@ snapshots["test_protein_retrieval 1"] = {
         "stable_id": "ENSP00000369497.3",
         "unversioned_stable_id": "ENSP00000369497",
         "version": 3,
+    }
+}
+snapshots["test_protein_retrieval_separate_arguments 1"] = expected_protein
+
+snapshots["test_protein_retrieval_by_id_input 1"] = expected_protein
+
+snapshots["test_protein_retrieval_by_transcript 1"] = {
+    "transcript": {
+        "product_generating_contexts": [
+            {"product": {"stable_id": "ENSP00000369497.3"}, "product_type": "protein"}
+        ]
     }
 }

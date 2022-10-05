@@ -22,7 +22,8 @@ def validate_config(config_parser: ConfigParser) -> None:
     """Basic function to validate Thoas config file.  The script checks that all required sections and fields exist, and
     that file path locations exist"""
     check_required_fields(
-        {"GENERAL", "MONGO DB", "REFGET DB"}, set(config_parser.sections())
+        {"GENERAL", "MONGO DB", "REFGET DB", "METADATA DB", "TAXON DB"},
+        set(config_parser.sections()),
     )
 
     for section in config_parser.sections():
@@ -38,6 +39,14 @@ def validate_config(config_parser: ConfigParser) -> None:
             }
         elif section in {"MONGO DB", "REFGET DB"}:
             required_fields = {"host", "port", "user", "password", "db"}
+        elif section in {"METADATA DB", "TAXON DB"}:
+            required_fields = {
+                "host",
+                "port",
+                "user",
+                "password",
+                "database",
+            }
         else:
             required_fields = {
                 "production_name",

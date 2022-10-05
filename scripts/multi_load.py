@@ -20,16 +20,18 @@ import os
 import subprocess
 from datetime import datetime
 
-from scripts.config_validator import validate_config
+from common.mongo import MongoDbClient
+from scripts.config_validator import validate_config, check_path_exists
+from scripts.load_metadata import load_metadata
 
 
 def get_repo_path():
     return os.path.dirname(os.path.realpath(__file__))
 
 
-def get_default_collection_name():
-    """Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>,
-    eg graphql_211129152013_876a48b"""
+def get_default_collection_name(release):
+    """Creates a default mongo collection name of the form graphql_<timestamp>_<git hash>_<release number>,
+    eg graphql_211129152013_876a48b_104"""
     cwd = os.getcwd()
     repo_path = get_repo_path()
     os.chdir(repo_path)
@@ -40,7 +42,7 @@ def get_default_collection_name():
     )
     os.chdir(cwd)
     current_time = datetime.now().strftime("%y%m%d%H%M%S")
-    return "_".join(["graphql", current_time, current_commit_git_hash])
+    return "_".join(["graphql", current_time, current_commit_git_hash, release])
 
 
 async def run_assembly(args):
@@ -64,8 +66,6 @@ async def run_assembly(args):
         else ""
     )
 
-    mongo_collection_name = get_default_collection_name()
-
     shell_command = f"""
         perl {code}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --assembly={args["assembly"]} --division={args["division"]};\
         python {code}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]};\
@@ -88,15 +88,23 @@ if __name__ == "__main__":
     CONF_PARSER = configparser.ConfigParser()
 
     CLI_ARGS = ARG_PARSER.parse_args()
+
+    check_path_exists("config file path", CLI_ARGS.config)
     CONF_PARSER.read(CLI_ARGS.config)
     validate_config(CONF_PARSER)
 
+    mongo_collection_name = get_default_collection_name(
+        CONF_PARSER["GENERAL"]["release"]
+    )
     print(f"Dumping data to {os.getcwd()} and loading to MongoDB")
+
+    MONGO_CLIENT = MongoDbClient(CONF_PARSER, mongo_collection_name)
+    load_metadata(CONF_PARSER, MONGO_CLIENT)
 
     # each section of the file dictates a particular assembly to work on
     for section in CONF_PARSER.sections():
         # one section is MongoDB config, the rest are species info
-        if section in ["MONGO DB", "REFGET DB", "GENERAL"]:
+        if section in ["MONGO DB", "REFGET DB", "GENERAL", "METADATA DB", "TAXON DB"]:
             continue
 
         # Get extra parameters from the GENERAL section.

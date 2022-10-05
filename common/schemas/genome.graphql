@@ -1,0 +1,27 @@
+type Assembly {
+  id: String!
+  name: String!
+  accession_id: String!
+  accessioning_body: String!
+  organism: Organism!
+  regions: [Region!]!
+  default: Boolean!
+  tolid: String
+}
+
+type Organism {
+  scientific_name: String!
+  scientific_parlance_name: String
+  species: Species!
+  id: String!
+  assemblies: [Assembly!]!
+  is_reference_organism: Boolean
+}
+
+type Species {
+  scientific_name: String!
+  ncbi_common_name: String
+  alternative_names: [String!]!
+  taxon_id: Int!
+  organisms: [Organism!]!
+}

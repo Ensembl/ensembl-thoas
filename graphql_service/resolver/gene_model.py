@@ -12,14 +12,28 @@
    limitations under the License.
 """
 
-from typing import Dict, Optional, List, Any, Union
+from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLError, GraphQLResolveInfo
 
+from graphql_service.resolver.exceptions import (
+    GeneNotFoundError,
+    TranscriptNotFoundError,
+    ProductNotFoundError,
+    FieldNotFoundError,
+    RegionNotFoundError,
+    AssemblyNotFoundError,
+    SliceLimitExceededError,
+    RegionsFromAssemblyNotFound,
+    OrganismFromAssemblyNotFound,
+    AssembliesFromOrganismNotFound,
+    SpeciesFromOrganismNotFound,
+    OrganismsFromSpeciesNotFound,
+)
+
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
-from graphql_service.resolver.data_loaders import DataLoaderCollection
 
 QUERY_TYPE = QueryType()
 GENE_TYPE = ObjectType("Gene")
@@ -29,136 +43,49 @@ PRODUCT_TYPE = ObjectType("Product")
 GENE_METADATA_TYPE = ObjectType("GeneMetadata")
 SLICE_TYPE = ObjectType("Slice")
 REGION_TYPE = ObjectType("Region")
-
-
-def get_root_key(info: GraphQLResolveInfo) -> Union[str, int]:
-    """This is intended to be used inside a resolver to determine its root query.  For example, suppose we had a query
-    like this:
-
-    query {
-      transcript(byId: {
-        genome_id: "plasmodium_falciparum_GCA_000002765_2",
-        stable_id: "CAD52290"
-      }) {
-        ...
-      }
-      gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "YHR055C"
-      }) {
-        ...
-      }
-    }
-
-    Then this function will return "transcript" if it runs inside a resolver processing the transcript query, and "gene"
-    if run inside a resolver processing the gene query.
-
-    The keys are always unique within a graphql query.  If you want to run the same type of query more than once in the
-    same GraphQL request then you need to define aliases.  Here is an example:
-
-    query {
-      firstGene: gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "snR41"
-      }) {
-        ...
-      }
-      secondGene: gene(byId: {
-        genome_id: "homo_sapiens_GCA_000001405_28"
-        stable_id: "ENSG00000127720.8"
-      }) {
-        ...
-      }
-    }
-    In this case the keys that could be returned by this function are "firstGene" and "secondGene".
-    """
-    current = info.path
-    parent = current.prev
-    while parent is not None:
-        current = parent
-        parent = parent.prev
-    return current.key
-
-
-def create_dataloader_collection(genome_id: str, info: GraphQLResolveInfo) -> None:
-    """This function ensures that all resolvers have access to a dataloader specific to their root query.
-    This function must be run inside every root-level resolver method (except for the version resolver, which doesn't
-    use any dataloaders).
-
-    For example, suppose that we are processing a query like this:
-
-    query {
-      firstGene: gene(byId: {
-        genome_id: "saccharomyces_cerevisiae_GCA_000146045_2"
-        stable_id: "snR41"
-      }) {
-        ...
-      }
-      secondGene: gene(byId: {
-        genome_id: "homo_sapiens_GCA_000001405_28"
-        stable_id: "ENSG00000127720.8"
-      }) {
-        ...
-      }
-    }
-    Provided we run this function inside every root-level resolver, at the end of processing the query the value
-    of info.context["request"].state will be
-    {
-      "firstGene": DataLoaderCollection(<mongo client>, "saccharomyces_cerevisiae_GCA_000146045_2"),
-      "secondGene": DataLoaderCollection(<mongo client>, "homo_sapiens_GCA_000001405_28")
-    }
-    This ensures that we have a separate collection of dataloaders per-request and per-genome_id.
-    """
-
-    key = get_root_key(info)
-    request_state = info.context["request"].state
-    if hasattr(request_state, "dataloader_collections"):
-        request_state.dataloader_collections[key] = DataLoaderCollection(
-            info.context["mongo_db"], genome_id
-        )
-    else:
-        request_state.dataloader_collections = {
-            key: DataLoaderCollection(info.context["mongo_db"], genome_id)
-        }
-
-
-def get_dataloader_collection(info: GraphQLResolveInfo) -> DataLoaderCollection:
-    key = get_root_key(info)
-    return info.context["request"].state.dataloader_collections[key]
+ASSEMBLY_TYPE = ObjectType("Assembly")
+ORGANISM_TYPE = ObjectType("Organism")
+SPECIES_TYPE = ObjectType("Species")
 
 
 @QUERY_TYPE.field("gene")
-def resolve_gene(_, info: GraphQLResolveInfo, byId: Dict[str, str]) -> Dict:
+def resolve_gene(
+    _,
+    info: GraphQLResolveInfo,
+    byId: Optional[Dict[str, str]] = None,
+    by_id: Optional[Dict[str, str]] = None,
+) -> Dict:
     "Load Gene via stable_id"
 
-    create_dataloader_collection(byId["genome_id"], info)
+    if by_id is None:
+        by_id = byId
+
+    assert by_id
 
     query = {
         "type": "Gene",
         "$or": [
-            {"stable_id": byId["stable_id"]},
-            {"unversioned_stable_id": byId["stable_id"]},
+            {"stable_id": by_id["stable_id"]},
+            {"unversioned_stable_id": by_id["stable_id"]},
         ],
-        "genome_id": byId["genome_id"],
+        "genome_id": by_id["genome_id"],
     }
 
     collection = info.context["mongo_db"]
     result = collection.find_one(query)
     if not result:
-        raise GeneNotFoundError(byId=byId)
+        raise GeneNotFoundError(by_id=by_id)
     return result
 
 
-@QUERY_TYPE.field("genes_by_symbol")
-def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List:
+@QUERY_TYPE.field("genes")
+def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     "Load Genes via potentially ambiguous symbol"
 
-    create_dataloader_collection(bySymbol["genome_id"], info)
-
     query = {
-        "genome_id": bySymbol["genome_id"],
+        "genome_id": by_symbol["genome_id"],
         "type": "Gene",
-        "symbol": bySymbol["symbol"],
+        "symbol": by_symbol["symbol"],
     }
 
     collection = info.context["mongo_db"]
@@ -167,7 +94,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, bySymbol: Dict[str, str]) -> List
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
-        raise GeneNotFoundError(bySymbol=bySymbol)
+        raise GeneNotFoundError(by_symbol=by_symbol)
     return result
 
 
@@ -232,32 +159,39 @@ def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
     bySymbol: Optional[Dict[str, str]] = None,
+    by_symbol: Optional[Dict[str, str]] = None,
     byId: Optional[Dict[str, str]] = None,
+    by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
+
+    if by_symbol is None:
+        by_symbol = bySymbol
+    if by_id is None:
+        by_id = byId
+
+    assert by_id or by_symbol
+
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
-    if bySymbol:
-        query["symbol"] = bySymbol["symbol"]
-        query["genome_id"] = bySymbol["genome_id"]
-        genome_id = bySymbol["genome_id"]
-    if byId:
+    if by_symbol:
+        query["symbol"] = by_symbol["symbol"]
+        query["genome_id"] = by_symbol["genome_id"]
+        genome_id = by_symbol["genome_id"]
+    if by_id:
         query["$or"] = [
-            {"stable_id": byId["stable_id"]},
-            {"unversioned_stable_id": byId["stable_id"]},
+            {"stable_id": by_id["stable_id"]},
+            {"unversioned_stable_id": by_id["stable_id"]},
         ]
-        query["genome_id"] = byId["genome_id"]
-        genome_id = byId["genome_id"]
+        query["genome_id"] = by_id["genome_id"]
+        genome_id = by_id["genome_id"]
 
-    if genome_id is None:
-        raise GraphQLError("Unable to resolve transcript, genome id is None")
-
-    create_dataloader_collection(genome_id, info)
+    assert genome_id
 
     collection = info.context["mongo_db"]
     transcript = collection.find_one(query)
     if not transcript:
-        raise TranscriptNotFoundError(bySymbol=bySymbol, byId=byId)
+        raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
     return transcript
 
 
@@ -272,11 +206,11 @@ def resolve_api(
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     "Use a DataLoader to get transcripts for the parent gene"
 
-    gene_stable_id = gene["stable_id"]
+    gene_primary_key = gene["gene_primary_key"]
     # Get a dataloader from info
-    loader = get_dataloader_collection(info).gene_transcript_dataloader
+    loader = info.context["loaders"].transcript_loader
     # Tell DataLoader to get this request done when it feels like it
-    transcripts = await loader.load(key=gene_stable_id)
+    transcripts = await loader.load(key=gene_primary_key)
     return transcripts
 
 
@@ -300,27 +234,45 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
     gene = collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
-            byId={"genome_id": transcript["genome_id"], "stable_id": transcript["gene"]}
+            by_id={
+                "genome_id": transcript["genome_id"],
+                "stable_id": transcript["gene"],
+            }
         )
     return gene
 
 
 @QUERY_TYPE.field("overlap_region")
 def resolve_overlap(
-    _, info: GraphQLResolveInfo, genomeId: str, regionName: str, start: int, end: int
+    _,
+    info: GraphQLResolveInfo,
+    genomeId: Optional[str] = None,
+    regionName: Optional[str] = None,
+    start: Optional[int] = None,
+    end: Optional[int] = None,
+    by_slice: Optional[Dict[str, Any]] = None,
 ) -> Dict:
     """
     Query Mongo for genes and transcripts lying between start and end
     """
 
-    create_dataloader_collection(genomeId, info)
+    if by_slice:
+        genome_id = by_slice["genome_id"]
+        region_name = by_slice["region_name"]
+        start = by_slice["start"]
+        end = by_slice["end"]
+    else:
+        genome_id = genomeId
+        region_name = regionName
+
+    assert genome_id and region_name and start and end
 
     # Thoas only contains "chromosome"-type regions
-    region_id = "_".join([genomeId, regionName, "chromosome"])
+    region_id = "_".join([genome_id, region_name, "chromosome"])
     return {
-        "genes": overlap_region(info.context, genomeId, region_id, start, end, "Gene"),
+        "genes": overlap_region(info.context, genome_id, region_id, start, end, "Gene"),
         "transcripts": overlap_region(
-            info.context, genomeId, region_id, start, end, "Transcript"
+            info.context, genome_id, region_id, start, end, "Transcript"
         ),
     }
 
@@ -372,11 +324,19 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 @QUERY_TYPE.field("product")
 def resolve_product_by_id(
-    _, info: GraphQLResolveInfo, genome_id: str, stable_id: str
+    _,
+    info: GraphQLResolveInfo,
+    genome_id: Optional[str] = None,
+    stable_id: Optional[str] = None,
+    by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Fetch a product by stable_id, this is almost always a protein"
 
-    create_dataloader_collection(genome_id, info)
+    if by_id:
+        genome_id = by_id["genome_id"]
+        stable_id = by_id["stable_id"]
+
+    assert genome_id and stable_id
 
     query = {
         "genome_id": genome_id,
@@ -398,14 +358,15 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
     if pgc["product_id"] is None:
         return None
-    loader = get_dataloader_collection(info).transcript_product_dataloader
-    products = await loader.load(key=pgc["product_id"])
+    loader = info.context["loaders"].product_loader
+    products = await loader.load(key=pgc["product_foreign_key"])
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
 
     if not products:
-        raise ProductNotFoundError(
-            stable_id=pgc["product_id"], genome_id=pgc["genome_id"]
+        raise FieldNotFoundError(
+            field_type="product_foreign_key",
+            key_dict={"product_foreign_key": pgc["product_foreign_key"]},
         )
     return products[0]
 
@@ -417,7 +378,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
         return None
     region_id = slc["region_id"]
 
-    loader = get_dataloader_collection(info).slice_region_dataloader
+    loader = info.context["loaders"].region_loader
 
     regions = await loader.load(key=region_id)
 
@@ -427,7 +388,9 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
 
 
 @REGION_TYPE.field("assembly")
-async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
+async def resolve_assembly_from_region(
+    region: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
     "Fetch an assembly referenced by a region"
     if region["assembly_id"] is None:
         return None
@@ -436,109 +399,69 @@ async def resolve_assembly(region: Dict, info: GraphQLResolveInfo) -> Optional[D
     query = {"type": "Assembly", "id": region["assembly_id"]}
 
     collection = info.context["mongo_db"]
-    result = collection.find_one(query)
+    assembly = collection.find_one(query)
 
-    if not result:
+    if not assembly:
         raise AssemblyNotFoundError(assembly_id)
-    return result
+    return assembly
 
 
-class FieldNotFoundError(GraphQLError):
-    """
-    Custom error to be raised if a field cannot be found by id
-    """
+@ASSEMBLY_TYPE.field("regions")
+async def resolve_regions_from_assembly(
+    assembly: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].region_by_assembly_loader
 
-    def __init__(self, field_type: str, key_dict: Dict[str, str]):
-        self.extensions = {"code": f"{field_type.upper()}_NOT_FOUND"}
-        ids_string = ", ".join([f"{key}={val}" for key, val in key_dict.items()])
-        message = f"Failed to find {field_type} with ids: {ids_string}"
-        self.extensions.update(key_dict)
-        super().__init__(message, extensions=self.extensions)
+    regions = await loader.load(key=assembly["id"])
 
-
-class FeatureNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if a gene or transcript cannot be found by id
-    """
-
-    def __init__(
-        self,
-        feature_type: str,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
-    ):
-        if bySymbol:
-            super().__init__(
-                feature_type,
-                {"symbol": bySymbol["symbol"], "genome_id": bySymbol["genome_id"]},
-            )
-        if byId:
-            super().__init__(
-                feature_type,
-                {"stable_id": byId["stable_id"], "genome_id": byId["genome_id"]},
-            )
+    if not regions:
+        raise RegionsFromAssemblyNotFound(assembly["id"])
+    return regions
 
 
-class GeneNotFoundError(FeatureNotFoundError):
-    """
-    Custom error to be raised if gene is not found
-    """
+@ASSEMBLY_TYPE.field("organism")
+async def resolve_organism_from_assembly(
+    assembly: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
+    loader = info.context["loaders"].organism_loader
 
-    def __init__(
-        self,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
-    ):
-        super().__init__("gene", bySymbol, byId)
-
-
-class TranscriptNotFoundError(FeatureNotFoundError):
-    """
-    Custom error to be raised if transcript is not found
-    """
-
-    def __init__(
-        self,
-        bySymbol: Optional[Dict[str, str]] = None,
-        byId: Optional[Dict[str, str]] = None,
-    ):
-        super().__init__("transcript", bySymbol, byId)
+    organisms = await loader.load(key=assembly["organism_foreign_key"])
+    if not organisms:
+        raise OrganismFromAssemblyNotFound(assembly["organism_foreign_key"])
+    return organisms[0]
 
 
-class ProductNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if product is not found
-    """
+@ORGANISM_TYPE.field("assemblies")
+async def resolve_assemblies_from_organism(
+    organism: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].assembly_by_organism_loader
 
-    def __init__(self, stable_id: str, genome_id: str):
-        super().__init__("product", {"stable_id": stable_id, "genome_id": genome_id})
-
-
-class RegionNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised if region is not found
-    """
-
-    def __init__(self, region_id: str):
-        super().__init__("region", {"region_id": region_id})
+    assemblies = await loader.load(key=organism["organism_primary_key"])
+    if not assemblies:
+        raise AssembliesFromOrganismNotFound(organism["organism_primary_key"])
+    return assemblies
 
 
-class AssemblyNotFoundError(FieldNotFoundError):
-    """
-    Custom error to be raised in assembly is not found
-    """
+@ORGANISM_TYPE.field("species")
+async def resolve_species_from_organism(
+    organism: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].species_loader
 
-    def __init__(self, assembly_id: str):
-        super().__init__("assembly", {"assembly_id": assembly_id})
+    species = await loader.load(key=organism["species_foreign_key"])
+    if not species:
+        raise SpeciesFromOrganismNotFound(species_id=organism["species_foreign_key"])
+    return species[0]
 
 
-class SliceLimitExceededError(GraphQLError):
-    """
-    Custom error to be raised if number of slice results exceeds limit
-    """
+@SPECIES_TYPE.field("organisms")
+async def resolve_organisms_from_species(
+    species: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
+    loader = info.context["loaders"].organism_by_species_loader
 
-    extensions = {"code": "SLICE_RESULT_LIMIT_EXCEEDED"}
-
-    def __init__(self, max_results_size: int):
-        message = f"Slice query met size limit of {max_results_size}"
-        super().__init__(message, extensions=self.extensions)
+    organisms = await loader.load(key=species["species_primary_key"])
+    if not organisms:
+        raise OrganismsFromSpeciesNotFound(species_id=species["species_primary_key"])
+    return organisms

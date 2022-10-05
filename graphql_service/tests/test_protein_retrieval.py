@@ -14,15 +14,15 @@
 
 import pytest
 from ariadne import graphql
-from .snapshot_utils import setup_test
+from .snapshot_utils import setup_test, add_loaders_to_context
 
 executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_protein_retrieval(snapshot):
+async def test_protein_retrieval_separate_arguments(snapshot):
     """
-    Test retrieval of proteins from the grapqhl api by id
+    Test retrieval of proteins from the graphql api by genome_id, stable_id
     Gets the expected test result from snapshottest
     """
     query = """{
@@ -77,7 +77,72 @@ async def test_protein_retrieval(snapshot):
 }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
+    )
+    assert success
+    assert result["data"]["product"]
+    snapshot.assert_match(result["data"])
+
+
+@pytest.mark.asyncio
+async def test_protein_retrieval_by_id_input(snapshot):
+    """
+    Test retrieval of proteins from the graphql api by a
+    single argument called `by_id`
+    """
+    query = """{
+      product(by_id: {genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSP00000369497.3"}) {
+        stable_id
+        unversioned_stable_id
+        version
+        length
+        sequence {
+          alphabet {
+            accession_id
+          }
+          checksum
+        }
+        family_matches {
+          sequence_family {
+            source {
+              name
+            }
+            name
+            accession_id
+            url
+            description
+          }
+          via {
+            source {
+              name
+            }
+            accession_id
+            url
+          }
+          relative_location {
+            start
+            end
+            length
+          }
+          score
+          evalue
+          hit_location {
+            start
+            end
+            length
+          }
+        }
+        external_references {
+          accession_id
+          source {
+            name
+          }
+        }
+      }
+    }"""
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
     )
     assert success
     assert result["data"]["product"]
@@ -87,7 +152,7 @@ async def test_protein_retrieval(snapshot):
 @pytest.mark.asyncio
 async def test_protein_retrieval_by_transcript(snapshot):
     """
-    Test retrieval of proteins from the grapqhl api by transcript
+    Test retrieval of proteins from the graphql api by transcript
     """
     query = """{
         transcript(byId: {stable_id: "ENST00000380152.7", genome_id: "homo_sapiens_GCA_000001405_28"}) {
@@ -102,7 +167,7 @@ async def test_protein_retrieval_by_transcript(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
     )
     assert success
     assert result["data"]["transcript"]

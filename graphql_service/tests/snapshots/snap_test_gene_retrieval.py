@@ -10,11 +10,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_gene_retrieval_by_symbol 1"] = {
-    "gene": {"stable_id": "ENSG00000139618.15", "symbol": "BRCA2"}
-}
-
-snapshots["test_gene_retrieval_by_id 1"] = {
+snapshots["test_gene_retrieval_by_id_camel_case 1"] = {
     "gene": {
         "name": "BRCA2 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1101]",
         "slice": {
@@ -25,13 +21,11 @@ snapshots["test_gene_retrieval_by_id 1"] = {
                 "code": "chromosome",
                 "topology": "linear",
                 "assembly": {
-                    "type": "Assembly",
                     "id": "GRCh38.p13",
                     "default": True,
                     "name": "GRCh38",
                     "accession_id": "GCA_000001405.28",
                     "accessioning_body": "EGA",
-                    "species": "homo_sapiens",
                 },
                 "metadata": {
                     "ontology_terms": [
@@ -82,7 +76,11 @@ snapshots["test_gene_retrieval_by_id 1"] = {
     }
 }
 
-snapshots["test_gene_retrieval_by_symbol 1"] = {
+expected_id_and_symbol = {
     "stable_id": "ENSG00000139618.15",
     "symbol": "BRCA2",
 }
+
+snapshots["test_gene_retrieval_by_id_snake_case 1"] = expected_id_and_symbol
+
+snapshots["test_gene_retrieval_by_symbol 1"] = [expected_id_and_symbol]
