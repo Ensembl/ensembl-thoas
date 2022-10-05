@@ -1,0 +1,9 @@
+type Version {
+  api: Api!
+}
+
+type Api {
+  major: String!
+  minor: String!
+  patch: String!
+}

@@ -195,6 +195,13 @@ def resolve_transcript(
     return transcript
 
 
+@QUERY_TYPE.field("version")
+def resolve_api(
+    _: None, info: GraphQLResolveInfo
+):  # the second argument must be named `info` to avoid a NameError
+    return {"api": {"major": "0", "minor": "1", "patch": "0-beta"}}
+
+
 @GENE_TYPE.field("transcripts")
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     "Use a DataLoader to get transcripts for the parent gene"

@@ -1,6 +1,7 @@
 # TODO remove deprecated parameters after clients have migrated
 
 type Query {
+  version: Version
   gene(byId: IdInput @deprecated(reason: "Use `by_id`"), by_id: IdInput): Gene
   genes(by_symbol: SymbolInput!): [Gene]
   transcript(bySymbol: SymbolInput @deprecated(reason: "Use `by_symbol`"),
