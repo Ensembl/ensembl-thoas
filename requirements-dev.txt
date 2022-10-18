@@ -1,5 +1,4 @@
--r requirements-api.txt
--r requirements-loading.txt
+-r requirements.txt
 pytest==7.1.2
 pytest-asyncio==0.18.3
 snapshottest==0.6.0

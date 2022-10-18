@@ -1,7 +1,0 @@
-{
-"canonical" : {
-    "value": "true",
-    "label": "Ensembl canonical",
-    "definition": "A single, representative transcript identified at every locus"
-	}
-}

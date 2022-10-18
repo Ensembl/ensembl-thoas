@@ -1,5 +1,0 @@
--r requirements-shared.txt
-configparser==5.2.0
-ijson==3.1.4
-mysql-connector-python==8.0.29
-psycopg2-binary==2.9.3
