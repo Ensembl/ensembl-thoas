@@ -21,7 +21,7 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_region_retrieval_by_name(snapshot):
+async def test_region_retrieval(snapshot):
     query = """{
       region (by_name: {genome_id: "homo_sapiens_GCA_000001405_28", name: "13"}) {
         name
@@ -39,7 +39,7 @@ async def test_region_retrieval_by_name(snapshot):
 
 
 @pytest.mark.asyncio
-async def test_regions_retrieval_by_genome_id(snapshot):
+async def test_regions_retrieval(snapshot):
     query = """{
       regions (by_genome_id: {genome_id: "homo_sapiens_GCA_000001405_28"}) {
         name
