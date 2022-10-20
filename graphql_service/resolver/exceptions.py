@@ -74,13 +74,29 @@ class ProductNotFoundError(FieldNotFoundError):
         super().__init__("product", {"product_id": product_id, "genome_id": genome_id})
 
 
+class RegionFromSliceNotFoundError(FieldNotFoundError):
+    """Custom error to be raised if we can't find the region for a slice"""
+
+    def __init__(self, region_id: str):
+        super().__init__("region", {"region_id": region_id})
+
+
 class RegionNotFoundError(FieldNotFoundError):
     """
     Custom error to be raised if region is not found
     """
 
-    def __init__(self, region_id: str):
-        super().__init__("region", {"region_id": region_id})
+    def __init__(self, genome_id: str, name: str):
+        super().__init__("region", {"genome_id": genome_id, "name": name})
+
+
+class RegionsNotFoundError(FieldNotFoundError):
+    """
+    Custom error to be raised if regions are not found
+    """
+
+    def __init__(self, genome_id: str):
+        super().__init__("regions", {"genome_id": genome_id})
 
 
 class AssemblyNotFoundError(FieldNotFoundError):

@@ -319,6 +319,7 @@ def build_region():
     return {
         "type": "Region",
         "region_id": "homo_sapiens_GCA_000001405_28_13_chromosome",
+        "genome_id": "homo_sapiens_GCA_000001405_28",
         "name": "13",
         "length": 114364328,
         "code": "chromosome",
