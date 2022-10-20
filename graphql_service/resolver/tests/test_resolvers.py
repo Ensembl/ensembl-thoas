@@ -15,7 +15,6 @@ from unittest.mock import Mock
 
 import pytest
 import mongomock
-from graphql.pyutils import Path
 from starlette.datastructures import State
 
 import graphql_service.resolver.gene_model as model
@@ -125,13 +124,21 @@ def fixture_region_data():
         [
             {
                 "type": "Region",
-                "region_id": "plasmodium_falciparum_GCA_000002765_2_13",
-                "name": "13",
+                "region_id": "plasmodium_falciparum_GCA_000002765_2_blah",
+                "name": "blah",
+                "genome_id": "plasmodium_falciparum_GCA_000002765_2",
             },
             {
                 "type": "Region",
                 "region_id": "plasmodium_falciparum_GCA_000002765_2_14",
                 "name": "14",
+                "genome_id": "plasmodium_falciparum_GCA_000002765_2",
+            },
+            {
+                "type": "Region",
+                "region_id": "plasmodium_falciparum_GCA_000002765_2_13",
+                "name": "13",
+                "genome_id": "plasmodium_falciparum_GCA_000002765_2",
             },
         ]
     )
@@ -475,7 +482,7 @@ async def test_resolve_region_happy_case(region_data):
         "default": True,
     }
     info = create_info(region_data)
-    result = await model.resolve_region(slc, info)
+    result = await model.resolve_region_from_slice(slc, info)
     assert result["region_id"] == "plasmodium_falciparum_GCA_000002765_2_13"
 
 
@@ -486,8 +493,8 @@ async def test_resolve_region_region_not_exist(region_data):
         "region_id": "some_non_existing_region_id",
     }
     result = None
-    with pytest.raises(model.RegionNotFoundError) as region_error:
-        result = await model.resolve_region(slc, info)
+    with pytest.raises(model.RegionFromSliceNotFoundError) as region_error:
+        result = await model.resolve_region_from_slice(slc, info)
     assert not result
     assert region_error.value.extensions["region_id"] == "some_non_existing_region_id"
 
@@ -809,6 +816,40 @@ async def test_resolve_organisms_from_species_not_exists(genome_data):
         result = await model.resolve_organisms_from_species(species, info)
     assert not result
     assert organisms_not_found_error.value.extensions["species_id"] == "blah blah"
+
+
+@pytest.mark.asyncio
+async def test_resolve_region(region_data):
+    info = create_info(region_data)
+
+    result = await model.resolve_region(
+        None,
+        info,
+        by_name={"genome_id": "plasmodium_falciparum_GCA_000002765_2", "name": "14"},
+    )
+    assert remove_ids(result) == {
+        "genome_id": "plasmodium_falciparum_GCA_000002765_2",
+        "name": "14",
+        "region_id": "plasmodium_falciparum_GCA_000002765_2_14",
+        "type": "Region",
+    }
+
+
+@pytest.mark.asyncio
+async def test_resolve_region_no_results(region_data):
+    info = create_info(region_data)
+
+    result = None
+    with pytest.raises(model.RegionNotFoundError) as region_not_found_error:
+        result = await model.resolve_region(
+            None, info, by_name={"genome_id": "yeti_genome", "name": "14"}
+        )
+    assert not result
+    assert region_not_found_error.value.extensions == {
+        "code": "REGION_NOT_FOUND",
+        "genome_id": "yeti_genome",
+        "name": "14",
+    }
 
 
 def remove_ids(test_output):
