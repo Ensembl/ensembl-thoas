@@ -1,8 +1,10 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ensembl-thoas-ingress-<DEPLOYMENT_TAG>
+  namespace: ensembl-apps
   annotations:
+    kubernetes.io/ingress.class: 'nginx'
     # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting
     # nginx.ingress.kubernetes.io/limit-rpm: "2"
 spec:
@@ -11,6 +13,9 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: thoas-server-svc
-          servicePort: 8000
+          service:
+            name: thoas-server-svc
+            port:
+              number: 8000
         path: /
+        pathType: Prefix
