@@ -2,6 +2,7 @@ apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: mongodb-standalone
+  namespace: ensembl-apps
 spec:
   serviceName: database
   replicas: 1
