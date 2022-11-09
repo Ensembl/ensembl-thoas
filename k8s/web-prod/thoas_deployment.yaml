@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: thoas-server-deployment
+  namespace: ensembl-apps
 spec:
   replicas: 1
   selector:
