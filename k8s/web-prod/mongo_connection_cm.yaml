@@ -12,3 +12,4 @@ data:
 kind: ConfigMap
 metadata:
   name: thoas-configmap
+  namespace: ensembl-apps

@@ -7,6 +7,6 @@ metadata:
   namespace: ensembl-apps
 subsets:
   - addresses:
-      - ip: 10.7.51.44
+      - ip: 10.42.24.29
     ports:
       - port: 27017
