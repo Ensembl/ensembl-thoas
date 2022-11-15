@@ -40,5 +40,5 @@ type ClosestDataProvider {
   source: ExternalDB!
   accession_id: String!
   url: String!
-  description: String!
+  description: String
 }
