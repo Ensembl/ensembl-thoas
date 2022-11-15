@@ -281,6 +281,7 @@ def build_products():
                     },
                     "accession_id": "IPR004258",
                     "url": "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258",
+                    "description": "Duffy-binding-like domain",
                 },
                 "relative_location": {"start": 602, "end": 762, "length": 161},
                 "score": 212.5,

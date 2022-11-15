@@ -53,6 +53,7 @@ async def test_protein_retrieval_separate_arguments(snapshot):
         }
         accession_id
         url
+        description
       }
       relative_location {
         start
@@ -118,6 +119,7 @@ async def test_protein_retrieval_by_id_input(snapshot):
             }
             accession_id
             url
+            description
           }
           relative_location {
             start
