@@ -29,6 +29,7 @@ expected_protein = {
                     "accession_id": "IPR004258",
                     "source": {"name": "InterProScan"},
                     "url": "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR004258",
+                    "description": "Duffy-binding-like domain",
                 },
             }
         ],
