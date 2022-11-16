@@ -16,6 +16,8 @@ type Query {
                  start: Int @deprecated(reason: "Use `by_slice`"),
                  end: Int @deprecated(reason: "Use `by_slice`")
                  by_slice: SliceInput): Locus
+  region(by_name: RegionNameInput!): Region
+  regions(by_genome_id: GenomeIdInput!): [Region]
 }
 
 input SymbolInput {
@@ -39,4 +41,13 @@ type Locus {
   # A dynamically defined part of a Region
   genes: [Gene!]!
   transcripts: [Transcript!]!
+}
+
+input RegionNameInput  {
+  genome_id: String!
+  name: String!
+}
+
+input GenomeIdInput {
+  genome_id: String!
 }

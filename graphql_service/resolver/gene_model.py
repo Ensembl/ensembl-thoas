@@ -30,6 +30,8 @@ from graphql_service.resolver.exceptions import (
     AssembliesFromOrganismNotFound,
     SpeciesFromOrganismNotFound,
     OrganismsFromSpeciesNotFound,
+    RegionsNotFoundError,
+    RegionFromSliceNotFoundError,
 )
 
 # Define Query types for GraphQL
@@ -372,7 +374,9 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
 
 @SLICE_TYPE.field("region")
-async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
+async def resolve_region_from_slice(
+    slc: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
     "Fetch a region that is referenced by a slice"
     if slc["region_id"] is None:
         return None
@@ -383,7 +387,7 @@ async def resolve_region(slc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     regions = await loader.load(key=region_id)
 
     if not regions:
-        raise RegionNotFoundError(region_id)
+        raise RegionFromSliceNotFoundError(region_id=region_id)
     return regions[0]
 
 
@@ -465,3 +469,33 @@ async def resolve_organisms_from_species(
     if not organisms:
         raise OrganismsFromSpeciesNotFound(species_id=species["species_primary_key"])
     return organisms
+
+
+@QUERY_TYPE.field("region")
+async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -> Dict:
+    query = {
+        "type": "Region",
+        "genome_id": by_name["genome_id"],
+        "name": by_name["name"],
+    }
+    collection = info.context["mongo_db"]
+    result = collection.find_one(query)
+    if not result:
+        raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
+    return result
+
+
+@QUERY_TYPE.field("regions")
+async def resolve_regions(
+    _, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]
+) -> List[Dict]:
+    query = {
+        "type": "Region",
+        "genome_id": by_genome_id["genome_id"],
+        "code": "chromosome",  # We filter on chromosomes to avoid returning an overwhelming number of regions
+    }
+    collection = info.context["mongo_db"]
+    results = list(collection.find(query))
+    if not results:
+        raise RegionsNotFoundError(genome_id=by_genome_id["genome_id"])
+    return results
