@@ -8,6 +8,7 @@ type Gene {
   name: String
   so_term: String!
   transcripts: [Transcript!]!
+  transcripts_page(page: Int!, per_page: Int!): TranscriptsPage!
   slice: Slice!
   external_references: [ExternalReference!]!
   alternative_symbols: [String!]!

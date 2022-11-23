@@ -47,6 +47,7 @@ REGION_TYPE = ObjectType("Region")
 ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
+TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
 
 
 @QUERY_TYPE.field("gene")
@@ -213,6 +214,24 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(key=gene_primary_key)
     return transcripts
+
+
+@GENE_TYPE.field("transcripts_page")
+async def resolve_gene_transcripts_page(gene: Dict, info: GraphQLResolveInfo, page: int, per_page: int) -> Dict:
+    "Use a dataloader to get a page of transcripts"
+
+    query = {
+        "type": "Transcript",
+        "gene_foreign_key": gene["gene_primary_key"],
+    }
+    collection = info.context["mongo_db"]
+    results = await collection.find(query, batch_size=per_page).sort([("stable_id", 1)]).skip((page - 1)*per_page).limit(per_page)
+    return {"transcripts": list(results)}
+
+
+# @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
+# async def resolve_page_metadata(transcripts_page: Dict, info: GraphQLResolveInfo) -> Dict:
+#     query =
 
 
 @TRANSCRIPT_TYPE.field("product_generating_contexts")

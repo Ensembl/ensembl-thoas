@@ -16,7 +16,6 @@ from collections import defaultdict
 from typing import List, Dict
 
 from aiodataloader import DataLoader
-from pymongo.collection import Collection
 
 
 class BatchLoaders:
