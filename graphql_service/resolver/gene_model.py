@@ -217,21 +217,40 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 
 @GENE_TYPE.field("transcripts_page")
-async def resolve_gene_transcripts_page(gene: Dict, info: GraphQLResolveInfo, page: int, per_page: int) -> Dict:
-    "Use a dataloader to get a page of transcripts"
+async def resolve_gene_transcripts_page(gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int):
+    "This resolver just passes required fields down to child resolvers"
+    return {
+        "gene_primary_key": gene["gene_primary_key"],
+        "page": page,
+        "per_page": per_page
+    }
 
+
+@TRANSCRIPT_PAGE_TYPE.field("transcripts")
+async def resolve_gene_transcripts_page(transcripts_page: Dict, info: GraphQLResolveInfo) -> List[Dict]:
+    "Load a page of transcripts"
     query = {
         "type": "Transcript",
-        "gene_foreign_key": gene["gene_primary_key"],
+        "gene_foreign_key": transcripts_page["gene_primary_key"],
+    }
+    page, per_page = transcripts_page["page"], transcripts_page["per_page"]
+    collection = info.context["mongo_db"]
+    results = collection.find(query).sort([("stable_id", 1)]).skip((page - 1)*per_page).limit(per_page)
+    return list(results)
+
+
+@TRANSCRIPT_PAGE_TYPE.field("page_metadata")
+async def resolve_page_metadata(transcripts_page: Dict, info: GraphQLResolveInfo) -> Dict:
+    query = {
+        "type": "Transcript",
+        "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
     collection = info.context["mongo_db"]
-    results = await collection.find(query, batch_size=per_page).sort([("stable_id", 1)]).skip((page - 1)*per_page).limit(per_page)
-    return {"transcripts": list(results)}
-
-
-# @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
-# async def resolve_page_metadata(transcripts_page: Dict, info: GraphQLResolveInfo) -> Dict:
-#     query =
+    return {
+        "total_count": collection.count_documents(query),
+        "page": transcripts_page["page"],
+        "per_page": transcripts_page["per_page"]
+    }
 
 
 @TRANSCRIPT_TYPE.field("product_generating_contexts")

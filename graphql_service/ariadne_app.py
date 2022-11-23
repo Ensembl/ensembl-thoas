@@ -14,6 +14,7 @@
 from typing import Dict, Callable
 
 import ariadne
+from ariadne import snake_case_fallback_resolvers
 from graphql import GraphQLSchema
 from starlette.requests import Request
 
@@ -29,7 +30,7 @@ from graphql_service.resolver.gene_model import (
     GENE_METADATA_TYPE,
     ASSEMBLY_TYPE,
     ORGANISM_TYPE,
-    SPECIES_TYPE,
+    SPECIES_TYPE, TRANSCRIPT_PAGE_TYPE,
 )
 
 
@@ -51,6 +52,7 @@ def prepare_executable_schema() -> GraphQLSchema:
         ASSEMBLY_TYPE,
         ORGANISM_TYPE,
         SPECIES_TYPE,
+        TRANSCRIPT_PAGE_TYPE,
     )
 
 
