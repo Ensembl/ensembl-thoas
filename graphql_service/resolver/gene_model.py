@@ -220,7 +220,7 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 async def resolve_gene_transcripts_page(
     gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
 ):
-    "This resolver just passes required fields down to child resolvers"
+    "This resolver passes required fields down to child resolvers"
 
     return {
         "gene_primary_key": gene["gene_primary_key"],
