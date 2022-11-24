@@ -887,6 +887,15 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
 
 
 @pytest.mark.asyncio
+async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_data):
+    info = create_info(transcript_data)
+
+    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 3, "per_page": 1}
+    result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
+    assert result == []
+
+
+@pytest.mark.asyncio
 async def test_resolve_transcripts_page_metadata(transcript_data):
     info = create_info(transcript_data)
 

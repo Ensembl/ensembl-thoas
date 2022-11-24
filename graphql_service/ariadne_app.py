@@ -14,7 +14,6 @@
 from typing import Dict, Callable
 
 import ariadne
-from ariadne import snake_case_fallback_resolvers
 from graphql import GraphQLSchema
 from starlette.requests import Request
 
