@@ -217,18 +217,22 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 
 @GENE_TYPE.field("transcripts_page")
-async def resolve_gene_transcripts_page(gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int):
+async def resolve_gene_transcripts_page(
+    gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
+):
     "This resolver just passes required fields down to child resolvers"
 
     return {
         "gene_primary_key": gene["gene_primary_key"],
         "page": page,
-        "per_page": per_page
+        "per_page": per_page,
     }
 
 
 @TRANSCRIPT_PAGE_TYPE.field("transcripts")
-async def resolve_transcripts_page_transcripts(transcripts_page: Dict, info: GraphQLResolveInfo) -> List[Dict]:
+async def resolve_transcripts_page_transcripts(
+    transcripts_page: Dict, info: GraphQLResolveInfo
+) -> List[Dict]:
     "Load a page of transcripts"
     query = {
         "type": "Transcript",
@@ -236,12 +240,19 @@ async def resolve_transcripts_page_transcripts(transcripts_page: Dict, info: Gra
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
     collection = info.context["mongo_db"]
-    results = collection.find(query).sort([("stable_id", 1)]).skip((page - 1)*per_page).limit(per_page)
+    results = (
+        collection.find(query)
+        .sort([("stable_id", 1)])
+        .skip((page - 1) * per_page)
+        .limit(per_page)
+    )
     return list(results)
 
 
 @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
-async def resolve_transcripts_page_metadata(transcripts_page: Dict, info: GraphQLResolveInfo) -> Dict:
+async def resolve_transcripts_page_metadata(
+    transcripts_page: Dict, info: GraphQLResolveInfo
+) -> Dict:
     query = {
         "type": "Transcript",
         "gene_foreign_key": transcripts_page["gene_primary_key"],
@@ -250,7 +261,7 @@ async def resolve_transcripts_page_metadata(transcripts_page: Dict, info: GraphQ
     return {
         "total_count": collection.count_documents(query),
         "page": transcripts_page["page"],
-        "per_page": transcripts_page["per_page"]
+        "per_page": transcripts_page["per_page"],
     }
 
 

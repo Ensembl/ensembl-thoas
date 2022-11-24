@@ -104,7 +104,7 @@ def fixture_transcript_data():
                 "unversioned_stable_id": "ENST002",
                 "gene": "ENSG001.1",
                 "product_generating_contexts": [],
-                "gene_primary_key": "1_ENSG001.1",
+                "gene_foreign_key": "1_ENSG001.1",
             },
             {
                 "genome_id": "1",
@@ -850,6 +850,49 @@ async def test_resolve_region_no_results(region_data):
         "genome_id": "yeti_genome",
         "name": "14",
     }
+
+
+@pytest.mark.asyncio
+async def test_resolve_gene_transcripts_page():
+    gene = {
+        "genome_id": "1",
+        "type": "Gene",
+        "symbol": "banana",
+        "stable_id": "ENSG001.1",
+        "unversioned_stable_id": "ENSG001",
+        "gene_primary_key": "1_ENSG001.1",
+    }
+    result = await model.resolve_gene_transcripts_page(gene, None, 1, 2)
+    assert result == {"gene_primary_key": "1_ENSG001.1", "page": 1, "per_page": 2}
+
+
+@pytest.mark.asyncio
+async def test_resolve_transcripts_page_transcripts(transcript_data):
+    info = create_info(transcript_data)
+
+    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
+    result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
+    assert remove_ids(result) == [
+        {
+            "gene": "ENSG001.1",
+            "gene_foreign_key": "1_ENSG001.1",
+            "genome_id": "1",
+            "product_generating_contexts": [],
+            "stable_id": "ENST002.2",
+            "symbol": "grape",
+            "type": "Transcript",
+            "unversioned_stable_id": "ENST002",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resolve_transcripts_page_metadata(transcript_data):
+    info = create_info(transcript_data)
+
+    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
+    result = await model.resolve_transcripts_page_metadata(transcripts_page, info)
+    assert result == {"page": 2, "per_page": 1, "total_count": 2}
 
 
 def remove_ids(test_output):

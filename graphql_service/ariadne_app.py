@@ -30,7 +30,8 @@ from graphql_service.resolver.gene_model import (
     GENE_METADATA_TYPE,
     ASSEMBLY_TYPE,
     ORGANISM_TYPE,
-    SPECIES_TYPE, TRANSCRIPT_PAGE_TYPE,
+    SPECIES_TYPE,
+    TRANSCRIPT_PAGE_TYPE,
 )
 
 
