@@ -36,16 +36,15 @@ print(os.environ)
 
 CONFIG = load_config(os.getenv("GQL_CONF"))
 
-DEBUG_MODE = False
+DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
     ExtensionList
 ] = None  # mypy will throw an incompatible type error without this type cast
 
 if DEBUG_MODE:
-    # This will write MongoDB transactions to `thoas.log`
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG, filename="thoas.log", filemode="w")
+    logging.basicConfig(level=logging.DEBUG)
 
     monitoring.register(CommandLogger(log))
 

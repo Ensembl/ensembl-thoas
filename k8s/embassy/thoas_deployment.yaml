@@ -21,12 +21,9 @@ spec:
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
-          env:
-            - name: GQL_CONF
-              valueFrom:
-                configMapKeyRef:
-                  name: mongo-conf-filepath-cm
-                  key: GQL_CONF
+          envFrom:
+            - configMapRef:
+                name: thoas-config-location
           command: ["uvicorn"]
           args: [
             "--host",
