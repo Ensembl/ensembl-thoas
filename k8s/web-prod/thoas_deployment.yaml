@@ -21,17 +21,9 @@ spec:
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
-          env:
-            - name: GQL_CONF
-              valueFrom:
-                configMapKeyRef:
-                  name: thoas-config-location
-                  key: GQL_CONF
-            - name: HTTPS_PROXY
-              valueFrom:
-                configMapKeyRef:
-                  name: thoas-config-location
-                  key: HTTPS_PROXY
+          envFrom:
+            - configMapRef:
+                name: thoas-config-location
           command: ["uvicorn"]
           args: [
             "--host",
