@@ -222,15 +222,15 @@ async def resolve_gene_transcripts_page(
     _: GraphQLResolveInfo,
     page: int,
     per_page: int,
-    transcript_filter=None,
+    filters=None,
 ):
     "This resolver passes required fields down to child resolvers"
 
-    if transcript_filter is None:
-        transcript_filter = {}
+    if filters is None:
+        filters = {}
     transcript_filter_queries = {
         ".".join(["metadata", filter_name, "value"]): {"$in": filter_values}
-        for filter_name, filter_values in transcript_filter.items()
+        for filter_name, filter_values in filters.items()
     }
 
     return {

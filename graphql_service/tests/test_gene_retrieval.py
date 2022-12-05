@@ -180,7 +180,7 @@ async def test_transcript_pagination_filters(snapshot):
           genome_id:"homo_sapiens_GCA_000001405_28",
           stable_id: "ENSG00000139618.15"
         }) {
-            transcripts_page(page: 1, per_page:2, transcript_filter: {biotype: ["protein_coding"]}) {
+            transcripts_page(page: 1, per_page:2, filters: {biotype: ["protein_coding"]}) {
                 transcripts {
                     stable_id
                 }
