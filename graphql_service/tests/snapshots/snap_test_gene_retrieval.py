@@ -91,15 +91,6 @@ snapshots["test_transcript_pagination 1"] = {
     }
 }
 
-snapshots["test_transcript_pagination_filters"] = {
-    "gene": {
-        "transcripts_page": {
-            "page_metadata": {"page": 1, "per_page": 2, "total_count": 1},
-            "transcripts": [{"stable_id": "ENST00000380152.7"}],
-        }
-    }
-}
-
 snapshots["test_transcript_pagination_filters 1"] = {
     "gene": {
         "transcripts_page": {
