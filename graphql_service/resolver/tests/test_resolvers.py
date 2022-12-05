@@ -95,6 +95,7 @@ def fixture_transcript_data():
                     }
                 ],
                 "gene_foreign_key": "1_ENSG001.1",
+                "metadata": {"biotype": {"value": "protein_coding"}},
             },
             {
                 "genome_id": "1",
@@ -105,6 +106,7 @@ def fixture_transcript_data():
                 "gene": "ENSG001.1",
                 "product_generating_contexts": [],
                 "gene_foreign_key": "1_ENSG001.1",
+                "metadata": {"biotype": {"value": "nonsense_mediated_decay"}},
             },
             {
                 "genome_id": "1",
@@ -862,15 +864,36 @@ async def test_resolve_gene_transcripts_page():
         "unversioned_stable_id": "ENSG001",
         "gene_primary_key": "1_ENSG001.1",
     }
-    result = await model.resolve_gene_transcripts_page(gene, None, 1, 2)
-    assert result == {"gene_primary_key": "1_ENSG001.1", "page": 1, "per_page": 2}
+    transcript_filter = {
+        "biotype": ["protein_coding", "nonsense_mediated_decay"],
+        "tsl": ["tsl1", "tsl2", "tsl3"],
+    }
+    result = await model.resolve_gene_transcripts_page(
+        gene, None, 1, 2, transcript_filter
+    )
+    assert result == {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 1,
+        "per_page": 2,
+        "transcript_filter_queries": {
+            "metadata.biotype.value": {
+                "$in": ["protein_coding", "nonsense_mediated_decay"]
+            },
+            "metadata.tsl.value": {"$in": ["tsl1", "tsl2", "tsl3"]},
+        },
+    }
 
 
 @pytest.mark.asyncio
 async def test_resolve_transcripts_page_transcripts(transcript_data):
     info = create_info(transcript_data)
 
-    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
+    transcripts_page = {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 2,
+        "per_page": 1,
+        "transcript_filter_queries": {},
+    }
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
     assert remove_ids(result) == [
         {
@@ -882,6 +905,41 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
             "symbol": "grape",
             "type": "Transcript",
             "unversioned_stable_id": "ENST002",
+            "metadata": {"biotype": {"value": "nonsense_mediated_decay"}},
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resolve_transcripts_page_transcripts_filters(transcript_data):
+    info = create_info(transcript_data)
+
+    transcripts_page = {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 1,
+        "per_page": 2,
+        "transcript_filter_queries": {
+            "metadata.biotype.value": {"$in": ["protein_coding"]}
+        },
+    }
+    result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
+    assert remove_ids(result) == [
+        {
+            "gene": "ENSG001.1",
+            "gene_foreign_key": "1_ENSG001.1",
+            "genome_id": "1",
+            "metadata": {"biotype": {"value": "protein_coding"}},
+            "product_generating_contexts": [
+                {
+                    "product_foreign_key": "1_ENSP001.1",
+                    "product_id": "ENSP001.1",
+                    "product_type": "Protein",
+                }
+            ],
+            "stable_id": "ENST001.1",
+            "symbol": "kumquat",
+            "type": "Transcript",
+            "unversioned_stable_id": "ENST001",
         }
     ]
 
@@ -890,7 +948,12 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
 async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_data):
     info = create_info(transcript_data)
 
-    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 3, "per_page": 1}
+    transcripts_page = {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 3,
+        "per_page": 1,
+        "transcript_filter_queries": {},
+    }
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
     assert result == []
 
@@ -899,9 +962,30 @@ async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_da
 async def test_resolve_transcripts_page_metadata(transcript_data):
     info = create_info(transcript_data)
 
-    transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
+    transcripts_page = {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 2,
+        "per_page": 1,
+        "transcript_filter_queries": {},
+    }
     result = await model.resolve_transcripts_page_metadata(transcripts_page, info)
     assert result == {"page": 2, "per_page": 1, "total_count": 2}
+
+
+@pytest.mark.asyncio
+async def test_resolve_transcripts_page_metadata_filters(transcript_data):
+    info = create_info(transcript_data)
+
+    transcripts_page = {
+        "gene_primary_key": "1_ENSG001.1",
+        "page": 1,
+        "per_page": 1,
+        "transcript_filter_queries": {
+            "metadata.biotype.value": {"$in": ["protein_coding"]}
+        },
+    }
+    result = await model.resolve_transcripts_page_metadata(transcripts_page, info)
+    assert result == {"page": 1, "per_page": 1, "total_count": 1}
 
 
 def remove_ids(test_output):

@@ -46,3 +46,8 @@ input RegionNameInput  {
   genome_id: String!
   name: String!
 }
+
+input TranscriptFilter {
+  biotype: [String!]
+  tsl: [String!]
+}

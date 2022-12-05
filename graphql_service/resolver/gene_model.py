@@ -218,14 +218,26 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 @GENE_TYPE.field("transcripts_page")
 async def resolve_gene_transcripts_page(
-    gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
+    gene: Dict,
+    _: GraphQLResolveInfo,
+    page: int,
+    per_page: int,
+    transcript_filter=None,
 ):
     "This resolver passes required fields down to child resolvers"
+
+    if transcript_filter is None:
+        transcript_filter = {}
+    transcript_filter_queries = {
+        ".".join(["metadata", filter_name, "value"]): {"$in": filter_values}
+        for filter_name, filter_values in transcript_filter.items()
+    }
 
     return {
         "gene_primary_key": gene["gene_primary_key"],
         "page": page,
         "per_page": per_page,
+        "transcript_filter_queries": transcript_filter_queries,
     }
 
 
@@ -234,9 +246,11 @@ async def resolve_transcripts_page_transcripts(
     transcripts_page: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
     "Load a page of transcripts"
+
     query = {
         "type": "Transcript",
         "gene_foreign_key": transcripts_page["gene_primary_key"],
+        **transcripts_page["transcript_filter_queries"],
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
     collection = info.context["mongo_db"]
@@ -256,6 +270,7 @@ async def resolve_transcripts_page_metadata(
     query = {
         "type": "Transcript",
         "gene_foreign_key": transcripts_page["gene_primary_key"],
+        **transcripts_page["transcript_filter_queries"],
     }
     collection = info.context["mongo_db"]
     return {

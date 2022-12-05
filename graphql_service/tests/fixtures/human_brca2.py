@@ -73,6 +73,7 @@ def build_transcripts():
         "so_term": "protein_coding",
         "genome_id": "homo_sapiens_GCA_000001405_28",
         "exons": build_exons(),
+        "metadata": {"biotype": {"value": "protein_coding"}},
         "slice": {
             "region_id": "homo_sapiens_GCA_000001405_28_13_chromosome",
             "location": {
