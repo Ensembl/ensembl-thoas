@@ -84,3 +84,12 @@ expected_id_and_symbol = {
 snapshots["test_gene_retrieval_by_id_snake_case 1"] = expected_id_and_symbol
 
 snapshots["test_gene_retrieval_by_symbol 1"] = [expected_id_and_symbol]
+
+snapshots["test_transcript_pagination 1"] = {
+    "gene": {
+        "transcripts_page": {
+            "page_metadata": {"page": 2, "per_page": 1, "total_count": 2},
+            "transcripts": [{"stable_id": "ENST00000528762.1"}],
+        }
+    }
+}

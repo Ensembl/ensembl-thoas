@@ -30,6 +30,7 @@ from graphql_service.resolver.gene_model import (
     ASSEMBLY_TYPE,
     ORGANISM_TYPE,
     SPECIES_TYPE,
+    TRANSCRIPT_PAGE_TYPE,
 )
 
 
@@ -51,6 +52,7 @@ def prepare_executable_schema() -> GraphQLSchema:
         ASSEMBLY_TYPE,
         ORGANISM_TYPE,
         SPECIES_TYPE,
+        TRANSCRIPT_PAGE_TYPE,
     )
 
 

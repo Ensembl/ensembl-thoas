@@ -1,3 +1,14 @@
+type TranscriptsPage {
+  transcripts: [Transcript!]!
+  page_metadata: PageMetadata!
+}
+
+type PageMetadata {
+  total_count: Int!
+  page: Int!
+  per_page: Int!
+}
+
 type Transcript {
   """
   A Transcript of a Gene. Exons are listed in sequence order
