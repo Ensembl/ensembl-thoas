@@ -14,6 +14,7 @@
 from typing import Dict, Callable
 
 import ariadne
+from ariadne.contrib.federation import make_federated_schema
 from graphql import GraphQLSchema
 from starlette.requests import Request
 
@@ -39,7 +40,7 @@ def prepare_executable_schema() -> GraphQLSchema:
     Combine schema definitions with corresponding resolvers
     """
     schema = ariadne.load_schema_from_path("common/schemas")
-    return ariadne.make_executable_schema(
+    return make_federated_schema(
         schema,
         QUERY_TYPE,
         GENE_TYPE,

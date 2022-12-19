@@ -15,6 +15,7 @@ import logging
 import os
 from typing import Optional
 
+import uvicorn
 from ariadne.asgi import GraphQL
 from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
 from ariadne.types import ExtensionList
@@ -34,7 +35,7 @@ from graphql_service.ariadne_app import (
 
 print(os.environ)
 
-CONFIG = load_config(os.getenv("GQL_CONF"))
+CONFIG = load_config("mongo.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
@@ -81,3 +82,6 @@ APP.mount(
         extensions=EXTENSIONS,
     ),
 )
+
+if __name__ == "__main__":
+    uvicorn.run(APP, host="0.0.0.0", port=5001)

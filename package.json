@@ -1,0 +1,29 @@
+{
+  "name": "ensembl-thoas",
+  "version": "1.0.0",
+  "description": "A [GraphQL trial](https://graphql.org/) for [Ensembl](https://www.ensembl.org) to reduce the need for RESTful web services.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ensembl/ensembl-thoas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ensembl/ensembl-thoas/issues"
+  },
+  "homepage": "https://github.com/Ensembl/ensembl-thoas#readme",
+  "dependencies": {
+    "@apollo/gateway": "^2.2.2",
+    "@apollo/server": "^4.3.0",
+    "graphql": "^16.6.0"
+  },
+  "type": "module"
+}
