@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # snapshottest: v1 - https://goo.gl/zC4yUc
-
-"""Test data for gene name retrieval tests"""
-
 from __future__ import unicode_literals
 
 from snapshottest import Snapshot
@@ -30,7 +27,7 @@ snapshots["test_no_externaldb_source_name 1"] = {
             "name": {
                 "accession_id": "A0A1D5TR86",
                 "source": None,
-                "url": "http://purl.uniprot.org/uniprot/A0A1D5TR86",
+                "url": "https://purl.uniprot.org/uniprot/A0A1D5TR86",
                 "value": "Sulfotransferase [Source:UniProtKB/TrEMBL;Acc:A0A1D5TR86]",
             }
         },
@@ -70,7 +67,7 @@ snapshots["test_no_xref_description 1"] = {
                     "release": None,
                     "url": "https://www.uniprot.org/",
                 },
-                "url": "http://purl.uniprot.org/uniprot/A0A1D5TR86",
+                "url": "https://purl.uniprot.org/uniprot/A0A1D5TR86",
                 "value": None,
             }
         },
