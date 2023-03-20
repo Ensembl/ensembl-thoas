@@ -41,7 +41,7 @@ type TranscriptTSLMetadata implements ValueSetMetadata {
 }
 
 type NCBITranscript {
-	id: String!
+	ncbi_id: String!
 	url : String!
 }
 
