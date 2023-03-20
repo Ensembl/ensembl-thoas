@@ -72,7 +72,6 @@ type Intron {
   slice: Slice!
   so_term: String!
   relative_location: Location!
-  sequence_checksum: String!
 }
 
 type ProductGeneratingContext {
