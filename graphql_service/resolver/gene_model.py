@@ -407,7 +407,7 @@ def resolve_product_by_id(
 async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     "Fetch product that is referenced by the Product Generating Context"
 
-    if pgc["product_id"] is None:
+    if "product_id" not in pgc:
         return None
     loader = info.context["loaders"].product_loader
     products = await loader.load(key=pgc["product_foreign_key"])
