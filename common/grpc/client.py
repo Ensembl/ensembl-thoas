@@ -30,16 +30,14 @@ class GRPCClient(object):
         response = self.stub.GetGenomesByKeyword(request)
         return response
 
-    def get_genome_by_assembly_acc_id(self, genome_uuid):
-        request = ensembl_metadata_pb2.GenomeUUIDRequest(genome_uuid=genome_uuid)
-        print(f'{request}')
-        response = self.stub.GetGenomeByUUID(request)
-        print(f'{response}')
+    def get_genome_by_assembly_acc_id(self, assembly_accession_id):
+        request = ensembl_metadata_pb2.AssemblyAccessionIDRequest(assembly_accession=assembly_accession_id)
+        response = self.stub.GetGenomesByAssemblyAccessionID(request)
         return response
 
-    def get_genome_by_genome_name(self, genome_uuid):
-        request = ensembl_metadata_pb2.GenomeUUIDRequest(genome_uuid=genome_uuid)
-        print(f'{request}')
-        response = self.stub.GetGenomeByUUID(request)
-        print(f'{response}')
+    def get_genome_by_genome_name(self, ensembl_name, site_name, release_version=None):
+        request = ensembl_metadata_pb2.GenomeNameRequest(ensembl_name=ensembl_name,
+                                                         site_name=site_name,
+                                                         release_version=release_version)
+        response = self.stub.GetGenomeByName(request)
         return response

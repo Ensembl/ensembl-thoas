@@ -570,11 +570,22 @@ def resolve_genomes(
         return genomes
 
     if by_assembly_acc_id:
-        pass
+        result = grpc_client.get_genome_by_assembly_acc_id(by_assembly_acc_id.get('assembly_accession_id'))
+        genomes = list(result)
+        if not genomes:
+            raise GenomeNotFoundError(by_assembly_acc_id)
+        genomes = list(map(create_genome_response, genomes))
+        return genomes
 
 
     if by_genome_name:
-        pass
+        result = grpc_client.get_genome_by_genome_name(by_genome_name.get('ensembl_name'),
+                                                       by_genome_name.get('site_name'),
+                                                       by_genome_name.get('release_version'))
+        if not result.genome_uuid:
+            raise GenomeNotFoundError(by_genome_name)
+        genomes = list(map(create_genome_response, [result]))
+        return genomes
 
 
 
