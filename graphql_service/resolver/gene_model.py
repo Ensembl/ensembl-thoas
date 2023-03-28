@@ -31,6 +31,8 @@ from graphql_service.resolver.exceptions import (
     SpeciesFromOrganismNotFound,
     OrganismsFromSpeciesNotFound,
     RegionFromSliceNotFoundError,
+    InputFieldArgumentNumberError,
+    GenomeNotFoundError,
 )
 
 # Define Query types for GraphQL
@@ -48,6 +50,7 @@ ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
+GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
@@ -532,3 +535,52 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
+
+
+@QUERY_TYPE.field("genomes")
+def resolve_genomes(
+        _,
+        info: GraphQLResolveInfo,
+        by_genome_uuid: Optional[Dict[str, str]] = None,
+        by_keyword: Optional[Dict[str, str]] = None,
+        by_assembly_acc_id: Optional[Dict[str, str]] = None,
+        by_genome_name: Optional[Dict[str, str]] = None,
+) -> List:
+
+    if sum(map(bool, [by_genome_uuid, by_keyword, by_assembly_acc_id, by_genome_name])) != 1:
+        raise InputFieldArgumentNumberError(1)
+
+    grpc_client = info.context["grpc_client"]
+
+    if by_genome_uuid:
+        result = grpc_client.get_genome_by_genome_uuid(by_genome_uuid.get('genome_uuid'),
+                                                       by_genome_uuid.get('release_version'))
+        if not result.genome_uuid:
+            raise GenomeNotFoundError(by_genome_uuid)
+        genomes = list(map(create_genome_response, [result]))
+        return genomes
+
+    if by_keyword:
+        result = grpc_client.get_genome_by_keyword(by_keyword.get('keyword'),
+                                                       by_keyword.get('release_version'))
+        genomes = list(result)
+        if not genomes:
+            raise GenomeNotFoundError(by_keyword)
+        genomes = list(map(create_genome_response, genomes))
+        return genomes
+
+    if by_assembly_acc_id:
+        pass
+
+
+    if by_genome_name:
+        pass
+
+
+
+def create_genome_response(genome):
+    response = {"genome_id": genome.genome_uuid,
+                "assembly_accession": genome.assembly.accession,
+                "scientific_name": genome.organism.scientific_name,
+                "release_number": genome.release.release_version}
+    return response

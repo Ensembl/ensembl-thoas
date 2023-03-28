@@ -31,6 +31,7 @@ from graphql_service.resolver.gene_model import (
     ORGANISM_TYPE,
     SPECIES_TYPE,
     TRANSCRIPT_PAGE_TYPE,
+    GENOME_TYPE
 )
 
 
@@ -53,6 +54,7 @@ def prepare_executable_schema() -> GraphQLSchema:
         ORGANISM_TYPE,
         SPECIES_TYPE,
         TRANSCRIPT_PAGE_TYPE,
+        GENOME_TYPE,
     )
 
 
@@ -73,11 +75,13 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         mongo_db = context["mongo_db"]
         xref_resolver = context["XrefResolver"]
         batch_loaders = BatchLoaders(mongo_db)
+        grpc_client = context["grpc_client"]
         return {
             "request": request,
             "mongo_db": mongo_db,
             "XrefResolver": xref_resolver,
             "loaders": batch_loaders,
+            "grpc_client": grpc_client,
         }
 
     return context_provider

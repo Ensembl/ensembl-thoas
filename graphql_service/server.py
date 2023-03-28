@@ -27,6 +27,8 @@ from common.logger import CommandLogger
 from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common import mongo
+from common.grpc.client import GRPCClient
+
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
@@ -56,6 +58,9 @@ if DEBUG_MODE:
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
+GRPC_CLIENT = GRPCClient(CONFIG)
+
+
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
 RESOLVER = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
@@ -64,6 +69,7 @@ CONTEXT_PROVIDER = prepare_context_provider(
     {
         "mongo_db": MONGO_CLIENT.collection(),
         "XrefResolver": RESOLVER,
+        "grpc_client": GRPC_CLIENT,
     }
 )
 

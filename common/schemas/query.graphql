@@ -17,6 +17,12 @@ type Query {
                  end: Int @deprecated(reason: "Use `by_slice`")
                  by_slice: SliceInput): Locus
   region(by_name: RegionNameInput!): Region
+
+  genomes(by_genome_uuid: GenomeUUIDInput,
+          by_keyword: GenomeByKeywordInput,
+          by_assembly_acc_id: AssemblyAccessionIDInput,
+          by_genome_name: GenomeNameInput): [Genome]
+
 }
 
 input SymbolInput {
@@ -45,4 +51,24 @@ type Locus {
 input RegionNameInput  {
   genome_id: String!
   name: String!
+}
+
+input GenomeUUIDInput {
+  genome_uuid: String!
+  release_version: Float
+}
+
+input GenomeByKeywordInput {
+  keyword: String!
+  release_version: Float
+}
+
+input AssemblyAccessionIDInput {
+  assembly_accession_id: String!
+}
+
+input GenomeNameInput {
+  ensembl_name: String!
+  site_name: String!
+  release_version: Float
 }
