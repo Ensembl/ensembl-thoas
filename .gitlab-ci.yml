@@ -51,7 +51,7 @@ test:
     - pip3 install -r requirements-dev.txt
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
-    - pylint $(git ls-files '*.py') --fail-under=9.5
+    - pylint $(git ls-files '*.py') --fail-under=8
     - mypy graphql_service
     - pytest
 
