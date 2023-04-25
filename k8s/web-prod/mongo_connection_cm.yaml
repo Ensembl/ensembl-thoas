@@ -9,6 +9,9 @@ data:
     port = 27017
     db = apps_data
     collection = graphql-test-6
+    [GRPC]
+    host = localhost
+    port = 50051
 kind: ConfigMap
 metadata:
   name: thoas-configmap
