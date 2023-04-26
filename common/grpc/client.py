@@ -14,7 +14,7 @@ class GRPCClient(object):
 
         # instantiate a channel
         self.channel = grpc.insecure_channel(
-            '{}:{}'.format(host, port))
+            '{}:{}'.format(host, port), options=(('grpc.enable_http_proxy', 0),))
 
         # bind the client and the server
         self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
