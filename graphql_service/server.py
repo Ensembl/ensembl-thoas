@@ -16,6 +16,7 @@ import os
 from typing import Optional
 
 from ariadne.asgi import GraphQL
+from ariadne.asgi.handlers import GraphQLHTTPHandler
 from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
 from ariadne.types import ExtensionList
 from pymongo import monitoring
@@ -78,6 +79,8 @@ APP.mount(
         EXECUTABLE_SCHEMA,
         debug=DEBUG_MODE,
         context_value=CONTEXT_PROVIDER,
-        extensions=EXTENSIONS,
+        http_handler=GraphQLHTTPHandler(
+            extensions=EXTENSIONS,
+        ),
     ),
 )
