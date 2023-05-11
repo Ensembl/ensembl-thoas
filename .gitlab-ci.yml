@@ -59,7 +59,7 @@ test:
 build:
   extends: .build
   only:
-    - main
+    - develop
 
 # deploy application to k8s cluster for k8s-deploy branch
 deploy:
@@ -67,4 +67,4 @@ deploy:
   environment:
     name: thoas-graphql
   only:
-    - main
+    - develop
