@@ -18,6 +18,8 @@ from typing import Optional
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
 from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
+from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_query
+from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
 from pymongo import monitoring
 from starlette.applications import Starlette
@@ -72,6 +74,87 @@ starlette_middleware = [
     Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 ]
 
+# The original HTML file can be found under
+# [venv]/ariadne/explorer/templates/graphiql.html
+CUSTOM_GRAPHIQL_HTML = read_template(
+    os.path.dirname(os.path.realpath(__file__)) + "/templates/custom_graphiql.html"
+)
+
+DEFAULT_QUERY = """
+#
+# GraphiQL is an in -browser tool for writing, validating, and
+# testing GraphQL queries.
+#
+# Type queries into this side of the screen, and you will see intelligent
+# typeaheads aware of the current GraphQL type schema and live syntax and
+# validation errors highlighted within the text.
+#
+# GraphQL queries typically start with a "{" character. Lines that start
+# with a # are ignored.
+#
+# An example GraphQL query might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#
+#       }
+#
+#     }
+#
+# Keyboard shortcuts:
+#
+#   Prettify query: Shift - Ctrl - P(or press the prettify button)
+#
+#  Merge fragments: Shift - Ctrl - M(or press the merge button)
+#
+#        Run Query: Ctrl - Enter(or press the play button)
+#
+#    Auto Complete: Ctrl - Space(or just start typing)
+#
+query ENSG00000139618 {
+  gene(
+    by_id: {genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618"}
+  ) {
+    alternative_symbols
+    name
+    so_term
+    stable_id
+    transcripts {
+      stable_id
+      symbol
+    }
+  }
+}
+"""
+
+
+class CustomExplorerGraphiQL(ExplorerGraphiQL):
+    """
+    We can customize the GraphiQL interface in Ariadne by overriding the ExplorerGraphiQL class
+    which is responsible for rendering the default GraphiQL UI
+    """
+
+    def __init__(
+        self,
+        title: str = "Ensembl Core API",
+        explorer_plugin: bool = True,
+        default_query: str = DEFAULT_QUERY,
+    ):
+        super(CustomExplorerGraphiQL, self).__init__()
+        self.parsed_html = render_template(
+            CUSTOM_GRAPHIQL_HTML,
+            {
+                "title": title,
+                "enable_explorer_plugin": explorer_plugin,
+                "default_query": escape_default_query(default_query),
+            },
+        )
+
+    def html(self, _):
+        return self.parsed_html
+
+
 APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
 APP.mount(
     "/",
@@ -82,5 +165,6 @@ APP.mount(
         http_handler=GraphQLHTTPHandler(
             extensions=EXTENSIONS,
         ),
+        explorer=CustomExplorerGraphiQL(),
     ),
 )
