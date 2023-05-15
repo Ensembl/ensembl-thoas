@@ -29,6 +29,7 @@ from starlette.middleware.cors import CORSMiddleware
 from common.logger import CommandLogger
 from common.utils import load_config
 from common.crossrefs import XrefResolver
+from common.extensions import QueryExecutionTimeExtension
 from common import mongo
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
@@ -40,9 +41,9 @@ print(os.environ)
 CONFIG = load_config(os.getenv("GQL_CONF"))
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
-EXTENSIONS: Optional[
-    ExtensionList
-] = None  # mypy will throw an incompatible type error without this type cast
+
+# Including the execution time in the response
+EXTENSIONS: Optional[ExtensionList] = [QueryExecutionTimeExtension]
 
 if DEBUG_MODE:
     log = logging.getLogger()
@@ -53,9 +54,7 @@ if DEBUG_MODE:
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
-    # To see it in the GraphQL playground, make sure you have `"tracing.hideTracingResponse": false` in the playground
-    # settings
-    EXTENSIONS = [ApolloTracingExtension]
+    EXTENSIONS.append(ApolloTracingExtension)
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
