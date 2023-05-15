@@ -102,6 +102,9 @@ DEFAULT_QUERY = """
 #
 #     }
 #
+# In the example below we added "query ENSG00000139618" 
+# to give the query a name which is optional
+# 
 # Keyboard shortcuts:
 #
 #   Prettify query: Shift - Ctrl - P(or press the prettify button)
@@ -150,9 +153,6 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
                 "default_query": escape_default_query(default_query),
             },
         )
-
-    def html(self, _):
-        return self.parsed_html
 
 
 APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
