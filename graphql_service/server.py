@@ -41,9 +41,12 @@ print(os.environ)
 CONFIG = load_config(os.getenv("GQL_CONF"))
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
+EXTENSIONS: Optional[
+    ExtensionList
+] = None  # mypy will throw an incompatible type error without this type cast
 
 # Including the execution time in the response
-EXTENSIONS: Optional[ExtensionList] = [QueryExecutionTimeExtension]
+EXTENSIONS = [QueryExecutionTimeExtension]
 
 if DEBUG_MODE:
     log = logging.getLogger()
