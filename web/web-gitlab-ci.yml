@@ -24,17 +24,29 @@ variables:
     - docker rmi ${DOCKER_IMAGE}
     - docker logout $CI_REGISTRY
 
-# Template to deploy application to k8s cluster
 .deploy:
   stage: deploy
   image: dockerhub.ebi.ac.uk/kamal/deploy-tools:0.1
 
+# Template to deploy application to web's k8s cluster
+.deploy-web:
+  extends: .deploy  
   script:
-    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
-    - kubectl apply -f web/k8s/thoas_deployment.yaml
-  
+    - echo "Deploying to web k8s"
+#    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
+#    - kubectl apply -f web/k8s/thoas_deployment.yaml
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "nodeaffinity" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+
+# Template to deploy application to apps k8s cluster
+.deploy-apps:
+  extends: .deploy
+  script:
+    - echo "Deploying to apps k8s"
+#    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/web-prod/thoas_deployment.yaml
+#    - kubectl apply -f k8s/web-prod/thoas_deployment.yaml
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "nodeaffinity" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
 
 # Run a suite of unit and integration tests
 test:
@@ -51,10 +63,11 @@ build:
   extends: .build
   only:
     - main
+    - nodeaffinity
 
 # deploy to dev at WP-HX
 deploy:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name: wp-hx-dev-grp
 
