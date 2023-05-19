@@ -73,36 +73,36 @@ deploy:
 
 # deploy to staging at WP-HX
 staging:wp-hx:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name: wp-hx-staging
 
 # deploy to staging at WP-HH
 staging:wp-hh:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name: wp-hh-staging
 
 # deploy to internal at WP-HX
 internal:wp-hx:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name: wp-hx-internal
 
 # deploy to internal at WP-HH
 internal:wp-hh:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name: wp-hh-internal
     
  # deploy to live at WP-HX
 live:wp-hx:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name : wp-hx-live
 
 # deploy to live at WP-HL
 live:wp-hl:
-  extends: .deploy
+  extends: .deploy-web
   environment:
     name : wp-hh-live
