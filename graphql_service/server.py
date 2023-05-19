@@ -27,7 +27,6 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
 from common.logger import CommandLogger
-from common.utils import load_config
 from common.crossrefs import XrefResolver
 from common.extensions import QueryExecutionTimeExtension
 from common import mongo
@@ -37,8 +36,6 @@ from graphql_service.ariadne_app import (
 )
 
 print(os.environ)
-
-CONFIG = load_config(os.getenv("GQL_CONF"))
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
@@ -59,7 +56,7 @@ if DEBUG_MODE:
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
 
-MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
+MONGO_CLIENT = mongo.MongoDbClient(os.environ)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
