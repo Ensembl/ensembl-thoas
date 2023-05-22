@@ -59,6 +59,23 @@ if DEBUG_MODE:
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
 
+
+# Experimenting with query logging with debug mode off
+# Create the logger
+command_log = logging.getLogger("command_logger")
+command_log.setLevel(logging.DEBUG)
+# Create a file handler and set its level to DEBUG
+file_handler = logging.FileHandler("thoas_logs.log")
+file_handler.setLevel(logging.DEBUG)
+# Create a formatter and add it to the file handler
+formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+file_handler.setFormatter(formatter)
+# Add the file handler to the logger
+command_log.addHandler(file_handler)
+# Register the logger
+monitoring.register(CommandLogger(command_log))
+
+
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()

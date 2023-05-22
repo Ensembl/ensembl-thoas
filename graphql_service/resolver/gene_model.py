@@ -17,6 +17,7 @@ from typing import Dict, Optional, List, Any
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
 
+from common.logger import ThoasLogging
 from graphql_service.resolver.exceptions import (
     GeneNotFoundError,
     TranscriptNotFoundError,
@@ -77,6 +78,10 @@ def resolve_gene(
     result = collection.find_one(query)
     if not result:
         raise GeneNotFoundError(by_id=by_id)
+
+    logger = ThoasLogging(logging_file='thoas_logs.log', logger_name='client_info_logger')
+    logger.log_client_info(info.context['request'].scope)
+
     return result
 
 
