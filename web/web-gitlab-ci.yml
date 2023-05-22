@@ -106,3 +106,8 @@ live:wp-hl:
   extends: .deploy-web
   environment:
     name : wp-hh-live
+
+deploy:
+  extends: .deploy-apps
+  environment:
+    name: thoas-graphql
