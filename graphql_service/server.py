@@ -66,6 +66,7 @@ command_log = logging.getLogger("command_logger")
 command_log.setLevel(logging.DEBUG)
 # Create a file handler and set its level to DEBUG
 file_handler = logging.FileHandler("thoas_logs.log")
+file_handler = logging.StreamHandler()
 file_handler.setLevel(logging.DEBUG)
 # Create a formatter and add it to the file handler
 formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")

@@ -60,6 +60,7 @@ build:
   extends: .build
   only:
     - develop
+    - feat/add_logging
 
 # deploy application to k8s cluster for k8s-deploy branch
 deploy:
@@ -68,3 +69,4 @@ deploy:
     name: thoas-graphql
   only:
     - develop
+    - feat/add_logging

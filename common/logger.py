@@ -10,7 +10,10 @@ class ThoasLogging:
 
         self.logger_name = logger_name
         self.logging_file = logging_file
+        # store the logs in .log file
         self.logging_handler = logging.FileHandler(self.logging_file)
+        # and print them out in the stdout
+        self.logging_handler = logging.StreamHandler()
 
         logger = logging.getLogger(self.logger_name)
         logger.addHandler(self.logging_handler)
