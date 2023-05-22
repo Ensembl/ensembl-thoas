@@ -79,8 +79,10 @@ def resolve_gene(
     if not result:
         raise GeneNotFoundError(by_id=by_id)
 
-    logger = ThoasLogging(logging_file='thoas_logs.log', logger_name='client_info_logger')
-    logger.log_client_info(info.context['request'].scope)
+    logger = ThoasLogging(
+        logging_file="thoas_logs.log", logger_name="client_info_logger"
+    )
+    logger.log_client_info(info.context["request"].scope)
 
     return result
 

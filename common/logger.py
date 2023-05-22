@@ -58,12 +58,14 @@ class ThoasLogging:
         mentioned above (and more!) are stored
         """
         # Override Logging format specific to some_other_logger
-        formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+        )
         self.logging_handler.setFormatter(formatter)
 
         method = log_scope.get("method")
         # turn {"client": ("127.0.0.1", 58017)} to "127.0.0.1:58017"
-        client_ip_address = ':'.join(map(str, log_scope["client"]))
+        client_ip_address = ":".join(map(str, log_scope["client"]))
         user_agent = log_scope["headers"][1][1].decode().split("/")[0]
         # referer may not exist, I'll keep it commented for now
         # referer = log_scope["headers"][5][1].decode()
