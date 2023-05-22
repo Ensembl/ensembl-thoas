@@ -59,6 +59,7 @@ build:
     - develop
     - main
     - nodeaffinity
+    - test-mirroring
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
@@ -78,7 +79,7 @@ build:
 #    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/web-prod/thoas_deployment.yaml
 #    - kubectl apply -f k8s/web-prod/thoas_deployment.yaml
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "nodeaffinity" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "test-mirroring" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
 
 # deploy to staging at WP-HX
 staging:wp-hx:
