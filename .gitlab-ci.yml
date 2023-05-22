@@ -126,6 +126,3 @@ deploy-apps:
   extends: .deploy-apps
   environment:
     name: thoas-graphql
-  only:
-    - develop
-    - nodeaffinity
