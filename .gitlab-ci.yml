@@ -6,15 +6,15 @@ stages:
 
 # GitLab Dependency Proxy to get rid of Docker hub pull limit issue
 # https://docs.gitlab.com/ee/user/packages/dependency_proxy/#authenticate-within-cicd
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
+# image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
 
 # This fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
 variables:
   # DOCKER_HOST variable tells docker how to connect to the daemon (a background service running inside the Docker VM)
-  DOCKER_HOST: tcp://docker:2375/
+  # DOCKER_HOST: tcp://docker:2375/
   # Environment Variable for docker:dind service explaining to use overlay2 as supporting driver for docker
   # https://docs.docker.com/storage/storagedriver/overlayfs-driver/
-  DOCKER_DRIVER: overlay2
+  # DOCKER_DRIVER: overlay2
   # We need to disable TLS (https://about.gitlab.com/blog/2019/07/31/docker-in-docker-with-docker-19-dot-03/#disable-tls)
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
