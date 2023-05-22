@@ -60,14 +60,6 @@ build:
     - main
     - nodeaffinity
 
-# deploy application to k8s cluster for k8s-deploy branch
-deploy-apps:
-  extends: .deploy
-  environment:
-    name: thoas-graphql
-  only:
-    - develop
-
 # Template to deploy application to web's k8s cluster
 .deploy-web:
   extends: .deploy
@@ -125,6 +117,15 @@ live:wp-hl:
     name : wp-hh-live
 
 deploy-web:
+  extends: .deploy-web
+  environment:
+    name: wp-hx-dev-grp
+
+# deploy application to k8s cluster for k8s-deploy branch
+deploy-apps:
   extends: .deploy-apps
   environment:
     name: thoas-graphql
+  only:
+    - develop
+    - nodeaffinity
