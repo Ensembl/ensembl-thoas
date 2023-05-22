@@ -11,18 +11,22 @@ class ThoasLogging:
         self.logger_name = logger_name
         self.logging_file = logging_file
         # store the logs in .log file
-        self.logging_handler = logging.FileHandler(self.logging_file)
+        self.file_handler = logging.FileHandler(self.logging_file)
         # and print them out in the stdout
-        self.logging_handler = logging.StreamHandler()
+        self.console_handler = logging.StreamHandler()
 
         logger = logging.getLogger(self.logger_name)
-        logger.addHandler(self.logging_handler)
 
         # Set generic format
         formatter = logging.Formatter("*****\n%(levelname)s \n%(message)s \n*****")
 
-        self.logging_handler.setFormatter(formatter)
-        self.logging_handler.setLevel(logging.DEBUG)
+        self.file_handler.setFormatter(formatter)
+        self.console_handler.setFormatter(formatter)
+        # self.file_handler.setLevel(logging.DEBUG)
+        # self.console_handler.setLevel(logging.DEBUG)
+
+        logger.addHandler(self.file_handler)
+        logger.addHandler(self.console_handler)
 
     def url_logger(self, **kwargs):
 
@@ -64,7 +68,8 @@ class ThoasLogging:
         formatter = logging.Formatter(
             "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
         )
-        self.logging_handler.setFormatter(formatter)
+        self.file_handler.setFormatter(formatter)
+        self.console_handler.setFormatter(formatter)
 
         method = log_scope.get("method")
         # turn {"client": ("127.0.0.1", 58017)} to "127.0.0.1:58017"

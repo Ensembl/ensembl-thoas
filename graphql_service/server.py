@@ -48,33 +48,54 @@ EXTENSIONS: Optional[
 # Including the execution time in the response
 EXTENSIONS = [QueryExecutionTimeExtension]
 
+
+log = logging.getLogger()
+
 if DEBUG_MODE:
-    log = logging.getLogger()
     log.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
-
-    monitoring.register(CommandLogger(log))
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
+else:
+    log.setLevel(logging.ERROR)
+    logging.basicConfig(
+        filename="thoas_logs.out",
+        level=logging.ERROR,
+        format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+    )
 
+monitoring.register(CommandLogger(log))
 
+"""
 # Experimenting with query logging with debug mode off
 # Create the logger
 command_log = logging.getLogger("command_logger")
 command_log.setLevel(logging.DEBUG)
-# Create a file handler and set its level to DEBUG
-file_handler = logging.FileHandler("thoas_logs.log")
-file_handler = logging.StreamHandler()
-file_handler.setLevel(logging.DEBUG)
-# Create a formatter and add it to the file handler
+
+# Comment this to suppress console output
+console_handler = logging.StreamHandler()
+# console_handler.setLevel(logging.DEBUG)
+command_log.addHandler(console_handler)
+
+# Create INFO file handler
+file_handler_info = logging.FileHandler("thoas_logs.out")
 formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
-file_handler.setFormatter(formatter)
-# Add the file handler to the logger
-command_log.addHandler(file_handler)
+file_handler_info.setFormatter(formatter)
+# file_handler_info.setLevel(logging.DEBUG)
+command_log.addHandler(file_handler_info)
+
+
+# Create ERROR file handler
+file_handler_error = logging.FileHandler("thoas_logs.err")
+formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+file_handler_error.setFormatter(formatter)
+# file_handler_error.setLevel(logging.DEBUG)
+command_log.addHandler(file_handler_error)
 # Register the logger
 monitoring.register(CommandLogger(command_log))
+"""
 
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
