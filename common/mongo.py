@@ -46,7 +46,7 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("host")
+        host = config.get("host").split(",")
         port = int(config.get("port"))
         user = config.get("username")
         password = config.get("password")
