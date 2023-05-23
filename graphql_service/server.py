@@ -62,9 +62,7 @@ if DEBUG_MODE:
 # Experimenting with query logging with debug mode off
 log.setLevel(logging.DEBUG)
 logging.basicConfig(
-    filename="thoas_logs.log",
-    level=logging.DEBUG,
-    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+    level=logging.DEBUG, format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 )
 
 monitoring.register(CommandLogger(log))
@@ -156,7 +154,7 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         explorer_plugin: bool = True,
         default_query: str = DEFAULT_QUERY,
     ):
-        super(CustomExplorerGraphiQL, self).__init__()
+        super().__init__()
         self.parsed_html = render_template(
             CUSTOM_GRAPHIQL_HTML,
             {
