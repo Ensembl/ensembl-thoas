@@ -59,7 +59,7 @@ class MongoDbClient:
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
         )
-        print("connected to MongoDB " + host)
+        print(f"connected to MongoDB {host}")
         return client[dbname]
 
     def collection(self):
