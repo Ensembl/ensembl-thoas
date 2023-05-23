@@ -116,13 +116,13 @@ live:wp-hl:
   environment:
     name : wp-hh-live
 
-deploy-web:
+deploy:web:
   extends: .deploy-web
   environment:
     name: wp-hx-dev-grp
 
 # deploy application to k8s cluster for k8s-deploy branch
-deploy:
+deploy:apps:
   extends: .deploy
   environment:
     name: thoas-graphql
