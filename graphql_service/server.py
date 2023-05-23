@@ -49,7 +49,7 @@ EXTENSIONS: Optional[
 EXTENSIONS = [QueryExecutionTimeExtension]
 
 
-log = logging.getLogger()
+log = logging.getLogger("command_logger")
 
 if DEBUG_MODE:
     log.setLevel(logging.DEBUG)
@@ -58,45 +58,16 @@ if DEBUG_MODE:
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
-else:
-    log.setLevel(logging.ERROR)
-    logging.basicConfig(
-        filename="thoas_logs.out",
-        level=logging.ERROR,
-        format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
-    )
+
+# Experimenting with query logging with debug mode off
+log.setLevel(logging.DEBUG)
+logging.basicConfig(
+    filename="thoas_logs.log",
+    level=logging.DEBUG,
+    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+)
 
 monitoring.register(CommandLogger(log))
-
-"""
-# Experimenting with query logging with debug mode off
-# Create the logger
-command_log = logging.getLogger("command_logger")
-command_log.setLevel(logging.DEBUG)
-
-# Comment this to suppress console output
-console_handler = logging.StreamHandler()
-# console_handler.setLevel(logging.DEBUG)
-command_log.addHandler(console_handler)
-
-# Create INFO file handler
-file_handler_info = logging.FileHandler("thoas_logs.out")
-formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
-file_handler_info.setFormatter(formatter)
-# file_handler_info.setLevel(logging.DEBUG)
-command_log.addHandler(file_handler_info)
-
-
-# Create ERROR file handler
-file_handler_error = logging.FileHandler("thoas_logs.err")
-formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
-file_handler_error.setFormatter(formatter)
-# file_handler_error.setLevel(logging.DEBUG)
-command_log.addHandler(file_handler_error)
-# Register the logger
-monitoring.register(CommandLogger(command_log))
-"""
-
 
 MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
 
