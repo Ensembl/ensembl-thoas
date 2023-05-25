@@ -30,7 +30,7 @@ class MongoDbClient:
         """
         self.mongo_db = MongoDbClient.connect_mongo(config)
         try:
-            self.collection_name = config.get("MONGO DB", "collection")
+            self.collection_name = config.get("collection")
             print(
                 f"Using MongoDB collection with name {self.collection_name} from config file"
             )
@@ -46,11 +46,11 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("MONGO DB", "host")
-        port = config.getint("MONGO DB", "port")
-        user = config.get("MONGO DB", "user")
-        password = config.get("MONGO DB", "password")
-        dbname = config.get("MONGO DB", "db")
+        host = config.get("host").split(",")
+        port = int(config.get("port"))
+        user = config.get("username")
+        password = config.get("password")
+        dbname = config.get("database")
 
         client = pymongo.MongoClient(
             host,
@@ -59,7 +59,7 @@ class MongoDbClient:
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
         )
-        print("connected to MongoDB " + host)
+        print(f"connected to MongoDB {host}")
         return client[dbname]
 
     def collection(self):
