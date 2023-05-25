@@ -34,8 +34,10 @@ from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
 )
+from dotenv import load_dotenv
 
 
+load_dotenv("example.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
