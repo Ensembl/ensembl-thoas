@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thoas-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thoas-server
+  template:
+    metadata:
+      labels:
+        app: thoas-server
+    spec:
+      imagePullSecrets:
+        - name: ensemblweb-pull-secret 
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workload
+                operator: In
+                values:
+                - webteam
+      containers:
+        - name: thoas-server
+          image: DOCKER_IMAGE
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: thoas-configmap
+            - secretRef:
+                name: mongo-config
+          command: ["uvicorn"]
+          args: [
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "graphql_service.server:APP"
+          ]
