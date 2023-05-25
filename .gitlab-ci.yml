@@ -71,6 +71,15 @@ build:
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
+# Template to deploy application to web's k8s cluster
+.deploy-web-public:
+  extends: .deploy
+  script:
+    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
+    - kubectl apply -f web/k8s/thoas_deployment.yaml
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "refactor-k8s" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+
 # Template to deploy application to apps k8s cluster
 .deploy-apps:
   extends: .deploy
@@ -115,6 +124,11 @@ live:wp-hl:
   extends: .deploy-web
   environment:
     name : wp-hh-live
+
+deploy:public:
+  extends: .deploy-web-public
+  environment:
+    name: wp40-hl-public
 
 deploy:web:
   extends: .deploy-web
