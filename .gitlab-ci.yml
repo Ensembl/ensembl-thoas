@@ -130,7 +130,7 @@ live:wp-hl:
 deploy:public:
   extends: .deploy-web-public
   variables:
-    BASE: k8s/web-prd/overlays/public-graphql
+    BASE: k8s/web-prod/overlays/public-graphql
   environment:
     name: wp40-hl-public
 
