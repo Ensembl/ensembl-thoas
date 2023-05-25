@@ -36,7 +36,7 @@ variables:
     - docker logout $CI_REGISTRY
 
 # Template to deploy application to k8s cluster
-# At the moment, possible values for ${CI_PROJECT_NAMESPACE} are either 'ensembl-apps' or 'ensembl-web'
+# At the moment, possible values for ${CI_PROJECT_NAMESPACE} are 'ensembl-apps' or 'ensembl-web'
 .deploy:
   stage: deploy
   image: dockerhub.ebi.ac.uk/${CI_PROJECT_NAMESPACE}/deploy-tools:latest
