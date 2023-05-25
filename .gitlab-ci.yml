@@ -19,6 +19,7 @@ variables:
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  BASE: k8s/web-prd/base
 
 # Template to build docker image
 .build:
@@ -61,6 +62,7 @@ build:
   only:
     - develop
     - main
+    - refactor-k8s
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
@@ -75,8 +77,10 @@ build:
 .deploy-web-public:
   extends: .deploy
   script:
-    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
-    - kubectl apply -f web/k8s/thoas_deployment.yaml
+    - cd ${BASE}
+    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
+    - kustomize build ${BASE} | kubectl apply -f -
+
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "refactor-k8s" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
@@ -127,6 +131,8 @@ live:wp-hl:
 
 deploy:public:
   extends: .deploy-web-public
+  variables:
+    BASE: k8s/web-prd/overlays/public-graphql
   environment:
     name: wp40-hl-public
 
