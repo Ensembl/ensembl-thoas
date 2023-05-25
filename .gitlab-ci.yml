@@ -10,8 +10,6 @@ image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
 
 # This fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
 variables:
-  # DOCKER_HOST variable tells docker how to connect to the daemon (a background service running inside the Docker VM)
-  DOCKER_HOST: tcp://docker:2375/
   # Environment Variable for docker:dind service explaining to use overlay2 as supporting driver for docker
   # https://docs.docker.com/storage/storagedriver/overlayfs-driver/
   DOCKER_DRIVER: overlay2
@@ -79,9 +77,9 @@ build:
   script:
     - cd ${BASE}
     - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
-    - kustomize build ${BASE} | kubectl apply -f -
+    - kustomize build ${BASE}x | kubectl apply -f -
 
-  rules:
+  rules:x
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "refactor-k8s" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
 # Template to deploy application to apps k8s cluster
