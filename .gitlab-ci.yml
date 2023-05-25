@@ -17,7 +17,7 @@ variables:
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  BASE: k8s/web-prd/base
+  BASE: k8s/web-prod/base
 
 # Template to build docker image
 .build:
