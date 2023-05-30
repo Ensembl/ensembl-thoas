@@ -36,9 +36,10 @@ variables:
     - docker logout $CI_REGISTRY
 
 # Template to deploy application to k8s cluster
+# At the moment, possible values for ${CI_PROJECT_NAMESPACE} are 'ensembl-apps' or 'ensembl-web'
 .deploy:
   stage: deploy
-  image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
+  image: dockerhub.ebi.ac.uk/${CI_PROJECT_NAMESPACE}/deploy-tools:latest
 
   script:
     - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/web-prod/thoas_deployment.yaml
