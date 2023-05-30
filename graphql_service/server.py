@@ -37,7 +37,7 @@ from graphql_service.ariadne_app import (
 from dotenv import load_dotenv
 
 
-load_dotenv("example.conf")
+load_dotenv("mongo.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
