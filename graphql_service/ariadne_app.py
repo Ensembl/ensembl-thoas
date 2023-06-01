@@ -75,13 +75,13 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         mongo_db = context["mongo_db"]
         xref_resolver = context["XrefResolver"]
         batch_loaders = BatchLoaders(mongo_db)
-        grpc_client = context["grpc_client"]
+        grpc_model = context["grpc_model"]
         return {
             "request": request,
             "mongo_db": mongo_db,
             "XrefResolver": xref_resolver,
             "loaders": batch_loaders,
-            "grpc_client": grpc_client,
+            "grpc_model": grpc_model,
         }
 
     return context_provider

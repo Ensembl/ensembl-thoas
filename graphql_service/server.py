@@ -26,8 +26,8 @@ from starlette.middleware.cors import CORSMiddleware
 from common.logger import CommandLogger
 from common.utils import load_config
 from common.crossrefs import XrefResolver
-from common import mongo
-from common.grpc.client import GRPCClient
+from common import db
+from grpc_service import grpc_model
 
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
@@ -56,9 +56,11 @@ if DEBUG_MODE:
     # settings
     EXTENSIONS = [ApolloTracingExtension]
 
-MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
+MONGO_CLIENT = db.MongoDbClient(CONFIG)
 
-GRPC_CLIENT = GRPCClient(CONFIG)
+GRPC_SERVER = db.GRPCServer(CONFIG)
+GRPC_STUB = GRPC_SERVER.get_grpc_stub()
+GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
 
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
@@ -69,7 +71,7 @@ CONTEXT_PROVIDER = prepare_context_provider(
     {
         "mongo_db": MONGO_CLIENT.collection(),
         "XrefResolver": RESOLVER,
-        "grpc_client": GRPC_CLIENT,
+        "grpc_model": GRPC_MODEL,
     }
 )
 

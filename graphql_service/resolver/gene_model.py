@@ -550,10 +550,10 @@ def resolve_genomes(
     if sum(map(bool, [by_genome_uuid, by_keyword, by_assembly_acc_id, by_genome_name])) != 1:
         raise InputFieldArgumentNumberError(1)
 
-    grpc_client = info.context["grpc_client"]
+    grpc_model = info.context["grpc_model"]
 
     if by_genome_uuid:
-        result = grpc_client.get_genome_by_genome_uuid(by_genome_uuid.get('genome_uuid'),
+        result = grpc_model.get_genome_by_genome_uuid(by_genome_uuid.get('genome_uuid'),
                                                        by_genome_uuid.get('release_version'))
         if not result.genome_uuid:
             raise GenomeNotFoundError(by_genome_uuid)
@@ -561,7 +561,7 @@ def resolve_genomes(
         return genomes
 
     if by_keyword:
-        result = grpc_client.get_genome_by_keyword(by_keyword.get('keyword'),
+        result = grpc_model.get_genome_by_keyword(by_keyword.get('keyword'),
                                                        by_keyword.get('release_version'))
         genomes = list(result)
         if not genomes:
@@ -570,23 +570,21 @@ def resolve_genomes(
         return genomes
 
     if by_assembly_acc_id:
-        result = grpc_client.get_genome_by_assembly_acc_id(by_assembly_acc_id.get('assembly_accession_id'))
+        result = grpc_model.get_genome_by_assembly_acc_id(by_assembly_acc_id.get('assembly_accession_id'))
         genomes = list(result)
         if not genomes:
             raise GenomeNotFoundError(by_assembly_acc_id)
         genomes = list(map(create_genome_response, genomes))
         return genomes
 
-
     if by_genome_name:
-        result = grpc_client.get_genome_by_genome_name(by_genome_name.get('ensembl_name'),
+        result = grpc_model.get_genome_by_genome_name(by_genome_name.get('ensembl_name'),
                                                        by_genome_name.get('site_name'),
                                                        by_genome_name.get('release_version'))
         if not result.genome_uuid:
             raise GenomeNotFoundError(by_genome_name)
         genomes = list(map(create_genome_response, [result]))
         return genomes
-
 
 
 def create_genome_response(genome):

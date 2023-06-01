@@ -15,6 +15,8 @@ from configparser import NoOptionError
 
 import pymongo
 import mongomock
+import grpc
+from grpc_service import ensembl_metadata_pb2_grpc as ensembl_metadata_pb2_grpc
 from pymongo.event_loggers import CommandLogger
 
 
@@ -81,3 +83,25 @@ class FakeMongoDbClient:
 
     def collection(self):
         return self.mongo_db[self.collection_name]
+
+
+
+class GRPCServer(object):
+
+    def __init__(self, config):
+
+        host = config.get("GRPC", "host")
+        port = config.get("GRPC", "port")
+
+        # instantiate a channel
+        self.channel = grpc.insecure_channel(
+            '{}:{}'.format(host, port), options=(('grpc.enable_http_proxy', 0),))
+
+        # bind the client and the server
+        self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
+
+
+    def get_grpc_stub(self):
+        return self.stub
+
+
