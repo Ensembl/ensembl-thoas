@@ -61,7 +61,6 @@ build:
   only:
     - develop
     - main
-    - refactor-k8s
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
