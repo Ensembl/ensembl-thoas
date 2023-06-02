@@ -80,7 +80,7 @@ build:
     - kustomize build . | kubectl apply -f -
 
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "refactor-k8s" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
 # Template to deploy application to apps k8s cluster
 .deploy-apps:
