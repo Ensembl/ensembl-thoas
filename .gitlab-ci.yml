@@ -10,8 +10,6 @@ image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
 
 # This fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
 variables:
-  # DOCKER_HOST variable tells docker how to connect to the daemon (a background service running inside the Docker VM)
-  DOCKER_HOST: tcp://docker:2375/
   # Environment Variable for docker:dind service explaining to use overlay2 as supporting driver for docker
   # https://docs.docker.com/storage/storagedriver/overlayfs-driver/
   DOCKER_DRIVER: overlay2
@@ -19,6 +17,7 @@ variables:
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  BASE: k8s/web-prod/base
 
 # Template to build docker image
 .build:
@@ -62,6 +61,7 @@ build:
   only:
     - develop
     - main
+    - refactor-k8s
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
@@ -71,6 +71,17 @@ build:
     - kubectl apply -f web/k8s/thoas_deployment.yaml
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+
+# Template to deploy application to web's k8s cluster
+.deploy-web-public:
+  extends: .deploy
+  script:
+    - cd ${BASE}
+    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
+    - kustomize build . | kubectl apply -f -
+
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
 # Template to deploy application to apps k8s cluster
 .deploy-apps:
@@ -116,6 +127,13 @@ live:wp-hl:
   extends: .deploy-web
   environment:
     name : wp-hh-live
+
+deploy:public:
+  extends: .deploy-web-public
+  variables:
+    BASE: k8s/web-prod/overlays/public-graphql
+  environment:
+    name: wp40-hl-public
 
 deploy:web:
   extends: .deploy-web

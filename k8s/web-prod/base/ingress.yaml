@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: thoas-server-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: hostname
+    http:
+      paths:
+      - backend:
+          service:
+            name: thoas-server-svc
+            port:
+              number: 8000
+        path: path
+        pathType: Prefix
