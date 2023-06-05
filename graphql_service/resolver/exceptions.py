@@ -155,6 +155,7 @@ class SliceLimitExceededError(GraphQLError):
         message = f"Slice query met size limit of {max_results_size}"
         super().__init__(message, extensions=self.extensions)
 
+
 class InputFieldArgumentNumberError(GraphQLError):
     """
     Custom error to be raised if wrong number of input arguments are sent

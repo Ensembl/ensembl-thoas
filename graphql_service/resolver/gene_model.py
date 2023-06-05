@@ -539,30 +539,35 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 
 @QUERY_TYPE.field("genomes")
 def resolve_genomes(
-        _,
-        info: GraphQLResolveInfo,
-        by_genome_uuid: Optional[Dict[str, str]] = None,
-        by_keyword: Optional[Dict[str, str]] = None,
-        by_assembly_acc_id: Optional[Dict[str, str]] = None,
-        by_genome_name: Optional[Dict[str, str]] = None,
+    _,
+    info: GraphQLResolveInfo,
+    by_genome_uuid: Optional[Dict[str, str]] = None,
+    by_keyword: Optional[Dict[str, str]] = None,
+    by_assembly_acc_id: Optional[Dict[str, str]] = None,
+    by_genome_name: Optional[Dict[str, str]] = None,
 ) -> List:
 
-    if sum(map(bool, [by_genome_uuid, by_keyword, by_assembly_acc_id, by_genome_name])) != 1:
+    if (
+        sum(map(bool, [by_genome_uuid, by_keyword, by_assembly_acc_id, by_genome_name]))
+        != 1
+    ):
         raise InputFieldArgumentNumberError(1)
 
     grpc_model = info.context["grpc_model"]
 
     if by_genome_uuid:
-        result = grpc_model.get_genome_by_genome_uuid(by_genome_uuid.get('genome_uuid'),
-                                                       by_genome_uuid.get('release_version'))
+        result = grpc_model.get_genome_by_genome_uuid(
+            by_genome_uuid.get("genome_uuid"), by_genome_uuid.get("release_version")
+        )
         if not result.genome_uuid:
             raise GenomeNotFoundError(by_genome_uuid)
         genomes = list(map(create_genome_response, [result]))
         return genomes
 
     if by_keyword:
-        result = grpc_model.get_genome_by_keyword(by_keyword.get('keyword'),
-                                                       by_keyword.get('release_version'))
+        result = grpc_model.get_genome_by_keyword(
+            by_keyword.get("keyword"), by_keyword.get("release_version")
+        )
         genomes = list(result)
         if not genomes:
             raise GenomeNotFoundError(by_keyword)
@@ -570,7 +575,9 @@ def resolve_genomes(
         return genomes
 
     if by_assembly_acc_id:
-        result = grpc_model.get_genome_by_assembly_acc_id(by_assembly_acc_id.get('assembly_accession_id'))
+        result = grpc_model.get_genome_by_assembly_acc_id(
+            by_assembly_acc_id.get("assembly_accession_id")
+        )
         genomes = list(result)
         if not genomes:
             raise GenomeNotFoundError(by_assembly_acc_id)
@@ -578,9 +585,11 @@ def resolve_genomes(
         return genomes
 
     if by_genome_name:
-        result = grpc_model.get_genome_by_genome_name(by_genome_name.get('ensembl_name'),
-                                                       by_genome_name.get('site_name'),
-                                                       by_genome_name.get('release_version'))
+        result = grpc_model.get_genome_by_genome_name(
+            by_genome_name.get("ensembl_name"),
+            by_genome_name.get("site_name"),
+            by_genome_name.get("release_version"),
+        )
         if not result.genome_uuid:
             raise GenomeNotFoundError(by_genome_name)
         genomes = list(map(create_genome_response, [result]))
@@ -588,8 +597,10 @@ def resolve_genomes(
 
 
 def create_genome_response(genome):
-    response = {"genome_id": genome.genome_uuid,
-                "assembly_accession": genome.assembly.accession,
-                "scientific_name": genome.organism.scientific_name,
-                "release_number": genome.release.release_version}
+    response = {
+        "genome_id": genome.genome_uuid,
+        "assembly_accession": genome.assembly.accession,
+        "scientific_name": genome.organism.scientific_name,
+        "release_number": genome.release.release_version,
+    }
     return response

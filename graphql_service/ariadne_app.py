@@ -31,7 +31,7 @@ from graphql_service.resolver.gene_model import (
     ORGANISM_TYPE,
     SPECIES_TYPE,
     TRANSCRIPT_PAGE_TYPE,
-    GENOME_TYPE
+    GENOME_TYPE,
 )
 
 

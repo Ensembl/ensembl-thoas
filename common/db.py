@@ -85,9 +85,7 @@ class FakeMongoDbClient:
         return self.mongo_db[self.collection_name]
 
 
-
 class GRPCServer(object):
-
     def __init__(self, config):
 
         host = config.get("GRPC", "host")
@@ -95,13 +93,11 @@ class GRPCServer(object):
 
         # instantiate a channel
         self.channel = grpc.insecure_channel(
-            '{}:{}'.format(host, port), options=(('grpc.enable_http_proxy', 0),))
+            "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
+        )
 
         # bind the client and the server
         self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
 
-
     def get_grpc_stub(self):
         return self.stub
-
-
