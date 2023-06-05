@@ -66,8 +66,9 @@ build:
 .deploy-web:
   extends: .deploy
   script:
-    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" web/k8s/thoas_deployment.yaml
-    - kubectl apply -f web/k8s/thoas_deployment.yaml
+    - cd ${BASE}
+    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
+    - kubectl apply -k ${BASE}
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
@@ -136,6 +137,8 @@ deploy:public:
 
 deploy:web:
   extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/dev
   environment:
     name: wp-hx-dev-grp
 
