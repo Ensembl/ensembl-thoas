@@ -61,6 +61,7 @@ build:
   only:
     - develop
     - main
+    - fix-deploy
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
