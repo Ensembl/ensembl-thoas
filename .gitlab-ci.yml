@@ -66,4 +66,4 @@ deploy:
   environment:
     name: thoas-graphql
   only:
-    - feature/uuid_search
+    - develop
