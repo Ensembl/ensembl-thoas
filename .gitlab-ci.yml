@@ -69,7 +69,7 @@ build:
   script:
     - cd ${BASE}
     - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
-    - kubectl apply -k ${BASE}
+    - kubectl apply -k .
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "fix-deploy" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
