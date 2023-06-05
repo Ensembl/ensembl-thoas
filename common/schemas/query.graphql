@@ -18,10 +18,10 @@ type Query {
                  by_slice: SliceInput): Locus
   region(by_name: RegionNameInput!): Region
 
-  genomes(by_genome_uuid: GenomeUUIDInput,
-          by_keyword: GenomeByKeywordInput,
-          by_assembly_acc_id: AssemblyAccessionIDInput,
-          by_genome_name: GenomeNameInput): [Genome]
+  genomes(by_keyword: GenomeByKeywordInput,
+          by_assembly_accession_id: AssemblyAccessionIDInput): [Genome]
+
+  genome(by_genome_uuid: GenomeUUIDInput): Genome
 
 }
 
@@ -65,10 +65,4 @@ input GenomeByKeywordInput {
 
 input AssemblyAccessionIDInput {
   assembly_accession_id: String!
-}
-
-input GenomeNameInput {
-  ensembl_name: String!
-  site_name: String!
-  release_version: Float
 }

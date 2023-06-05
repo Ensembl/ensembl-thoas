@@ -50,8 +50,6 @@ ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
-GENOME_TYPE = ObjectType("Genome")
-
 
 @QUERY_TYPE.field("gene")
 def resolve_gene(
@@ -541,28 +539,17 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 def resolve_genomes(
     _,
     info: GraphQLResolveInfo,
-    by_genome_uuid: Optional[Dict[str, str]] = None,
     by_keyword: Optional[Dict[str, str]] = None,
-    by_assembly_acc_id: Optional[Dict[str, str]] = None,
-    by_genome_name: Optional[Dict[str, str]] = None,
+    by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
 
     if (
-        sum(map(bool, [by_genome_uuid, by_keyword, by_assembly_acc_id, by_genome_name]))
+        sum(map(bool, [by_keyword, by_assembly_accession_id]))
         != 1
     ):
         raise InputFieldArgumentNumberError(1)
 
     grpc_model = info.context["grpc_model"]
-
-    if by_genome_uuid:
-        result = grpc_model.get_genome_by_genome_uuid(
-            by_genome_uuid.get("genome_uuid"), by_genome_uuid.get("release_version")
-        )
-        if not result.genome_uuid:
-            raise GenomeNotFoundError(by_genome_uuid)
-        genomes = list(map(create_genome_response, [result]))
-        return genomes
 
     if by_keyword:
         result = grpc_model.get_genome_by_keyword(
@@ -574,26 +561,33 @@ def resolve_genomes(
         genomes = list(map(create_genome_response, genomes))
         return genomes
 
-    if by_assembly_acc_id:
+    if by_assembly_accession_id:
         result = grpc_model.get_genome_by_assembly_acc_id(
-            by_assembly_acc_id.get("assembly_accession_id")
+            by_assembly_accession_id.get("assembly_accession_id")
         )
         genomes = list(result)
         if not genomes:
-            raise GenomeNotFoundError(by_assembly_acc_id)
+            raise GenomeNotFoundError(by_assembly_accession_id)
         genomes = list(map(create_genome_response, genomes))
         return genomes
 
-    if by_genome_name:
-        result = grpc_model.get_genome_by_genome_name(
-            by_genome_name.get("ensembl_name"),
-            by_genome_name.get("site_name"),
-            by_genome_name.get("release_version"),
-        )
-        if not result.genome_uuid:
-            raise GenomeNotFoundError(by_genome_name)
-        genomes = list(map(create_genome_response, [result]))
-        return genomes
+@QUERY_TYPE.field("genome")
+def resolve_genome(
+    _,
+    info: GraphQLResolveInfo,
+    by_genome_uuid: Optional[Dict[str, str]] = None
+) -> Dict:
+
+    grpc_model = info.context["grpc_model"]
+
+    genome = grpc_model.get_genome_by_genome_uuid(
+        by_genome_uuid.get("genome_uuid"), by_genome_uuid.get("release_version")
+    )
+    if not genome.genome_uuid:
+        raise GenomeNotFoundError(by_genome_uuid)
+    genomes = create_genome_response(genome)
+    return genomes
+
 
 
 def create_genome_response(genome):

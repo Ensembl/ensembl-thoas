@@ -25,12 +25,3 @@ class GRPC_MODEL:
         )
         response = self.grpc_stub.GetGenomesByAssemblyAccessionID(request)
         return response
-
-    def get_genome_by_genome_name(self, ensembl_name, site_name, release_version=None):
-        request = ensembl_metadata_pb2.GenomeNameRequest(
-            ensembl_name=ensembl_name,
-            site_name=site_name,
-            release_version=release_version,
-        )
-        response = self.grpc_stub.GetGenomeByName(request)
-        return response
