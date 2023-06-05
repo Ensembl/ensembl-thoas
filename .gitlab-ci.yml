@@ -70,7 +70,7 @@ build:
     - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
     - kubectl apply -k ${BASE}
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "fix-deploy" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
 # Template to deploy application to web's k8s cluster
 .deploy-web-public:
