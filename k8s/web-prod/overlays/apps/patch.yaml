@@ -1,0 +1,4 @@
+# Use apps-pull-secret instead of ensemblweb-pull-secret
+- op: replace
+  path: /spec/template/spec/imagePullSecrets/0/name
+  value: apps-pull-secret
