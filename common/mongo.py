@@ -59,7 +59,13 @@ class MongoDbClient:
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
         )
-        print(f"connected to MongoDB {host}")
+        try:
+            # make sure the connection is established successfully
+            client.server_info()
+            print(f"Connected to MongoDB {host}")
+        except Exception:
+            raise "Connection to mongo Failed"
+
         return client[dbname]
 
     def collection(self):
