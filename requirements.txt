@@ -2,7 +2,7 @@ mongomock==4.0.0
 pymongo==4.1.1
 requests==2.28.0
 aiodataloader==0.2.1
-ariadne==0.15.1
+ariadne==0.19.1
 python-dotenv==0.20.0
 uvicorn==0.18.1
 grpcio==1.38.1

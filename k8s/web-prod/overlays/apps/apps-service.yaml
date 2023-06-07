@@ -1,0 +1,17 @@
+# Apps is using a NodePort Service instead of ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: thoas-server-svc
+  namespace: ensembl-apps
+  labels:
+    app: thoas-server-svc
+spec:
+  selector:
+    app: thoas-server
+  type: NodePort
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: 8000
+      nodePort: 30152

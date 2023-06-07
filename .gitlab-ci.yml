@@ -10,8 +10,6 @@ image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
 
 # This fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
 variables:
-  # DOCKER_HOST variable tells docker how to connect to the daemon (a background service running inside the Docker VM)
-  DOCKER_HOST: tcp://docker:2375/
   # Environment Variable for docker:dind service explaining to use overlay2 as supporting driver for docker
   # https://docs.docker.com/storage/storagedriver/overlayfs-driver/
   DOCKER_DRIVER: overlay2
@@ -19,6 +17,7 @@ variables:
   # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
   DOCKER_TLS_CERTDIR: ""
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  BASE: k8s/web-prod/base
 
 # Template to build docker image
 .build:
@@ -36,13 +35,15 @@ variables:
     - docker logout $CI_REGISTRY
 
 # Template to deploy application to k8s cluster
+# At the moment, possible values for ${CI_PROJECT_NAMESPACE} are 'ensembl-apps' or 'ensembl-web'
 .deploy:
   stage: deploy
-  image: dockerhub.ebi.ac.uk/ensembl-apps/ensembl-thoas/deploy-tools:latest
+  image: dockerhub.ebi.ac.uk/${CI_PROJECT_NAMESPACE}/deploy-tools:latest
 
   script:
-    - sed -i "s#<DOCKER_IMAGE>#${DOCKER_IMAGE}#g" k8s/web-prod/thoas_deployment.yaml
-    - kubectl apply -f k8s/web-prod/thoas_deployment.yaml
+    - cd ${BASE}
+    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
+    - kustomize build . | kubectl apply -f -
 
 # Run a suite of unit and integration tests
 test:
@@ -59,11 +60,87 @@ build:
   extends: .build
   only:
     - feature/uuid_search
+    - develop
+    - main
+
+# Template to deploy application to web's k8s cluster
+.deploy-web:
+  extends: .deploy
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+
+# Template to deploy application to apps k8s cluster
+.deploy-apps:
+  extends: .deploy
+  variables:
+    BASE: k8s/web-prod/overlays/apps
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "feature/uuid_search" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
+
+# deploy to staging at WP-HX
+staging:wp-hx:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/staging
+  environment:
+    name: wp-hx-staging
+
+# deploy to staging at WP-HH
+staging:wp-hh:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/staging
+  environment:
+    name: wp-hh-staging
+
+# deploy to internal at WP-HX
+internal:wp-hx:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/internal
+  environment:
+    name: wp-hx-internal
+
+# deploy to internal at WP-HH
+internal:wp-hh:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/intenal
+  environment:
+    name: wp-hh-internal
+
+ # deploy to live at WP-HX
+live:wp-hx:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/prod
+  environment:
+    name : wp-hx-live
+
+# deploy to live at WP-HL
+live:wp-hl:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/prod
+  environment:
+    name : wp-hh-live
+
+deploy:public:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/public-graphql
+  environment:
+    name: wp40-hl-public
+
+deploy:web:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/dev
+  environment:
+    name: wp-hx-dev-grp
 
 # deploy application to k8s cluster for k8s-deploy branch
-deploy:
-  extends: .deploy
+deploy:apps:
+  extends: .deploy-apps
   environment:
     name: thoas-graphql
-  only:
-    - develop
