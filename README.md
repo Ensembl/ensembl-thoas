@@ -22,12 +22,14 @@ Put configuration MongoDB configuration `./mongo.conf`
 
 The file follows the following template:
 ```
-host=IP_ADDRESS
-port=PORT
-user=MONGO_USER
-password=MONGO_PASS
-db=MONGO_DB_NAME
-collection=MONGO_COLLECTION
+mongo_host=MONGO_IP_ADDRESS
+mongo_port=MONGO_PORT
+mongo_user=MONGO_USER
+mongo_password=MONGO_PASS
+mongo_db=MONGO_DB_NAME
+mongo_collection=MONGO_COLLECTION
+grpc_host=GRPC_HOST
+grpc_port=GRPC_PORT
 ```
 
 This command will start the server:

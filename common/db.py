@@ -32,7 +32,7 @@ class MongoDbClient:
         """
         self.mongo_db = MongoDbClient.connect_mongo(config)
         try:
-            self.collection_name = config.get("collection")
+            self.collection_name = config.get("mongo_collection")
             print(
                 f"Using MongoDB collection with name {self.collection_name} from config file"
             )
@@ -48,11 +48,11 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("host").split(",")
-        port = int(config.get("port"))
-        user = config.get("user")
-        password = config.get("password")
-        dbname = config.get("db")
+        host = config.get("mongo_host").split(",")
+        port = int(config.get("mongo_port"))
+        user = config.get("mongo_user")
+        password = config.get("mongo_password")
+        dbname = config.get("mongo_db")
 
         client = pymongo.MongoClient(
             host,
@@ -94,8 +94,8 @@ class FakeMongoDbClient:
 class GRPCServer(object):
     def __init__(self, config):
 
-        host = config.get("GRPC", "host")
-        port = config.get("GRPC", "port")
+        host = config.get("grpc_host")
+        port = config.get("grpc_port")
 
         # instantiate a channel
         self.channel = grpc.insecure_channel(
