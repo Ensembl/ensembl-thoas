@@ -569,10 +569,12 @@ def resolve_genomes(
         genomes = list(map(create_genome_response, genomes))
         return genomes
 
+    return []
+
 
 @QUERY_TYPE.field("genome")
 def resolve_genome(
-    _, info: GraphQLResolveInfo, by_genome_uuid: Optional[Dict[str, str]] = None
+    _, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]
 ) -> Dict:
 
     grpc_model = info.context["grpc_model"]
