@@ -51,6 +51,7 @@ ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
 
+
 @QUERY_TYPE.field("gene")
 def resolve_gene(
     _,
@@ -543,10 +544,7 @@ def resolve_genomes(
     by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
 
-    if (
-        sum(map(bool, [by_keyword, by_assembly_accession_id]))
-        != 1
-    ):
+    if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
         raise InputFieldArgumentNumberError(1)
 
     grpc_model = info.context["grpc_model"]
@@ -571,11 +569,10 @@ def resolve_genomes(
         genomes = list(map(create_genome_response, genomes))
         return genomes
 
+
 @QUERY_TYPE.field("genome")
 def resolve_genome(
-    _,
-    info: GraphQLResolveInfo,
-    by_genome_uuid: Optional[Dict[str, str]] = None
+    _, info: GraphQLResolveInfo, by_genome_uuid: Optional[Dict[str, str]] = None
 ) -> Dict:
 
     grpc_model = info.context["grpc_model"]
@@ -587,7 +584,6 @@ def resolve_genome(
         raise GenomeNotFoundError(by_genome_uuid)
     genomes = create_genome_response(genome)
     return genomes
-
 
 
 def create_genome_response(genome):

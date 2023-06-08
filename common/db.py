@@ -16,9 +16,7 @@ from configparser import NoOptionError
 import pymongo
 import mongomock
 import grpc
-from grpc_service import ensembl_metadata_pb2_grpc as ensembl_metadata_pb2_grpc
-from pymongo.event_loggers import CommandLogger
-
+from grpc_service import ensembl_metadata_pb2_grpc
 
 class MongoDbClient:
     """
@@ -65,8 +63,8 @@ class MongoDbClient:
             # make sure the connection is established successfully
             client.server_info()
             print(f"Connected to MongoDB {host}")
-        except Exception:
-            raise "Connection to mongo Failed"
+        except Exception as exc:
+            raise "Connection to mongo Failed" from exc
 
         return client[dbname]
 
@@ -91,7 +89,7 @@ class FakeMongoDbClient:
         return self.mongo_db[self.collection_name]
 
 
-class GRPCServer(object):
+class GRPCServer:
     def __init__(self, config):
 
         host = config.get("grpc_host")
