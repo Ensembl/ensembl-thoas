@@ -53,6 +53,7 @@ test:
     - export META_CLASSIFIER_PATH=$PWD/docs/metadata_classifiers/
   script:
     - pylint $(git ls-files '*.py') --fail-under=9.5
+    - mypy graphql_service
     - pytest
 
 # Build docker image for k8s-deploy branch
