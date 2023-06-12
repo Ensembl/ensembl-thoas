@@ -1,4 +1,4 @@
-from grpc_service import ensembl_metadata_pb2 as ensembl_metadata_pb2
+from grpc_service import ensembl_metadata_pb2
 
 
 class GRPC_MODEL:
