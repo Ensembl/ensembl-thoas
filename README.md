@@ -22,18 +22,17 @@ Put configuration MongoDB configuration `./mongo.conf`
 
 The file follows the following template:
 ```
-[MONGO DB]
-host = 
-port = 
-user = 
-password = 
-db = 
-collection = 
+host=IP_ADDRESS
+port=PORT
+user=MONGO_USER
+password=MONGO_PASS
+db=MONGO_DB_NAME
+collection=MONGO_COLLECTION
 ```
 
 This command will start the server:
 
-```GQL_CONF=mongo.conf uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP```
+```uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP```
 
 
 If you're developing in PyCharm, you will probably find it useful to create a run 

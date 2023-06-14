@@ -1,0 +1,8 @@
+.env
+k8s/
+web/
+.github
+.git
+.gitlab-ci.yml
+example.conf
+example_load.conf

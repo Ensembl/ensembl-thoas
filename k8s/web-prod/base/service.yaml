@@ -2,15 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: thoas-server-svc
-  namespace: ensembl-apps
   labels:
     app: thoas-server-svc
 spec:
   selector:
     app: thoas-server
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: 8000
       protocol: TCP
       targetPort: 8000
-      nodePort: 30152
