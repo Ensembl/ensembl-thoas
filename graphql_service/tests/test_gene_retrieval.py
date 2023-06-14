@@ -167,3 +167,35 @@ async def test_transcript_pagination(snapshot):
     )
     assert success
     snapshot.assert_match(result["data"])
+
+
+@pytest.mark.asyncio
+async def test_transcript_pagination_filters(snapshot):
+    """
+    Run a query checking pagination with filters
+    """
+    query = """
+    {
+        gene(by_id:{
+          genome_id:"homo_sapiens_GCA_000001405_28",
+          stable_id: "ENSG00000139618.15"
+        }) {
+            transcripts_page(page: 1, per_page:2, filters: {biotype: ["protein_coding"]}) {
+                transcripts {
+                    stable_id
+                }
+                page_metadata {
+                    total_count
+                    page
+                    per_page
+                }
+            }
+        }
+    }
+    """
+    query_data = {"query": query}
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=add_loaders_to_context(context)
+    )
+    assert success
+    snapshot.assert_match(result["data"])
