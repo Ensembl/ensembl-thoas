@@ -16,7 +16,7 @@ from configparser import NoOptionError
 import pymongo
 import mongomock
 import grpc
-from grpc_service import ensembl_metadata_pb2_grpc
+from ensembl.production.metadata import ensembl_metadata_pb2_grpc
 
 class MongoDbClient:
     """
