@@ -38,7 +38,7 @@ from graphql_service.ariadne_app import (
 from dotenv import load_dotenv
 
 
-load_dotenv("mongo.conf")
+load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
@@ -61,7 +61,7 @@ if DEBUG_MODE:
 
 MONGO_CLIENT = db.MongoDbClient(os.environ)
 
-GRPC_SERVER = db.GRPCServer(os.environ)
+GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
 GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
 

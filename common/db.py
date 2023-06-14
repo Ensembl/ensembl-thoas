@@ -89,7 +89,7 @@ class FakeMongoDbClient:
         return self.mongo_db[self.collection_name]
 
 
-class GRPCServer:
+class GRPCServiceClient:
     def __init__(self, config):
 
         host = config.get("grpc_host")

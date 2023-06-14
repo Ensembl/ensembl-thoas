@@ -1,4 +1,4 @@
-mongo.conf
+connections.conf
 load.conf
 
 # Byte-compiled / optimized / DLL files
