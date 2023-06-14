@@ -6,7 +6,7 @@ stages:
 
 # GitLab Dependency Proxy to get rid of Docker hub pull limit issue
 # https://docs.gitlab.com/ee/user/packages/dependency_proxy/#authenticate-within-cicd
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.7
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8
 
 # This fixes "error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 192.168.65.5:53: no such host"
 variables:
