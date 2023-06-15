@@ -173,3 +173,16 @@ class GenomeNotFoundError(FieldNotFoundError):
 
     def __init__(self, by_genome_uuid):
         super().__init__("genome", by_genome_uuid)
+
+
+class MissingArgumentException(GraphQLError):
+    """
+    Exception raised when a required argument is missing.
+    """
+    def __init__(self, message: str):
+        """Initializes a MissingArgumentException instance.
+
+        Args:
+            message: The error message describing the missing argument.
+        """
+        super().__init__(message)

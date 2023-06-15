@@ -33,6 +33,7 @@ from graphql_service.resolver.exceptions import (
     RegionFromSliceNotFoundError,
     InputFieldArgumentNumberError,
     GenomeNotFoundError,
+    MissingArgumentException,
 )
 
 # Define Query types for GraphQL
@@ -174,7 +175,14 @@ def resolve_transcript(
     if by_id is None:
         by_id = byId
 
-    assert by_id or by_symbol
+    # in case the user provides both arguments or none
+    if sum(map(bool, [by_symbol, by_id])) != 1:
+        # ask them to provide at least one argument
+        if not by_symbol and not by_id:
+            raise MissingArgumentException(
+                "You must provide either 'by_symbol' or 'by_id' argument.")
+        # or in case they provided both, ask them to provide one only
+        raise InputFieldArgumentNumberError(1)
 
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
@@ -544,7 +552,13 @@ def resolve_genomes(
     by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
 
+    # in case the user provides both arguments or none
     if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
+        # ask them to provide at least one argument
+        if not by_keyword and not by_assembly_accession_id:
+            raise MissingArgumentException(
+                "You must provide either 'by_keyword' or 'by_assembly_accession_id' argument.")
+        # or in case they provided both, ask them to provide one only
         raise InputFieldArgumentNumberError(1)
 
     grpc_model = info.context["grpc_model"]
