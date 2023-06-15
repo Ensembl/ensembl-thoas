@@ -25,3 +25,10 @@ type Species {
   taxon_id: Int!
   organisms: [Organism!]!
 }
+
+type Genome {
+  genome_id: String!
+  assembly_accession: String!
+  scientific_name: String!
+  release_number: Float!
+}

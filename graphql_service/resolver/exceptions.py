@@ -154,3 +154,22 @@ class SliceLimitExceededError(GraphQLError):
     def __init__(self, max_results_size: int):
         message = f"Slice query met size limit of {max_results_size}"
         super().__init__(message, extensions=self.extensions)
+
+
+class InputFieldArgumentNumberError(GraphQLError):
+    """
+    Custom error to be raised if wrong number of input arguments are sent
+    """
+
+    def __init__(self, number_of_input_arguments: int):
+        message = f"Set {number_of_input_arguments} input argument(s)"
+        super().__init__(message)
+
+
+class GenomeNotFoundError(FieldNotFoundError):
+    """
+    Custom error to be raised if product is not found
+    """
+
+    def __init__(self, by_genome_uuid):
+        super().__init__("genome", by_genome_uuid)

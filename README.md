@@ -9,7 +9,7 @@ GraphQL requires a schema (in /common) and implementation of resolver functions 
 https://www.ebi.ac.uk/seqdb/confluence/display/EA/Thoas+Docs
 
 ## Installation
-Requires Python 3.7+.  
+Requires Python 3.8+.  
 
 To install dependencies, run:
 
@@ -18,16 +18,18 @@ To install dependencies, run:
 `pip install -r requirements-dev.txt` installs everything including dev dependencies like pytest, mypy etc.
 
 ## Running the API locally
-Put configuration MongoDB configuration `./mongo.conf`
+Add MongoDB and GRPC configuration `./connections.conf`
 
 The file follows the following template:
 ```
-host=IP_ADDRESS
-port=PORT
-user=MONGO_USER
-password=MONGO_PASS
-db=MONGO_DB_NAME
-collection=MONGO_COLLECTION
+mongo_host=MONGO_IP_ADDRESS
+mongo_port=MONGO_PORT
+mongo_user=MONGO_USER
+mongo_password=MONGO_PASS
+mongo_db=MONGO_DB_NAME
+mongo_collection=MONGO_COLLECTION
+grpc_host=GRPC_HOST
+grpc_port=GRPC_PORT
 ```
 
 This command will start the server:
@@ -82,9 +84,6 @@ Run a container with the image (`--publish` below is exposing the container's po
 
 `docker container run --publish 0.0.0.0:80:80/tcp --publish 0.0.0.0:8000:8000/tcp -ti $NAME:$VERSION`
 
-There are two other Dockerfiles in this repo at `k8s/Dockerfile` and `web/Dockerfile`.  These Dockerfiles are intended 
-to be used in Kubernetes, and for those the Mongo configuration is passed in a different way to the `./Dockerfile`.  In 
-`./Dockerfile` the Mongo conf is assumed to exist in the repo as the file `./mongo.conf` and gets built into the Docker 
-image.  For the other Dockerfiles the configuration is not in the image.  Instead it gets externalised as a variable pointing to 
-a location where the config file has been mounted using a k8s object called a config-map.  If we want to emulate this 
+The connection configuration is assumed to exist in the repo as the file `./connections.conf` and gets built into the Docker 
+image. On Kubernetes cluster, these configs are passed through k8s objects called a escrets.  If we want to emulate this 
 in Docker then we could look into using Docker [bind mounts](https://docs.docker.com/storage/bind-mounts/).

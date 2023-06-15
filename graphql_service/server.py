@@ -28,8 +28,9 @@ from starlette.middleware.cors import CORSMiddleware
 
 from common.logger import CommandLogger
 from common.crossrefs import XrefResolver
+from common import db
+from grpc_service import grpc_model
 from common.extensions import QueryExecutionTimeExtension
-from common import mongo
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
@@ -37,7 +38,7 @@ from graphql_service.ariadne_app import (
 from dotenv import load_dotenv
 
 
-load_dotenv("mongo.conf")
+load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
 EXTENSIONS: Optional[
@@ -58,7 +59,7 @@ if DEBUG_MODE:
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
 
-MONGO_CLIENT = mongo.MongoDbClient(os.environ)
+MONGO_CLIENT = db.MongoDbClient(os.environ)
 # Experimenting with query logging with debug mode off
 log.setLevel(logging.DEBUG)
 logging.basicConfig(
@@ -67,7 +68,11 @@ logging.basicConfig(
 
 monitoring.register(CommandLogger(log))
 
-MONGO_CLIENT = mongo.MongoDbClient(CONFIG)
+MONGO_CLIENT = db.MongoDbClient(os.environ)
+
+GRPC_SERVER = db.GRPCServiceClient(os.environ)
+GRPC_STUB = GRPC_SERVER.get_grpc_stub()
+GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
@@ -77,6 +82,7 @@ CONTEXT_PROVIDER = prepare_context_provider(
     {
         "mongo_db": MONGO_CLIENT.collection(),
         "XrefResolver": RESOLVER,
+        "grpc_model": GRPC_MODEL,
     }
 )
 
