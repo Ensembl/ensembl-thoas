@@ -15,8 +15,8 @@ from configparser import NoOptionError
 
 import pymongo
 import mongomock
-from pymongo.event_loggers import CommandLogger
-
+import grpc
+from ensembl.production.metadata import ensembl_metadata_pb2_grpc
 
 class MongoDbClient:
     """
@@ -30,7 +30,7 @@ class MongoDbClient:
         """
         self.mongo_db = MongoDbClient.connect_mongo(config)
         try:
-            self.collection_name = config.get("collection")
+            self.collection_name = config.get("mongo_collection")
             print(
                 f"Using MongoDB collection with name {self.collection_name} from config file"
             )
@@ -46,11 +46,11 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("host").split(",")
-        port = int(config.get("port"))
-        user = config.get("user")
-        password = config.get("password")
-        dbname = config.get("db")
+        host = config.get("mongo_host").split(",")
+        port = int(config.get("mongo_port"))
+        user = config.get("mongo_user")
+        password = config.get("mongo_password")
+        dbname = config.get("mongo_db")
 
         client = pymongo.MongoClient(
             host,
@@ -63,8 +63,8 @@ class MongoDbClient:
             # make sure the connection is established successfully
             client.server_info()
             print(f"Connected to MongoDB {host}")
-        except Exception:
-            raise "Connection to mongo Failed"
+        except Exception as exc:
+            raise "Connection to mongo Failed" from exc
 
         return client[dbname]
 
@@ -87,3 +87,21 @@ class FakeMongoDbClient:
 
     def collection(self):
         return self.mongo_db[self.collection_name]
+
+
+class GRPCServiceClient:
+    def __init__(self, config):
+
+        host = config.get("grpc_host")
+        port = config.get("grpc_port")
+
+        # instantiate a channel
+        self.channel = grpc.insecure_channel(
+            "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
+        )
+
+        # bind the client and the server
+        self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
+
+    def get_grpc_stub(self):
+        return self.stub

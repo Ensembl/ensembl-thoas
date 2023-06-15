@@ -13,12 +13,6 @@
 """
 
 from configparser import ConfigParser
-import argparse
-import sys
-from string import Template
-
-import pymongo
-import requests
 
 
 def load_config(filename):
