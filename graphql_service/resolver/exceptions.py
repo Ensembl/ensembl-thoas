@@ -179,6 +179,7 @@ class MissingArgumentException(GraphQLError):
     """
     Exception raised when a required argument is missing.
     """
+
     def __init__(self, message: str):
         """Initializes a MissingArgumentException instance.
 

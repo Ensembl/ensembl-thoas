@@ -2,7 +2,7 @@
 
 type Query {
   version: Version
-  gene(byId: IdInput @deprecated(reason: "Use `by_id`"), by_id: IdInput!): Gene
+  gene(byId: IdInput @deprecated(reason: "Use `by_id`"), by_id: IdInput): Gene
   genes(by_symbol: SymbolInput!): [Gene]
   transcript(bySymbol: SymbolInput @deprecated(reason: "Use `by_symbol`"),
              by_symbol: SymbolInput,
@@ -10,12 +10,12 @@ type Query {
              by_id: IdInput): Transcript
   product(genome_id: String @deprecated(reason: "Use `by_id`"),
           stable_id: String @deprecated(reason: "Use `by_id`"),
-          by_id: IdInput!): Product
+          by_id: IdInput): Product
   overlap_region(genomeId: String @deprecated(reason: "Use `by_slice`"),
                  regionName: String @deprecated(reason: "Use `by_slice`"),
                  start: Int @deprecated(reason: "Use `by_slice`"),
                  end: Int @deprecated(reason: "Use `by_slice`")
-                 by_slice: SliceInput!): Locus
+                 by_slice: SliceInput): Locus
   region(by_name: RegionNameInput!): Region
 
   genomes(by_keyword: GenomeByKeywordInput,
