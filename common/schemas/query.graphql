@@ -21,7 +21,7 @@ type Query {
   genomes(by_keyword: GenomeByKeywordInput,
           by_assembly_accession_id: AssemblyAccessionIDInput): [Genome]
 
-  genome(by_genome_uuid: GenomeUUIDInput): Genome
+  genome(by_genome_uuid: GenomeUUIDInput!): Genome
 
 }
 
