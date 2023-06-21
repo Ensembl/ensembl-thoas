@@ -70,6 +70,9 @@ def resolve_gene(
             "You must provide 'by_id' or 'byId' (deprecated) argument."
         )
 
+    # this is needed for mypy to pass
+    assert by_id
+
     query = {
         "type": "Gene",
         "$or": [
@@ -187,6 +190,9 @@ def resolve_transcript(
             )
         # or in case they provided both, ask them to provide one only
         raise InputFieldArgumentNumberError(1)
+
+    # this is needed for mypy to pass
+    assert by_id or by_symbol
 
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
@@ -335,6 +341,9 @@ def resolve_overlap(
             "You must provide 'by_slice' or all four 'genomeId' (deprecated), 'regionName' (deprecated), 'start' (deprecated) and 'end' (deprecated) arguments."
         )
 
+    # this is needed for mypy to pass
+    assert genome_id and region_name and start and end
+
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
     return {
@@ -408,6 +417,9 @@ def resolve_product_by_id(
         raise MissingArgumentException(
             "You must provide 'by_id' or both 'genome_id' (deprecated) and 'stable_id' (deprecated) arguments."
         )
+
+    # this is needed for mypy to pass
+    assert genome_id and stable_id
 
     query = {
         "genome_id": genome_id,
