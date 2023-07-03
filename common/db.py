@@ -17,6 +17,7 @@ import pymongo
 import mongomock
 import grpc
 from ensembl.production.metadata import ensembl_metadata_pb2_grpc
+from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 
 class MongoDbClient:
@@ -25,23 +26,36 @@ class MongoDbClient:
     management
     """
 
-    def __init__(self, config, collection_name=None):
+    def __init__(self, config):
         """
         Note that config here is a configparser object
         """
-        self.mongo_db = MongoDbClient.connect_mongo(config)
-        try:
-            self.collection_name = config.get("mongo_collection")
-            print(
-                f"Using MongoDB collection with name {self.collection_name} from config file"
-            )
-        except NoOptionError as no_option_error:
-            if not collection_name:
-                raise IOError(
-                    "Unable to find a MongoDB collection name"
-                ) from no_option_error
-            self.collection_name = collection_name
-            print(f"Using injected MongoDB collection with name {self.collection_name}")
+        self.config = config
+        self.mongo_db = MongoDbClient.connect_mongo(self.config)
+
+    def get_collection_conn(self, uuid):
+
+        mapping_collection = self.config.get("mongo_mapping_collection")
+        # print(mapping_collection)
+        query = {
+            "uuid": uuid,
+            "is_current": True
+        }
+
+        # Find the data collection corresponding to the given UUID
+        data_collection = self.mongo_db[mapping_collection].find_one(query)
+        # print(data_collection)
+
+        # Fallback to the collection in the configuration file if no collection found in the mappings
+        # for the given UUID
+        data_collection_name = self.config.get("mongo_default_collection") if not data_collection \
+            else data_collection.get("collection")
+
+        print("Using '{}' collection for '{}' UUID".format(data_collection_name, uuid))
+
+        data_collection_connection = self.mongo_db[data_collection_name]
+
+        return data_collection_connection
 
     @staticmethod
     def connect_mongo(config):
@@ -68,12 +82,6 @@ class MongoDbClient:
             raise "Connection to mongo Failed" from exc
 
         return client[dbname]
-
-    def collection(self):
-        """
-        Get the currently set default collection to run queries against
-        """
-        return self.mongo_db[self.collection_name]
 
 
 class FakeMongoDbClient:

@@ -40,6 +40,10 @@ class BatchLoaders:
             batch_load_fn=self.batch_organism_by_species_load
         )
 
+
+    def set_collection_name(self, collecton_name):
+        self.collection_name = collecton_name
+
     async def batch_transcript_by_gene_load(self, keys: List[str]) -> List[List]:
         """
         Load many transcripts to satisfy a bunch of `await`s

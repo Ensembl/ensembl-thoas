@@ -70,13 +70,13 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
     def context_provider(request: Request) -> Dict:
         """We must return a new object with every request,
         otherwise the requests will pollute each other's state"""
-        mongo_db = context["mongo_db"]
+        mongo_db_client = context["mongo_db_client"]
         xref_resolver = context["XrefResolver"]
-        batch_loaders = BatchLoaders(mongo_db)
+        batch_loaders = BatchLoaders(mongo_db_client)
         grpc_model = context["grpc_model"]
         return {
             "request": request,
-            "mongo_db": mongo_db,
+            "mongo_db_client": mongo_db_client,
             "XrefResolver": xref_resolver,
             "loaders": batch_loaders,
             "grpc_model": grpc_model,

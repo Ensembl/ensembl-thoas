@@ -81,8 +81,7 @@ def resolve_gene(
         ],
         "genome_id": by_id["genome_id"],
     }
-
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(by_id["genome_id"])
     result = collection.find_one(query)
     if not result:
         raise GeneNotFoundError(by_id=by_id)
@@ -99,7 +98,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol["symbol"],
     }
 
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(by_symbol["genome_id"])
 
     result = collection.find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
@@ -114,7 +113,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 @PRODUCT_TYPE.field("external_references")
 def insert_crossref_urls(feature: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     """
-    A gene/transcript with cross references in the data model is given as
+    A gene/transcript with cross-references in the data model is given as
     argument. Using the crossrefs package we can infer URLs to those resources
     and inject them into the response
     """
@@ -210,7 +209,7 @@ def resolve_transcript(
 
     assert genome_id
 
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(genome_id)
     transcript = collection.find_one(query)
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
@@ -260,6 +259,7 @@ async def resolve_transcripts_page_transcripts(
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
     collection = info.context["mongo_db"]
+
     results = (
         collection.find(query)
         .sort([("stable_id", 1)])
@@ -301,7 +301,8 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         "genome_id": transcript["genome_id"],
         "stable_id": transcript["gene"],
     }
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(transcript["genome_id"])
+
     gene = collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
@@ -381,7 +382,8 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    results = list(context["mongo_db"].find(query).limit(max_results_size))
+    collection = context["mongo_db_client"].get_collection_conn(genome_id)
+    results = list(collection.find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
@@ -427,7 +429,7 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(genome_id)
     result = collection.find_one(query)
 
     if not result:
@@ -559,7 +561,7 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "genome_id": by_name["genome_id"],
         "name": by_name["name"],
     }
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_db_client"].get_collection_conn(by_name["genome_id"])
     result = collection.find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
