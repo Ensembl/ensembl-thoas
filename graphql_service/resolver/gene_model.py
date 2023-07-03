@@ -645,14 +645,14 @@ def create_genome_response(genome):
     return response
 
 
-def find_and_set_mongo_collection(context, UUID):
+def find_and_set_mongo_collection(context, uuid):
     # IMPORTANT: This function must be called from all the root level(@QUERY_TYPE) resolvers to set the context
     # for them and their child resolvers to connect to the correct Mongo collection
 
     # print(context)
 
     # Get the relevant collection for genome UUID
-    collection_conn = context["mongo_db_client"].get_collection_conn(UUID)
+    collection_conn = context["mongo_db_client"].get_collection_conn(uuid)
 
     # Add it to the context so that all the resolvers and their child resolvers can use it
     context["mongo_collection"] = collection_conn
@@ -661,4 +661,3 @@ def find_and_set_mongo_collection(context, UUID):
     context["loaders"].collection_conn = collection_conn
 
     # print(context)
-

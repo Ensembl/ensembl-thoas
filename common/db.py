@@ -11,13 +11,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from configparser import NoOptionError
-
 import pymongo
 import mongomock
 import grpc
 from ensembl.production.metadata import ensembl_metadata_pb2_grpc
-from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 
 class MongoDbClient:
@@ -37,10 +34,7 @@ class MongoDbClient:
 
         mapping_collection = self.config.get("mongo_mapping_collection")
         # print(mapping_collection)
-        query = {
-            "uuid": uuid,
-            "is_current": True
-        }
+        query = {"uuid": uuid, "is_current": True}
 
         # Find the data collection corresponding to the given UUID
         data_collection = self.mongo_db[mapping_collection].find_one(query)
@@ -48,8 +42,10 @@ class MongoDbClient:
 
         # Fallback to the collection in the configuration file if no collection found in the mappings
         # for the given UUID
-        data_collection_name = self.config.get("mongo_default_collection") if not data_collection \
-            else data_collection.get("collection")
+        if not data_collection:
+            data_collection_name = self.config.get("mongo_default_collection")
+        else:
+            data_collection_name = data_collection.get("collection")
 
         print("Using '{}' collection for '{}' UUID".format(data_collection_name, uuid))
 
