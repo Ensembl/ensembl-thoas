@@ -81,8 +81,11 @@ def resolve_gene(
         ],
         "genome_id": by_id["genome_id"],
     }
-    collection = info.context["mongo_db_client"].get_collection_conn(by_id["genome_id"])
-    result = collection.find_one(query)
+
+    find_and_set_mongo_collection(info.context, by_id["genome_id"])
+
+    result = info.context["mongo_collection"].find_one(query)
+
     if not result:
         raise GeneNotFoundError(by_id=by_id)
     return result
@@ -98,9 +101,9 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol["symbol"],
     }
 
-    collection = info.context["mongo_db_client"].get_collection_conn(by_symbol["genome_id"])
+    find_and_set_mongo_collection(info.context, by_symbol["genome_id"])
 
-    result = collection.find(query)
+    result = info.context["mongo_collection"].find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
@@ -209,8 +212,10 @@ def resolve_transcript(
 
     assert genome_id
 
-    collection = info.context["mongo_db_client"].get_collection_conn(genome_id)
-    transcript = collection.find_one(query)
+    find_and_set_mongo_collection(info.context, genome_id)
+
+    transcript = info.context["mongo_collection"].find_one(query)
+
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
     return transcript
@@ -258,7 +263,7 @@ async def resolve_transcripts_page_transcripts(
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_collection"]
 
     results = (
         collection.find(query)
@@ -277,7 +282,7 @@ async def resolve_transcripts_page_metadata(
         "type": "Transcript",
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
-    collection = info.context["mongo_db"]
+    collection = info.context["mongo_collection"]
     return {
         "total_count": collection.count_documents(query),
         "page": transcripts_page["page"],
@@ -301,7 +306,8 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         "genome_id": transcript["genome_id"],
         "stable_id": transcript["gene"],
     }
-    collection = info.context["mongo_db_client"].get_collection_conn(transcript["genome_id"])
+
+    collection = info.context["mongo_collection"]
 
     gene = collection.find_one(query)
     if not gene:
@@ -347,6 +353,9 @@ def resolve_overlap(
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
+
+    find_and_set_mongo_collection(info.context, genome_id)
+
     return {
         "genes": overlap_region(info.context, genome_id, region_id, start, end, "Gene"),
         "transcripts": overlap_region(
@@ -382,7 +391,7 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    collection = context["mongo_db_client"].get_collection_conn(genome_id)
+    collection = context["mongo_collection"]
     results = list(collection.find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
@@ -429,8 +438,8 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    collection = info.context["mongo_db_client"].get_collection_conn(genome_id)
-    result = collection.find_one(query)
+    find_and_set_mongo_collection(info.context, genome_id)
+    result = info.context["mongo_collection"].find_one(query)
 
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
@@ -485,8 +494,7 @@ async def resolve_assembly_from_region(
 
     query = {"type": "Assembly", "id": region["assembly_id"]}
 
-    collection = info.context["mongo_db"]
-    assembly = collection.find_one(query)
+    assembly = info.context["mongo_collection"].find_one(query)
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -561,8 +569,10 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "genome_id": by_name["genome_id"],
         "name": by_name["name"],
     }
-    collection = info.context["mongo_db_client"].get_collection_conn(by_name["genome_id"])
-    result = collection.find_one(query)
+
+    find_and_set_mongo_collection(info.context, by_name["genome_id"])
+
+    result = info.context["mongo_collection"].find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
@@ -633,3 +643,22 @@ def create_genome_response(genome):
         "release_number": genome.release.release_version,
     }
     return response
+
+
+def find_and_set_mongo_collection(context, UUID):
+    # IMPORTANT: This function must be called from all the root level(@QUERY_TYPE) resolvers to set the context
+    # for them and their child resolvers to connect to the correct Mongo collection
+
+    # print(context)
+
+    # Get the relevant collection for genome UUID
+    collection_conn = context["mongo_db_client"].get_collection_conn(UUID)
+
+    # Add it to the context so that all the resolvers and their child resolvers can use it
+    context["mongo_collection"] = collection_conn
+
+    # Update BatchLoader to use this collection
+    context["loaders"].collection_conn = collection_conn
+
+    # print(context)
+

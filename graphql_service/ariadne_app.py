@@ -72,7 +72,7 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         otherwise the requests will pollute each other's state"""
         mongo_db_client = context["mongo_db_client"]
         xref_resolver = context["XrefResolver"]
-        batch_loaders = BatchLoaders(mongo_db_client)
+        batch_loaders = BatchLoaders()
         grpc_model = context["grpc_model"]
         return {
             "request": request,

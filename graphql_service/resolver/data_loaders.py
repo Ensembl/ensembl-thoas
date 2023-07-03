@@ -21,8 +21,8 @@ from aiodataloader import DataLoader
 class BatchLoaders:
     """A collection of bulk data aggregators for "joins" in GraphQL"""
 
-    def __init__(self, mongo_client):
-        self.mongo_client = mongo_client
+    def __init__(self):
+        self.collection_conn = None
         self.transcript_loader = DataLoader(
             batch_load_fn=self.batch_transcript_by_gene_load
         )
@@ -39,10 +39,6 @@ class BatchLoaders:
         self.organism_by_species_loader = DataLoader(
             batch_load_fn=self.batch_organism_by_species_load
         )
-
-
-    def set_collection_name(self, collecton_name):
-        self.collection_name = collecton_name
 
     async def batch_transcript_by_gene_load(self, keys: List[str]) -> List[List]:
         """
@@ -126,4 +122,4 @@ class BatchLoaders:
         batch_transcript_load expects a list of results, and *must* call a single
         function in order to be valid.
         """
-        return list(self.mongo_client.find(query))
+        return list(self.collection_conn.find(query))
