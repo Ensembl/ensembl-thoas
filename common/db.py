@@ -47,7 +47,7 @@ class MongoDbClient:
         else:
             data_collection_name = data_collection.get("collection")
 
-        print("Using '{}' collection for '{}' UUID".format(data_collection_name, uuid))
+        print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
 
         data_collection_connection = self.mongo_db[data_collection_name]
 

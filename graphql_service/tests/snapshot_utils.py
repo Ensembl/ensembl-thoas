@@ -15,7 +15,6 @@ from unittest.mock import Mock
 
 import mongomock
 import requests
-from starlette.datastructures import State
 
 from common.crossrefs import XrefResolver
 
