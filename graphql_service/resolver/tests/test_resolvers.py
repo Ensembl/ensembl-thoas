@@ -113,25 +113,22 @@ def fixture_basic_data():
                 "genome_id": "2",
                 "type": "Gene",
                 "symbol": "apple",
-                "stable_id": "ENSG001.1",
-                "unversioned_stable_id": "ENSG001",
-                "gene_primary_id": "1_ENSG001.1",
+                "stable_id": "ENSG003.1",
+                "unversioned_stable_id": "ENSG003",
+                "gene_primary_id": "1_ENSG003.1",
             },
             {
                 "genome_id": "2",
                 "type": "Gene",
                 "symbol": "orange",
-                "stable_id": "ENSG002.2",
-                "unversioned_stable_id": "ENSG002",
-                "gene_primary_id": "1_ENSG002.2",
+                "stable_id": "ENSG004.2",
+                "unversioned_stable_id": "ENSG004",
+                "gene_primary_id": "1_ENSG004.2",
             },
         ]
     )
 
-    print("*****HERE******")
-    print(collection1)
-    print(collection2)
-    print(database.list_collection_names())
+    # print(database.list_collection_names())
 
     return mongo_client
 
@@ -374,7 +371,6 @@ def test_resolve_gene(basic_data):
     )
 
     assert result["symbol"] == "banana"
-
 
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
@@ -1068,6 +1064,22 @@ async def test_resolve_transcripts_page_metadata(transcript_data):
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
     result = await model.resolve_transcripts_page_metadata(transcripts_page, info)
     assert result == {"page": 2, "per_page": 1, "total_count": 2}
+
+
+def test_collection_lookup_service(basic_data):
+
+    info = create_GraphQLResolveInfo(basic_data)
+
+    result1 = model.resolve_gene(
+        None, info, by_id={"stable_id": "ENSG001.1", "genome_id": "1"}
+    )
+    assert result1["symbol"] == "banana"
+
+    # genome_id '2' is in a different collection
+    result2 = model.resolve_gene(
+        None, info, by_id={"stable_id": "ENSG003.1", "genome_id": "2"}
+    )
+    assert result2["symbol"] == "apple"
 
 
 def remove_ids(test_output):
