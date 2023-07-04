@@ -80,18 +80,30 @@ class MongoDbClient:
         return client[dbname]
 
 
+# TODO: Remove this class? We are not using this?
 class FakeMongoDbClient:
     """
     Sets up a mongomock collection for thoas code to test with
     """
-
     def __init__(self):
-        "Override default setup"
-        self.mongo_db = mongomock.MongoClient().db
-        self.collection_name = "test"
+        mongo_client = mongomock.MongoClient()
+        self.mongo_db = mongo_client.db
 
-    def collection(self):
-        return self.mongo_db[self.collection_name]
+    def get_collection_conn(self, uuid):
+        mapping_collection = 'uuid_to_collection_mapping'
+        query = {"uuid": uuid, "is_current": True}
+        data_collection = self.mongo_db[mapping_collection].find_one(query)
+
+        # Fallback to the default collection if no collection found in the mappings
+        # for the given UUID
+        if not data_collection:
+            data_collection_name = 'collection1'
+        else:
+            data_collection_name = data_collection.get("collection")
+
+        print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
+        data_collection_connection = self.mongo_db[data_collection_name]
+        return data_collection_connection
 
 
 class GRPCServiceClient:

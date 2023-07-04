@@ -59,7 +59,8 @@ async def test_batch_transcript_load():
         ]
     )
 
-    loaders = BatchLoaders(collection)
+    loaders = BatchLoaders()
+    loaders.collection_conn = collection
 
     response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
@@ -108,7 +109,8 @@ async def test_batch_product_load():
         ]
     )
 
-    loader = BatchLoaders(collection)
+    loader = BatchLoaders()
+    loader.collection_conn = collection
 
     response = await loader.batch_product_load(["1_ENSP001.1"])
 
