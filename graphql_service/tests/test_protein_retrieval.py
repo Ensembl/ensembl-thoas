@@ -14,7 +14,7 @@
 
 import pytest
 from ariadne import graphql
-from .snapshot_utils import setup_test, add_loaders_to_context
+from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
 
@@ -78,7 +78,7 @@ async def test_protein_retrieval_separate_arguments(snapshot):
 }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context
     )
     assert success
     assert result["data"]["product"]
@@ -144,7 +144,7 @@ async def test_protein_retrieval_by_id_input(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context
     )
     assert success
     assert result["data"]["product"]
@@ -169,7 +169,7 @@ async def test_protein_retrieval_by_transcript(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context
     )
     assert success
     assert result["data"]["transcript"]

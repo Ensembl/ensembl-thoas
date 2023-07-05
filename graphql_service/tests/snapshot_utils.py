@@ -30,39 +30,52 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
+from common.db import FakeMongoDbClient
 
-
-def prepare_db():
-    "Fill a mock database with data and provide a collection accessor"
-
-    mocked_mongo_collection = mongomock.MongoClient().db.collection
-    try:
-        xref_resolver = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
-    except requests.exceptions.ConnectionError:
-        print("No network available, tests will fail")
-        xref_resolver = None
-
+def create_GraphQLResolveInfo(database_client):
+    """
+    Factory for creating the mock  Info objects produced by graphql
+    """
     context = {
-        "mongo_db": mocked_mongo_collection,
-        "XrefResolver": xref_resolver,
+        "mongo_db_client": database_client,
+        "XrefResolver": XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json"),
+        "loaders": BatchLoaders(),
     }
-
-    mocked_mongo_collection.insert_one(build_gene())
-    mocked_mongo_collection.insert_many(build_transcripts())
-    mocked_mongo_collection.insert_many(build_products())
-    mocked_mongo_collection.insert_one(build_region())
-    mocked_mongo_collection.insert_one(build_assembly())
-    mocked_mongo_collection.insert_one(build_organism())
-    mocked_mongo_collection.insert_one(build_species())
-    mocked_mongo_collection.insert_many(build_wheat_genes())
     return context
 
+def prepare_mongo_instance():
+    mongo_client = FakeMongoDbClient()
+    database = mongo_client.mongo_db
+    collection1 = database.create_collection('uuid_to_collection_mapping')
+    collection1.insert_many(
+        [
+            {
+                "uuid": "homo_sapiens_GCA_000001405_28",
+                "collection": "collection2",
+                "is_current": True,
+                "load_date": "2023-06-29T17:00:41.510Z"
+            },
+            {
+                "uuid": "triticum_aestivum_GCA_900519105_1",
+                "collection": "collection2",
+                "is_current": True,
+                "load_date": "2023-06-29T17:00:41.736Z"
+            }
+        ]
+    )
 
-def add_loaders_to_context(context):
-    """This must be run per-request"""
+    collection2 = database.create_collection('collection2')
+    collection2.insert_one(build_gene())
+    collection2.insert_many(build_transcripts())
+    collection2.insert_many(build_products())
+    collection2.insert_one(build_region())
+    collection2.insert_one(build_assembly())
+    collection2.insert_one(build_organism())
+    collection2.insert_one(build_species())
+    collection2.insert_many(build_wheat_genes())
 
-    context["loaders"] = BatchLoaders(context["mongo_db"])
-    return context
+    return mongo_client
+
 
 
 def setup_test():
@@ -70,6 +83,7 @@ def setup_test():
     Run setup scripts once per module
     This is the one to use in other modules
     """
-    context = prepare_db()
+    mongo_client = prepare_mongo_instance()
+    context = create_GraphQLResolveInfo(mongo_client)
     executable_schema = prepare_executable_schema()
     return executable_schema, context
