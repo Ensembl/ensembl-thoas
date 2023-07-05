@@ -165,7 +165,7 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
             CUSTOM_GRAPHIQL_HTML,
             {
                 "title": title,
-                "enable_explorer_plugin": explorer_plugin,
+                # "enable_explorer_plugin": explorer_plugin,
                 "default_query": escape_default_query(default_query),
             },
         )

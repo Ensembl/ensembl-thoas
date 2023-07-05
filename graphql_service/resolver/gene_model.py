@@ -34,6 +34,7 @@ from graphql_service.resolver.exceptions import (
     RegionFromSliceNotFoundError,
     InputFieldArgumentNumberError,
     GenomeNotFoundError,
+    MissingArgumentException,
 )
 
 # Define Query types for GraphQL
@@ -65,6 +66,12 @@ def resolve_gene(
     if by_id is None:
         by_id = byId
 
+    if not by_id:
+        raise MissingArgumentException(
+            "You must provide 'by_id' or 'byId' (deprecated) argument."
+        )
+
+    # this is needed for mypy to pass
     assert by_id
 
     query = {
@@ -180,6 +187,17 @@ def resolve_transcript(
     if by_id is None:
         by_id = byId
 
+    # in case the user provides both arguments or none
+    if sum(map(bool, [by_symbol, by_id])) != 1:
+        # ask them to provide at least one argument
+        if not by_symbol and not by_id:
+            raise MissingArgumentException(
+                "You must provide either 'by_symbol' or 'by_id' argument."
+            )
+        # or in case they provided both, ask them to provide one only
+        raise InputFieldArgumentNumberError(1)
+
+    # this is needed for mypy to pass
     assert by_id or by_symbol
 
     query: Dict[str, Any] = {"type": "Transcript"}
@@ -324,6 +342,12 @@ def resolve_overlap(
         genome_id = genomeId
         region_name = regionName
 
+    if not by_slice and (not genome_id and not region_name and not start and not end):
+        raise MissingArgumentException(
+            "You must provide 'by_slice' or all four 'genomeId' (deprecated), 'regionName' (deprecated), 'start' (deprecated) and 'end' (deprecated) arguments."
+        )
+
+    # this is needed for mypy to pass
     assert genome_id and region_name and start and end
 
     # Thoas only contains "chromosome"-type regions
@@ -395,6 +419,12 @@ def resolve_product_by_id(
         genome_id = by_id["genome_id"]
         stable_id = by_id["stable_id"]
 
+    if not by_id and (not genome_id and not stable_id):
+        raise MissingArgumentException(
+            "You must provide 'by_id' or both 'genome_id' (deprecated) and 'stable_id' (deprecated) arguments."
+        )
+
+    # this is needed for mypy to pass
     assert genome_id and stable_id
 
     query = {
@@ -550,7 +580,14 @@ def resolve_genomes(
     by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
 
+    # in case the user provides both arguments or none
     if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
+        # ask them to provide at least one argument
+        if not by_keyword and not by_assembly_accession_id:
+            raise MissingArgumentException(
+                "You must provide either 'by_keyword' or 'by_assembly_accession_id' argument."
+            )
+        # or in case they provided both, ask them to provide one only
         raise InputFieldArgumentNumberError(1)
 
     grpc_model = info.context["grpc_model"]
@@ -579,9 +616,7 @@ def resolve_genomes(
 
 
 @QUERY_TYPE.field("genome")
-def resolve_genome(
-    _, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]
-) -> Dict:
+def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
 
     grpc_model = info.context["grpc_model"]
 

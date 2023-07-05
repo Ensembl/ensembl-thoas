@@ -18,6 +18,7 @@ import mongomock
 import grpc
 from ensembl.production.metadata import ensembl_metadata_pb2_grpc
 
+
 class MongoDbClient:
     """
     A pymongo wrapper class to take care of configuration and collection
