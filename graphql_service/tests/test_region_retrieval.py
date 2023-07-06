@@ -32,7 +32,7 @@ async def test_region_retrieval_by_name(snapshot):
 
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=context
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"])

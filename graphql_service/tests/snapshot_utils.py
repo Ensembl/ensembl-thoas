@@ -11,11 +11,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from unittest.mock import Mock
-
-import mongomock
-import requests
-
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
@@ -32,16 +27,6 @@ from graphql_service.tests.fixtures.human_brca2 import (
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
 from common.db import FakeMongoDbClient
 
-def create_GraphQLResolveInfo(database_client):
-    """
-    Factory for creating the mock  Info objects produced by graphql
-    """
-    context = {
-        "mongo_db_client": database_client,
-        "XrefResolver": XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json"),
-        "loaders": BatchLoaders(),
-    }
-    return context
 
 def prepare_mongo_instance():
     mongo_client = FakeMongoDbClient()
@@ -77,13 +62,31 @@ def prepare_mongo_instance():
     return mongo_client
 
 
+def prepare_context_provider(mongo_client, xref):
+
+    # Dataloader should be bound to every request.
+    # mongo_client and xrefs are created only once but
+    # loaders is created for every request as this inner function closure
+    # is assigned to context_value which gets evaluated at the beginning
+    # of every request.
+    def context_provider():
+        context = {
+            "mongo_db_client": mongo_client,
+            "XrefResolver": xref,
+            "loaders": BatchLoaders()
+        }
+        return context
+    return context_provider
 
 def setup_test():
     """
     Run setup scripts once per module
     This is the one to use in other modules
     """
-    mongo_client = prepare_mongo_instance()
-    context = create_GraphQLResolveInfo(mongo_client)
     executable_schema = prepare_executable_schema()
+
+    mongo_client = prepare_mongo_instance()
+    xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+    context = prepare_context_provider(mongo_client, xref)
+
     return executable_schema, context
