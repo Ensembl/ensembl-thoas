@@ -48,16 +48,25 @@ EXTENSIONS: Optional[
 # Including the execution time in the response
 EXTENSIONS = [QueryExecutionTimeExtension]
 
+
+log = logging.getLogger("command_logger")
+
 if DEBUG_MODE:
-    log = logging.getLogger()
     log.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
-
-    monitoring.register(CommandLogger(log))
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
+
+MONGO_CLIENT = db.MongoDbClient(os.environ)
+# Experimenting with query logging with debug mode off
+log.setLevel(logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+)
+
+monitoring.register(CommandLogger(log))
 
 MONGO_CLIENT = db.MongoDbClient(os.environ)
 
@@ -151,7 +160,7 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         explorer_plugin: bool = True,
         default_query: str = DEFAULT_QUERY,
     ):
-        super(CustomExplorerGraphiQL, self).__init__()
+        super().__init__()
         self.parsed_html = render_template(
             CUSTOM_GRAPHIQL_HTML,
             {

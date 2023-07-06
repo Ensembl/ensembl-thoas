@@ -24,11 +24,21 @@ from graphql_service.resolver.data_loaders import BatchLoaders
 
 def create_info(collection):
     """
-    Factory for creating the mock  Info objects produced by graphql
+    Factory for creating the mock Info objects produced by graphql
     """
     info = Mock()
     request_mock = Mock()
-    request_mock.state = State()
+    request_mock.scope = {
+        "client": ("127.0.0.1", 58017),
+        "headers": [
+            (b"host", b"0.0.0.0:8000"),
+            (
+                b"user-agent",
+                b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/112.0",
+            ),
+            (b"referer", b"http://0.0.0.0:8000/"),
+        ],
+    }
     info.context = {
         "stuff": "Nonsense",
         "mongo_db": collection,
