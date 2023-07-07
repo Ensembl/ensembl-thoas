@@ -263,10 +263,9 @@ async def resolve_transcripts_page_transcripts(
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
-    collection = info.context["mongo_collection"]
 
     results = (
-        collection.find(query)
+        info.context["mongo_collection"].find(query)
         .sort([("stable_id", 1)])
         .skip((page - 1) * per_page)
         .limit(per_page)
@@ -307,9 +306,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         "stable_id": transcript["gene"],
     }
 
-    collection = info.context["mongo_collection"]
-
-    gene = collection.find_one(query)
+    gene = info.context["mongo_collection"].find_one(query)
     if not gene:
         raise GeneNotFoundError(
             by_id={
@@ -391,8 +388,7 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    collection = context["mongo_collection"]
-    results = list(collection.find(query).limit(max_results_size))
+    results = list(context["mongo_collection"].find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
