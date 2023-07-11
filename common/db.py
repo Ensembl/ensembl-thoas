@@ -44,10 +44,10 @@ class MongoDbClient:
         # for the given UUID
         if not data_collection:
             data_collection_name = self.config.get("mongo_default_collection")
+            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
         else:
             data_collection_name = data_collection.get("collection")
-
-        print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
+            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
 
         data_collection_connection = self.mongo_db[data_collection_name]
 
@@ -97,10 +97,11 @@ class FakeMongoDbClient:
         # for the given UUID
         if not data_collection:
             data_collection_name = 'collection1'
+            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
         else:
             data_collection_name = data_collection.get("collection")
+            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
 
-        print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
         data_collection_connection = self.mongo_db[data_collection_name]
         return data_collection_connection
 
