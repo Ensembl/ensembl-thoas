@@ -18,20 +18,7 @@ To install dependencies, run:
 `pip install -r requirements-dev.txt` installs everything including dev dependencies like pytest, mypy etc.
 
 ## Running the API locally
-Add MongoDB and GRPC configuration `./connections.conf`
-
-The file follows the following template:
-```
-mongo_host=MONGO_IP_ADDRESS
-mongo_port=MONGO_PORT
-mongo_user=MONGO_USER
-mongo_password=MONGO_PASS
-mongo_db=MONGO_DB_NAME
-mongo_default_collection = MONGO_COLLECTION
-mongo_lookup_service_collection = MONGO_LOOKUP_COLLECTION
-grpc_host=GRPC_HOST
-grpc_port=GRPC_PORT
-```
+Rename example_connections.conf to connections.conf and update the config values accordingly.
 
 This command will start the server:
 
