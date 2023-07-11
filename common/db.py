@@ -37,11 +37,12 @@ class MongoDbClient:
         query = {"uuid": uuid, "is_current": True}
 
         # Find the data collection corresponding to the given UUID
+        # Returns None if no data collection is found in lookup_service_collection
+        # Returns None if the `lookup_service_collection` collection doesn't exist in the database
         data_collection = self.mongo_db[lookup_service_collection].find_one(query)
         # print(data_collection)
 
-        # Fallback to the collection in the configuration file if no collection found in the mappings
-        # for the given UUID
+        # Fallback to the collection in the configuration file if no data collection is found for the given UUID
         if not data_collection:
             data_collection_name = self.config.get("mongo_default_collection")
             print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")

@@ -12,12 +12,18 @@
    limitations under the License.
 """
 
-from configparser import ConfigParser
-
-
-def load_config(filename):
-    "Load a config, return a ConfigParser object"
-
-    cp = ConfigParser(default_section="MONGO DB")
-    cp.read(filename)
-    return cp
+def check_config_validity(config):
+    MANDATORY_FIELDS = [
+        "mongo_host",
+        "mongo_port",
+        "mongo_user",
+        "mongo_password",
+        "mongo_db",
+        "mongo_default_collection",
+        "mongo_lookup_service_collection",
+        "grpc_host",
+        "grpc_port",
+    ]
+    for mandatory_field in MANDATORY_FIELDS:
+        if not config.get(mandatory_field):
+            raise KeyError(f"Missing information in configuration file - '{mandatory_field}'")
