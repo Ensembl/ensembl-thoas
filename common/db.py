@@ -32,12 +32,12 @@ class MongoDbClient:
 
     def get_collection_conn(self, uuid):
 
-        mapping_collection = self.config.get("mongo_mapping_collection")
-        # print(mapping_collection)
+        lookup_service_collection = self.config.get("mongo_lookup_service_collection")
+        # print(lookup_service_collection)
         query = {"uuid": uuid, "is_current": True}
 
         # Find the data collection corresponding to the given UUID
-        data_collection = self.mongo_db[mapping_collection].find_one(query)
+        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
         # print(data_collection)
 
         # Fallback to the collection in the configuration file if no collection found in the mappings
@@ -80,7 +80,6 @@ class MongoDbClient:
         return client[dbname]
 
 
-# TODO: Remove this class? We are not using this?
 class FakeMongoDbClient:
     """
     Sets up a mongomock collection for thoas code to test with
@@ -90,9 +89,9 @@ class FakeMongoDbClient:
         self.mongo_db = mongo_client.db
 
     def get_collection_conn(self, uuid):
-        mapping_collection = 'uuid_to_collection_mapping'
+        lookup_service_collection = 'uuid_to_collection_mapping'
         query = {"uuid": uuid, "is_current": True}
-        data_collection = self.mongo_db[mapping_collection].find_one(query)
+        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
 
         # Fallback to the default collection if no collection found in the mappings
         # for the given UUID
