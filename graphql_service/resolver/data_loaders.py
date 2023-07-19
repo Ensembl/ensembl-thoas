@@ -21,8 +21,8 @@ from aiodataloader import DataLoader
 class BatchLoaders:
     """A collection of bulk data aggregators for "joins" in GraphQL"""
 
-    def __init__(self):
-        self.collection_conn = None
+    def __init__(self, collection_conn):
+        self.collection_conn = collection_conn
         self.transcript_loader = DataLoader(
             batch_load_fn=self.batch_transcript_by_gene_load
         )

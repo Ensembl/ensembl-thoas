@@ -17,7 +17,6 @@ import ariadne
 from graphql import GraphQLSchema
 from starlette.requests import Request
 
-from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.resolver.gene_model import (
     QUERY_TYPE,
     GENE_TYPE,
@@ -72,13 +71,11 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         otherwise the requests will pollute each other's state"""
         mongo_db_client = context["mongo_db_client"]
         xref_resolver = context["XrefResolver"]
-        batch_loaders = BatchLoaders()
         grpc_model = context["grpc_model"]
         return {
             "request": request,
             "mongo_db_client": mongo_db_client,
             "XrefResolver": xref_resolver,
-            "loaders": batch_loaders,
             "grpc_model": grpc_model,
         }
 

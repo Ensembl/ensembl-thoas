@@ -17,6 +17,8 @@ from typing import Dict, Optional, List, Any
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
 
+from graphql_service.resolver.data_loaders import BatchLoaders
+
 from graphql_service.resolver.exceptions import (
     GeneNotFoundError,
     TranscriptNotFoundError,
@@ -84,10 +86,12 @@ def resolve_gene(
 
     find_and_set_mongo_collection(info.context, by_id["genome_id"])
 
-    result = info.context["mongo_collection"].find_one(query)
+    result = info.context[by_id["genome_id"]+'-collection'].find_one(query)
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
+
+
     return result
 
 
@@ -103,7 +107,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 
     find_and_set_mongo_collection(info.context, by_symbol["genome_id"])
 
-    result = info.context["mongo_collection"].find(query)
+    result = info.context["mongo_collection"][by_symbol["genome_id"]].find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
@@ -142,7 +146,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 
     source_id = name_metadata.get("source", {}).get("id")
 
-    # If a gene does'nt have a source id, we cant find any information about the source and also the gene name URL
+    # If a gene doesn't have a source id, we cant find any information about the source and also the gene name URL
     if source_id is None:
         name_metadata["source"] = None
         name_metadata["url"] = None
@@ -650,10 +654,27 @@ def find_and_set_mongo_collection(context, uuid):
     # Get the relevant collection for genome UUID
     collection_conn = context["mongo_db_client"].get_collection_conn(uuid)
 
-    # Add it to the context so that all the resolvers and their child resolvers can use it
-    context["mongo_collection"] = collection_conn
+    print("*************")
+    print(context)
+    print("****")
 
-    # Update BatchLoader to use this collection
-    context["loaders"].collection_conn = collection_conn
+    # Add it to the context so that all the resolvers and their child resolvers can use it
+    # This key-value pair will be available only for this request and will not be shared with the next request
+    # because the next request will have its own copy of the new dynamic context
+    # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
+
+    # Adding UUID as key because a single request can have multiple gene queries with different Genome UUIDs.
+    # In such cases, a generic common key will create problems if the 2nd query updates the key's value while
+    # 1st query is still processing.
+
+    context[uuid+'-collection'] = collection_conn
+
+    # Also, update BatchLoader to use this collection
+    context[uuid + '-dataloader'] = BatchLoaders(collection_conn)
+
+    print(context)
+    print("*************")
+
+
 
     # print(context)
