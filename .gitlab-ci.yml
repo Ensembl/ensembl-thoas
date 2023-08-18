@@ -112,7 +112,7 @@ live:wp-hl:
 dev:wp-hl:
   extends: .deploy-web
   variables:
-    BASE: k8s/web-prod/overlays/prod
+    BASE: k8s/web-prod/overlays/dev
   environment:
     name : wp40-hl-development
 
@@ -120,7 +120,7 @@ dev:wp-hl:
 dev:wp-hx:
   extends: .deploy-web
   variables:
-    BASE: k8s/web-prod/overlays/prod
+    BASE: k8s/web-prod/overlays/dev
   environment:
     name : wp41-hx-development
 
