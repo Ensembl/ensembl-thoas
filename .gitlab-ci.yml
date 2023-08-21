@@ -66,7 +66,7 @@ build:
 .deploy-web:
   extends: .deploy
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "deploy-newk8s" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
 # Template to deploy application to apps k8s cluster
 .deploy-apps:
