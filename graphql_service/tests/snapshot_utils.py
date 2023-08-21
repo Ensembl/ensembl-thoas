@@ -72,8 +72,7 @@ def prepare_context_provider(mongo_client, xref):
     def context_provider():
         context = {
             "mongo_db_client": mongo_client,
-            "XrefResolver": xref,
-            "loaders": BatchLoaders()
+            "XrefResolver": xref
         }
         return context
     return context_provider

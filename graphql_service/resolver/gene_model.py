@@ -686,19 +686,19 @@ def set_col_conn_for_uuid(info, uuid):
     # is through Context in GraphQLResolveInfo.
     #
     # This method finds the Mongo collection for the requested Genome UUID and stores it
-    # in the context so that the root resolver and all its child resolvers can use it to
+    # in the Context so that the root resolver and all its child resolvers can use it to
     # fetch the data from the relevant Mongo collection.
     #
     # A single request can have multiple queries and each of those queries could be requesting
     # information for different Genome UUID. This means a single request can have multiple
     # queries with each query needing to fetch data from different Mongo collections.
     #
-    # As context is shared between the queries of a single request, we are using info.path
+    # As Context is shared between the queries of a single request, we are using info.path
     # to differentiate different queries of a request and set Mongo connection details
     # per query. This way, in an async execution, child resolvers of the 1st query can avoid
     # connecting to Mongo collection of the 2nd query of the same request.
     #
-    # These connection details in the context will be available only for this request
+    # These connection details in the Context will be available only for this request
     # and will not be shared with the next request because the next request will have
     # its own copy of the new dynamic context
     # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
