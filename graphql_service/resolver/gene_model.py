@@ -38,6 +38,8 @@ from graphql_service.resolver.exceptions import (
     MissingArgumentException,
 )
 
+from pymongo.collection import Collection
+
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
 
@@ -378,7 +380,7 @@ def resolve_overlap(
 
 
 def overlap_region(
-    connection: Dict,
+    connection: Collection,
     genome_id: str,
     region_id: str,
     start: int,
