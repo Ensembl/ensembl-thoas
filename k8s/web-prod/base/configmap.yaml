@@ -7,4 +7,4 @@ data:
   https_proxy: <HTTP_PROXY>
 kind: ConfigMap
 metadata:
-  name: thoas-configmap
+  name: graphql-core-configmap

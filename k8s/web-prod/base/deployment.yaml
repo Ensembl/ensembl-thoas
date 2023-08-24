@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: thoas-server-deployment
+  name: graphql-core-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: thoas-server
+      app: graphql-core
   template:
     metadata:
       labels:
-        app: thoas-server
+        app: graphql-core
     spec:
       imagePullSecrets:
         - name: ensemblweb-pull-secret 
       containers:
-        - name: thoas-server
+        - name: graphql-core
           image: DOCKER_IMAGE
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: thoas-configmap
+                name: graphql-core-configmap
             - secretRef:
                 name: mongo-config
           command: ["uvicorn"]
