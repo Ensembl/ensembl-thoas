@@ -17,6 +17,8 @@ from typing import Dict, Optional, List, Any
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
 
+from graphql_service.resolver.data_loaders import BatchLoaders
+
 from graphql_service.resolver.exceptions import (
     GeneNotFoundError,
     TranscriptNotFoundError,
@@ -35,6 +37,8 @@ from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
     MissingArgumentException,
 )
+
+from pymongo.collection import Collection
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
@@ -82,10 +86,15 @@ def resolve_gene(
         "genome_id": by_id["genome_id"],
     }
 
-    collection = info.context["mongo_db"]
-    result = collection.find_one(query)
+    set_col_conn_for_uuid(info, by_id["genome_id"])
+    connection = get_col_conn(info)
+
+    result = connection.find_one(query)
+
     if not result:
         raise GeneNotFoundError(by_id=by_id)
+
+
     return result
 
 
@@ -99,9 +108,10 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol["symbol"],
     }
 
-    collection = info.context["mongo_db"]
+    set_col_conn_for_uuid(info, by_symbol["genome_id"])
+    connection = get_col_conn(info)
 
-    result = collection.find(query)
+    result = connection.find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
@@ -114,7 +124,7 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 @PRODUCT_TYPE.field("external_references")
 def insert_crossref_urls(feature: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     """
-    A gene/transcript with cross references in the data model is given as
+    A gene/transcript with cross-references in the data model is given as
     argument. Using the crossrefs package we can infer URLs to those resources
     and inject them into the response
     """
@@ -140,7 +150,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 
     source_id = name_metadata.get("source", {}).get("id")
 
-    # If a gene does'nt have a source id, we cant find any information about the source and also the gene name URL
+    # If a gene doesn't have a source id, we cant find any information about the source and also the gene name URL
     if source_id is None:
         name_metadata["source"] = None
         name_metadata["url"] = None
@@ -176,6 +186,7 @@ def resolve_transcript(
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
 
+
     if by_symbol is None:
         by_symbol = bySymbol
     if by_id is None:
@@ -210,8 +221,11 @@ def resolve_transcript(
 
     assert genome_id
 
-    collection = info.context["mongo_db"]
-    transcript = collection.find_one(query)
+    set_col_conn_for_uuid(info, genome_id)
+    connection = get_col_conn(info)
+
+    transcript = connection.find_one(query)
+
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
     return transcript
@@ -228,9 +242,11 @@ def resolve_api(
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     "Use a DataLoader to get transcripts for the parent gene"
 
+    data_loader = get_data_loader(info)
+
     gene_primary_key = gene["gene_primary_key"]
     # Get a dataloader from info
-    loader = info.context["loaders"].transcript_loader
+    loader = data_loader.transcript_loader
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(key=gene_primary_key)
     return transcripts
@@ -259,9 +275,11 @@ async def resolve_transcripts_page_transcripts(
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
-    collection = info.context["mongo_db"]
+
+    connection = get_col_conn(info)
+
     results = (
-        collection.find(query)
+        connection.find(query)
         .sort([("stable_id", 1)])
         .skip((page - 1) * per_page)
         .limit(per_page)
@@ -277,9 +295,10 @@ async def resolve_transcripts_page_metadata(
         "type": "Transcript",
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
-    collection = info.context["mongo_db"]
+
+    connection = get_col_conn(info)
     return {
-        "total_count": collection.count_documents(query),
+        "total_count": connection.count_documents(query),
         "page": transcripts_page["page"],
         "per_page": transcripts_page["per_page"],
     }
@@ -301,8 +320,10 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         "genome_id": transcript["genome_id"],
         "stable_id": transcript["gene"],
     }
-    collection = info.context["mongo_db"]
-    gene = collection.find_one(query)
+
+    connection = get_col_conn(info)
+
+    gene = connection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
             by_id={
@@ -346,16 +367,20 @@ def resolve_overlap(
 
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
+
+    set_col_conn_for_uuid(info, genome_id)
+    connection = get_col_conn(info)
+
     return {
-        "genes": overlap_region(info.context, genome_id, region_id, start, end, "Gene"),
+        "genes": overlap_region(connection, genome_id, region_id, start, end, "Gene"),
         "transcripts": overlap_region(
-            info.context, genome_id, region_id, start, end, "Transcript"
+            connection, genome_id, region_id, start, end, "Transcript"
         ),
     }
 
 
 def overlap_region(
-    context: Dict,
+    connection: Collection,
     genome_id: str,
     region_id: str,
     start: int,
@@ -381,7 +406,7 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    results = list(context["mongo_db"].find(query).limit(max_results_size))
+    results = list(connection.find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
@@ -427,8 +452,9 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    collection = info.context["mongo_db"]
-    result = collection.find_one(query)
+    set_col_conn_for_uuid(info, genome_id)
+    connection = get_col_conn(info)
+    result = connection.find_one(query)
 
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
@@ -441,7 +467,10 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
     # product_id may not exist or the value can be null
     if "product_id" not in pgc or pgc["product_id"] is None:
         return None
-    loader = info.context["loaders"].product_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.product_loader
+
     products = await loader.load(key=pgc["product_foreign_key"])
     # Data loader returns a list because most data-loads are one-many
     # ID mappings
@@ -463,7 +492,9 @@ async def resolve_region_from_slice(
         return None
     region_id = slc["region_id"]
 
-    loader = info.context["loaders"].region_loader
+    data_loader = get_data_loader(info)
+
+    loader = data_loader.region_loader
 
     regions = await loader.load(key=region_id)
 
@@ -483,8 +514,9 @@ async def resolve_assembly_from_region(
 
     query = {"type": "Assembly", "id": region["assembly_id"]}
 
-    collection = info.context["mongo_db"]
-    assembly = collection.find_one(query)
+    connection = get_col_conn(info)
+
+    assembly = connection.find_one(query)
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -495,7 +527,9 @@ async def resolve_assembly_from_region(
 async def resolve_regions_from_assembly(
     assembly: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-    loader = info.context["loaders"].region_by_assembly_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.region_by_assembly_loader
 
     regions = await loader.load(key=assembly["id"])
 
@@ -508,7 +542,9 @@ async def resolve_regions_from_assembly(
 async def resolve_organism_from_assembly(
     assembly: Dict, info: GraphQLResolveInfo
 ) -> Optional[Dict]:
-    loader = info.context["loaders"].organism_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.organism_loader
 
     organisms = await loader.load(key=assembly["organism_foreign_key"])
     if not organisms:
@@ -520,7 +556,9 @@ async def resolve_organism_from_assembly(
 async def resolve_assemblies_from_organism(
     organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-    loader = info.context["loaders"].assembly_by_organism_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.assembly_by_organism_loader
 
     assemblies = await loader.load(key=organism["organism_primary_key"])
     if not assemblies:
@@ -532,7 +570,9 @@ async def resolve_assemblies_from_organism(
 async def resolve_species_from_organism(
     organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-    loader = info.context["loaders"].species_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.species_loader
 
     species = await loader.load(key=organism["species_foreign_key"])
     if not species:
@@ -544,7 +584,9 @@ async def resolve_species_from_organism(
 async def resolve_organisms_from_species(
     species: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-    loader = info.context["loaders"].organism_by_species_loader
+
+    data_loader = get_data_loader(info)
+    loader = data_loader.organism_by_species_loader
 
     organisms = await loader.load(key=species["species_primary_key"])
     if not organisms:
@@ -559,8 +601,11 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "genome_id": by_name["genome_id"],
         "name": by_name["name"],
     }
-    collection = info.context["mongo_db"]
-    result = collection.find_one(query)
+
+    set_col_conn_for_uuid(info, by_name["genome_id"])
+    connection = get_col_conn(info)
+
+    result = connection.find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
@@ -631,3 +676,59 @@ def create_genome_response(genome):
         "release_number": genome.release.release_version,
     }
     return response
+
+
+def set_col_conn_for_uuid(info, uuid):
+    # IMPORTANT:
+    # This function must be called from all the root level(@QUERY_TYPE) resolvers.
+    #
+    # Child resolvers need to know their query's GenomeUUID or the Mongo collection details
+    # to fetch the data from.
+    # The only way to pass the GenomeUUID or the connection details to the child resolvers
+    # is through Context in GraphQLResolveInfo.
+    #
+    # This method finds the Mongo collection for the requested Genome UUID and stores it
+    # in the Context so that the root resolver and all its child resolvers can use it to
+    # fetch the data from the relevant Mongo collection.
+    #
+    # A single request can have multiple queries and each of those queries could be requesting
+    # information for different Genome UUID. This means a single request can have multiple
+    # queries with each query needing to fetch data from different Mongo collections.
+    #
+    # As Context is shared between the queries of a single request, we are using info.path
+    # to differentiate different queries of a request and set Mongo connection details
+    # per query. This way, in an async execution, child resolvers of the 1st query can avoid
+    # connecting to Mongo collection of the 2nd query of the same request.
+    #
+    # These connection details in the Context will be available only for this request
+    # and will not be shared with the next request because the next request will have
+    # its own copy of the new dynamic context
+    # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
+
+    col_conn = info.context["mongo_db_client"].get_collection_conn(uuid)
+
+    conn = {'col_conn': col_conn,
+            'data_loader': BatchLoaders(col_conn)}
+
+    parent_key = get_path_parent_key(info)
+    info.context.setdefault(parent_key, conn)
+
+    # print("*************")
+    # print(info)
+    # print("*************")
+
+
+def get_col_conn(info):
+    parent_key = get_path_parent_key(info)
+    return info.context[parent_key]['col_conn']
+
+
+def get_data_loader(info):
+    parent_key = get_path_parent_key(info)
+    return info.context[parent_key]['data_loader']
+
+
+def get_path_parent_key(info):
+    path_keys = info.path.as_list()
+    parent_key = path_keys[0]
+    return parent_key

@@ -29,6 +29,7 @@ from starlette.middleware.cors import CORSMiddleware
 from common.logger import CommandLogger
 from common.crossrefs import XrefResolver
 from common import db
+from common.utils import check_config_validity
 from grpc_service import grpc_model
 from common.extensions import QueryExecutionTimeExtension
 from graphql_service.ariadne_app import (
@@ -59,7 +60,9 @@ if DEBUG_MODE:
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
 
-MONGO_CLIENT = db.MongoDbClient(os.environ)
+
+check_config_validity(os.environ)
+MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
@@ -71,7 +74,7 @@ RESOLVER = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
 CONTEXT_PROVIDER = prepare_context_provider(
     {
-        "mongo_db": MONGO_CLIENT.collection(),
+        "mongo_db_client": MONGO_DB_CLIENT,
         "XrefResolver": RESOLVER,
         "grpc_model": GRPC_MODEL,
     }

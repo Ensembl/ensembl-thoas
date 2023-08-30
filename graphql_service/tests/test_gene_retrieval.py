@@ -14,12 +14,9 @@
 
 import pytest
 from ariadne import graphql
-
-from graphql_service.resolver.data_loaders import BatchLoaders
-from .snapshot_utils import setup_test, add_loaders_to_context
+from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
-
 
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_id_camel_case(snapshot):
@@ -93,8 +90,13 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
     }"""
 
     query_data = {"query": query}
+
+    # Unlike 'context_value' in ariadne.asgi.GraphQL, 'context_value' of
+    # ariadne.graphql is not callable. It needs to be evaluated explicitly
+    # as context_value=context() when creating request
+
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"])
@@ -111,8 +113,13 @@ async def test_gene_retrieval_by_id_snake_case(snapshot):
       }
     }"""
     query_data = {"query": query}
+
+    # Unlike 'context_value' in ariadne.asgi.GraphQL, 'context_value' of
+    # ariadne.graphql is not callable. It needs to be evaluated explicitly
+    # as context_value=context() when creating request
+
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"]["gene"])
@@ -121,8 +128,6 @@ async def test_gene_retrieval_by_id_snake_case(snapshot):
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_symbol(snapshot):
     "Test `genes` query using by_symbol snake_case"
-    context["loaders"] = BatchLoaders(context["mongo_db"])
-
     query = """{
       genes(by_symbol: { genome_id: "homo_sapiens_GCA_000001405_28", symbol: "BRCA2" }) {
         symbol
@@ -130,8 +135,13 @@ async def test_gene_retrieval_by_symbol(snapshot):
       }
     }"""
     query_data = {"query": query}
+
+    # Unlike 'context_value' in ariadne.asgi.GraphQL, 'context_value' of
+    # ariadne.graphql is not callable. It needs to be evaluated explicitly
+    # as context_value=context() when creating request
+
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"]["genes"])
@@ -162,8 +172,13 @@ async def test_transcript_pagination(snapshot):
     }
     """
     query_data = {"query": query}
+
+    # Unlike 'context_value' in ariadne.asgi.GraphQL, 'context_value' of
+    # ariadne.graphql is not callable. It needs to be evaluated explicitly
+    # as context_value=context() when creating request
+
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"])
