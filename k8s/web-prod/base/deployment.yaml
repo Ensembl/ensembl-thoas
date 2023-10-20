@@ -31,7 +31,7 @@ spec:
             "0.0.0.0",
             "--port",
             "8000",
-            "--worker",
+            "--workers",
             "4",
             "graphql_service.server:APP"
           ]
