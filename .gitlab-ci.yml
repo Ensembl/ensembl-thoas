@@ -62,7 +62,7 @@ build:
   only:
     - develop
     - main
-    - multiple_worker
+    - multiple_workers
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
