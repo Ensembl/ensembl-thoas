@@ -6,5 +6,5 @@ ariadne==0.19.1
 python-dotenv==0.20.0
 uvicorn==0.18.1
 ensembl-metadata-service@git+https://github.com/Ensembl/ensembl-metadata-service.git@0.0.2.dev2
-grpcio==1.38.1
+grpcio==1.53.0
 grpcio-tools==1.38.1
