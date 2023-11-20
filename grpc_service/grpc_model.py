@@ -1,4 +1,4 @@
-from ensembl.production.metadata import ensembl_metadata_pb2
+from ensembl.production.metadata.grpc import ensembl_metadata_pb2
 
 
 class GRPC_MODEL:
