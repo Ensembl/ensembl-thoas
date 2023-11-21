@@ -11,7 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import configparser
+import logging
 from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
@@ -233,9 +234,18 @@ def resolve_transcript(
 
 @QUERY_TYPE.field("version")
 def resolve_api(
-    _: None, info: GraphQLResolveInfo
-):  # the second argument must be named `info` to avoid a NameError
-    return {"api": {"major": "0", "minor": "1", "patch": "0-beta"}}
+    _: None, info: GraphQLResolveInfo  # the second argument must be named `info` to avoid a NameError
+) -> Dict[str, Dict[str, str]]:
+    """
+    Resolve the API version.
+    Fetches the version details from INI configuration file and returns it.
+    """
+    try:
+        version_details = get_version_details()
+        return {"api": version_details}
+    except Exception as e:
+        logging.error(f"Error resolving API version: {e}")
+        raise
 
 
 @GENE_TYPE.field("transcripts")
@@ -676,6 +686,34 @@ def create_genome_response(genome):
         "release_number": genome.release.release_version,
     }
     return response
+
+
+def get_version_details() -> Dict[str, str]:
+    """
+    Fetch version details from a 'version_config.ini' file.
+    Returns a dictionary with keys 'major', 'minor', and 'patch'.
+    If the file or keys are not found, default values are used.
+    """
+    config = configparser.ConfigParser()
+
+    try:
+        if not config.read('version_config.ini'):
+            raise FileNotFoundError("INI file not found.")
+
+        version_data = config['version']
+        return {
+            "major": version_data['major'],
+            "minor": version_data['minor'],
+            "patch": version_data['patch']
+        }
+    except FileNotFoundError:
+        logging.error("Version config file not found. Using default values.")
+    except KeyError:
+        logging.error("Version section or keys not found in INI file. Using default values.")
+    except Exception as e:
+        logging.error(f"Error reading INI file: {e}. Using default values.")
+
+    return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
 def set_col_conn_for_uuid(info, uuid):
