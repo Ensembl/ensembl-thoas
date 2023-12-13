@@ -684,6 +684,11 @@ def create_genome_response(genome):
         "assembly_accession": genome.assembly.accession,
         "scientific_name": genome.organism.scientific_name,
         "release_number": genome.release.release_version,
+        "taxon_id": genome.taxon.taxonomy_id,
+        "tol_id": genome.assembly.tol_id,
+        "parlance_name": genome.organism.scientific_parlance_name,
+        "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
+        "is_reference": genome.assembly.is_reference,
     }
     return response
 
