@@ -132,6 +132,15 @@ deploy:public:
   environment:
     name: wp40-hl-public
 
+deploy:web:dev:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/dev
+  environment:
+    name: wp51-hl-development
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "review-on-newk8s"'
+
 deploy:web:
   extends: .deploy-web
   variables:
