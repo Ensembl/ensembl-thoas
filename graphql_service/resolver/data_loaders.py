@@ -12,17 +12,20 @@
    limitations under the License.
 """
 
+import logging
 from collections import defaultdict
 from typing import List, Dict
 
 from aiodataloader import DataLoader
 
+logger = logging.getLogger(__name__)
+
 
 class BatchLoaders:
     """A collection of bulk data aggregators for "joins" in GraphQL"""
 
-    def __init__(self, collection_conn):
-        self.collection_conn = collection_conn
+    def __init__(self, database_conn):
+        self.database_conn = database_conn
         self.transcript_loader = DataLoader(
             batch_load_fn=self.batch_transcript_by_gene_load
         )
@@ -51,7 +54,7 @@ class BatchLoaders:
             "gene_foreign_key": {"$in": sorted(keys)},
         }
 
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="transcript")
         return self.collate_dataloader_output("gene_foreign_key", keys, data)
 
     async def batch_product_load(self, keys: List[str]) -> List[List]:
@@ -62,37 +65,37 @@ class BatchLoaders:
             "type": "Protein",
             "product_primary_key": {"$in": keys},
         }
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="protein")
         return self.collate_dataloader_output("product_primary_key", keys, data)
 
     async def batch_region_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Region", "region_id": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="region")
         return self.collate_dataloader_output("region_id", keys, data)
 
     async def batch_region_by_assembly_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Region", "assembly_id": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="region")
         return self.collate_dataloader_output("assembly_id", keys, data)
 
     async def batch_organism_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Organism", "organism_primary_key": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="organism")
         return self.collate_dataloader_output("organism_primary_key", keys, data)
 
     async def batch_assembly_by_organism_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Assembly", "organism_foreign_key": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="assembly")
         return self.collate_dataloader_output("organism_foreign_key", keys, data)
 
     async def batch_species_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Species", "species_primary_key": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="assembly")
         return self.collate_dataloader_output("species_primary_key", keys, data)
 
     async def batch_organism_by_species_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Organism", "species_foreign_key": {"$in": keys}}
-        data = await self.query_mongo(query)
+        data = await self.query_mongo(query=query, doc_type="organism")
         return self.collate_dataloader_output("species_foreign_key", keys, data)
 
     @staticmethod
@@ -116,10 +119,12 @@ class BatchLoaders:
 
         return [grouped_docs[fk] for fk in original_ids]
 
-    async def query_mongo(self, query: Dict) -> List[Dict]:
+    async def query_mongo(self, query: Dict, doc_type) -> List[Dict]:
         """
         Query function that exists solely to satisfy the vagaries of Python async.
         batch_transcript_load expects a list of results, and *must* call a single
         function in order to be valid.
         """
-        return list(self.collection_conn.find(query))
+        # the collection name is the doc_type
+        logger.info(f"Getting '{doc_type}' from DB: '{self.database_conn.name}', collection '{doc_type}'")
+        return list(self.database_conn[doc_type].find(query))

@@ -17,6 +17,7 @@ from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
+from pymongo.database import Database
 
 from graphql_service.resolver.data_loaders import BatchLoaders
 
@@ -40,6 +41,8 @@ from graphql_service.resolver.exceptions import (
 )
 
 from pymongo.collection import Collection
+
+logger = logging.getLogger(__name__)
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
@@ -87,14 +90,15 @@ def resolve_gene(
         "genome_id": by_id["genome_id"],
     }
 
-    set_col_conn_for_uuid(info, by_id["genome_id"])
-    connection = get_col_conn(info)
+    set_db_conn_for_uuid(info, by_id["genome_id"])
+    connection_db = get_db_conn(info)
+    gene_collection = connection_db['gene']
 
-    result = connection.find_one(query)
+    logger.info(f"[resolve_gene] Getting Gene from DB: '{connection_db.name}'")
+    result = gene_collection.find_one(query)
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
-
 
     return result
 
@@ -109,10 +113,12 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol["symbol"],
     }
 
-    set_col_conn_for_uuid(info, by_symbol["genome_id"])
-    connection = get_col_conn(info)
+    set_db_conn_for_uuid(info, by_symbol["genome_id"])
+    connection_db = get_db_conn(info)
+    gene_collection = connection_db['gene']
+    logger.info(f"[resolve_genes] Getting Gene from DB: '{connection_db.name}'")
 
-    result = connection.find(query)
+    result = gene_collection.find(query)
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
@@ -222,10 +228,12 @@ def resolve_transcript(
 
     assert genome_id
 
-    set_col_conn_for_uuid(info, genome_id)
-    connection = get_col_conn(info)
+    set_db_conn_for_uuid(info, genome_id)
+    connection_db = get_db_conn(info)
+    transcript_collection = connection_db['transcript']
+    logger.info(f"[resolve_transcript] Getting Transcript from DB: '{connection_db.name}'")
 
-    transcript = connection.find_one(query)
+    transcript = transcript_collection.find_one(query)
 
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
@@ -286,10 +294,12 @@ async def resolve_transcripts_page_transcripts(
     }
     page, per_page = transcripts_page["page"], transcripts_page["per_page"]
 
-    connection = get_col_conn(info)
+    connection_db = get_db_conn(info)
+    transcript_collection = connection_db['transcript']
+    logger.info(f"[resolve_transcripts_page_transcripts] Getting Transcript from DB: '{connection_db.name}'")
 
     results = (
-        connection.find(query)
+        transcript_collection.find(query)
         .sort([("stable_id", 1)])
         .skip((page - 1) * per_page)
         .limit(per_page)
@@ -306,9 +316,12 @@ async def resolve_transcripts_page_metadata(
         "gene_foreign_key": transcripts_page["gene_primary_key"],
     }
 
-    connection = get_col_conn(info)
+    connection_db = get_db_conn(info)
+    transcript_collection = connection_db['transcript']
+    logger.info(f"[resolve_transcripts_page_metadata] Getting Transcript from DB: '{connection_db.name}'")
+
     return {
-        "total_count": connection.count_documents(query),
+        "total_count": transcript_collection.count_documents(query),
         "page": transcripts_page["page"],
         "per_page": transcripts_page["per_page"],
     }
@@ -378,19 +391,20 @@ def resolve_overlap(
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
 
-    set_col_conn_for_uuid(info, genome_id)
-    connection = get_col_conn(info)
+    set_db_conn_for_uuid(info, genome_id)
+    connection_db = get_db_conn(info)
+    logger.info(f"[resolve_overlap] Getting Gene and Transcript Overlap from DB: '{connection_db.name}'")
 
     return {
-        "genes": overlap_region(connection, genome_id, region_id, start, end, "Gene"),
+        "genes": overlap_region(connection_db, genome_id, region_id, start, end, "Gene"),
         "transcripts": overlap_region(
-            connection, genome_id, region_id, start, end, "Transcript"
+            connection_db, genome_id, region_id, start, end, "Transcript"
         ),
     }
 
 
 def overlap_region(
-    connection: Collection,
+    connection: Database,
     genome_id: str,
     region_id: str,
     start: int,
@@ -416,7 +430,9 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    results = list(connection.find(query).limit(max_results_size))
+    feature_type_collection = connection[connection.name + '_' + feature_type.lower()]
+    print(f"[INFO] Getting Overlap Region from DB: '{connection.name}', Collection: '{connection.name + '_' + feature_type.lower()}'")
+    results = list(feature_type_collection.find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
@@ -462,9 +478,16 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    set_col_conn_for_uuid(info, genome_id)
-    connection = get_col_conn(info)
-    result = connection.find_one(query)
+    set_db_conn_for_uuid(info, genome_id)
+    connection_db = get_db_conn(info)
+    protein_collection = connection_db['protein']
+    logger.info(f"[resolve_product_by_id] Getting Protein from DB: '{connection_db.name}'")
+    # NB: 'MatureRNA' will be added in the future, with collection per type approach
+    # with have two options (TBD)
+    # 1. Keep it collection per type: collection for 'Protein' and another one for 'MatureRNA'
+    #    and changing the code logic
+    # 2. Put all products in one collection
+    result = protein_collection.find_one(query)
 
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
@@ -524,9 +547,10 @@ async def resolve_assembly_from_region(
 
     query = {"type": "Assembly", "id": region["assembly_id"]}
 
-    connection = get_col_conn(info)
-
-    assembly = connection.find_one(query)
+    connection_db = get_db_conn(info)
+    assembly_collection = connection_db['assembly']
+    logger.info(f"[resolve_assembly_from_region] Getting Assembly from DB: '{connection_db.name}'")
+    assembly = assembly_collection.find_one(query)
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -613,9 +637,11 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
     }
 
     set_col_conn_for_uuid(info, by_name["genome_id"])
-    connection = get_col_conn(info)
+    connection_db = get_db_conn(info)
+    region_collection = connection_db['region']
+    logger.info(f"[resolve_region] Getting Region from DB: '{connection_db.name}'")
 
-    result = connection.find_one(query)
+    result = region_collection.find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
@@ -761,9 +787,51 @@ def set_col_conn_for_uuid(info, uuid):
     # print("*************")
 
 
+def set_db_conn_for_uuid(info, uuid):
+    # IMPORTANT:
+    # This function must be called from all the root level(@QUERY_TYPE) resolvers.
+    #
+    # Child resolvers need to know their query's GenomeUUID or the Mongo db details
+    # to fetch the data from.
+    # The only way to pass the GenomeUUID or the connection details to the child resolvers
+    # is through Context in GraphQLResolveInfo.
+    #
+    # This method finds the Mongo db for the requested Genome UUID and stores it
+    # in the Context so that the root resolver and all its child resolvers can use it to
+    # fetch the data from the relevant Mongo db.
+    #
+    # A single request can have multiple queries and each of those queries could be requesting
+    # information for different Genome UUID. This means a single request can have multiple
+    # queries with each query needing to fetch data from different Mongo dbs.
+    #
+    # As Context is shared between the queries of a single request, we are using info.path
+    # to differentiate different queries of a request and set Mongo connection details
+    # per query. This way, in an async execution, child resolvers of the 1st query can avoid
+    # connecting to Mongo dbs of the 2nd query of the same request.
+    #
+    # These connection details in the Context will be available only for this request
+    # and will not be shared with the next request because the next request will have
+    # its own copy of the new dynamic context
+    # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
+
+    # db_conn = info.context["mongo_db_client"].get_database_conn(uuid)
+    db_conn = info.context["mongo_db_client"].get_database_conn(uuid)
+
+    conn = {'db_conn': db_conn,
+            'data_loader': BatchLoaders(db_conn)}
+
+    parent_key = get_path_parent_key(info)
+    info.context.setdefault(parent_key, conn)
+
+
 def get_col_conn(info):
     parent_key = get_path_parent_key(info)
     return info.context[parent_key]['col_conn']
+
+
+def get_db_conn(info):
+    parent_key = get_path_parent_key(info)
+    return info.context[parent_key]['db_conn']
 
 
 def get_data_loader(info):

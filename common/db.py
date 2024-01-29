@@ -28,7 +28,8 @@ class MongoDbClient:
         Note that config here is a configparser object
         """
         self.config = config
-        self.mongo_db = MongoDbClient.connect_mongo(self.config)
+        # self.mongo_db = MongoDbClient.connect_mongo(self.config)
+        self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
     def get_collection_conn(self, uuid):
 
@@ -54,6 +55,16 @@ class MongoDbClient:
 
         return data_collection_connection
 
+
+    def get_database_conn(self, uuid):
+        # gRPC logic can go here
+        # ...
+
+        data_database_connection = self.mongo_client['release_110']
+
+        return data_database_connection
+
+
     @staticmethod
     def connect_mongo(config):
         "Get a MongoDB connection"
@@ -62,7 +73,7 @@ class MongoDbClient:
         port = int(config.get("mongo_port"))
         user = config.get("mongo_user")
         password = config.get("mongo_password")
-        dbname = config.get("mongo_db")
+        # dbname = config.get("mongo_default_db")
 
         client = pymongo.MongoClient(
             host,
@@ -74,11 +85,11 @@ class MongoDbClient:
         try:
             # make sure the connection is established successfully
             client.server_info()
-            print(f"Connected to MongoDB {host}")
+            print(f"Connected to MongoDB, Host: {host}")
         except Exception as exc:
             raise "Connection to mongo Failed" from exc
 
-        return client[dbname]
+        return client
 
 
 class FakeMongoDbClient:
