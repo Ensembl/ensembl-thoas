@@ -27,3 +27,18 @@ def check_config_validity(config):
     for mandatory_field in MANDATORY_FIELDS:
         if not config.get(mandatory_field):
             raise KeyError(f"Missing information in configuration file - '{mandatory_field}'")
+
+
+def get_ensembl_metadata_api_version():
+    """
+    Get the Metadata API tag from requirement.txt file
+    """
+    version = "unknown"  # default version
+    with open('requirements.txt', 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            if 'ensembl-metadata-api' in line:
+                # Extract the tag part from the line
+                version = line.strip().split('@')[-1]
+                break
+    return version
