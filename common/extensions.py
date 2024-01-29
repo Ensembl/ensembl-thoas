@@ -16,6 +16,8 @@ import time
 
 from ariadne.types import Extension, ContextValue
 
+from common import utils
+
 
 class QueryExecutionTimeExtension(Extension):
     def __init__(self):
@@ -29,4 +31,7 @@ class QueryExecutionTimeExtension(Extension):
             exec_time_in_secs = round(
                 (time.perf_counter_ns() - self.start_timestamp) / 1000000000, 2
             )
-            return {"execution_time_in_seconds": exec_time_in_secs}
+            return {
+                "execution_time_in_seconds": exec_time_in_secs,
+                "metadata_api_version": utils.get_ensembl_metadata_api_version()
+            }
