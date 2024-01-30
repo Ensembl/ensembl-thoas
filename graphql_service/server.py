@@ -22,21 +22,17 @@ from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_q
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
 from pymongo import monitoring
-from starlette.applications import Starlette
-from starlette.middleware import Middleware
+from starlette import applications, middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from common.logger import CommandLogger
-from common.crossrefs import XrefResolver
-from common import db
-from common.utils import check_config_validity
+from common import crossrefs, db, extensions, utils
 from grpc_service import grpc_model
-from common.extensions import QueryExecutionTimeExtension
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
 )
 from dotenv import load_dotenv
+from common.logger import CommandLogger
 
 
 load_dotenv("connections.conf")
@@ -47,7 +43,7 @@ EXTENSIONS: Optional[
 ] = None  # mypy will throw an incompatible type error without this type cast
 
 # Including the execution time in the response
-EXTENSIONS = [QueryExecutionTimeExtension]
+EXTENSIONS = [extensions.QueryExecutionTimeExtension]
 
 if DEBUG_MODE:
     log = logging.getLogger()
@@ -61,7 +57,7 @@ if DEBUG_MODE:
     EXTENSIONS.append(ApolloTracingExtension)
 
 
-check_config_validity(os.environ)
+utils.check_config_validity(os.environ)
 MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
@@ -70,7 +66,7 @@ GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
-RESOLVER = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
 CONTEXT_PROVIDER = prepare_context_provider(
     {
@@ -81,7 +77,7 @@ CONTEXT_PROVIDER = prepare_context_provider(
 )
 
 starlette_middleware = [
-    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
+    middleware.Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 ]
 
 # The original HTML file can be found under
@@ -154,7 +150,7 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         explorer_plugin: bool = True,
         default_query: str = DEFAULT_QUERY,
     ):
-        super(CustomExplorerGraphiQL, self).__init__()
+        super().__init__()
         self.parsed_html = render_template(
             CUSTOM_GRAPHIQL_HTML,
             {
@@ -165,7 +161,7 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         )
 
 
-APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
 APP.mount(
     "/",
     GraphQL(

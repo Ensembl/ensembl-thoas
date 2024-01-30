@@ -17,6 +17,7 @@ from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
+from pymongo.collection import Collection
 
 from graphql_service.resolver.data_loaders import BatchLoaders
 
@@ -39,7 +40,6 @@ from graphql_service.resolver.exceptions import (
     MissingArgumentException,
 )
 
-from pymongo.collection import Collection
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
@@ -62,7 +62,7 @@ TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
 def resolve_gene(
     _,
     info: GraphQLResolveInfo,
-    byId: Optional[Dict[str, str]] = None,
+    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Gene via stable_id"
@@ -180,9 +180,9 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
-    bySymbol: Optional[Dict[str, str]] = None,
+    bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_symbol: Optional[Dict[str, str]] = None,
-    byId: Optional[Dict[str, str]] = None,
+    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
@@ -243,8 +243,8 @@ def resolve_api(
     try:
         version_details = get_version_details()
         return {"api": version_details}
-    except Exception as e:
-        logging.error(f"Error resolving API version: {e}")
+    except Exception as exp:
+        logging.error(f"Error resolving API version: {exp}")
         raise
 
 
@@ -348,8 +348,8 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 def resolve_overlap(
     _,
     info: GraphQLResolveInfo,
-    genomeId: Optional[str] = None,
-    regionName: Optional[str] = None,
+    genomeId: Optional[str] = None,  # pylint: disable=invalid-name
+    regionName: Optional[str] = None,  # pylint: disable=invalid-name
     start: Optional[int] = None,
     end: Optional[int] = None,
     by_slice: Optional[Dict[str, Any]] = None,
@@ -715,8 +715,8 @@ def get_version_details() -> Dict[str, str]:
         logging.error("Version config file not found. Using default values.")
     except KeyError:
         logging.error("Version section or keys not found in INI file. Using default values.")
-    except Exception as e:
-        logging.error(f"Error reading INI file: {e}. Using default values.")
+    except Exception as exp:
+        logging.error(f"Error reading INI file: {exp}. Using default values.")
 
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 

@@ -11,10 +11,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from common.crossrefs import XrefResolver
+from common import crossrefs, db
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.tests.fixtures.human_brca2 import (
     build_gene,
     build_transcripts,
@@ -25,11 +24,10 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
-from common.db import FakeMongoDbClient
 
 
 def prepare_mongo_instance():
-    mongo_client = FakeMongoDbClient()
+    mongo_client = db.FakeMongoDbClient()
     database = mongo_client.mongo_db
     collection1 = database.create_collection('uuid_to_collection_mapping')
     collection1.insert_many(
@@ -85,7 +83,7 @@ def setup_test():
     executable_schema = prepare_executable_schema()
 
     mongo_client = prepare_mongo_instance()
-    xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+    xref = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
     context = prepare_context_provider(mongo_client, xref)
 
     return executable_schema, context
