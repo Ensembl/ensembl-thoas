@@ -19,19 +19,22 @@ from starlette.datastructures import State
 import graphql_service.resolver.gene_model as model
 from common import crossrefs, db
 
+
 def create_graphql_resolve_info(database_client):
     """
     Factory for creating the mock  Info objects produced by graphql
     """
     info = Mock()
-    attrs = {'as_list.return_value': ['test_feature']}
+    attrs = {"as_list.return_value": ["test_feature"]}
     info.path = Mock(**attrs)
     request_mock = Mock()
     request_mock.state = State()
     info.context = {
         "stuff": "Nonsense",
         "mongo_db_client": database_client,
-        "XrefResolver": crossrefs.XrefResolver(from_file="common/tests/mini_identifiers.json"),
+        "XrefResolver": crossrefs.XrefResolver(
+            from_file="common/tests/mini_identifiers.json"
+        ),
         "request": request_mock,
     }
     return info
@@ -40,37 +43,38 @@ def create_graphql_resolve_info(database_client):
 def prepare_mongo_instance():
     mongo_client = db.FakeMongoDbClient()
     database = mongo_client.mongo_db
-    collection = database.create_collection('uuid_to_collection_mapping')
+    collection = database.create_collection("uuid_to_collection_mapping")
     collection.insert_many(
         [
             {
                 "uuid": "1",
                 "collection": "collection1",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.510Z"
+                "load_date": "2023-06-29T17:00:41.510Z",
             },
             {
                 "uuid": "2",
                 "collection": "collection2",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
+                "load_date": "2023-06-29T17:00:41.736Z",
             },
             {
                 "uuid": "test_genome_id",
                 "collection": "collection1",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
+                "load_date": "2023-06-29T17:00:41.736Z",
             },
             {
                 "uuid": "plasmodium_falciparum_GCA_000002765_2",
                 "collection": "collection1",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            }
+                "load_date": "2023-06-29T17:00:41.736Z",
+            },
         ]
     )
 
     return mongo_client
+
 
 @pytest.fixture(name="basic_data")
 def fixture_basic_data():
@@ -79,7 +83,7 @@ def fixture_basic_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
 
-    collection1 = database.create_collection('collection1')
+    collection1 = database.create_collection("collection1")
 
     collection1.insert_many(
         [
@@ -102,7 +106,7 @@ def fixture_basic_data():
         ]
     )
 
-    collection2 = database.create_collection('collection2')
+    collection2 = database.create_collection("collection2")
 
     collection2.insert_many(
         [
@@ -137,7 +141,7 @@ def fixture_transcript_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
 
-    collection = database.create_collection('collection1')
+    collection = database.create_collection("collection1")
     collection.insert_many(
         [
             {
@@ -190,7 +194,7 @@ def fixture_region_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
 
-    collection = database.create_collection('collection1')
+    collection = database.create_collection("collection1")
 
     collection.insert_many(
         [
@@ -225,7 +229,7 @@ def fixture_slice_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
 
-    collection = database.create_collection('collection1')
+    collection = database.create_collection("collection1")
 
     collection.insert_many(
         [
@@ -280,7 +284,7 @@ def fixture_genome_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
 
-    collection = database.create_collection('collection1')
+    collection = database.create_collection("collection1")
     collection.insert_many(
         [
             {
@@ -369,6 +373,7 @@ def test_resolve_gene(basic_data):
 
     assert result["symbol"] == "banana"
 
+
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
 
@@ -422,7 +427,7 @@ def test_resolve_transcript_by_id_not_found(transcript_data):
     )
     assert transcript_not_found_error.value.extensions["code"] == "TRANSCRIPT_NOT_FOUND"
     assert transcript_not_found_error.value.extensions["stable_id"] == "FAKEYFAKEYFAKEY"
-    assert transcript_not_found_error.value.extensions["genome_id"] == '1'
+    assert transcript_not_found_error.value.extensions["genome_id"] == "1"
 
 
 def test_resolve_transcript_by_symbol(transcript_data):
@@ -1078,7 +1083,7 @@ def test_collection_lookup_service(basic_data):
     # In the application, Path is set by GraphQL.
     # As we are not using GraphQL's Path but a Mock,
     # we need to set its value manually.
-    attrs = {'as_list.return_value': ['test_feature2']}
+    attrs = {"as_list.return_value": ["test_feature2"]}
     info.path = Mock(**attrs)
 
     result2 = model.resolve_gene(

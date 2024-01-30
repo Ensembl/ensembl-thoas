@@ -29,25 +29,25 @@ from graphql_service.tests.fixtures.wheat import build_wheat_genes
 def prepare_mongo_instance():
     mongo_client = db.FakeMongoDbClient()
     database = mongo_client.mongo_db
-    collection1 = database.create_collection('uuid_to_collection_mapping')
+    collection1 = database.create_collection("uuid_to_collection_mapping")
     collection1.insert_many(
         [
             {
                 "uuid": "homo_sapiens_GCA_000001405_28",
                 "collection": "collection2",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.510Z"
+                "load_date": "2023-06-29T17:00:41.510Z",
             },
             {
                 "uuid": "triticum_aestivum_GCA_900519105_1",
                 "collection": "collection2",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            }
+                "load_date": "2023-06-29T17:00:41.736Z",
+            },
         ]
     )
 
-    collection2 = database.create_collection('collection2')
+    collection2 = database.create_collection("collection2")
     collection2.insert_one(build_gene())
     collection2.insert_many(build_transcripts())
     collection2.insert_many(build_products())
@@ -68,12 +68,11 @@ def prepare_context_provider(mongo_client, xref):
     # is assigned to context_value which gets evaluated at the beginning
     # of every request.
     def context_provider():
-        context = {
-            "mongo_db_client": mongo_client,
-            "XrefResolver": xref
-        }
+        context = {"mongo_db_client": mongo_client, "XrefResolver": xref}
         return context
+
     return context_provider
+
 
 def setup_test():
     """

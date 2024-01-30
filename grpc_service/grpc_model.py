@@ -10,7 +10,11 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         self.grpc_stub = grpc_stub
 
     def get_genome_by_genome_uuid(self, genome_uuid, release_version=None):
-        logger.debug("Received RPC for GetGenomeByUUID with genome_uuid: '%s', release: %s", genome_uuid, release_version)
+        logger.debug(
+            "Received RPC for GetGenomeByUUID with genome_uuid: '%s', release: %s",
+            genome_uuid,
+            release_version,
+        )
         request = ensembl_metadata_pb2.GenomeUUIDRequest(
             genome_uuid=genome_uuid, release_version=release_version
         )
@@ -18,7 +22,11 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         return response
 
     def get_genome_by_keyword(self, keyword, release_version=None):
-        logger.debug("Received RPC for GetGenomesByKeyword with keyword: '%s', release: %s", keyword, release_version)
+        logger.debug(
+            "Received RPC for GetGenomesByKeyword with keyword: '%s', release: %s",
+            keyword,
+            release_version,
+        )
         request = ensembl_metadata_pb2.GenomeByKeywordRequest(
             keyword=keyword, release_version=release_version
         )
@@ -26,7 +34,10 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         return response
 
     def get_genome_by_assembly_acc_id(self, assembly_accession_id):
-        logger.debug("Received RPC for GetGenomesByAssemblyAccessionID with assembly_accession_id: '%s'", assembly_accession_id)
+        logger.debug(
+            "Received RPC for GetGenomesByAssemblyAccessionID with assembly_accession_id: '%s'",
+            assembly_accession_id,
+        )
         request = ensembl_metadata_pb2.AssemblyAccessionIDRequest(
             assembly_accession=assembly_accession_id
         )

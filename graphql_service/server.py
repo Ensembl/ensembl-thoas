@@ -77,7 +77,9 @@ CONTEXT_PROVIDER = prepare_context_provider(
 )
 
 starlette_middleware = [
-    middleware.Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
+    middleware.Middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"]
+    )
 ]
 
 # The original HTML file can be found under

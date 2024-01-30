@@ -45,7 +45,9 @@ class MongoDbClient:
         # Fallback to the collection in the configuration file if no data collection is found for the given UUID
         if not data_collection:
             data_collection_name = self.config.get("mongo_default_collection")
-            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
+            print(
+                f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID"
+            )
         else:
             data_collection_name = data_collection.get("collection")
             print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
@@ -85,20 +87,23 @@ class FakeMongoDbClient:
     """
     Sets up a mongomock collection for thoas code to test with
     """
+
     def __init__(self):
         mongo_client = mongomock.MongoClient()
         self.mongo_db = mongo_client.db
 
     def get_collection_conn(self, uuid):
-        lookup_service_collection = 'uuid_to_collection_mapping'
+        lookup_service_collection = "uuid_to_collection_mapping"
         query = {"uuid": uuid, "is_current": True}
         data_collection = self.mongo_db[lookup_service_collection].find_one(query)
 
         # Fallback to the default collection if no collection found in the mappings
         # for the given UUID
         if not data_collection:
-            data_collection_name = 'collection1'
-            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
+            data_collection_name = "collection1"
+            print(
+                f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID"
+            )
         else:
             data_collection_name = data_collection.get("collection")
             print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")

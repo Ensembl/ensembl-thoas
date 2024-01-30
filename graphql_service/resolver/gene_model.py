@@ -95,7 +95,6 @@ def resolve_gene(
     if not result:
         raise GeneNotFoundError(by_id=by_id)
 
-
     return result
 
 
@@ -187,7 +186,6 @@ def resolve_transcript(
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
 
-
     if by_symbol is None:
         by_symbol = bySymbol
     if by_id is None:
@@ -234,7 +232,8 @@ def resolve_transcript(
 
 @QUERY_TYPE.field("version")
 def resolve_api(
-    _: None, info: GraphQLResolveInfo  # the second argument must be named `info` to avoid a NameError
+    _: None,
+    info: GraphQLResolveInfo,  # the second argument must be named `info` to avoid a NameError
 ) -> Dict[str, Dict[str, str]]:
     """
     Resolve the API version.
@@ -702,19 +701,21 @@ def get_version_details() -> Dict[str, str]:
     config = configparser.ConfigParser()
 
     try:
-        if not config.read('version_config.ini'):
+        if not config.read("version_config.ini"):
             raise FileNotFoundError("INI file not found.")
 
-        version_data = config['version']
+        version_data = config["version"]
         return {
-            "major": version_data['major'],
-            "minor": version_data['minor'],
-            "patch": version_data['patch']
+            "major": version_data["major"],
+            "minor": version_data["minor"],
+            "patch": version_data["patch"],
         }
     except FileNotFoundError:
         logging.error("Version config file not found. Using default values.")
     except KeyError:
-        logging.error("Version section or keys not found in INI file. Using default values.")
+        logging.error(
+            "Version section or keys not found in INI file. Using default values."
+        )
     except Exception as exp:
         logging.error(f"Error reading INI file: {exp}. Using default values.")
 
@@ -750,8 +751,7 @@ def set_col_conn_for_uuid(info, uuid):
 
     col_conn = info.context["mongo_db_client"].get_collection_conn(uuid)
 
-    conn = {'col_conn': col_conn,
-            'data_loader': BatchLoaders(col_conn)}
+    conn = {"col_conn": col_conn, "data_loader": BatchLoaders(col_conn)}
 
     parent_key = get_path_parent_key(info)
     info.context.setdefault(parent_key, conn)
@@ -763,12 +763,12 @@ def set_col_conn_for_uuid(info, uuid):
 
 def get_col_conn(info):
     parent_key = get_path_parent_key(info)
-    return info.context[parent_key]['col_conn']
+    return info.context[parent_key]["col_conn"]
 
 
 def get_data_loader(info):
     parent_key = get_path_parent_key(info)
-    return info.context[parent_key]['data_loader']
+    return info.context[parent_key]["data_loader"]
 
 
 def get_path_parent_key(info):
