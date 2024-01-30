@@ -32,11 +32,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      # Set up Python version
-      - name: Set up Python 3.7
+    # Set up Python version from the matrix
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.python-version }}
 
       # Runs a set of commands installing Python dependencies using the runners shell (Run a multi-line script)
       - name: Install Python dependencies
