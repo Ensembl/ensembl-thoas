@@ -25,3 +25,10 @@ class GRPC_MODEL:
         )
         response = self.grpc_stub.GetGenomesByAssemblyAccessionID(request)
         return response
+
+    def get_release_by_genome_uuid(self, genome_uuid):
+        request = ensembl_metadata_pb2.ReleaseVersionRequest(
+            genome_uuid=genome_uuid
+        )
+        response = self.grpc_stub.GetReleaseVersionByUUID(request)
+        return response

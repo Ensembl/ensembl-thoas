@@ -14,7 +14,10 @@
 import pymongo
 import mongomock
 import grpc
+import logging
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDbClient:
@@ -55,12 +58,22 @@ class MongoDbClient:
 
         return data_collection_connection
 
+    def get_database_conn(self, grpc_model, uuid):
+        # default value is 'mongo_default_db' that is in the config
+        chosen_db = self.config.get('mongo_default_db')
 
-    def get_database_conn(self, uuid):
-        # gRPC logic can go here
-        # ...
+        grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
+        if grpc_response:
+            # replacing '.' with '_' to avoid
+            # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
+            release_version = str(grpc_response.release_version).replace('.', '_')
+            chosen_db = 'release_' + release_version
 
-        data_database_connection = self.mongo_client['release_110']
+        logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB (ignored for now)")
+        # Ignoring the code snippet above (falling back to 'mongo_default_db') for now
+        # TODO: delete the line below once the DB is setup properly
+        chosen_db = self.config.get('mongo_default_db')
+        data_database_connection = self.mongo_client[chosen_db]
 
         return data_database_connection
 

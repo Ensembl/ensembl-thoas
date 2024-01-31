@@ -539,7 +539,7 @@ def test_overlap_region(start, end, expected_ids, slice_data):
 
     # Finding the collection here as we are not using the base resolver
     model.set_col_conn_for_uuid(info, "test_genome_id")
-    connection = model.get_col_conn(info)
+    connection = model.get_db_conn(info)
 
     result = model.overlap_region(
         connection=connection,
@@ -558,7 +558,7 @@ def test_overlap_region_too_many_results(slice_data):
 
     # Finding the collection here as we are not using the base resolver
     model.set_col_conn_for_uuid(info, "test_genome_id")
-    connection = model.get_col_conn(info)
+    connection = model.get_db_conn(info)
 
     result = None
     with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:

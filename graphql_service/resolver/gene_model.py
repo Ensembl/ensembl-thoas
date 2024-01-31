@@ -339,14 +339,16 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
 @TRANSCRIPT_TYPE.field("gene")
 async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) -> Dict:
     query = {
-        "type": "Gene",
+        "type": "Gene",  # TODO: no need to select a type if we have collection per type anyway
         "genome_id": transcript["genome_id"],
         "stable_id": transcript["gene"],
     }
 
-    connection = get_col_conn(info)
+    connection_db = get_db_conn(info)
+    gene_collection = connection_db['gene']
+    logger.info(f"[resolve_transcript_gene] Getting Gene from DB: '{connection_db.name}'")
 
-    gene = connection.find_one(query)
+    gene = gene_collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
             by_id={
@@ -748,6 +750,7 @@ def get_version_details() -> Dict[str, str]:
 
 
 def set_col_conn_for_uuid(info, uuid):
+    # TODO: Delete this function once we make sure set_db_conn_for_uuid() function below is working as expected
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
     #
@@ -814,17 +817,21 @@ def set_db_conn_for_uuid(info, uuid):
     # its own copy of the new dynamic context
     # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
 
-    # db_conn = info.context["mongo_db_client"].get_database_conn(uuid)
-    db_conn = info.context["mongo_db_client"].get_database_conn(uuid)
+    grpc_model = info.context["grpc_model"]
+    # we pass the gRPC model instance and genome_uuid to get the release version used to infer Mongo DB's name
+    db_conn = info.context["mongo_db_client"].get_database_conn(grpc_model, uuid)
 
-    conn = {'db_conn': db_conn,
-            'data_loader': BatchLoaders(db_conn)}
+    conn = {
+        'db_conn': db_conn,
+        'data_loader': BatchLoaders(db_conn)
+    }
 
     parent_key = get_path_parent_key(info)
     info.context.setdefault(parent_key, conn)
 
 
 def get_col_conn(info):
+    # TODO: Delete this function once we make sure get_db_conn() function below is working as expected
     parent_key = get_path_parent_key(info)
     return info.context[parent_key]['col_conn']
 
