@@ -15,7 +15,6 @@
 import pytest
 from ariadne import graphql
 
-from graphql_service.resolver.data_loaders import BatchLoaders
 from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()

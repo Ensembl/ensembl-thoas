@@ -1,24 +1,30 @@
 # Workflow name
-name: PyTest and Black
+name: PyTest, Black and Pylint
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on pull request (on main only) events
+  # Triggers the workflow on pull request (on main and develop only) events
   pull_request:
     branches:
       - main
+      - develop
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "test"
-  test:
+  # This workflow contains a single job called "tests"
+  tests:
     # The type of runner that the job will run on and timeout in minutes
-    name: Run Python Tests and Black formatter
+    name: Run Python Tests, Black formatter and Pylint
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    # Include a strategy matrix in order to allow the job to run multiple times with different versions of Python
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -26,11 +32,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      # Set up Python version
-      - name: Set up Python 3.7
+    # Set up Python version from the matrix
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.python-version }}
 
       # Runs a set of commands installing Python dependencies using the runners shell (Run a multi-line script)
       - name: Install Python dependencies
@@ -48,3 +54,8 @@ jobs:
       - name: Run Black code formatter
         run: |
           black . --check --verbose --diff --color
+
+      # Run Pylint
+      - name: Run Pylint
+        run: |
+          pylint $(git ls-files '*.py') --fail-under=9.5
