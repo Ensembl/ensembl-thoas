@@ -12,8 +12,9 @@
    limitations under the License.
 """
 
+
 def check_config_validity(config):
-    MANDATORY_FIELDS = [
+    mandatory_fields = [
         "mongo_host",
         "mongo_port",
         "mongo_user",
@@ -24,9 +25,11 @@ def check_config_validity(config):
         "grpc_host",
         "grpc_port",
     ]
-    for mandatory_field in MANDATORY_FIELDS:
+    for mandatory_field in mandatory_fields:
         if not config.get(mandatory_field):
-            raise KeyError(f"Missing information in configuration file - '{mandatory_field}'")
+            raise KeyError(
+                f"Missing information in configuration file - '{mandatory_field}'"
+            )
 
 
 def get_ensembl_metadata_api_version():
@@ -34,11 +37,11 @@ def get_ensembl_metadata_api_version():
     Get the Metadata API tag from requirement.txt file
     """
     version = "unknown"  # default version
-    with open('requirements.txt', 'r') as file:
+    with open("requirements.txt", "r", encoding="UTF-8") as file:
         lines = file.readlines()
         for line in lines:
-            if 'ensembl-metadata-api' in line:
+            if "ensembl-metadata-api" in line:
                 # Extract the tag part from the line
-                version = line.strip().split('@')[-1]
+                version = line.strip().split("@")[-1]
                 break
     return version

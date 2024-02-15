@@ -11,10 +11,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from common.crossrefs import XrefResolver
+from common import crossrefs, db
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.tests.fixtures.human_brca2 import (
     build_gene,
     build_transcripts,
@@ -25,31 +24,30 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
-from common.db import FakeMongoDbClient
 
 
 def prepare_mongo_instance():
-    mongo_client = FakeMongoDbClient()
+    mongo_client = db.FakeMongoDbClient()
     database = mongo_client.mongo_db
-    collection1 = database.create_collection('uuid_to_collection_mapping')
+    collection1 = database.create_collection("uuid_to_collection_mapping")
     collection1.insert_many(
         [
             {
                 "uuid": "homo_sapiens_GCA_000001405_28",
                 "collection": "collection2",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.510Z"
+                "load_date": "2023-06-29T17:00:41.510Z",
             },
             {
                 "uuid": "triticum_aestivum_GCA_900519105_1",
                 "collection": "collection2",
                 "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            }
+                "load_date": "2023-06-29T17:00:41.736Z",
+            },
         ]
     )
 
-    collection2 = database.create_collection('collection2')
+    collection2 = database.create_collection("collection2")
     collection2.insert_one(build_gene())
     collection2.insert_many(build_transcripts())
     collection2.insert_many(build_products())
@@ -70,12 +68,11 @@ def prepare_context_provider(mongo_client, xref):
     # is assigned to context_value which gets evaluated at the beginning
     # of every request.
     def context_provider():
-        context = {
-            "mongo_db_client": mongo_client,
-            "XrefResolver": xref
-        }
+        context = {"mongo_db_client": mongo_client, "XrefResolver": xref}
         return context
+
     return context_provider
+
 
 def setup_test():
     """
@@ -85,7 +82,7 @@ def setup_test():
     executable_schema = prepare_executable_schema()
 
     mongo_client = prepare_mongo_instance()
-    xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+    xref = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
     context = prepare_context_provider(mongo_client, xref)
 
     return executable_schema, context

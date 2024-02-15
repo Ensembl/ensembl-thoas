@@ -17,6 +17,7 @@ from typing import Dict, Optional, List, Any
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
+from pymongo.collection import Collection
 
 from graphql_service.resolver.data_loaders import BatchLoaders
 
@@ -39,7 +40,6 @@ from graphql_service.resolver.exceptions import (
     MissingArgumentException,
 )
 
-from pymongo.collection import Collection
 
 # Define Query types for GraphQL
 # Don't forget to import these into ariadne_app.py if you add a new type
@@ -62,7 +62,7 @@ TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
 def resolve_gene(
     _,
     info: GraphQLResolveInfo,
-    byId: Optional[Dict[str, str]] = None,
+    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Gene via stable_id"
@@ -94,7 +94,6 @@ def resolve_gene(
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
-
 
     return result
 
@@ -180,13 +179,12 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
-    bySymbol: Optional[Dict[str, str]] = None,
+    bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_symbol: Optional[Dict[str, str]] = None,
-    byId: Optional[Dict[str, str]] = None,
+    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
     by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
-
 
     if by_symbol is None:
         by_symbol = bySymbol
@@ -234,7 +232,8 @@ def resolve_transcript(
 
 @QUERY_TYPE.field("version")
 def resolve_api(
-    _: None, info: GraphQLResolveInfo  # the second argument must be named `info` to avoid a NameError
+    _: None,
+    info: GraphQLResolveInfo,  # the second argument must be named `info` to avoid a NameError
 ) -> Dict[str, Dict[str, str]]:
     """
     Resolve the API version.
@@ -243,8 +242,8 @@ def resolve_api(
     try:
         version_details = get_version_details()
         return {"api": version_details}
-    except Exception as e:
-        logging.error(f"Error resolving API version: {e}")
+    except Exception as exp:
+        logging.error(f"Error resolving API version: {exp}")
         raise
 
 
@@ -348,8 +347,8 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 def resolve_overlap(
     _,
     info: GraphQLResolveInfo,
-    genomeId: Optional[str] = None,
-    regionName: Optional[str] = None,
+    genomeId: Optional[str] = None,  # pylint: disable=invalid-name
+    regionName: Optional[str] = None,  # pylint: disable=invalid-name
     start: Optional[int] = None,
     end: Optional[int] = None,
     by_slice: Optional[Dict[str, Any]] = None,
@@ -702,21 +701,23 @@ def get_version_details() -> Dict[str, str]:
     config = configparser.ConfigParser()
 
     try:
-        if not config.read('version_config.ini'):
+        if not config.read("version_config.ini"):
             raise FileNotFoundError("INI file not found.")
 
-        version_data = config['version']
+        version_data = config["version"]
         return {
-            "major": version_data['major'],
-            "minor": version_data['minor'],
-            "patch": version_data['patch']
+            "major": version_data["major"],
+            "minor": version_data["minor"],
+            "patch": version_data["patch"],
         }
     except FileNotFoundError:
         logging.error("Version config file not found. Using default values.")
     except KeyError:
-        logging.error("Version section or keys not found in INI file. Using default values.")
-    except Exception as e:
-        logging.error(f"Error reading INI file: {e}. Using default values.")
+        logging.error(
+            "Version section or keys not found in INI file. Using default values."
+        )
+    except Exception as exp:
+        logging.error(f"Error reading INI file: {exp}. Using default values.")
 
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
@@ -750,8 +751,7 @@ def set_col_conn_for_uuid(info, uuid):
 
     col_conn = info.context["mongo_db_client"].get_collection_conn(uuid)
 
-    conn = {'col_conn': col_conn,
-            'data_loader': BatchLoaders(col_conn)}
+    conn = {"col_conn": col_conn, "data_loader": BatchLoaders(col_conn)}
 
     parent_key = get_path_parent_key(info)
     info.context.setdefault(parent_key, conn)
@@ -763,12 +763,12 @@ def set_col_conn_for_uuid(info, uuid):
 
 def get_col_conn(info):
     parent_key = get_path_parent_key(info)
-    return info.context[parent_key]['col_conn']
+    return info.context[parent_key]["col_conn"]
 
 
 def get_data_loader(info):
     parent_key = get_path_parent_key(info)
-    return info.context[parent_key]['data_loader']
+    return info.context[parent_key]["data_loader"]
 
 
 def get_path_parent_key(info):

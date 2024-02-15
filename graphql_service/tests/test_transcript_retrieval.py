@@ -161,9 +161,7 @@ async def test_transcript_splicing(snapshot):
         }
     }"""
     (success, result) = await graphql(
-        executable_schema,
-        {"query": query},
-        context_value=context()
+        executable_schema, {"query": query}, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]
