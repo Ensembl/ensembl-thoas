@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import graphql.error.graphql_error
 import pymongo
 import mongomock
 import grpc
@@ -59,22 +60,31 @@ class MongoDbClient:
         return data_collection_connection
 
     def get_database_conn(self, grpc_model, uuid):
-        # default value is 'mongo_default_db' that is in the config
+        grpc_response = None
         chosen_db = self.config.get('mongo_default_db')
+        # Try to connect to gRPC
+        try:
+            grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
+        except Exception as grpc_exp:
+            # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
+            # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
+            logger.debug(f"[get_database_conn] Couldn't connected to gRPC Host: {grpc_exp}")
 
-        grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
         if grpc_response:
             # replacing '.' with '_' to avoid
             # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
             release_version = str(grpc_response.release_version).replace('.', '_')
             chosen_db = 'release_' + release_version
 
-        logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB (ignored for now)")
-        # Ignoring the code snippet above (falling back to 'mongo_default_db') for now
-        # TODO: delete the line below once the DB is setup properly
-        chosen_db = self.config.get('mongo_default_db')
-        data_database_connection = self.mongo_client[chosen_db]
+        # Ignoring the code snippet above (for testing purposes)
+        # TODO: delete the condition below once the DB is setup properly
+        # if uuid == 'a73356e1-93e7-11ec-a39d-005056b38ce3':  # plasmodium
+        #     chosen_db = 'release_108_plasmodium'
+        # else:
+        #     chosen_db = self.config.get('mongo_default_db')
 
+        logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB")
+        data_database_connection = self.mongo_client[chosen_db]
         return data_database_connection
 
 
