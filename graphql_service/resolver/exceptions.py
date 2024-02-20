@@ -3,6 +3,17 @@ from typing import Optional, Dict
 from graphql import GraphQLError
 
 
+class DatabaseNotFoundError(GraphQLError):
+    """
+    Custom error to be raised if database is not found
+    """
+
+    def __init__(self, db_name: str):
+        self.extensions = {"code": f"DATABASE_NOT_FOUND"}
+        message = f"Failed to find database: {db_name}"
+        super().__init__(message, extensions=self.extensions)
+
+
 class FieldNotFoundError(GraphQLError):
     """
     Custom error to be raised if a field cannot be found by id

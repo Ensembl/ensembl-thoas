@@ -38,6 +38,7 @@ from graphql_service.resolver.exceptions import (
     InputFieldArgumentNumberError,
     GenomeNotFoundError,
     MissingArgumentException,
+    DatabaseNotFoundError,
 )
 
 from pymongo.collection import Collection
@@ -95,7 +96,11 @@ def resolve_gene(
     gene_collection = connection_db['gene']
 
     logger.info(f"[resolve_gene] Getting Gene from DB: '{connection_db.name}'")
-    result = gene_collection.find_one(query)
+    try:
+        result = gene_collection.find_one(query)
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise DatabaseNotFoundError(db_name=connection_db.name)
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
@@ -118,7 +123,12 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
     gene_collection = connection_db['gene']
     logger.info(f"[resolve_genes] Getting Gene from DB: '{connection_db.name}'")
 
-    result = gene_collection.find(query)
+    try:
+        result = gene_collection.find(query)
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise DatabaseNotFoundError(db_name=connection_db.name)
+
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
     if len(result) == 0:
@@ -233,7 +243,11 @@ def resolve_transcript(
     transcript_collection = connection_db['transcript']
     logger.info(f"[resolve_transcript] Getting Transcript from DB: '{connection_db.name}'")
 
-    transcript = transcript_collection.find_one(query)
+    try:
+        transcript = transcript_collection.find_one(query)
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise DatabaseNotFoundError(db_name=connection_db.name)
 
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)

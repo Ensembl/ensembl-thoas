@@ -78,8 +78,9 @@ class MongoDbClient:
 
         # Ignoring the code snippet above (for testing purposes)
         # TODO: delete the condition below once the DB is setup properly
+        # YES!! switching between DBs WORKS!!
         # if uuid == 'a73356e1-93e7-11ec-a39d-005056b38ce3':  # plasmodium
-        #     chosen_db = 'release_108_plasmodium'
+        #     chosen_db = 'ensthoasdev'
         # else:
         #     chosen_db = self.config.get('mongo_default_db')
 
