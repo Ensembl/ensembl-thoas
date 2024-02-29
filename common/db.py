@@ -37,25 +37,26 @@ class MongoDbClient:
 
     def get_database_conn(self, grpc_model, uuid):
         grpc_response = None
-        chosen_db = self.config.get('mongo_default_db')
+        chosen_db = self.config.get("mongo_default_db")
         # Try to connect to gRPC
         try:
             grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
         except Exception as grpc_exp:
             # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
             # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
-            logger.debug(f"[get_database_conn] Couldn't connected to gRPC Host: {grpc_exp}")
+            logger.debug(
+                f"[get_database_conn] Couldn't connected to gRPC Host: {grpc_exp}"
+            )
 
         if grpc_response:
             # replacing '.' with '_' to avoid
             # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
-            release_version = str(grpc_response.release_version).replace('.', '_')
-            chosen_db = 'release_' + release_version
+            release_version = str(grpc_response.release_version).replace(".", "_")
+            chosen_db = "release_" + release_version
 
         logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB")
         data_database_connection = self.mongo_client[chosen_db]
         return data_database_connection
-
 
     @staticmethod
     def connect_mongo(config):
@@ -88,6 +89,7 @@ class FakeMongoDbClient:
     """
     Sets up a mongomock collection for thoas code to test with
     """
+
     def __init__(self):
         self.mongo_client = mongomock.MongoClient()
         self.mongo_db = self.mongo_client.db

@@ -18,6 +18,7 @@ from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
 
+
 @pytest.mark.asyncio
 async def test_gene_retrieval_by_id_camel_case(snapshot):
     "Test `gene` query using byId camelCase"

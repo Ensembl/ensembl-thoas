@@ -12,6 +12,7 @@
    limitations under the License.
 """
 
+
 def check_config_validity(config):
     MANDATORY_FIELDS = [
         "mongo_host",
@@ -24,4 +25,6 @@ def check_config_validity(config):
     ]
     for mandatory_field in MANDATORY_FIELDS:
         if not config.get(mandatory_field):
-            raise KeyError(f"Missing information in configuration file - '{mandatory_field}'")
+            raise KeyError(
+                f"Missing information in configuration file - '{mandatory_field}'"
+            )

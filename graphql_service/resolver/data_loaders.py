@@ -126,5 +126,7 @@ class BatchLoaders:
         function in order to be valid.
         """
         # the collection name is the doc_type
-        logger.info(f"Getting '{doc_type}' from DB: '{self.database_conn.name}', collection '{doc_type}'")
+        logger.info(
+            f"Getting '{doc_type}' from DB: '{self.database_conn.name}', collection '{doc_type}'"
+        )
         return list(self.database_conn[doc_type].find(query))

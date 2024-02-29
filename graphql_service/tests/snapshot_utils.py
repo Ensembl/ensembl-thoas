@@ -31,19 +31,19 @@ from common.db import FakeMongoDbClient
 def prepare_mongo_instance():
     mongo_client = FakeMongoDbClient()
     database = mongo_client.mongo_db
-    gene_coll = database.create_collection('gene')
+    gene_coll = database.create_collection("gene")
     gene_coll.insert_one(build_gene())
-    transcript_coll = database.create_collection('transcript')
+    transcript_coll = database.create_collection("transcript")
     transcript_coll.insert_many(build_transcripts())
-    protein_coll = database.create_collection('protein')
+    protein_coll = database.create_collection("protein")
     protein_coll.insert_many(build_products())
-    region_coll = database.create_collection('region')
+    region_coll = database.create_collection("region")
     region_coll.insert_one(build_region())
-    assembly_coll = database.create_collection('assembly')
+    assembly_coll = database.create_collection("assembly")
     assembly_coll.insert_one(build_assembly())
-    organism_coll = database.create_collection('organism')
+    organism_coll = database.create_collection("organism")
     organism_coll.insert_one(build_organism())
-    species_coll = database.create_collection('species')
+    species_coll = database.create_collection("species")
     species_coll.insert_one(build_species())
     # wheat_gene_coll = database.create_collection('gene')
     gene_coll.insert_many(build_wheat_genes())
@@ -62,9 +62,10 @@ def prepare_context_provider(mongo_client, xref, grpc_model):
         context = {
             "mongo_db_client": mongo_client,
             "XrefResolver": xref,
-            "grpc_model": grpc_model
+            "grpc_model": grpc_model,
         }
         return context
+
     return context_provider
 
 

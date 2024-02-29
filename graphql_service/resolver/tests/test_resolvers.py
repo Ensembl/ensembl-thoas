@@ -29,7 +29,7 @@ def create_GraphQLResolveInfo(database_client):
     Factory for creating the mock  Info objects produced by graphql
     """
     info = Mock()
-    attrs = {'as_list.return_value': ['test_feature']}
+    attrs = {"as_list.return_value": ["test_feature"]}
     info.path = Mock(**attrs)
     request_mock = Mock()
     request_mock.state = State()
@@ -38,9 +38,10 @@ def create_GraphQLResolveInfo(database_client):
         "mongo_db_client": database_client,
         "XrefResolver": XrefResolver(from_file="common/tests/mini_identifiers.json"),
         "request": request_mock,
-        "grpc_model": "fake_grpc_model"  # TODO: find a way to test/mock gRPC
+        "grpc_model": "fake_grpc_model",  # TODO: find a way to test/mock gRPC
     }
     return info
+
 
 @pytest.fixture(name="basic_data")
 def fixture_basic_data():
@@ -118,7 +119,7 @@ def fixture_transcript_data():
                 "gene": "ENSG001.1",
                 "product_generating_contexts": [],
                 "gene_foreign_key": "1_ENSG001.1",
-            }
+            },
         ]
     )
 
@@ -236,7 +237,7 @@ def fixture_genome_data():
                 "assembly_id": "test_assembly_id_2",
                 "name": "other banana assembly",
                 "organism_foreign_key": "test_organism_id_1",
-            }
+            },
         ]
     )
 
@@ -253,7 +254,7 @@ def fixture_genome_data():
                 "scientific_name": "other banana",
                 "organism_primary_key": "test_organism_id_2",
                 "species_foreign_key": "test_species_id_1",
-            }
+            },
         ]
     )
 
@@ -326,6 +327,7 @@ def test_resolve_gene(basic_data):
 
     assert result["symbol"] == "banana"
 
+
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
 
@@ -379,7 +381,7 @@ def test_resolve_transcript_by_id_not_found(transcript_data):
     )
     assert transcript_not_found_error.value.extensions["code"] == "TRANSCRIPT_NOT_FOUND"
     assert transcript_not_found_error.value.extensions["stable_id"] == "FAKEYFAKEYFAKEY"
-    assert transcript_not_found_error.value.extensions["genome_id"] == '1'
+    assert transcript_not_found_error.value.extensions["genome_id"] == "1"
 
 
 def test_resolve_transcript_by_symbol(transcript_data):
