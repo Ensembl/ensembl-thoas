@@ -18,10 +18,7 @@ def check_config_validity(config):
         "mongo_port",
         "mongo_user",
         "mongo_password",
-        # "mongo_db",
-        # "mongo_default_collection",
         "mongo_default_db",
-        "mongo_lookup_service_collection",
         "grpc_host",
         "grpc_port",
     ]

@@ -69,29 +69,6 @@ def fixture_basic_data():
         ]
     )
 
-    # collection2 = database.create_collection('gene_collection2')
-    #
-    # collection2.insert_many(
-    #     [
-    #         {
-    #             "genome_id": "2",
-    #             "type": "Gene",
-    #             "symbol": "apple",
-    #             "stable_id": "ENSG003.1",
-    #             "unversioned_stable_id": "ENSG003",
-    #             "gene_primary_id": "1_ENSG003.1",
-    #         },
-    #         {
-    #             "genome_id": "2",
-    #             "type": "Gene",
-    #             "symbol": "orange",
-    #             "stable_id": "ENSG004.2",
-    #             "unversioned_stable_id": "ENSG004",
-    #             "gene_primary_id": "1_ENSG004.2",
-    #         },
-    #     ]
-    # )
-
     return mongo_client
 
 
