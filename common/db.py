@@ -32,7 +32,6 @@ class MongoDbClient:
         Note that config here is a configparser object
         """
         self.config = config
-        # self.mongo_db = MongoDbClient.connect_mongo(self.config)
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
     def get_database_conn(self, grpc_model, uuid):
@@ -66,7 +65,6 @@ class MongoDbClient:
         port = int(config.get("mongo_port"))
         user = config.get("mongo_user")
         password = config.get("mongo_password")
-        # dbname = config.get("mongo_default_db")
 
         client = pymongo.MongoClient(
             host,

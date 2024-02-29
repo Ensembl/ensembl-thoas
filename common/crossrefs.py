@@ -107,8 +107,8 @@ class XrefResolver:
         Provide prefix-based indexes for the flat list of entities from
         the identifiers.org api
         """
-        for ns in self.identifiers_org_data["payload"]["namespaces"]:
-            self.id_org_indexed[ns["prefix"]] = ns
+        for namespace in self.identifiers_org_data["payload"]["namespaces"]:
+            self.id_org_indexed[namespace["prefix"]] = namespace
 
     def generate_url_from_id_org_data(self, xref_acc_id, id_org_ns_prefix):
         """
@@ -204,9 +204,9 @@ class XrefResolver:
             return xref_base + xref_acc_id
 
         # Now get the URL from identifiers.org using the id_org_ns_prefix and xref_id
-        URL = self.generate_url_from_id_org_data(xref_acc_id, id_org_ns_prefix)
+        url = self.generate_url_from_id_org_data(xref_acc_id, id_org_ns_prefix)
 
-        return URL
+        return url
 
     def annotate_crossref(self, xref):
         """

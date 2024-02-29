@@ -14,7 +14,6 @@
 from unittest.mock import Mock
 
 import pytest
-import mongomock
 from starlette.datastructures import State
 
 import graphql_service.resolver.gene_model as model
@@ -24,7 +23,7 @@ from common.db import FakeMongoDbClient
 from graphql_service.tests.snapshot_utils import prepare_mongo_instance
 
 
-def create_GraphQLResolveInfo(database_client):
+def create_graphql_resolve_info(database_client):
     """
     Factory for creating the mock  Info objects produced by graphql
     """
@@ -290,7 +289,7 @@ def fixture_genome_data():
 def test_resolve_gene(basic_data):
     "Test the querying of Mongo by gene symbol"
 
-    info = create_GraphQLResolveInfo(basic_data)
+    info = create_graphql_resolve_info(basic_data)
 
     # Check we can resolve using byId camelCase
     result = model.resolve_gene(
@@ -331,7 +330,7 @@ def test_resolve_gene(basic_data):
 def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
 
-    info = create_GraphQLResolveInfo(basic_data)
+    info = create_graphql_resolve_info(basic_data)
 
     # Check we can resolve using by_symbol
     result = model.resolve_genes(
@@ -358,7 +357,7 @@ def test_resolve_gene_by_symbol(basic_data):
 def test_resolve_transcript_by_id(transcript_data):
     "Test fetching of transcripts by stable ID"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
     result = model.resolve_transcript(
         None, info, byId={"stable_id": "ENST001.1", "genome_id": "1"}
     )
@@ -369,7 +368,7 @@ def test_resolve_transcript_by_id(transcript_data):
 
 def test_resolve_transcript_by_id_not_found(transcript_data):
     result = None
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         result = model.resolve_transcript(
             None, info, byId={"stable_id": "FAKEYFAKEYFAKEY", "genome_id": "1"}
@@ -387,7 +386,7 @@ def test_resolve_transcript_by_id_not_found(transcript_data):
 def test_resolve_transcript_by_symbol(transcript_data):
     "Test fetching of transcripts by symbol"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
     result = model.resolve_transcript(
         None, info, bySymbol={"symbol": "kumquat", "genome_id": "1"}
     )
@@ -395,7 +394,7 @@ def test_resolve_transcript_by_symbol(transcript_data):
 
 
 def test_resolve_transcript_by_symbol_not_found(transcript_data):
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
         model.resolve_transcript(
             None,
@@ -418,7 +417,7 @@ def test_resolve_transcript_by_symbol_not_found(transcript_data):
 async def test_resolve_gene_transcripts(transcript_data):
     "Check the DataLoader for transcripts is working via gene. Requires event loop for DataLoader"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -437,7 +436,7 @@ async def test_resolve_gene_transcripts(transcript_data):
 async def test_resolve_gene_from_transcript(transcript_data):
     "Check the DataLoader for gene is working via transcript. Requires event loop for DataLoader"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -454,7 +453,7 @@ async def test_resolve_gene_from_transcript(transcript_data):
 def test_resolve_overlap(slice_data):
     "Check features can be found via coordinates"
 
-    info = create_GraphQLResolveInfo(slice_data)
+    info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "test_genome_id")
@@ -490,7 +489,7 @@ query_region_expectations = [
 @pytest.mark.parametrize("start,end,expected_ids", query_region_expectations)
 def test_overlap_region(start, end, expected_ids, slice_data):
 
-    info = create_GraphQLResolveInfo(slice_data)
+    info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "test_genome_id")
@@ -509,7 +508,7 @@ def test_overlap_region(start, end, expected_ids, slice_data):
 
 def test_overlap_region_too_many_results(slice_data):
 
-    info = create_GraphQLResolveInfo(slice_data)
+    info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "test_genome_id")
@@ -543,7 +542,7 @@ async def test_resolve_region_happy_case(region_data):
         "strand": {"code": "forward", "value": 1},
         "default": True,
     }
-    info = create_GraphQLResolveInfo(region_data)
+    info = create_graphql_resolve_info(region_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
@@ -554,7 +553,7 @@ async def test_resolve_region_happy_case(region_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region_region_not_exist(region_data):
-    info = create_GraphQLResolveInfo(region_data)
+    info = create_graphql_resolve_info(region_data)
     slc = {
         "region_id": "some_non_existing_region_id",
     }
@@ -582,7 +581,7 @@ def test_url_generation(basic_data):
         },
     }
 
-    info = create_GraphQLResolveInfo(basic_data)
+    info = create_graphql_resolve_info(basic_data)
     result = model.insert_crossref_urls({"external_references": [xref]}, info)
 
     for key, value in xref.items():
@@ -603,7 +602,7 @@ def test_url_generation(basic_data):
 async def test_resolve_transcript_products(transcript_data):
     "Check the DataLoader for products is working via transcript. Requires event loop for DataLoader"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -628,7 +627,7 @@ async def test_resolve_transcript_products_product_not_exists(transcript_data):
         "genome_id": "1",
         "product_foreign_key": "adsfadsfa",
     }
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -644,7 +643,7 @@ async def test_resolve_transcript_products_product_not_exists(transcript_data):
 async def test_resolve_nested_products(transcript_data):
     "Test products inside transcripts inside the gene"
 
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
     gene_result = model.resolve_gene(
         None, info, byId={"genome_id": "1", "stable_id": "ENSG001.1"}
     )
@@ -661,7 +660,7 @@ async def test_resolve_nested_products(transcript_data):
 
 @pytest.mark.asyncio
 async def test_resolve_assembly_from_region(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -681,7 +680,7 @@ async def test_resolve_assembly_from_region(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_assembly_from_region_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -702,7 +701,7 @@ async def test_resolve_assembly_from_region_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_regions_from_assembly(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -731,7 +730,7 @@ async def test_resolve_regions_from_assembly(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_regions_from_assembly_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -750,7 +749,7 @@ async def test_resolve_regions_from_assembly_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_organism_from_assembly(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -769,7 +768,7 @@ async def test_resolve_organism_from_assembly(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_organism_from_assembly_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -785,7 +784,7 @@ async def test_resolve_organism_from_assembly_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_assemblies_from_organism(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -817,7 +816,7 @@ async def test_resolve_assemblies_from_organism(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_assemblies_from_organism_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
 
@@ -838,7 +837,7 @@ async def test_resolve_assemblies_from_organism_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_species_from_organism(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -861,7 +860,7 @@ async def test_resolve_species_from_organism(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_species_from_organism_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -881,7 +880,7 @@ async def test_resolve_species_from_organism_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_organisms_from_species(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -912,7 +911,7 @@ async def test_resolve_organisms_from_species(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_organisms_from_species_not_exists(genome_data):
-    info = create_GraphQLResolveInfo(genome_data)
+    info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -931,7 +930,7 @@ async def test_resolve_organisms_from_species_not_exists(genome_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region(region_data):
-    info = create_GraphQLResolveInfo(region_data)
+    info = create_graphql_resolve_info(region_data)
 
     result = await model.resolve_region(
         None,
@@ -948,7 +947,7 @@ async def test_resolve_region(region_data):
 
 @pytest.mark.asyncio
 async def test_resolve_region_no_results(region_data):
-    info = create_GraphQLResolveInfo(region_data)
+    info = create_graphql_resolve_info(region_data)
 
     result = None
     with pytest.raises(model.RegionNotFoundError) as region_not_found_error:
@@ -979,7 +978,7 @@ async def test_resolve_gene_transcripts_page():
 
 @pytest.mark.asyncio
 async def test_resolve_transcripts_page_transcripts(transcript_data):
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -1002,7 +1001,7 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
 
 @pytest.mark.asyncio
 async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_data):
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
@@ -1014,7 +1013,7 @@ async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_da
 
 @pytest.mark.asyncio
 async def test_resolve_transcripts_page_metadata(transcript_data):
-    info = create_GraphQLResolveInfo(transcript_data)
+    info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
     model.set_db_conn_for_uuid(info, "1")
