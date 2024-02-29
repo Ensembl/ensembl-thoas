@@ -31,38 +31,27 @@ from common.db import FakeMongoDbClient
 def prepare_mongo_instance():
     mongo_client = FakeMongoDbClient()
     database = mongo_client.mongo_db
-    collection1 = database.create_collection('uuid_to_collection_mapping')
-    collection1.insert_many(
-        [
-            {
-                "uuid": "homo_sapiens_GCA_000001405_28",
-                "collection": "collection2",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.510Z"
-            },
-            {
-                "uuid": "triticum_aestivum_GCA_900519105_1",
-                "collection": "collection2",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            }
-        ]
-    )
-
-    collection2 = database.create_collection('collection2')
-    collection2.insert_one(build_gene())
-    collection2.insert_many(build_transcripts())
-    collection2.insert_many(build_products())
-    collection2.insert_one(build_region())
-    collection2.insert_one(build_assembly())
-    collection2.insert_one(build_organism())
-    collection2.insert_one(build_species())
-    collection2.insert_many(build_wheat_genes())
+    gene_coll = database.create_collection('gene')
+    gene_coll.insert_one(build_gene())
+    transcript_coll = database.create_collection('transcript')
+    transcript_coll.insert_many(build_transcripts())
+    protein_coll = database.create_collection('protein')
+    protein_coll.insert_many(build_products())
+    region_coll = database.create_collection('region')
+    region_coll.insert_one(build_region())
+    assembly_coll = database.create_collection('assembly')
+    assembly_coll.insert_one(build_assembly())
+    organism_coll = database.create_collection('organism')
+    organism_coll.insert_one(build_organism())
+    species_coll = database.create_collection('species')
+    species_coll.insert_one(build_species())
+    # wheat_gene_coll = database.create_collection('gene')
+    gene_coll.insert_many(build_wheat_genes())
 
     return mongo_client
 
 
-def prepare_context_provider(mongo_client, xref):
+def prepare_context_provider(mongo_client, xref, grpc_model):
 
     # Dataloader should be bound to every request.
     # mongo_client and xrefs are created only once but
@@ -72,10 +61,12 @@ def prepare_context_provider(mongo_client, xref):
     def context_provider():
         context = {
             "mongo_db_client": mongo_client,
-            "XrefResolver": xref
+            "XrefResolver": xref,
+            "grpc_model": grpc_model
         }
         return context
     return context_provider
+
 
 def setup_test():
     """
@@ -86,6 +77,7 @@ def setup_test():
 
     mongo_client = prepare_mongo_instance()
     xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
-    context = prepare_context_provider(mongo_client, xref)
+    grpc_model = "fake_grpc_model"  # TODO: find a way to test/mock gRPC
+    context = prepare_context_provider(mongo_client, xref, grpc_model)
 
     return executable_schema, context

@@ -21,6 +21,7 @@ import graphql_service.resolver.gene_model as model
 from common.crossrefs import XrefResolver
 from graphql_service.resolver.data_loaders import BatchLoaders
 from common.db import FakeMongoDbClient
+from graphql_service.tests.snapshot_utils import prepare_mongo_instance
 
 
 def create_GraphQLResolveInfo(database_client):
@@ -37,44 +38,9 @@ def create_GraphQLResolveInfo(database_client):
         "mongo_db_client": database_client,
         "XrefResolver": XrefResolver(from_file="common/tests/mini_identifiers.json"),
         "request": request_mock,
+        "grpc_model": "fake_grpc_model"  # TODO: find a way to test/mock gRPC
     }
     return info
-
-
-def prepare_mongo_instance():
-    mongo_client = FakeMongoDbClient()
-    database = mongo_client.mongo_db
-    collection = database.create_collection('uuid_to_collection_mapping')
-    collection.insert_many(
-        [
-            {
-                "uuid": "1",
-                "collection": "collection1",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.510Z"
-            },
-            {
-                "uuid": "2",
-                "collection": "collection2",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            },
-            {
-                "uuid": "test_genome_id",
-                "collection": "collection1",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            },
-            {
-                "uuid": "plasmodium_falciparum_GCA_000002765_2",
-                "collection": "collection1",
-                "is_current": True,
-                "load_date": "2023-06-29T17:00:41.736Z"
-            }
-        ]
-    )
-
-    return mongo_client
 
 @pytest.fixture(name="basic_data")
 def fixture_basic_data():
@@ -82,10 +48,7 @@ def fixture_basic_data():
 
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
-
-    collection1 = database.create_collection('collection1')
-
-    collection1.insert_many(
+    database.gene.insert_many(
         [
             {
                 "genome_id": "1",
@@ -106,30 +69,28 @@ def fixture_basic_data():
         ]
     )
 
-    collection2 = database.create_collection('collection2')
-
-    collection2.insert_many(
-        [
-            {
-                "genome_id": "2",
-                "type": "Gene",
-                "symbol": "apple",
-                "stable_id": "ENSG003.1",
-                "unversioned_stable_id": "ENSG003",
-                "gene_primary_id": "1_ENSG003.1",
-            },
-            {
-                "genome_id": "2",
-                "type": "Gene",
-                "symbol": "orange",
-                "stable_id": "ENSG004.2",
-                "unversioned_stable_id": "ENSG004",
-                "gene_primary_id": "1_ENSG004.2",
-            },
-        ]
-    )
-
-    # print(database.list_collection_names())
+    # collection2 = database.create_collection('gene_collection2')
+    #
+    # collection2.insert_many(
+    #     [
+    #         {
+    #             "genome_id": "2",
+    #             "type": "Gene",
+    #             "symbol": "apple",
+    #             "stable_id": "ENSG003.1",
+    #             "unversioned_stable_id": "ENSG003",
+    #             "gene_primary_id": "1_ENSG003.1",
+    #         },
+    #         {
+    #             "genome_id": "2",
+    #             "type": "Gene",
+    #             "symbol": "orange",
+    #             "stable_id": "ENSG004.2",
+    #             "unversioned_stable_id": "ENSG004",
+    #             "gene_primary_id": "1_ENSG004.2",
+    #         },
+    #     ]
+    # )
 
     return mongo_client
 
@@ -140,9 +101,7 @@ def fixture_transcript_data():
 
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
-
-    collection = database.create_collection('collection1')
-    collection.insert_many(
+    database.gene.insert_many(
         [
             {
                 "genome_id": "1",
@@ -151,7 +110,12 @@ def fixture_transcript_data():
                 "stable_id": "ENSG001.1",
                 "unversioned_stable_id": "ENSG001",
                 "gene_primary_key": "1_ENSG001.1",
-            },
+            }
+        ]
+    )
+
+    database.transcript.insert_many(
+        [
             {
                 "genome_id": "1",
                 "type": "Transcript",
@@ -177,7 +141,12 @@ def fixture_transcript_data():
                 "gene": "ENSG001.1",
                 "product_generating_contexts": [],
                 "gene_foreign_key": "1_ENSG001.1",
-            },
+            }
+        ]
+    )
+
+    database.protein.insert_many(
+        [
             {
                 "genome_id": "1",
                 "type": "Protein",
@@ -193,10 +162,7 @@ def fixture_transcript_data():
 def fixture_region_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
-
-    collection = database.create_collection('collection1')
-
-    collection.insert_many(
+    database.region.insert_many(
         [
             {
                 "type": "Region",
@@ -228,10 +194,7 @@ def fixture_slice_data():
     """
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
-
-    collection = database.create_collection('collection1')
-
-    collection.insert_many(
+    database.gene.insert_many(
         [
             {
                 "genome_id": "test_genome_id",
@@ -274,7 +237,7 @@ def fixture_slice_data():
                 },
             }
         )
-    collection.insert_many(too_many_results)
+    database.gene.insert_many(too_many_results)
 
     return mongo_client
 
@@ -283,22 +246,25 @@ def fixture_slice_data():
 def fixture_genome_data():
     mongo_client = prepare_mongo_instance()
     database = mongo_client.mongo_db
-
-    collection = database.create_collection('collection1')
-    collection.insert_many(
+    database.assembly.insert_many(
         [
             {
                 "type": "Assembly",
-                "id": "test_assembly_id_1",
+                "assembly_id": "test_assembly_id_1",
                 "name": "banana assembly",
                 "organism_foreign_key": "test_organism_id_1",
             },
             {
                 "type": "Assembly",
-                "id": "test_assembly_id_2",
+                "assembly_id": "test_assembly_id_2",
                 "name": "other banana assembly",
                 "organism_foreign_key": "test_organism_id_1",
-            },
+            }
+        ]
+    )
+
+    database.organism.insert_many(
+        [
             {
                 "type": "Organism",
                 "scientific_name": "banana",
@@ -310,12 +276,22 @@ def fixture_genome_data():
                 "scientific_name": "other banana",
                 "organism_primary_key": "test_organism_id_2",
                 "species_foreign_key": "test_species_id_1",
-            },
+            }
+        ]
+    )
+
+    database.species.insert_many(
+        [
             {
                 "type": "Species",
                 "scientific_name": "banana",
                 "species_primary_key": "test_species_id_1",
-            },
+            }
+        ]
+    )
+
+    database.region.insert_many(
+        [
             {
                 "type": "Region",
                 "region_id": "test_region_id_1",
@@ -466,7 +442,7 @@ async def test_resolve_gene_transcripts(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_gene_transcripts(
         {"stable_id": "ENSG001.1", "genome_id": "1", "gene_primary_key": "1_ENSG001.1"},
@@ -485,7 +461,7 @@ async def test_resolve_gene_from_transcript(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_transcript_gene(
         {"gene": "ENSG001.1", "genome_id": "1"}, info
@@ -502,7 +478,7 @@ def test_resolve_overlap(slice_data):
     info = create_GraphQLResolveInfo(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "test_genome_id")
+    model.set_db_conn_for_uuid(info, "test_genome_id")
 
     result = model.resolve_overlap(
         None,
@@ -538,7 +514,7 @@ def test_overlap_region(start, end, expected_ids, slice_data):
     info = create_GraphQLResolveInfo(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "test_genome_id")
+    model.set_db_conn_for_uuid(info, "test_genome_id")
     connection = model.get_db_conn(info)
 
     result = model.overlap_region(
@@ -557,7 +533,7 @@ def test_overlap_region_too_many_results(slice_data):
     info = create_GraphQLResolveInfo(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "test_genome_id")
+    model.set_db_conn_for_uuid(info, "test_genome_id")
     connection = model.get_db_conn(info)
 
     result = None
@@ -591,7 +567,7 @@ async def test_resolve_region_happy_case(region_data):
     info = create_GraphQLResolveInfo(region_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
+    model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
 
     result = await model.resolve_region_from_slice(slc, info)
     assert result["region_id"] == "plasmodium_falciparum_GCA_000002765_2_13"
@@ -603,7 +579,7 @@ async def test_resolve_region_region_not_exist(region_data):
     slc = {
         "region_id": "some_non_existing_region_id",
     }
-    model.set_col_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
+    model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
 
     result = None
     with pytest.raises(model.RegionFromSliceNotFoundError) as region_error:
@@ -651,7 +627,7 @@ async def test_resolve_transcript_products(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_product_by_pgc(
         {
@@ -676,7 +652,7 @@ async def test_resolve_transcript_products_product_not_exists(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     result = None
     with pytest.raises(model.FieldNotFoundError) as field_not_found_error:
@@ -709,7 +685,7 @@ async def test_resolve_assembly_from_region(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     region = {
         "type": "Region",
@@ -718,7 +694,7 @@ async def test_resolve_assembly_from_region(genome_data):
     assembly_result = await model.resolve_assembly_from_region(region, info)
     assert remove_ids(assembly_result) == {
         "type": "Assembly",
-        "id": "test_assembly_id_1",
+        "assembly_id": "test_assembly_id_1",
         "name": "banana assembly",
         "organism_foreign_key": "test_organism_id_1",
     }
@@ -729,7 +705,7 @@ async def test_resolve_assembly_from_region_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     region = {
         "type": "Region",
@@ -750,11 +726,11 @@ async def test_resolve_regions_from_assembly(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     assembly = {
         "type": "Assembly",
-        "id": "test_assembly_id_1",
+        "assembly_id": "test_assembly_id_1",
     }
     regions_result = await model.resolve_regions_from_assembly(assembly, info)
     regions_result = sorted(regions_result, key=lambda r: r["assembly_id"])
@@ -779,11 +755,11 @@ async def test_resolve_regions_from_assembly_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     assembly = {
         "type": "Assembly",
-        "id": "blah blah",
+        "assembly_id": "blah blah",
     }
 
     result = None
@@ -798,7 +774,7 @@ async def test_resolve_organism_from_assembly(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     assembly = {"type": "Assembly", "organism_foreign_key": "test_organism_id_1"}
 
@@ -817,7 +793,7 @@ async def test_resolve_organism_from_assembly_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     assembly = {"type": "Assembly", "organism_foreign_key": "blah blah"}
 
@@ -833,7 +809,7 @@ async def test_resolve_assemblies_from_organism(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -847,13 +823,13 @@ async def test_resolve_assemblies_from_organism(genome_data):
     assert remove_ids(assemblies_result) == [
         {
             "type": "Assembly",
-            "id": "test_assembly_id_1",
+            "assembly_id": "test_assembly_id_1",
             "name": "banana assembly",
             "organism_foreign_key": "test_organism_id_1",
         },
         {
             "type": "Assembly",
-            "id": "test_assembly_id_2",
+            "assembly_id": "test_assembly_id_2",
             "name": "other banana assembly",
             "organism_foreign_key": "test_organism_id_1",
         },
@@ -864,7 +840,7 @@ async def test_resolve_assemblies_from_organism(genome_data):
 async def test_resolve_assemblies_from_organism_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -886,7 +862,7 @@ async def test_resolve_species_from_organism(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -909,7 +885,7 @@ async def test_resolve_species_from_organism_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -929,7 +905,7 @@ async def test_resolve_organisms_from_species(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     species = {
         "type": "Species",
@@ -960,7 +936,7 @@ async def test_resolve_organisms_from_species_not_exists(genome_data):
     info = create_GraphQLResolveInfo(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     species = {
         "type": "Species",
@@ -1027,7 +1003,7 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
@@ -1050,7 +1026,7 @@ async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_da
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 3, "per_page": 1}
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
@@ -1062,33 +1038,11 @@ async def test_resolve_transcripts_page_metadata(transcript_data):
     info = create_GraphQLResolveInfo(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_col_conn_for_uuid(info, "1")
+    model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
     result = await model.resolve_transcripts_page_metadata(transcripts_page, info)
     assert result == {"page": 2, "per_page": 1, "total_count": 2}
-
-
-def test_collection_lookup_service(basic_data):
-
-    info = create_GraphQLResolveInfo(basic_data)
-
-    result1 = model.resolve_gene(
-        None, info, by_id={"stable_id": "ENSG001.1", "genome_id": "1"}
-    )
-    assert result1["symbol"] == "banana"
-
-    # genome_id '2' is in a different collection
-    # In the application, Path is set by GraphQL.
-    # As we are not using GraphQL's Path but a Mock,
-    # we need to set its value manually.
-    attrs = {'as_list.return_value': ['test_feature2']}
-    info.path = Mock(**attrs)
-
-    result2 = model.resolve_gene(
-        None, info, by_id={"stable_id": "ENSG003.1", "genome_id": "2"}
-    )
-    assert result2["symbol"] == "apple"
 
 
 def remove_ids(test_output):

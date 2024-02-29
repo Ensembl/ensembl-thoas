@@ -90,7 +90,7 @@ class BatchLoaders:
 
     async def batch_species_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Species", "species_primary_key": {"$in": keys}}
-        data = await self.query_mongo(query=query, doc_type="assembly")
+        data = await self.query_mongo(query=query, doc_type="species")
         return self.collate_dataloader_output("species_primary_key", keys, data)
 
     async def batch_organism_by_species_load(self, keys: List[str]) -> List[List]:

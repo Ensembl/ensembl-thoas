@@ -35,30 +35,6 @@ class MongoDbClient:
         # self.mongo_db = MongoDbClient.connect_mongo(self.config)
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
-    def get_collection_conn(self, uuid):
-
-        lookup_service_collection = self.config.get("mongo_lookup_service_collection")
-        # print(lookup_service_collection)
-        query = {"uuid": uuid, "is_current": True}
-
-        # Find the data collection corresponding to the given UUID
-        # Returns None if no data collection is found in lookup_service_collection
-        # Returns None if the `lookup_service_collection` collection doesn't exist in the database
-        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
-        # print(data_collection)
-
-        # Fallback to the collection in the configuration file if no data collection is found for the given UUID
-        if not data_collection:
-            data_collection_name = self.config.get("mongo_default_collection")
-            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
-        else:
-            data_collection_name = data_collection.get("collection")
-            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
-
-        data_collection_connection = self.mongo_db[data_collection_name]
-
-        return data_collection_connection
-
     def get_database_conn(self, grpc_model, uuid):
         grpc_response = None
         chosen_db = self.config.get('mongo_default_db')
@@ -75,14 +51,6 @@ class MongoDbClient:
             # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
             release_version = str(grpc_response.release_version).replace('.', '_')
             chosen_db = 'release_' + release_version
-
-        # Ignoring the code snippet above (for testing purposes)
-        # TODO: delete the condition below once the DB is setup properly
-        # YES!! switching between DBs WORKS!!
-        # if uuid == 'a73356e1-93e7-11ec-a39d-005056b38ce3':  # plasmodium
-        #     chosen_db = 'ensthoasdev'
-        # else:
-        #     chosen_db = self.config.get('mongo_default_db')
 
         logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB")
         data_database_connection = self.mongo_client[chosen_db]
@@ -121,25 +89,13 @@ class FakeMongoDbClient:
     Sets up a mongomock collection for thoas code to test with
     """
     def __init__(self):
-        mongo_client = mongomock.MongoClient()
-        self.mongo_db = mongo_client.db
+        self.mongo_client = mongomock.MongoClient()
+        self.mongo_db = self.mongo_client.db
 
-    def get_collection_conn(self, uuid):
-        lookup_service_collection = 'uuid_to_collection_mapping'
-        query = {"uuid": uuid, "is_current": True}
-        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
-
-        # Fallback to the default collection if no collection found in the mappings
-        # for the given UUID
-        if not data_collection:
-            data_collection_name = 'collection1'
-            print(f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID")
-        else:
-            data_collection_name = data_collection.get("collection")
-            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
-
-        data_collection_connection = self.mongo_db[data_collection_name]
-        return data_collection_connection
+    def get_database_conn(self, grpc_model, uuid):
+        # we pretend that we did a gRPC call and got the chosen db
+        chosen_db = "db"
+        return self.mongo_client[chosen_db]
 
 
 class GRPCServiceClient:

@@ -60,7 +60,7 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
             topology
             assembly {
               default
-              id
+              assembly_id
               name
               accession_id
               accessioning_body
@@ -98,6 +98,7 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
     (success, result) = await graphql(
         executable_schema, query_data, context_value=context()
     )
+    print(f"_____ result ---> {result}")
     assert success
     snapshot.assert_match(result["data"])
 

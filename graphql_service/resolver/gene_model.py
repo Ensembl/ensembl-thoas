@@ -446,8 +446,8 @@ def overlap_region(
         "slice.location.end": {"$gte": start},
     }
     max_results_size = 1000
-    feature_type_collection = connection[connection.name + '_' + feature_type.lower()]
-    print(f"[INFO] Getting Overlap Region from DB: '{connection.name}', Collection: '{connection.name + '_' + feature_type.lower()}'")
+    feature_type_collection = connection[feature_type.lower()]
+    print(f"[INFO] Getting Overlap Region from DB: '{connection.name}', Collection: '{feature_type.lower()}'")
     results = list(feature_type_collection.find(query).limit(max_results_size))
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
@@ -561,7 +561,7 @@ async def resolve_assembly_from_region(
         return None
     assembly_id = region["assembly_id"]
 
-    query = {"type": "Assembly", "id": region["assembly_id"]}
+    query = {"type": "Assembly", "assembly_id": region["assembly_id"]}
 
     connection_db = get_db_conn(info)
     assembly_collection = connection_db['assembly']
@@ -581,10 +581,10 @@ async def resolve_regions_from_assembly(
     data_loader = get_data_loader(info)
     loader = data_loader.region_by_assembly_loader
 
-    regions = await loader.load(key=assembly["id"])
+    regions = await loader.load(key=assembly["assembly_id"])
 
     if not regions:
-        raise RegionsFromAssemblyNotFound(assembly["id"])
+        raise RegionsFromAssemblyNotFound(assembly["assembly_id"])
     return regions
 
 
@@ -652,7 +652,7 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "name": by_name["name"],
     }
 
-    set_col_conn_for_uuid(info, by_name["genome_id"])
+    set_db_conn_for_uuid(info, by_name["genome_id"])
     connection_db = get_db_conn(info)
     region_collection = connection_db['region']
     logger.info(f"[resolve_region] Getting Region from DB: '{connection_db.name}'")
@@ -763,47 +763,6 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
-def set_col_conn_for_uuid(info, uuid):
-    # TODO: Delete this function once we make sure set_db_conn_for_uuid() function below is working as expected
-    # IMPORTANT:
-    # This function must be called from all the root level(@QUERY_TYPE) resolvers.
-    #
-    # Child resolvers need to know their query's GenomeUUID or the Mongo collection details
-    # to fetch the data from.
-    # The only way to pass the GenomeUUID or the connection details to the child resolvers
-    # is through Context in GraphQLResolveInfo.
-    #
-    # This method finds the Mongo collection for the requested Genome UUID and stores it
-    # in the Context so that the root resolver and all its child resolvers can use it to
-    # fetch the data from the relevant Mongo collection.
-    #
-    # A single request can have multiple queries and each of those queries could be requesting
-    # information for different Genome UUID. This means a single request can have multiple
-    # queries with each query needing to fetch data from different Mongo collections.
-    #
-    # As Context is shared between the queries of a single request, we are using info.path
-    # to differentiate different queries of a request and set Mongo connection details
-    # per query. This way, in an async execution, child resolvers of the 1st query can avoid
-    # connecting to Mongo collection of the 2nd query of the same request.
-    #
-    # These connection details in the Context will be available only for this request
-    # and will not be shared with the next request because the next request will have
-    # its own copy of the new dynamic context
-    # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
-
-    col_conn = info.context["mongo_db_client"].get_collection_conn(uuid)
-
-    conn = {'col_conn': col_conn,
-            'data_loader': BatchLoaders(col_conn)}
-
-    parent_key = get_path_parent_key(info)
-    info.context.setdefault(parent_key, conn)
-
-    # print("*************")
-    # print(info)
-    # print("*************")
-
-
 def set_db_conn_for_uuid(info, uuid):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
@@ -842,12 +801,6 @@ def set_db_conn_for_uuid(info, uuid):
 
     parent_key = get_path_parent_key(info)
     info.context.setdefault(parent_key, conn)
-
-
-def get_col_conn(info):
-    # TODO: Delete this function once we make sure get_db_conn() function below is working as expected
-    parent_key = get_path_parent_key(info)
-    return info.context[parent_key]['col_conn']
 
 
 def get_db_conn(info):
