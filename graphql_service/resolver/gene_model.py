@@ -202,7 +202,6 @@ def resolve_transcript(
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
 
-
     if by_symbol is None:
         by_symbol = bySymbol
     if by_id is None:
