@@ -94,11 +94,11 @@ def resolve_gene(
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
 
-    logger.info(f"[resolve_gene] Getting Gene from DB: '{connection_db.name}'")
+    logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
         result = gene_collection.find_one(query)
     except Exception as e:
-        logging.error(f"Exception: {e}")
+        logging.error("Exception: %s", e)
         raise DatabaseNotFoundError(db_name=connection_db.name)
 
     if not result:
@@ -120,12 +120,12 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
     set_db_conn_for_uuid(info, by_symbol["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
-    logger.info(f"[resolve_genes] Getting Gene from DB: '{connection_db.name}'")
+    logger.info("[resolve_genes] Getting Gene from DB: '%s'", connection_db.name)
 
     try:
         result = gene_collection.find(query)
     except Exception as e:
-        logging.error(f"Exception: {e}")
+        logging.error("Exception: %s", e)
         raise DatabaseNotFoundError(db_name=connection_db.name)
 
     # unpack cursor into a list. We're guaranteed relatively small results
@@ -240,13 +240,13 @@ def resolve_transcript(
     connection_db = get_db_conn(info)
     transcript_collection = connection_db["transcript"]
     logger.info(
-        f"[resolve_transcript] Getting Transcript from DB: '{connection_db.name}'"
+        "[resolve_transcript] Getting Transcript from DB: '%s'", connection_db.name
     )
 
     try:
         transcript = transcript_collection.find_one(query)
     except Exception as e:
-        logging.error(f"Exception: {e}")
+        logging.error("Exception: %s", e)
         raise DatabaseNotFoundError(db_name=connection_db.name)
 
     if not transcript:
@@ -267,7 +267,7 @@ def resolve_api(
         version_details = get_version_details()
         return {"api": version_details}
     except Exception as exp:
-        logging.error(f"Error resolving API version: {exp}")
+        logging.error("Error resolving API version: %s", exp)
         raise
 
 
@@ -312,7 +312,8 @@ async def resolve_transcripts_page_transcripts(
     connection_db = get_db_conn(info)
     transcript_collection = connection_db["transcript"]
     logger.info(
-        f"[resolve_transcripts_page_transcripts] Getting Transcript from DB: '{connection_db.name}'"
+        "[resolve_transcripts_page_transcripts] Getting Transcript from DB: '%s'",
+        connection_db.name,
     )
 
     results = (
@@ -336,7 +337,8 @@ async def resolve_transcripts_page_metadata(
     connection_db = get_db_conn(info)
     transcript_collection = connection_db["transcript"]
     logger.info(
-        f"[resolve_transcripts_page_metadata] Getting Transcript from DB: '{connection_db.name}'"
+        "[resolve_transcripts_page_metadata] Getting Transcript from DB: '%s'",
+        connection_db.name,
     )
 
     return {
@@ -366,7 +368,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
     logger.info(
-        f"[resolve_transcript_gene] Getting Gene from DB: '{connection_db.name}'"
+        "[resolve_transcript_gene] Getting Gene from DB: '%s'", connection_db.name
     )
 
     gene = gene_collection.find_one(query)
@@ -417,7 +419,8 @@ def resolve_overlap(
     set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     logger.info(
-        f"[resolve_overlap] Getting Gene and Transcript Overlap from DB: '{connection_db.name}'"
+        "[resolve_overlap] Getting Gene and Transcript Overlap from DB: '%s'",
+        connection_db.name,
     )
 
     return {
@@ -511,7 +514,7 @@ def resolve_product_by_id(
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(
-        f"[resolve_product_by_id] Getting Protein from DB: '{connection_db.name}'"
+        "[resolve_product_by_id] Getting Protein from DB: '%s'", connection_db.name
     )
     # NB: 'MatureRNA' will be added in the future, with collection per type approach
     # with have two options (TBD)
@@ -581,7 +584,8 @@ async def resolve_assembly_from_region(
     connection_db = get_db_conn(info)
     assembly_collection = connection_db["assembly"]
     logger.info(
-        f"[resolve_assembly_from_region] Getting Assembly from DB: '{connection_db.name}'"
+        "[resolve_assembly_from_region] Getting Assembly from DB: '%s'",
+        connection_db.name,
     )
     assembly = assembly_collection.find_one(query)
 
@@ -672,7 +676,7 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
     set_db_conn_for_uuid(info, by_name["genome_id"])
     connection_db = get_db_conn(info)
     region_collection = connection_db["region"]
-    logger.info(f"[resolve_region] Getting Region from DB: '{connection_db.name}'")
+    logger.info("[resolve_region] Getting Region from DB: '%s'", connection_db.name)
 
     result = region_collection.find_one(query)
     if not result:
@@ -777,7 +781,7 @@ def get_version_details() -> Dict[str, str]:
             "Version section or keys not found in INI file. Using default values."
         )
     except Exception as exp:
-        logging.error(f"Error reading INI file: {exp}. Using default values.")
+        logging.error("Error reading INI file: %s. Using default values.", exp)
 
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 

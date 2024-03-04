@@ -11,11 +11,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import graphql.error.graphql_error
+import logging
 import pymongo
 import mongomock
 import grpc
-import logging
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ class MongoDbClient:
             # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
             # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
             logger.debug(
-                f"[get_database_conn] Couldn't connected to gRPC Host: {grpc_exp}"
+                "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
 
         if grpc_response:
@@ -53,7 +52,7 @@ class MongoDbClient:
             release_version = str(grpc_response.release_version).replace(".", "_")
             chosen_db = "release_" + release_version
 
-        logger.debug(f"[get_database_conn] Connected to '{chosen_db}' MongoDB")
+        logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
         data_database_connection = self.mongo_client[chosen_db]
         return data_database_connection
 
@@ -78,7 +77,7 @@ class MongoDbClient:
             client.server_info()
             print(f"Connected to MongoDB, Host: {host}")
         except Exception as exc:
-            raise "Connection to mongo Failed" from exc
+            raise Exception("Connection to MongoDB failed") from exc
 
         return client
 

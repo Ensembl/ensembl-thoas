@@ -18,8 +18,6 @@ from starlette.datastructures import State
 
 import graphql_service.resolver.gene_model as model
 from common.crossrefs import XrefResolver
-from graphql_service.resolver.data_loaders import BatchLoaders
-from common.db import FakeMongoDbClient
 from graphql_service.tests.snapshot_utils import prepare_mongo_instance
 
 
