@@ -25,14 +25,13 @@ from pymongo import monitoring
 from starlette import applications, middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from common import crossrefs, db, extensions, utils
+from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
 )
 from dotenv import load_dotenv
-from common.logger import CommandLogger
 
 
 load_dotenv("connections.conf")
@@ -50,7 +49,7 @@ if DEBUG_MODE:
     log.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
 
-    monitoring.register(CommandLogger(log))
+    monitoring.register(logger.CommandLogger(log))
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing

@@ -12,8 +12,9 @@
    limitations under the License.
 """
 
-import mongomock
 import pytest
+
+from common.db import FakeMongoDbClient
 from graphql_service.resolver.data_loaders import BatchLoaders
 
 
@@ -22,9 +23,9 @@ async def test_batch_transcript_load():
     """
     Try the batch loader outside of the async event process
     """
-
-    collection = mongomock.MongoClient().db.collection
-    collection.insert_many(
+    mongo_client = FakeMongoDbClient()
+    database = mongo_client.mongo_db
+    database.transcript.insert_many(
         [
             {
                 "genome_id": "1",
@@ -58,8 +59,7 @@ async def test_batch_transcript_load():
             },
         ]
     )
-
-    loaders = BatchLoaders(collection)
+    loaders = BatchLoaders(database)
 
     response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
@@ -90,8 +90,9 @@ async def test_batch_product_load():
     Batch load some test products
     """
 
-    collection = mongomock.MongoClient().db.collection
-    collection.insert_many(
+    mongo_client = FakeMongoDbClient()
+    database = mongo_client.mongo_db
+    database.protein.insert_many(
         [
             {
                 "genome_id": "1",
@@ -108,7 +109,7 @@ async def test_batch_product_load():
         ]
     )
 
-    loader = BatchLoaders(collection)
+    loader = BatchLoaders(database)
 
     response = await loader.batch_product_load(["1_ENSP001.1"])
 

@@ -1,5 +1,5 @@
 type Assembly {
-  id: String!
+  assembly_id: String!
   name: String!
   accession_id: String!
   accessioning_body: String!

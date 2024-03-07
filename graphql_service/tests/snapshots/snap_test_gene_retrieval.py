@@ -21,7 +21,7 @@ snapshots["test_gene_retrieval_by_id_camel_case 1"] = {
                 "code": "chromosome",
                 "topology": "linear",
                 "assembly": {
-                    "id": "GRCh38.p13",
+                    "assembly_id": "GRCh38.p13",
                     "default": True,
                     "name": "GRCh38",
                     "accession_id": "GCA_000001405.28",

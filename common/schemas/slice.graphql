@@ -49,6 +49,8 @@ enum RegionCode {
   chromosome
   plasmid
   scaffold
+  primary_assembly
+  supercontig
 }
 
 enum RegionTopology {
