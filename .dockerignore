@@ -1,4 +1,5 @@
 .env
+appenv/
 k8s/
 web/
 .github
