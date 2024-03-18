@@ -17,6 +17,7 @@ type Product {
   sequence_checksum: String! @deprecated
   external_references: [ExternalReference!]!
   family_matches: [FamilyMatch!]!
+  product_generating_context: ProductGeneratingContext
 }
 
 type FamilyMatch {

@@ -41,7 +41,6 @@ from graphql_service.resolver.exceptions import (
     DatabaseNotFoundError,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Define Query types for GraphQL
@@ -63,10 +62,10 @@ TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
 
 @QUERY_TYPE.field("gene")
 def resolve_gene(
-    _,
-    info: GraphQLResolveInfo,
-    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
-    by_id: Optional[Dict[str, str]] = None,
+        _,
+        info: GraphQLResolveInfo,
+        byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
+        by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Gene via stable_id"
 
@@ -193,12 +192,12 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 
 @QUERY_TYPE.field("transcript")
 def resolve_transcript(
-    _,
-    info: GraphQLResolveInfo,
-    bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
-    by_symbol: Optional[Dict[str, str]] = None,
-    byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
-    by_id: Optional[Dict[str, str]] = None,
+        _,
+        info: GraphQLResolveInfo,
+        bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
+        by_symbol: Optional[Dict[str, str]] = None,
+        byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
+        by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Load Transcripts by symbol or stable_id"
 
@@ -256,8 +255,8 @@ def resolve_transcript(
 
 @QUERY_TYPE.field("version")
 def resolve_api(
-    _: None,
-    info: GraphQLResolveInfo,  # the second argument must be named `info` to avoid a NameError
+        _: None,
+        info: GraphQLResolveInfo,  # the second argument must be named `info` to avoid a NameError
 ) -> Dict[str, Dict[str, str]]:
     """
     Resolve the API version.
@@ -287,7 +286,7 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 @GENE_TYPE.field("transcripts_page")
 async def resolve_gene_transcripts_page(
-    gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
+        gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
 ):
     "This resolver passes required fields down to child resolvers"
 
@@ -300,7 +299,7 @@ async def resolve_gene_transcripts_page(
 
 @TRANSCRIPT_PAGE_TYPE.field("transcripts")
 async def resolve_transcripts_page_transcripts(
-    transcripts_page: Dict, info: GraphQLResolveInfo
+        transcripts_page: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
     "Load a page of transcripts"
     query = {
@@ -327,7 +326,7 @@ async def resolve_transcripts_page_transcripts(
 
 @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
 async def resolve_transcripts_page_metadata(
-    transcripts_page: Dict, info: GraphQLResolveInfo
+        transcripts_page: Dict, info: GraphQLResolveInfo
 ) -> Dict:
     query = {
         "type": "Transcript",
@@ -384,13 +383,13 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 
 @QUERY_TYPE.field("overlap_region")
 def resolve_overlap(
-    _,
-    info: GraphQLResolveInfo,
-    genomeId: Optional[str] = None,  # pylint: disable=invalid-name
-    regionName: Optional[str] = None,  # pylint: disable=invalid-name
-    start: Optional[int] = None,
-    end: Optional[int] = None,
-    by_slice: Optional[Dict[str, Any]] = None,
+        _,
+        info: GraphQLResolveInfo,
+        genomeId: Optional[str] = None,  # pylint: disable=invalid-name
+        regionName: Optional[str] = None,  # pylint: disable=invalid-name
+        start: Optional[int] = None,
+        end: Optional[int] = None,
+        by_slice: Optional[Dict[str, Any]] = None,
 ) -> Dict:
     """
     Query Mongo for genes and transcripts lying between start and end
@@ -434,12 +433,12 @@ def resolve_overlap(
 
 
 def overlap_region(
-    connection: Database,
-    genome_id: str,
-    region_id: str,
-    start: int,
-    end: int,
-    feature_type: str,
+        connection: Database,
+        genome_id: str,
+        region_id: str,
+        start: int,
+        end: int,
+        feature_type: str,
 ) -> List[Dict]:
     """
     Query backend for a feature type using slice parameters:
@@ -484,11 +483,11 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 @QUERY_TYPE.field("product")
 def resolve_product_by_id(
-    _,
-    info: GraphQLResolveInfo,
-    genome_id: Optional[str] = None,
-    stable_id: Optional[str] = None,
-    by_id: Optional[Dict[str, str]] = None,
+        _,
+        info: GraphQLResolveInfo,
+        genome_id: Optional[str] = None,
+        stable_id: Optional[str] = None,
+        by_id: Optional[Dict[str, str]] = None,
 ) -> Dict:
     "Fetch a product by stable_id, this is almost always a protein"
 
@@ -528,6 +527,52 @@ def resolve_product_by_id(
     return result
 
 
+@PRODUCT_TYPE.field("product_generating_context")
+def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Dict:
+    pipeline = [
+        {
+            "$match": {
+                "stable_id": product.get('stable_id'),
+                "genome_id": product.get('genome_id')
+            }
+        },
+        {
+            "$lookup": {
+                "from": 'transcript',
+                "localField": 'transcript_id',
+                "foreignField": 'unversioned_stable_id',
+                "as": 'transcript'
+            }
+        },
+        {"$unwind": {"path": '$transcript'}}
+    ]
+
+    # get db connection
+    set_db_conn_for_uuid(info, product.get('genome_id'))
+    connection_db = get_db_conn(info)
+    protein_collection = connection_db["protein"]
+    logger.info(
+        "[resolve_pgc_for_product] Getting Protein from DB: '%s'", connection_db.name
+    )
+
+    results = list(protein_collection.aggregate(pipeline))
+
+    result = results[0]
+
+    pgcs = result.get('transcript', None).get('product_generating_contexts', None)
+
+    if not pgcs or len(pgcs) == 0:
+        return None
+
+    # get the specific pgc for product
+    pgc = [pgc for pgc in pgcs if pgc.get('product_foreign_key') == product.get('product_primary_key')]
+
+    if pgc[0]:
+        return pgc[0]
+
+    return None
+
+
 @PGC_TYPE.field("product")
 async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     "Fetch product that is referenced by the Product Generating Context"
@@ -552,7 +597,7 @@ async def resolve_product_by_pgc(pgc: Dict, info: GraphQLResolveInfo) -> Optiona
 
 @SLICE_TYPE.field("region")
 async def resolve_region_from_slice(
-    slc: Dict, info: GraphQLResolveInfo
+        slc: Dict, info: GraphQLResolveInfo
 ) -> Optional[Dict]:
     "Fetch a region that is referenced by a slice"
     if slc["region_id"] is None:
@@ -572,7 +617,7 @@ async def resolve_region_from_slice(
 
 @REGION_TYPE.field("assembly")
 async def resolve_assembly_from_region(
-    region: Dict, info: GraphQLResolveInfo
+        region: Dict, info: GraphQLResolveInfo
 ) -> Optional[Dict]:
     "Fetch an assembly referenced by a region"
     if region["assembly_id"] is None:
@@ -596,9 +641,8 @@ async def resolve_assembly_from_region(
 
 @ASSEMBLY_TYPE.field("regions")
 async def resolve_regions_from_assembly(
-    assembly: Dict, info: GraphQLResolveInfo
+        assembly: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.region_by_assembly_loader
 
@@ -611,9 +655,8 @@ async def resolve_regions_from_assembly(
 
 @ASSEMBLY_TYPE.field("organism")
 async def resolve_organism_from_assembly(
-    assembly: Dict, info: GraphQLResolveInfo
+        assembly: Dict, info: GraphQLResolveInfo
 ) -> Optional[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.organism_loader
 
@@ -625,9 +668,8 @@ async def resolve_organism_from_assembly(
 
 @ORGANISM_TYPE.field("assemblies")
 async def resolve_assemblies_from_organism(
-    organism: Dict, info: GraphQLResolveInfo
+        organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.assembly_by_organism_loader
 
@@ -639,9 +681,8 @@ async def resolve_assemblies_from_organism(
 
 @ORGANISM_TYPE.field("species")
 async def resolve_species_from_organism(
-    organism: Dict, info: GraphQLResolveInfo
+        organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.species_loader
 
@@ -653,9 +694,8 @@ async def resolve_species_from_organism(
 
 @SPECIES_TYPE.field("organisms")
 async def resolve_organisms_from_species(
-    species: Dict, info: GraphQLResolveInfo
+        species: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.organism_by_species_loader
 
@@ -686,12 +726,11 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 
 @QUERY_TYPE.field("genomes")
 def resolve_genomes(
-    _,
-    info: GraphQLResolveInfo,
-    by_keyword: Optional[Dict[str, str]] = None,
-    by_assembly_accession_id: Optional[Dict[str, str]] = None,
+        _,
+        info: GraphQLResolveInfo,
+        by_keyword: Optional[Dict[str, str]] = None,
+        by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
-
     # in case the user provides both arguments or none
     if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
         # ask them to provide at least one argument
@@ -729,7 +768,6 @@ def resolve_genomes(
 
 @QUERY_TYPE.field("genome")
 def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
-
     grpc_model = info.context["grpc_model"]
 
     genome = grpc_model.get_genome_by_genome_uuid(
