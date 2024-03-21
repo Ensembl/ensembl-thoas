@@ -9,5 +9,5 @@ patches:
       group: apps
       version: v1
       kind: Deployment
-      name: thoas-server-deployment
+      name: graphql-core-deployment
     path: patch.yaml

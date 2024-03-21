@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: thoas-server-deployment
+  name: graphql-core-deployment
 spec:
   template:
     spec:

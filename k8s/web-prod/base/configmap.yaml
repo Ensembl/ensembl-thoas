@@ -8,4 +8,4 @@ data:
   WORKERS: "4"
 kind: ConfigMap
 metadata:
-  name: thoas-configmap
+  name: proxy-configmap
