@@ -11,10 +11,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import logging
 import pymongo
 import mongomock
 import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDbClient:
@@ -28,33 +31,30 @@ class MongoDbClient:
         Note that config here is a configparser object
         """
         self.config = config
-        self.mongo_db = MongoDbClient.connect_mongo(self.config)
+        self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
-    def get_collection_conn(self, uuid):
-
-        lookup_service_collection = self.config.get("mongo_lookup_service_collection")
-        # print(lookup_service_collection)
-        query = {"uuid": uuid, "is_current": True}
-
-        # Find the data collection corresponding to the given UUID
-        # Returns None if no data collection is found in lookup_service_collection
-        # Returns None if the `lookup_service_collection` collection doesn't exist in the database
-        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
-        # print(data_collection)
-
-        # Fallback to the collection in the configuration file if no data collection is found for the given UUID
-        if not data_collection:
-            data_collection_name = self.config.get("mongo_default_collection")
-            print(
-                f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID"
+    def get_database_conn(self, grpc_model, uuid):
+        grpc_response = None
+        chosen_db = self.config.get("mongo_default_db")
+        # Try to connect to gRPC
+        try:
+            grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
+        except Exception as grpc_exp:
+            # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
+            # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
+            logger.debug(
+                "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
-        else:
-            data_collection_name = data_collection.get("collection")
-            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
 
-        data_collection_connection = self.mongo_db[data_collection_name]
+        if grpc_response:
+            # replacing '.' with '_' to avoid
+            # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
+            release_version = str(grpc_response.release_version).replace(".", "_")
+            chosen_db = "release_" + release_version
 
-        return data_collection_connection
+        logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
+        data_database_connection = self.mongo_client[chosen_db]
+        return data_database_connection
 
     @staticmethod
     def connect_mongo(config):
@@ -64,7 +64,6 @@ class MongoDbClient:
         port = int(config.get("mongo_port"))
         user = config.get("mongo_user")
         password = config.get("mongo_password")
-        dbname = config.get("mongo_db")
 
         client = pymongo.MongoClient(
             host,
@@ -76,11 +75,11 @@ class MongoDbClient:
         try:
             # make sure the connection is established successfully
             client.server_info()
-            print(f"Connected to MongoDB {host}")
+            print(f"Connected to MongoDB, Host: {host}")
         except Exception as exc:
-            raise "Connection to mongo Failed" from exc
+            raise Exception("Connection to MongoDB failed") from exc
 
-        return client[dbname]
+        return client
 
 
 class FakeMongoDbClient:
@@ -89,27 +88,13 @@ class FakeMongoDbClient:
     """
 
     def __init__(self):
-        mongo_client = mongomock.MongoClient()
-        self.mongo_db = mongo_client.db
+        self.mongo_client = mongomock.MongoClient()
+        self.mongo_db = self.mongo_client.db
 
-    def get_collection_conn(self, uuid):
-        lookup_service_collection = "uuid_to_collection_mapping"
-        query = {"uuid": uuid, "is_current": True}
-        data_collection = self.mongo_db[lookup_service_collection].find_one(query)
-
-        # Fallback to the default collection if no collection found in the mappings
-        # for the given UUID
-        if not data_collection:
-            data_collection_name = "collection1"
-            print(
-                f"Falling back to the default collection '{data_collection_name}' for '{uuid}' UUID"
-            )
-        else:
-            data_collection_name = data_collection.get("collection")
-            print(f"Using '{data_collection_name}' collection for '{uuid}' UUID")
-
-        data_collection_connection = self.mongo_db[data_collection_name]
-        return data_collection_connection
+    def get_database_conn(self, grpc_model, uuid):
+        # we pretend that we did a gRPC call and got the chosen db
+        chosen_db = "db"
+        return self.mongo_client[chosen_db]
 
 
 class GRPCServiceClient:
