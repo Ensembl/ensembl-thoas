@@ -62,7 +62,6 @@ build:
   only:
     - develop
     - main
-    - feat/sliced_collections
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
@@ -76,7 +75,7 @@ build:
   variables:
     BASE: k8s/web-prod/overlays/apps
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "feat/sliced_collections" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
 
 # deploy to staging at WP-HX
 staging:wp-hx:
