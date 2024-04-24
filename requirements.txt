@@ -5,6 +5,6 @@ aiodataloader==0.2.1
 ariadne==0.19.1
 python-dotenv==0.19.2
 uvicorn==0.18.1
-ensembl-metadata-api@git+https://github.com/Ensembl/ensembl-metadata-api.git@2.0.0.dev2
-grpcio==1.60.0
-grpcio-tools==1.60.0
+ensembl-metadata-api@git+https://github.com/Ensembl/ensembl-metadata-api.git@2.1.0a3
+grpcio==1.62.0
+grpcio-tools==1.62.0

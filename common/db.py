@@ -47,9 +47,11 @@ class MongoDbClient:
             )
 
         if grpc_response:
+            logger.debug("[get_database_conn] grpc_response: %s", grpc_response)
             # replacing '.' with '_' to avoid
             # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
             release_version = str(grpc_response.release_version).replace(".", "_")
+            logger.debug("[get_database_conn] release_version: %s", release_version)
             chosen_db = "release_" + release_version
 
         logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
