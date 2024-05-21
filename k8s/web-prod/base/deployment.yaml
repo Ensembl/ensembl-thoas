@@ -22,7 +22,7 @@ spec:
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: thoas-configmap
+                name: proxy-configmap
             - secretRef:
                 name: mongo-config
           command: ["uvicorn"]
