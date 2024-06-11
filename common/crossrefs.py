@@ -120,8 +120,13 @@ class XrefResolver:
             resources = self.id_org_indexed[id_org_ns_prefix]["resources"]
             for i in resources:
                 if i["official"] is True:
-                    url_base = i["urlPattern"]
-                    (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
+                    # the if condition below is a patch fixing the broken links mentioned in EA-1188
+                    if id_org_ns_prefix == "mgi":
+                        # https://github.com/identifiers-org/identifiers-org.github.io/issues/243#issuecomment-2129094280
+                        url = f"https://identifiers.org/{xref_acc_id}"
+                    else:
+                        url_base = i["urlPattern"]
+                        (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
             print(f"*** {id_org_ns_prefix} namespace not in identifiers.org ***")
