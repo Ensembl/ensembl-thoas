@@ -121,6 +121,18 @@ class XrefResolver:
             for i in resources:
                 if i["official"] is True:
                     url_base = i["urlPattern"]
+
+                    # The logic below takes care of cases where the prefix is duplicated generating a broken URL EA-1188
+                    # Extract the part of the URL after the last "/"
+                    # e.g: Extracts "MGI:" from "http://www.informatics.jax.org/accession/MGI:{$id}"
+                    url_prefix = url_base.split("/")[-1].split(":")[0].lower()
+                    # Check and strip prefix if necessary
+                    if (
+                        xref_acc_id.lower().startswith(f"{id_org_ns_prefix}:")
+                        and url_prefix == id_org_ns_prefix
+                    ):
+                        xref_acc_id = xref_acc_id[len(id_org_ns_prefix) + 1 :].lower()
+
                     (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
 
         else:
