@@ -15,6 +15,7 @@ import configparser
 import logging
 from typing import Dict, Optional, List, Any
 
+import grpc
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
 from pymongo.database import Database
@@ -39,6 +40,8 @@ from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
     MissingArgumentException,
     DatabaseNotFoundError,
+    AssembliesFromGenomeNotFound,
+    FailedToConnectToGrpc,
 )
 
 
@@ -59,6 +62,7 @@ ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
+GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
@@ -570,6 +574,56 @@ async def resolve_region_from_slice(
     return regions[0]
 
 
+# @GENOME_TYPE.field("assembly")
+# async def resolve_assembly_from_genome_uuid(
+#     genome: Dict, info: GraphQLResolveInfo
+# ) -> Optional[Dict]:
+#     "Fetch an assembly referenced by a genome"
+#     print("&&&&&&&&& BBBOOOOOOOOOOOM !!!!!! &&&&&&&&&&")
+#     print(f"*********^^^^^^^^ genome ---> {genome}")
+#     # data_loader = get_data_loader(info)
+#     # loader = data_loader.organism_loader
+#     # assemblies = await loader.load(key=genome["assembly"])
+#     # # assemblies = await loader.load(key=genome["assembly"])
+#     # if not assemblies:
+#     #     raise AssembliesFromGenomeNotFound(genome["assembly"])
+#     # return assemblies[0]
+#
+#     return {"assembly": "yoyoyoyo assembly"}
+
+
+@GENOME_TYPE.field("assembly")
+async def fetch_assembly_data(
+    genome_uuid: str, assembly_id: str, info: GraphQLResolveInfo
+):
+    # query = {"type": "Assembly", "assembly_id": assembly_id}
+    query = {"type": "Assembly"}
+
+    # connection_db = get_db_conn(info)
+    # assembly_collection = connection_db["assembly"]
+    # connection_db = info.context["mongo_db_client"].mongo_client
+    set_db_conn_for_uuid(info, genome_uuid)
+    connection_db = get_db_conn(info)
+    assembly_collection = connection_db.mongo_db["assembly"]
+    logger.info(
+        "[fetch_assembly_data] Getting Assembly from DB: '%s'",
+        connection_db.name,
+    )
+    # assembly = assembly_collection.find_one(query)
+    try:
+        assembly = assembly_collection.find_one(query)
+    except Exception as e:
+        logging.error("Exception: %s", e)
+        raise DatabaseNotFoundError(db_name=connection_db.name)
+
+    # print(f"assembly ---> {list(assembly)}")
+    # print(f"len assembly ---> {len(list(assembly))}")
+    if not assembly:
+        raise AssemblyNotFoundError(assembly_id)
+    # return assembly
+    return {"assembly": "yoyoyoyo assembly"}
+
+
 @REGION_TYPE.field("assembly")
 async def resolve_assembly_from_region(
     region: Dict, info: GraphQLResolveInfo
@@ -708,11 +762,49 @@ def resolve_genomes(
         result = grpc_model.get_genome_by_keyword(
             by_keyword.get("keyword"), by_keyword.get("release_version")
         )
-        genomes = list(result)
-        if not genomes:
-            raise GenomeNotFoundError(by_keyword)
-        genomes = list(map(create_genome_response, genomes))
-        return genomes
+        try:
+            genomes = list(result)
+            if not genomes:
+                raise GenomeNotFoundError(by_keyword)
+            genomes = [create_genome_response(genome, info) for genome in genomes]
+            return genomes
+
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                msg = "Error: Failed to connect to the remote host. Connection refused."
+                logger.error(msg)
+                raise FailedToConnectToGrpc(msg)
+            else:
+                # Print the default error message for any other gRPC errors
+                msg = f"gRPC Error: {e.details()}"
+                logger.error(msg)
+                raise FailedToConnectToGrpc(msg)
+
+        # print(f"$$$$$$$$$$ genome ---> {genomes}")
+
+        # print("===========================")
+        # # print(f"{[genome['genome_id'] for genome in genomes]}")
+        # print(f"{genomes[0]['genome_id']}")
+        # print("===========================")
+        #
+        # for genome in genomes:
+        #     query = {"genome_id": genome["genome_id"]}
+        #     set_db_conn_for_uuid(info, genome["genome_id"])
+        #     connection_db = get_db_conn(info)
+        #     region_collection = connection_db["region"]
+        #     logger.info(
+        #         "[resolve_genomes] Getting Region from DB: '%s'", connection_db.name
+        #     )
+        #
+        #     result = region_collection.find_one(query)
+        #     print("===========================")
+        #     # print(f"{[genome['genome_id'] for genome in genomes]}")
+        #     print(f"{result}")
+        #     print("===========================")
+
+        # return genomes
+        # print((f"*********^^^^^^^^ genomes[0] ---> {genomes[0]}"))
+        # return result
 
     if by_assembly_accession_id:
         result = grpc_model.get_genome_by_assembly_acc_id(
@@ -741,7 +833,8 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     return genomes
 
 
-def create_genome_response(genome):
+def create_genome_response(genome, info):
+    print(f"*********^^^^^^^^ genome ---> {genome}")
     response = {
         "genome_id": genome.genome_uuid,
         "assembly_accession": genome.assembly.accession,
@@ -752,6 +845,7 @@ def create_genome_response(genome):
         "parlance_name": genome.organism.scientific_parlance_name,
         "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
         "is_reference": genome.assembly.is_reference,
+        "assembly": fetch_assembly_data(genome.genome_uuid, genome.assembly.name, info),
     }
     return response
 

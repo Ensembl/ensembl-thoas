@@ -13,6 +13,7 @@
 """
 from typing import Optional, Dict
 
+import grpc
 from graphql import GraphQLError
 
 
@@ -141,6 +142,15 @@ class OrganismFromAssemblyNotFound(FieldNotFoundError):
         super().__init__("organism", {"organism_id": organism_id})
 
 
+class AssembliesFromGenomeNotFound(FieldNotFoundError):
+    """
+    Custom error to be raised if we can't find the assemblies for a genome
+    """
+
+    def __init__(self, assembly_id):
+        super().__init__("assemblies", {"assembly_id": assembly_id})
+
+
 class AssembliesFromOrganismNotFound(FieldNotFoundError):
     """
     Custom error to be raised if we can't find the assemblies for an organism
@@ -209,5 +219,19 @@ class MissingArgumentException(GraphQLError):
 
         Args:
             message: The error message describing the missing argument.
+        """
+        super().__init__(message)
+
+
+class FailedToConnectToGrpc(grpc.RpcError):
+    """
+    Exception raised when there is gRPC connection issue.
+    """
+
+    def __init__(self, message: str):
+        """Initializes a FailedToConnectToGrpc instance.
+
+        Args:
+            message: The error message describing the issue.
         """
         super().__init__(message)
