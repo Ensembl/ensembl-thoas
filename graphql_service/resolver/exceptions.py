@@ -23,7 +23,7 @@ class DatabaseNotFoundError(GraphQLError):
     """
 
     def __init__(self, db_name: str):
-        self.extensions = {"code": f"DATABASE_NOT_FOUND"}
+        self.extensions = {"code": "DATABASE_NOT_FOUND"}
         message = f"Failed to find database: {db_name}"
         super().__init__(message, extensions=self.extensions)
 
@@ -34,7 +34,7 @@ class CollectionNotFoundError(GraphQLError):
     """
 
     def __init__(self, collection_name: str):
-        self.extensions = {"code": f"COLLECTION_NOT_FOUND"}
+        self.extensions = {"code": "COLLECTION_NOT_FOUND"}
         message = f"Failed to find collection: {collection_name}"
         super().__init__(message, extensions=self.extensions)
 

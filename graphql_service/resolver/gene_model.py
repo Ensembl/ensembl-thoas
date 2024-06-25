@@ -99,9 +99,9 @@ def resolve_gene(
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
         result = gene_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
@@ -126,9 +126,9 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 
     try:
         result = gene_collection.find(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
@@ -247,9 +247,9 @@ def resolve_transcript(
 
     try:
         transcript = transcript_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
@@ -765,9 +765,11 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     query = {"assembly_id": assembly_id}
     try:
         assembly = assembly_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise CollectionNotFoundError(collection_name=assembly_collection.name)
+    except Exception as coll_exp:
+        logging.error("Exception: %s", coll_exp)
+        raise (
+            CollectionNotFoundError(collection_name=assembly_collection.name)
+        ) from coll_exp
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -788,7 +790,6 @@ def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> Li
         # logging.debug("Collections in the database:", connection_db.list_collection_names())
         assembly_collection = connection_db["assembly"]
         # logging.debug("assembly_collection.name:", assembly_collection.name)
-        logging.debug("is_assembly_prensent:", is_assembly_prensent)
 
         if not is_assembly_prensent:
             # Don't bother getting the assembly data if it's not requested in the query
