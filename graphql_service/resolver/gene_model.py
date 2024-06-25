@@ -775,6 +775,12 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
 
 
 def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> List:
+    # Check if the assembly field is requested in the query
+    requested_fields = [
+        field.name.value for field in info.field_nodes[0].selection_set.selections
+    ]
+    is_assembly_prensent = "assembly" in requested_fields
+
     combined_results = []
     for genome in genomes:
         set_db_conn_for_uuid(info, genome.genome_uuid)
@@ -782,9 +788,17 @@ def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> Li
         # logging.debug("Collections in the database:", connection_db.list_collection_names())
         assembly_collection = connection_db["assembly"]
         # logging.debug("assembly_collection.name:", assembly_collection.name)
+        logging.debug("is_assembly_prensent:", is_assembly_prensent)
 
-        assembly_data = fetch_assembly_data(assembly_collection, genome.assembly.name)
-        combined_results.append(create_genome_response(genome, assembly_data))
+        if not is_assembly_prensent:
+            # Don't bother getting the assembly data if it's not requested in the query
+            # TODO: See if this can be approved
+            combined_results.append(create_genome_response(genome, None))
+        else:
+            assembly_data = fetch_assembly_data(
+                assembly_collection, genome.assembly.name
+            )
+            combined_results.append(create_genome_response(genome, assembly_data))
     return combined_results
 
 
