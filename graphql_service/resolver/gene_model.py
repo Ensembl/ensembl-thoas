@@ -13,11 +13,11 @@
 """
 import configparser
 import logging
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo
-from pymongo.database import Database
+from pymongo.database import Database, Collection
 
 from graphql_service.resolver.data_loaders import BatchLoaders
 
@@ -39,6 +39,7 @@ from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
     MissingArgumentException,
     DatabaseNotFoundError,
+    CollectionNotFoundError,
 )
 
 
@@ -59,6 +60,7 @@ ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
+GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
@@ -97,9 +99,9 @@ def resolve_gene(
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
         result = gene_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
@@ -124,9 +126,9 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 
     try:
         result = gene_collection.find(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
@@ -245,9 +247,9 @@ def resolve_transcript(
 
     try:
         transcript = transcript_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
@@ -711,8 +713,9 @@ def resolve_genomes(
         genomes = list(result)
         if not genomes:
             raise GenomeNotFoundError(by_keyword)
-        genomes = list(map(create_genome_response, genomes))
-        return genomes
+
+        # Fetch assembly data and combine it with genome data
+        return fetch_and_combine_genome_data(info, genomes)
 
     if by_assembly_accession_id:
         result = grpc_model.get_genome_by_assembly_acc_id(
@@ -721,8 +724,9 @@ def resolve_genomes(
         genomes = list(result)
         if not genomes:
             raise GenomeNotFoundError(by_assembly_accession_id)
-        genomes = list(map(create_genome_response, genomes))
-        return genomes
+
+        # Fetch assembly data and combine it with genome data
+        return fetch_and_combine_genome_data(info, genomes)
 
     return []
 
@@ -741,7 +745,7 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     return genomes
 
 
-def create_genome_response(genome):
+def create_genome_response(genome, assembly_data=None):
     response = {
         "genome_id": genome.genome_uuid,
         "assembly_accession": genome.assembly.accession,
@@ -752,8 +756,51 @@ def create_genome_response(genome):
         "parlance_name": genome.organism.scientific_parlance_name,
         "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
         "is_reference": genome.assembly.is_reference,
+        "assembly": assembly_data,
     }
     return response
+
+
+def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Mapping:
+    query = {"assembly_id": assembly_id}
+    try:
+        assembly = assembly_collection.find_one(query)
+    except Exception as coll_exp:
+        logging.error("Exception: %s", coll_exp)
+        raise (
+            CollectionNotFoundError(collection_name=assembly_collection.name)
+        ) from coll_exp
+
+    if not assembly:
+        raise AssemblyNotFoundError(assembly_id)
+    return assembly
+
+
+def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> List:
+    # Check if the assembly field is requested in the query
+    requested_fields = [
+        field.name.value for field in info.field_nodes[0].selection_set.selections
+    ]
+    is_assembly_prensent = "assembly" in requested_fields
+
+    combined_results = []
+    for genome in genomes:
+        set_db_conn_for_uuid(info, genome.genome_uuid)
+        connection_db = get_db_conn(info)
+        # logging.debug("Collections in the database:", connection_db.list_collection_names())
+        assembly_collection = connection_db["assembly"]
+        # logging.debug("assembly_collection.name:", assembly_collection.name)
+
+        if not is_assembly_prensent:
+            # Don't bother getting the assembly data if it's not requested in the query
+            # TODO: See if this can be approved
+            combined_results.append(create_genome_response(genome, None))
+        else:
+            assembly_data = fetch_assembly_data(
+                assembly_collection, genome.assembly.name
+            )
+            combined_results.append(create_genome_response(genome, assembly_data))
+    return combined_results
 
 
 def get_version_details() -> Dict[str, str]:

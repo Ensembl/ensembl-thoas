@@ -12,6 +12,10 @@
    limitations under the License.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def check_config_validity(config):
     mandatory_fields = [
@@ -28,6 +32,28 @@ def check_config_validity(config):
             raise KeyError(
                 f"Missing information in configuration file - '{mandatory_field}'"
             )
+
+
+def process_release_version(grpc_response):
+    """
+    Processes the release version from the gRPC response and formats it for use as a database name.
+
+    This function extracts the release version from the provided gRPC response, replaces any dots ('.')
+    with underscores ('_') to avoid pymongo.errors.InvalidName errors, and returns a formatted database
+    name string.
+
+    Args:
+        grpc_response: The gRPC response object containing the release version.
+
+    Returns:
+        str: A formatted string suitable for use as a database name, prefixed with 'release_'.
+    """
+    logger.debug("[get_database_conn] grpc_response: %s", grpc_response)
+    # replacing '.' with '_' to avoid
+    # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
+    release_version = str(grpc_response.release_version).replace(".", "_")
+    logger.debug("[get_database_conn] release_version: %s", release_version)
+    return "release_" + release_version
 
 
 def get_ensembl_metadata_api_version():
