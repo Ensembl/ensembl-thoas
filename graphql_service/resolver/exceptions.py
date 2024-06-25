@@ -28,6 +28,17 @@ class DatabaseNotFoundError(GraphQLError):
         super().__init__(message, extensions=self.extensions)
 
 
+class CollectionNotFoundError(GraphQLError):
+    """
+    Custom error to be raised if collection is not found
+    """
+
+    def __init__(self, collection_name: str):
+        self.extensions = {"code": f"COLLECTION_NOT_FOUND"}
+        message = f"Failed to find collection: {collection_name}"
+        super().__init__(message, extensions=self.extensions)
+
+
 class FieldNotFoundError(GraphQLError):
     """
     Custom error to be raised if a field cannot be found by id

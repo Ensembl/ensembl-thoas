@@ -36,6 +36,5 @@ type Genome {
   parlance_name: String
   genome_tag: String
   is_reference: Boolean!
-#  region: Region!
   assembly: Assembly
 }
