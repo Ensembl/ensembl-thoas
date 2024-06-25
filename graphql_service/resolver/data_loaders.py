@@ -35,9 +35,6 @@ class BatchLoaders:
             batch_load_fn=self.batch_region_by_assembly_load
         )
         self.organism_loader = DataLoader(batch_load_fn=self.batch_organism_load)
-        self.assembly_by_genome_loader = DataLoader(
-            batch_load_fn=self.batch_assembly_by_genome_load
-        )
         self.assembly_by_organism_loader = DataLoader(
             batch_load_fn=self.batch_assembly_by_organism_load
         )
@@ -85,11 +82,6 @@ class BatchLoaders:
         query = {"type": "Organism", "organism_primary_key": {"$in": keys}}
         data = await self.query_mongo(query=query, doc_type="organism")
         return self.collate_dataloader_output("organism_primary_key", keys, data)
-
-    async def batch_assembly_by_genome_load(self, keys: List[str]) -> List[List]:
-        query = {"type": "Assembly", "assembly_id": {"$in": keys}}
-        data = await self.query_mongo(query=query, doc_type="assembly")
-        return self.collate_dataloader_output("assembly", keys, data)
 
     async def batch_assembly_by_organism_load(self, keys: List[str]) -> List[List]:
         query = {"type": "Assembly", "organism_foreign_key": {"$in": keys}}
