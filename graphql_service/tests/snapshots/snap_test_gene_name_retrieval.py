@@ -27,7 +27,7 @@ snapshots["test_no_externaldb_source_name 1"] = {
             "name": {
                 "accession_id": "A0A1D5TR86",
                 "source": None,
-                "url": "https://purl.uniprot.org/uniprot/A0A1D5TR86",
+                "url": "http://purl.uniprot.org/uniprot/A0A1D5TR86",
                 "value": "Sulfotransferase [Source:UniProtKB/TrEMBL;Acc:A0A1D5TR86]",
             }
         },
@@ -67,7 +67,7 @@ snapshots["test_no_xref_description 1"] = {
                     "release": None,
                     "url": "https://www.uniprot.org/",
                 },
-                "url": "https://purl.uniprot.org/uniprot/A0A1D5TR86",
+                "url": "http://purl.uniprot.org/uniprot/A0A1D5TR86",
                 "value": None,
             }
         },
