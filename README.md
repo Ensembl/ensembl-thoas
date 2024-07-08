@@ -21,11 +21,16 @@ To install dependencies, run:
 Rename example_connections.conf to connections.conf and update the config values accordingly.
 
 This command will start the server:
+```
+uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP
+```
 
-```uvicorn --workers 1 --host=0.0.0.0 graphql_service.server:APP```
+To run a Uvicorn server with automatic reload for development purposes, you can use the --reload flag. This flag will make Uvicorn watch your code for changes and automatically restart the server when it detects any changes.
+```
+uvicorn --workers 1 --host 0.0.0.0 --reload graphql_service.server:APP
+```
 
-
-If you're developing in PyCharm, you will probably find it useful to create a run 
+Also, if you're developing in PyCharm, you will probably find it useful to create a run 
 configuration so that you can use the debugger.  Create a run configuration that 
 looks like this:
 

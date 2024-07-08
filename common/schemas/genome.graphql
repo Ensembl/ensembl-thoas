@@ -31,6 +31,7 @@ type Genome {
   assembly_accession: String!
   scientific_name: String!
   release_number: Float!
+  release_date: String!
   taxon_id: Int!
   tol_id: String
   parlance_name: String

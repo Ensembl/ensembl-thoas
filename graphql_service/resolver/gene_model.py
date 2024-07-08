@@ -751,6 +751,7 @@ def create_genome_response(genome, assembly_data=None):
         "assembly_accession": genome.assembly.accession,
         "scientific_name": genome.organism.scientific_name,
         "release_number": genome.release.release_version,
+        "release_date": genome.release.release_date,
         "taxon_id": genome.taxon.taxonomy_id,
         "tol_id": genome.assembly.tol_id,
         "parlance_name": genome.organism.scientific_parlance_name,
@@ -793,7 +794,7 @@ def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> Li
 
         if not is_assembly_prensent:
             # Don't bother getting the assembly data if it's not requested in the query
-            # TODO: See if this can be approved
+            # TODO: See if this can be improved
             combined_results.append(create_genome_response(genome, None))
         else:
             assembly_data = fetch_assembly_data(
