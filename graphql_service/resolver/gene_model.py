@@ -16,7 +16,7 @@ import logging
 from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
-from graphql import GraphQLResolveInfo
+from graphql import GraphQLResolveInfo, GraphQLError
 from pymongo.database import Database, Collection
 
 from graphql_service.resolver.data_loaders import BatchLoaders
@@ -686,47 +686,85 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
     return result
 
 
+def fetch_genome_and_combine(info, grpc_model, by_keyword, key):
+    """
+    Fetches genomes by a specific keyword and combines genome data with assembly data if requested.
+
+    Args:
+        info (GraphQLResolveInfo): The GraphQL resolver information containing the field nodes and other query details.
+        grpc_model: The gRPC model to fetch genome data.
+        by_keyword (dict): Dictionary containing the keyword to search genomes by.
+        key (str): The specific key to use for fetching genomes.
+
+    Returns:
+        List: A list of combined genome and assembly data objects. If assembly data is not requested, only genome data is included.
+
+    Raises:
+        GenomeNotFoundError: If no genomes are found for the given keyword.
+    """
+    result = grpc_model.get_genome_by_specific_keyword(
+        **{key: by_keyword.get(key)},
+        release_version=by_keyword.get("release_version"),
+    )
+    genomes = list(result)
+    if not genomes:
+        raise GenomeNotFoundError(by_keyword)
+
+    # Check if the assembly field is requested in the query
+    requested_fields = [
+        field.name.value for field in info.field_nodes[0].selection_set.selections
+    ]
+    is_assembly_prensent = "assembly" in requested_fields
+
+    combined_results = []
+    for genome in genomes:
+        set_db_conn_for_uuid(info, genome.genome_uuid)
+        connection_db = get_db_conn(info)
+        # logging.debug("Collections in the database:", connection_db.list_collection_names())
+        assembly_collection = connection_db["assembly"]
+        # logging.debug("assembly_collection.name:", assembly_collection.name)
+
+        if not is_assembly_prensent:
+            # Don't bother getting the assembly data if it's not requested in the query
+            # TODO: See if this can be improved
+            combined_results.append(create_genome_response(genome, None))
+        else:
+            assembly_data = fetch_assembly_data(
+                assembly_collection, genome.assembly.name
+            )
+            combined_results.append(create_genome_response(genome, assembly_data))
+    return combined_results
+
+
 @QUERY_TYPE.field("genomes")
 def resolve_genomes(
-    _,
-    info: GraphQLResolveInfo,
-    by_keyword: Optional[Dict[str, str]] = None,
-    by_assembly_accession_id: Optional[Dict[str, str]] = None,
+    _, info: GraphQLResolveInfo, by_keyword: Optional[Dict[str, str]] = None
 ) -> List:
 
-    # in case the user provides both arguments or none
-    if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
-        # ask them to provide at least one argument
-        if not by_keyword and not by_assembly_accession_id:
-            raise MissingArgumentException(
-                "You must provide either 'by_keyword' or 'by_assembly_accession_id' argument."
-            )
-        # or in case they provided both, ask them to provide one only
-        raise InputFieldArgumentNumberError(1)
+    # ask them to provide at least one argument
+    if not by_keyword:
+        raise MissingArgumentException("You must provide 'by_keyword' argument.")
+
+    # Check if exactly one field is provided
+    provided_count = sum(1 for value in by_keyword.values() if value)
+    if provided_count != 1:
+        raise GraphQLError("Exactly one of the fields must be provided")
 
     grpc_model = info.context["grpc_model"]
 
     if by_keyword:
-        result = grpc_model.get_genome_by_keyword(
-            by_keyword.get("keyword"), by_keyword.get("release_version")
-        )
-        genomes = list(result)
-        if not genomes:
-            raise GenomeNotFoundError(by_keyword)
-
-        # Fetch assembly data and combine it with genome data
-        return fetch_and_combine_genome_data(info, genomes)
-
-    if by_assembly_accession_id:
-        result = grpc_model.get_genome_by_assembly_acc_id(
-            by_assembly_accession_id.get("assembly_accession_id")
-        )
-        genomes = list(result)
-        if not genomes:
-            raise GenomeNotFoundError(by_assembly_accession_id)
-
-        # Fetch assembly data and combine it with genome data
-        return fetch_and_combine_genome_data(info, genomes)
+        for key in [
+            "tolid",
+            "assembly_accession_id",
+            "assembly_name",
+            "ensembl_name",
+            "common_name",
+            "scientific_name",
+            "scientific_parlance_name",
+            "species_taxonomy_id",
+        ]:
+            if by_keyword.get(key):
+                return fetch_genome_and_combine(info, grpc_model, by_keyword, key)
 
     return []
 
@@ -775,33 +813,6 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
     return assembly
-
-
-def fetch_and_combine_genome_data(info: GraphQLResolveInfo, genomes: List) -> List:
-    # Check if the assembly field is requested in the query
-    requested_fields = [
-        field.name.value for field in info.field_nodes[0].selection_set.selections
-    ]
-    is_assembly_prensent = "assembly" in requested_fields
-
-    combined_results = []
-    for genome in genomes:
-        set_db_conn_for_uuid(info, genome.genome_uuid)
-        connection_db = get_db_conn(info)
-        # logging.debug("Collections in the database:", connection_db.list_collection_names())
-        assembly_collection = connection_db["assembly"]
-        # logging.debug("assembly_collection.name:", assembly_collection.name)
-
-        if not is_assembly_prensent:
-            # Don't bother getting the assembly data if it's not requested in the query
-            # TODO: See if this can be improved
-            combined_results.append(create_genome_response(genome, None))
-        else:
-            assembly_data = fetch_assembly_data(
-                assembly_collection, genome.assembly.name
-            )
-            combined_results.append(create_genome_response(genome, assembly_data))
-    return combined_results
 
 
 def get_version_details() -> Dict[str, str]:
