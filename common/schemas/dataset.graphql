@@ -1,0 +1,11 @@
+type Dataset {
+  dataset_id: String!
+  name: String!
+  release: Float!
+  type: String!
+  source: String!
+  dataset_type: String!
+  version: String
+  release_date: String!
+  release_type: String!
+}

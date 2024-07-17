@@ -61,6 +61,18 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         response = self.grpc_stub.GetGenomesBySpecificKeyword(request)
         return response
 
+    def get_datasets_list_by_uuid(self, genome_uuid, release_version=None):
+        logger.debug(
+            "Received RPC for GetDatasetsListByUUID with genome_uuid: '%s', release: %s",
+            genome_uuid,
+            release_version,
+        )
+        request = ensembl_metadata_pb2.DatasetsRequest(
+            genome_uuid=genome_uuid, release_version=release_version
+        )
+        response = self.grpc_stub.GetDatasetsListByUUID(request)
+        return response
+
     def get_release_by_genome_uuid(self, genome_uuid):
         request = ensembl_metadata_pb2.ReleaseVersionRequest(genome_uuid=genome_uuid)
         response = self.grpc_stub.GetReleaseVersionByUUID(request)

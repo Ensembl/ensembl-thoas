@@ -16,6 +16,7 @@ import logging
 from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
+from ensembl.production.metadata.api.models import Genome
 from graphql import GraphQLResolveInfo, GraphQLError
 from pymongo.database import Database, Collection
 
@@ -41,7 +42,7 @@ from graphql_service.resolver.exceptions import (
     DatabaseNotFoundError,
     CollectionNotFoundError,
 )
-
+from grpc_service.grpc_model import GRPC_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -686,7 +687,9 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
     return result
 
 
-def fetch_genome_and_combine(info, grpc_model, by_keyword, key):
+def fetch_genome_and_combine(
+    info: GraphQLResolveInfo, grpc_model: GRPC_MODEL, by_keyword: Dict, key: str
+) -> List:
     """
     Fetches genomes by a specific keyword and combines genome data with assembly data if requested.
 
@@ -702,6 +705,7 @@ def fetch_genome_and_combine(info, grpc_model, by_keyword, key):
     Raises:
         GenomeNotFoundError: If no genomes are found for the given keyword.
     """
+    # Fetch genomes data from metadata using gRPC
     result = grpc_model.get_genome_by_specific_keyword(
         **{key: by_keyword.get(key)},
         release_version=by_keyword.get("release_version"),
@@ -710,11 +714,12 @@ def fetch_genome_and_combine(info, grpc_model, by_keyword, key):
     if not genomes:
         raise GenomeNotFoundError(by_keyword)
 
-    # Check if the assembly field is requested in the query
     requested_fields = [
         field.name.value for field in info.field_nodes[0].selection_set.selections
     ]
-    is_assembly_prensent = "assembly" in requested_fields
+    # Check if the assembly and/or dataset fields are requested in the query
+    is_assembly_present = "assembly" in requested_fields
+    is_dataset_present = "dataset" in requested_fields
 
     combined_results = []
     for genome in genomes:
@@ -724,15 +729,17 @@ def fetch_genome_and_combine(info, grpc_model, by_keyword, key):
         assembly_collection = connection_db["assembly"]
         # logging.debug("assembly_collection.name:", assembly_collection.name)
 
-        if not is_assembly_prensent:
-            # Don't bother getting the assembly data if it's not requested in the query
-            # TODO: See if this can be improved
-            combined_results.append(create_genome_response(genome, None))
-        else:
+        assembly_data = None
+        dataset_data = None
+        if is_assembly_present:
             assembly_data = fetch_assembly_data(
                 assembly_collection, genome.assembly.name
             )
-            combined_results.append(create_genome_response(genome, assembly_data))
+        if is_dataset_present:
+            dataset_data = fetch_dataset_data(grpc_model, genome.genome_uuid)
+        combined_results.append(
+            create_genome_response(genome, assembly_data, dataset_data)
+        )
     return combined_results
 
 
@@ -779,11 +786,38 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     )
     if not genome.genome_uuid:
         raise GenomeNotFoundError(by_genome_uuid)
-    genomes = create_genome_response(genome)
+
+    # fetch dataset info
+    dataset_data = fetch_dataset_data(grpc_model, genome.genome_uuid)
+    genomes = create_genome_response(
+        genome=genome, assembly_data=None, dataset_data=dataset_data
+    )
     return genomes
 
 
-def create_genome_response(genome, assembly_data=None):
+def create_genome_response(
+    genome: Genome,
+    assembly_data: Optional[Dict[str, Any]] = None,
+    dataset_data: Optional[List] = None,
+) -> Dict:
+
+    datasets_response = []
+    if dataset_data:
+        for dataset in dataset_data:
+            datasets_response.append(
+                {
+                    "dataset_id": dataset.dataset_uuid,
+                    "name": dataset.dataset_label,
+                    "version": dataset.dataset_version,
+                    "release": dataset.release_version,
+                    "type": dataset.dataset_type_topic,
+                    "source": dataset.dataset_source_type,
+                    "dataset_type": dataset.dataset_type_name,
+                    "release_date": dataset.release_date,
+                    "release_type": dataset.release_type,
+                }
+            )
+
     response = {
         "genome_id": genome.genome_uuid,
         "assembly_accession": genome.assembly.accession,
@@ -796,6 +830,7 @@ def create_genome_response(genome, assembly_data=None):
         "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
         "is_reference": genome.assembly.is_reference,
         "assembly": assembly_data,
+        "dataset": datasets_response,
     }
     return response
 
@@ -813,6 +848,12 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
     return assembly
+
+
+def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
+    result = grpc_model.get_datasets_list_by_uuid(genome_uuid)
+    datasets = list(result.datasets)
+    return datasets
 
 
 def get_version_details() -> Dict[str, str]:

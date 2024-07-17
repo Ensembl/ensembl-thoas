@@ -38,4 +38,5 @@ type Genome {
   genome_tag: String
   is_reference: Boolean!
   assembly: Assembly
+  dataset: [Dataset]
 }
