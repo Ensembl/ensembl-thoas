@@ -13,6 +13,9 @@
 """
 
 import logging
+from typing import List
+
+from graphql import GraphQLResolveInfo
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +72,24 @@ def get_ensembl_metadata_api_version():
                 version = line.strip().split("@")[-1]
                 break
     return version
+
+
+def check_requested_fields(info: GraphQLResolveInfo, fields: List[str]) -> List[bool]:
+    """
+    Check if specific fields are requested in the GraphQL query.
+
+    Args:
+        info (ResolveInfo): The GraphQL resolve information containing query details.
+        fields (List[str]): A list of field names to check for in the query.
+
+    Returns:
+        List[bool]: A list of booleans indicating whether each field is present in the query.
+
+    Usage example:
+        fields_to_check = ["assembly", "dataset"]
+        is_assembly_present, is_dataset_present = check_requested_fields(info, fields_to_check)
+    """
+    requested_fields = [
+        field.name.value for field in info.field_nodes[0].selection_set.selections
+    ]
+    return [field in requested_fields for field in fields]
