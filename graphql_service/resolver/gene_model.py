@@ -113,12 +113,16 @@ def resolve_gene(
 
 @QUERY_TYPE.field("genes")
 def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
-    "Load Genes via potentially ambiguous symbol"
+    """
+    Load Genes via potentially ambiguous symbol
+    Or
+    If no Symbol is specified, get all related genes (this feature might be removed later)
+    """
 
     query = {
         "genome_id": by_symbol["genome_id"],
         "type": "Gene",
-        "symbol": by_symbol["symbol"],
+        "symbol": by_symbol.get("symbol"),  # this makes symbol optional
     }
 
     set_db_conn_for_uuid(info, by_symbol["genome_id"])
@@ -227,7 +231,7 @@ def resolve_transcript(
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
     if by_symbol:
-        query["symbol"] = by_symbol["symbol"]
+        query["symbol"] = by_symbol.get("symbol")  # this makes symbol optional
         query["genome_id"] = by_symbol["genome_id"]
         genome_id = by_symbol["genome_id"]
     if by_id:

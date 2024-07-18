@@ -26,7 +26,7 @@ type Query {
 }
 
 input SymbolInput {
-  symbol: String!
+  symbol: String
   genome_id: String!
 }
 
