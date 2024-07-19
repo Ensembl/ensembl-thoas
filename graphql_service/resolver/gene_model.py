@@ -41,7 +41,6 @@ from graphql_service.resolver.exceptions import (
     DatabaseNotFoundError,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Define Query types for GraphQL
@@ -506,6 +505,7 @@ def resolve_product_by_id(
 
     query = {
         "genome_id": genome_id,
+        # TODO: search by unversioned_stable_id as well?
         "stable_id": stable_id,
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
@@ -526,6 +526,56 @@ def resolve_product_by_id(
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
     return result
+
+
+@PRODUCT_TYPE.field("product_generating_context")
+def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Dict:
+    pipeline = [
+        {
+            "$match": {
+                "stable_id": product.get("stable_id"),
+                "genome_id": product.get("genome_id"),
+            }
+        },
+        {
+            "$lookup": {
+                "from": "transcript",
+                "localField": "transcript_id",
+                "foreignField": "unversioned_stable_id",
+                "as": "transcript",
+            }
+        },
+        {"$unwind": {"path": "$transcript"}},
+    ]
+
+    # get db connection
+    set_db_conn_for_uuid(info, product.get("genome_id"))
+    connection_db = get_db_conn(info)
+    protein_collection = connection_db["protein"]
+    logger.info(
+        "[resolve_pgc_for_product] Getting Protein from DB: '%s'", connection_db.name
+    )
+
+    results = list(protein_collection.aggregate(pipeline))
+
+    result = results[0]
+
+    pgcs = result.get("transcript", None).get("product_generating_contexts", None)
+
+    if not pgcs or len(pgcs) == 0:
+        return None
+
+    # get the specific pgc for product
+    pgc = [
+        pgc
+        for pgc in pgcs
+        if pgc.get("product_foreign_key") == product.get("product_primary_key")
+    ]
+
+    if pgc[0]:
+        return pgc[0]
+
+    return None
 
 
 @PGC_TYPE.field("product")
@@ -598,7 +648,6 @@ async def resolve_assembly_from_region(
 async def resolve_regions_from_assembly(
     assembly: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.region_by_assembly_loader
 
@@ -613,7 +662,6 @@ async def resolve_regions_from_assembly(
 async def resolve_organism_from_assembly(
     assembly: Dict, info: GraphQLResolveInfo
 ) -> Optional[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.organism_loader
 
@@ -627,7 +675,6 @@ async def resolve_organism_from_assembly(
 async def resolve_assemblies_from_organism(
     organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.assembly_by_organism_loader
 
@@ -641,7 +688,6 @@ async def resolve_assemblies_from_organism(
 async def resolve_species_from_organism(
     organism: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.species_loader
 
@@ -655,7 +701,6 @@ async def resolve_species_from_organism(
 async def resolve_organisms_from_species(
     species: Dict, info: GraphQLResolveInfo
 ) -> List[Dict]:
-
     data_loader = get_data_loader(info)
     loader = data_loader.organism_by_species_loader
 
@@ -691,7 +736,6 @@ def resolve_genomes(
     by_keyword: Optional[Dict[str, str]] = None,
     by_assembly_accession_id: Optional[Dict[str, str]] = None,
 ) -> List:
-
     # in case the user provides both arguments or none
     if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
         # ask them to provide at least one argument
@@ -729,7 +773,6 @@ def resolve_genomes(
 
 @QUERY_TYPE.field("genome")
 def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
-
     grpc_model = info.context["grpc_model"]
 
     genome = grpc_model.get_genome_by_genome_uuid(
