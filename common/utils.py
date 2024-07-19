@@ -15,7 +15,7 @@
 import logging
 from typing import List
 
-from graphql import GraphQLResolveInfo
+from graphql import GraphQLResolveInfo, FieldNode
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ def check_requested_fields(info: GraphQLResolveInfo, fields: List[str]) -> List[
     Check if specific fields are requested in the GraphQL query.
 
     Args:
-        info (ResolveInfo): The GraphQL resolve information containing query details.
+        info (GraphQLResolveInfo): The GraphQL resolve information containing query details.
         fields (List[str]): A list of field names to check for in the query.
 
     Returns:
@@ -89,7 +89,12 @@ def check_requested_fields(info: GraphQLResolveInfo, fields: List[str]) -> List[
         fields_to_check = ["assembly", "dataset"]
         is_assembly_present, is_dataset_present = check_requested_fields(info, fields_to_check)
     """
-    requested_fields = [
-        field.name.value for field in info.field_nodes[0].selection_set.selections
-    ]
+    requested_fields = []
+    if info.field_nodes:
+        selection_set = info.field_nodes[0].selection_set
+        if selection_set and selection_set.selections:
+            for field in selection_set.selections:
+                if isinstance(field, FieldNode) and field.name and field.name.value:
+                    requested_fields.append(field.name.value)
+
     return [field in requested_fields for field in fields]

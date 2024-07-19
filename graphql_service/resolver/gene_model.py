@@ -538,7 +538,7 @@ def resolve_product_by_id(
 
 
 @PRODUCT_TYPE.field("product_generating_context")
-def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Dict:
+def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     pipeline = [
         {
             "$match": {
@@ -856,7 +856,7 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
 def create_genome_response(
     genome: Genome,
     dataset_data: Optional[List] = None,
-    assembly_data: Optional[Dict[str, Any]] = None,
+    assembly_data: Optional[Mapping[Any, Any]] = None,
 ) -> Dict:
     """
     Create a response dictionary for a genome with optional assembly and dataset data.
