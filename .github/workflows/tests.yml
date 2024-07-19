@@ -1,5 +1,5 @@
 # Workflow name
-name: PyTest, Black and Pylint
+name: PyTest, Black, Pylint and Mypy
 
 # Controls when the workflow will run
 on:
@@ -17,7 +17,7 @@ jobs:
   # This workflow contains a single job called "tests"
   tests:
     # The type of runner that the job will run on and timeout in minutes
-    name: Run Python Tests, Black formatter and Pylint
+    name: Run Python Tests, Black formatter, Pylint and Mypy
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -32,7 +32,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-    # Set up Python version from the matrix
+      # Set up Python version from the matrix
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -59,3 +59,8 @@ jobs:
       - name: Run Pylint
         run: |
           pylint $(git ls-files '*.py') --fail-under=9.5
+
+      # Run Mypy
+      - name: Run Mypy type checker
+        run: |
+          mypy graphql_service
