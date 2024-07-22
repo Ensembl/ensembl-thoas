@@ -17,6 +17,8 @@ import mongomock
 import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 
+from common.utils import process_release_version
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,26 +35,30 @@ class MongoDbClient:
         self.config = config
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
-    def get_database_conn(self, grpc_model, uuid):
+    def get_database_conn(self, grpc_model, uuid, force_grpc=False):
         grpc_response = None
         chosen_db = self.config.get("mongo_default_db")
         # Try to connect to gRPC
         try:
             grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
         except Exception as grpc_exp:
-            # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
             # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
             logger.debug(
                 "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
 
-        if grpc_response:
-            logger.debug("[get_database_conn] grpc_response: %s", grpc_response)
-            # replacing '.' with '_' to avoid
-            # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
-            release_version = str(grpc_response.release_version).replace(".", "_")
-            logger.debug("[get_database_conn] release_version: %s", release_version)
-            chosen_db = "release_" + release_version
+        if force_grpc:
+            chosen_db = process_release_version(grpc_response)
+        else:
+            if grpc_response and grpc_response.release_version:
+                chosen_db = process_release_version(grpc_response)
+            else:
+                # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
+                # if force_grpc is not True
+                logger.warning(
+                    "[get_database_conn] Falling back to the default Mongo DB: '%s'",
+                    chosen_db,
+                )
 
         logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
         data_database_connection = self.mongo_client[chosen_db]
@@ -68,8 +74,8 @@ class MongoDbClient:
         password = config.get("mongo_password")
 
         client = pymongo.MongoClient(
-            host,
-            port,
+            host=host,
+            port=port,
             username=user,
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,

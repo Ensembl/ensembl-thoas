@@ -13,12 +13,14 @@
 """
 import configparser
 import logging
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
-from graphql import GraphQLResolveInfo
-from pymongo.database import Database
+from ensembl.production.metadata.api.models import Genome
+from graphql import GraphQLResolveInfo, GraphQLError
+from pymongo.database import Database, Collection
 
+from common import utils
 from graphql_service.resolver.data_loaders import BatchLoaders
 
 from graphql_service.resolver.exceptions import (
@@ -39,7 +41,9 @@ from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
     MissingArgumentException,
     DatabaseNotFoundError,
+    CollectionNotFoundError,
 )
+from grpc_service.grpc_model import GRPC_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,7 @@ ASSEMBLY_TYPE = ObjectType("Assembly")
 ORGANISM_TYPE = ObjectType("Organism")
 SPECIES_TYPE = ObjectType("Species")
 TRANSCRIPT_PAGE_TYPE = ObjectType("TranscriptsPage")
+GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
@@ -96,9 +101,9 @@ def resolve_gene(
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
         result = gene_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not result:
         raise GeneNotFoundError(by_id=by_id)
@@ -108,12 +113,16 @@ def resolve_gene(
 
 @QUERY_TYPE.field("genes")
 def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
-    "Load Genes via potentially ambiguous symbol"
+    """
+    Load Genes via potentially ambiguous symbol
+    Or
+    If no Symbol is specified, get all related genes (this feature might be removed later)
+    """
 
     query = {
         "genome_id": by_symbol["genome_id"],
         "type": "Gene",
-        "symbol": by_symbol["symbol"],
+        "symbol": by_symbol.get("symbol"),  # this makes symbol optional
     }
 
     set_db_conn_for_uuid(info, by_symbol["genome_id"])
@@ -123,9 +132,9 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
 
     try:
         result = gene_collection.find(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     # unpack cursor into a list. We're guaranteed relatively small results
     result = list(result)
@@ -222,7 +231,7 @@ def resolve_transcript(
     query: Dict[str, Any] = {"type": "Transcript"}
     genome_id = None
     if by_symbol:
-        query["symbol"] = by_symbol["symbol"]
+        query["symbol"] = by_symbol.get("symbol")  # this makes symbol optional
         query["genome_id"] = by_symbol["genome_id"]
         genome_id = by_symbol["genome_id"]
     if by_id:
@@ -244,9 +253,9 @@ def resolve_transcript(
 
     try:
         transcript = transcript_collection.find_one(query)
-    except Exception as e:
-        logging.error("Exception: %s", e)
-        raise DatabaseNotFoundError(db_name=connection_db.name)
+    except Exception as db_exp:
+        logging.error("Exception: %s", db_exp)
+        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     if not transcript:
         raise TranscriptNotFoundError(by_symbol=by_symbol, by_id=by_id)
@@ -529,7 +538,7 @@ def resolve_product_by_id(
 
 
 @PRODUCT_TYPE.field("product_generating_context")
-def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Dict:
+def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     pipeline = [
         {
             "$match": {
@@ -731,42 +740,91 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 
 @QUERY_TYPE.field("genomes")
 def resolve_genomes(
-    _,
-    info: GraphQLResolveInfo,
-    by_keyword: Optional[Dict[str, str]] = None,
-    by_assembly_accession_id: Optional[Dict[str, str]] = None,
+    _, info: GraphQLResolveInfo, by_keyword: Dict[str, str] = None
 ) -> List:
-    # in case the user provides both arguments or none
-    if sum(map(bool, [by_keyword, by_assembly_accession_id])) != 1:
-        # ask them to provide at least one argument
-        if not by_keyword and not by_assembly_accession_id:
-            raise MissingArgumentException(
-                "You must provide either 'by_keyword' or 'by_assembly_accession_id' argument."
-            )
-        # or in case they provided both, ask them to provide one only
-        raise InputFieldArgumentNumberError(1)
+    """
+    Resolve the genomes based on provided keyword arguments.
+    Under the hood, this resolver might execute and combine 3 different queries based on the requested data:
+    - The default `get_genome_by_specific_keyword()` gRPC call (Metadata DB)
+    - If `assembly` is requested, `fetch_assembly_data()` is triggered fetching data from Mongo DB
+    - If `dataset` is requested, `fetch_dataset_data()` is triggered which triggers `get_datasets_list_by_uuid()`
+        gRPC call to fetch dataset info (Metadata DB)
+
+    Args:
+        info (GraphQLResolveInfo): GraphQL resolve information containing query details.
+        by_keyword (Dict[str, str]): Dictionary containing keyword arguments for fetching genomes.
+
+    Returns:
+        List: A list of genomes matching the provided keyword.
+
+    Raises:
+        MissingArgumentException: If 'by_keyword' argument is not provided.
+        GraphQLError: If not exactly one field in 'by_keyword' is provided.
+        GenomeNotFoundError: If no genomes are found matching the provided keyword.
+    """
+    if not by_keyword:
+        raise MissingArgumentException("You must provide 'by_keyword' argument.")
+
+    # Check if exactly one field is provided
+    provided_count = sum(1 for value in by_keyword.values() if value)
+    if provided_count != 1:
+        raise GraphQLError("Exactly one of the fields must be provided")
 
     grpc_model = info.context["grpc_model"]
 
     if by_keyword:
-        result = grpc_model.get_genome_by_keyword(
-            by_keyword.get("keyword"), by_keyword.get("release_version")
-        )
-        genomes = list(result)
-        if not genomes:
-            raise GenomeNotFoundError(by_keyword)
-        genomes = list(map(create_genome_response, genomes))
-        return genomes
+        for key in [
+            "tolid",
+            "assembly_accession_id",
+            "assembly_name",
+            "ensembl_name",
+            "common_name",
+            "scientific_name",
+            "scientific_parlance_name",
+            "species_taxonomy_id",
+        ]:
+            # if one of the keys is provided
+            if by_keyword.get(key):
+                # Fetch genomes data from metadata using gRPC
+                result = grpc_model.get_genome_by_specific_keyword(
+                    **{key: by_keyword.get(key)},
+                    release_version=by_keyword.get("release_version"),
+                )
+                genomes = list(result)
 
-    if by_assembly_accession_id:
-        result = grpc_model.get_genome_by_assembly_acc_id(
-            by_assembly_accession_id.get("assembly_accession_id")
-        )
-        genomes = list(result)
-        if not genomes:
-            raise GenomeNotFoundError(by_assembly_accession_id)
-        genomes = list(map(create_genome_response, genomes))
-        return genomes
+                if not genomes:
+                    raise GenomeNotFoundError(by_keyword)
+
+                # Check if the assembly and dataset fields are requested in the query
+                fields_to_check = ["assembly", "dataset"]
+                is_assembly_present, is_dataset_present = utils.check_requested_fields(
+                    info, fields_to_check
+                )
+
+                combined_results = []
+                for genome in genomes:
+                    set_db_conn_for_uuid(info, genome.genome_uuid)
+                    connection_db = get_db_conn(info)
+                    # logging.debug("Collections in the database:", connection_db.list_collection_names())
+                    assembly_collection = connection_db["assembly"]
+                    # logging.debug("assembly_collection.name:", assembly_collection.name)
+
+                    assembly_data = (
+                        fetch_assembly_data(assembly_collection, genome.assembly.name)
+                        if is_assembly_present
+                        else None
+                    )
+                    dataset_data = (
+                        fetch_dataset_data(grpc_model, genome.genome_uuid)
+                        if is_dataset_present
+                        else None
+                    )
+
+                    combined_results.append(
+                        create_genome_response(genome, dataset_data, assembly_data)
+                    )
+
+                return combined_results
 
     return []
 
@@ -780,23 +838,114 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     )
     if not genome.genome_uuid:
         raise GenomeNotFoundError(by_genome_uuid)
-    genomes = create_genome_response(genome)
+
+    # Check if the dataset fields is requested in the query
+    fields_to_check = ["dataset"]
+    is_dataset_present = utils.check_requested_fields(info, fields_to_check)
+
+    dataset_data = (
+        fetch_dataset_data(grpc_model, genome.genome_uuid)
+        if is_dataset_present
+        else None
+    )
+
+    genomes = create_genome_response(genome=genome, dataset_data=dataset_data)
     return genomes
 
 
-def create_genome_response(genome):
+def create_genome_response(
+    genome: Genome,
+    dataset_data: Optional[List] = None,
+    assembly_data: Optional[Mapping[Any, Any]] = None,
+) -> Dict:
+    """
+    Create a response dictionary for a genome with optional assembly and dataset data.
+
+    Args:
+        genome (Genome): The genome object containing genome-related information.
+        assembly_data (Optional[Dict[str, Any]]): Optional dictionary containing assembly data.
+        dataset_data (Optional[List]): Optional list of dataset objects containing dataset information.
+
+    Returns:
+        Dict: A dictionary containing the genome response data.
+    """
+    datasets_response = []
+    if dataset_data:
+        for dataset in dataset_data:
+            datasets_response.append(
+                {
+                    "dataset_id": dataset.dataset_uuid,
+                    "name": dataset.dataset_label,
+                    "version": dataset.dataset_version,
+                    "release": dataset.release_version,
+                    "type": dataset.dataset_type_topic,
+                    "source": dataset.dataset_source_type,
+                    "dataset_type": dataset.dataset_type_name,
+                    "release_date": dataset.release_date,
+                    "release_type": dataset.release_type,
+                }
+            )
+
     response = {
         "genome_id": genome.genome_uuid,
         "assembly_accession": genome.assembly.accession,
         "scientific_name": genome.organism.scientific_name,
         "release_number": genome.release.release_version,
+        "release_date": genome.release.release_date,
         "taxon_id": genome.taxon.taxonomy_id,
         "tol_id": genome.assembly.tol_id,
         "parlance_name": genome.organism.scientific_parlance_name,
         "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
         "is_reference": genome.assembly.is_reference,
+        "assembly": assembly_data,
+        "dataset": datasets_response,
     }
     return response
+
+
+def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Mapping:
+    """
+    Fetch assembly data from a collection using the assembly ID.
+
+    Args:
+        assembly_collection (Collection): The collection to search for the assembly data.
+        assembly_id (str): The ID of the assembly to fetch.
+
+    Returns:
+        Mapping: The assembly data if found.
+
+    Raises:
+        CollectionNotFoundError: If there is an issue accessing the collection.
+        AssemblyNotFoundError: If the assembly with the given ID is not found.
+    """
+    query = {"assembly_id": assembly_id}
+    try:
+        assembly = assembly_collection.find_one(query)
+    except Exception as coll_exp:
+        logging.error("Exception: %s", coll_exp)
+        raise (
+            CollectionNotFoundError(collection_name=assembly_collection.name)
+        ) from coll_exp
+
+    if not assembly:
+        raise AssemblyNotFoundError(assembly_id)
+    return assembly
+
+
+def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
+    """
+    Fetch dataset data using a gRPC model based on the genome UUID.
+
+    Args:
+        grpc_model (GRPC_MODEL): The gRPC model to use for fetching the dataset data.
+        genome_uuid (str): The UUID of the genome for which to fetch dataset data.
+
+    Returns:
+        List: A list of datasets associated with the given genome UUID.
+    """
+    result = grpc_model.get_datasets_list_by_uuid(genome_uuid)
+    datasets = list(result.datasets)
+    return datasets
 
 
 def get_version_details() -> Dict[str, str]:
