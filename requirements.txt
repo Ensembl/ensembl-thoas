@@ -2,7 +2,7 @@ mongomock==4.0.0
 pymongo==4.1.1
 requests==2.31.0
 aiodataloader==0.2.1
-ariadne==0.19.1
+ariadne==0.23
 python-dotenv==0.19.2
 uvicorn==0.18.1
 ensembl-metadata-api@git+https://github.com/Ensembl/ensembl-metadata-api.git@2.2.0a1
