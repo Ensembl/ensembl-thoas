@@ -1,12 +1,44 @@
+"""
+Interface representing an ontology term.
+"""
 interface OntologyTerm {
+  """
+  The accession ID of the ontology term.
+  """
   accession_id: String!
+
+  """
+  The value associated with the ontology term.
+  """
   value: String!
+
+  """
+  The URL of the ontology term.
+  """
   url: String!
+
+  """
+  The source of the ontology term.
+  """
   source: OntologySource
 }
 
+"""
+Interface representing the source of an ontology term.
+"""
 interface OntologySource {
+  """
+  The name of the ontology source.
+  """
   name: String!
+
+  """
+  The URL of the ontology source.
+  """
   url: String!
+
+  """
+  A description of the ontology source.
+  """
   description: String!
 }

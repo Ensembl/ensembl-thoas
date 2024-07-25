@@ -1,39 +1,140 @@
+"""
+Represents an external reference.
+A reference to a database outside of Ensembl.
+"""
 type ExternalReference {
-  # A reference to a database outside of Ensembl
+  """
+  The accession ID of the external reference.
+  """
   accession_id: String!
+
+  """
+  The name of the external reference.
+  """
   name: String!
+
+  """
+  A description of the external reference.
+  """
   description: String
+
+  """
+  The method used to assign this external reference.
+  """
   assignment_method: XrefMethod!
+
+  """
+  The URL of the external reference.
+  """
   url: String
+
+  """
+  The source database of the external reference.
+  """
   source: ExternalDB!
 }
 
+"""
+Some metadata about databases outside of Ensembl.
+"""
 type ExternalDB {
-  # Some metadata about databases outside of Ensembl
+  """
+  The unique identifier for the external database.
+  """
   id: String!
+
+  """
+  The name of the external database.
+  """
   name: String!
+
+  """
+  A description of the external database.
+  """
   description: String
+
+  """
+  The URL of the external database.
+  """
   url: String
+
+  """
+  The release version of the external database.
+  """
   release: String
 }
 
+"""
+Differentiate by reference assignment method.
+"""
 type XrefMethod {
-  # Differentiate by ref assignment method
+  """
+  The type of information for the reference assignment method.
+  """
   type: InfoType!
+
+  """
+  A description of the reference assignment method.
+  """
   description: String
 }
 
+"""
+Enum of valid types in the external reference pipeline.
+"""
 enum InfoType {
-  # Enum of valid types in the external reference pipeline
+  """
+  Projection method.
+  """
   PROJECTION
+
+  """
+  Miscellaneous method.
+  """
   MISC
+
+  """
+  Direct method.
+  """
   DIRECT
+
+  """
+  Sequence match method.
+  """
   SEQUENCE_MATCH
+
+  """
+  Inferred pair method.
+  """
   INFERRED_PAIR
+
+  """
+  Probe method.
+  """
   PROBE
+
+  """
+  Unmapped method.
+  """
   UNMAPPED
+
+  """
+  Coordinate overlap method.
+  """
   COORDINATE_OVERLAP
+
+  """
+  Checksum method.
+  """
   CHECKSUM
+
+  """
+  No method assigned.
+  """
   NONE
+
+  """
+  Dependent method.
+  """
   DEPENDENT
 }

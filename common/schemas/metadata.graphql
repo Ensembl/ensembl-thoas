@@ -1,96 +1,318 @@
+"""
+Interface for metadata derived from a value set.
+"""
 interface ValueSetMetadata {
-	# Metadata derived from a value set
-	label: String!
-	definition: String!
-	description: String
+  """
+  The label of the value set.
+  """
+  label: String!
+
+  """
+  The definition of the value set.
+  """
+  definition: String!
+
+  """
+  A description of the value set.
+  """
+  description: String
 }
 
+"""
+Interface for metadata related to external references.
+"""
 interface XrefMetadata {
-	accession_id: String!
-	value: String!
-	url: String!
-	source: ExternalDB!
+  """
+  The accession ID of the external reference.
+  """
+  accession_id: String!
+
+  """
+  The value associated with the external reference.
+  """
+  value: String!
+
+  """
+  The URL of the external reference.
+  """
+  url: String!
+
+  """
+  The source database of the external reference.
+  """
+  source: ExternalDB!
 }
 
+"""
+Represents metadata for transcript biotype, implementing ValueSetMetadata.
+"""
 type TranscriptBiotypeMetadata implements ValueSetMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the biotype.
+  """
+  value: String!
+
+  """
+  The label of the biotype.
+  """
+  label: String!
+
+  """
+  The definition of the biotype.
+  """
+  definition: String!
+
+  """
+  A description of the biotype.
+  """
+  description: String
 }
 
+"""
+Represents metadata for Gencode basic transcripts, implementing ValueSetMetadata.
+"""
 type TranscriptGencodeBasicMetadata implements ValueSetMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the Gencode basic metadata.
+  """
+  value: String!
+
+  """
+  The label of the Gencode basic metadata.
+  """
+  label: String!
+
+  """
+  The definition of the Gencode basic metadata.
+  """
+  definition: String!
+
+  """
+  A description of the Gencode basic metadata.
+  """
+  description: String
 }
 
+"""
+Represents metadata for Appris transcripts, implementing ValueSetMetadata.
+"""
 type TranscriptApprisMetadata implements ValueSetMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the Appris metadata.
+  """
+  value: String!
+
+  """
+  The label of the Appris metadata.
+  """
+  label: String!
+
+  """
+  The definition of the Appris metadata.
+  """
+  definition: String!
+
+  """
+  A description of the Appris metadata.
+  """
+  description: String
 }
 
+"""
+Represents metadata for transcript support level (TSL), implementing ValueSetMetadata.
+"""
 type TranscriptTSLMetadata implements ValueSetMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the TSL metadata.
+  """
+  value: String!
+
+  """
+  The label of the TSL metadata.
+  """
+  label: String!
+
+  """
+  The definition of the TSL metadata.
+  """
+  definition: String!
+
+  """
+  A description of the TSL metadata.
+  """
+  description: String
 }
 
+"""
+Represents an NCBI transcript.
+"""
 type NCBITranscript {
-	id: String!
-	url : String!
+  """
+  The unique identifier for the NCBI transcript.
+  """
+  id: String!
+
+  """
+  The URL of the NCBI transcript.
+  """
+  url: String!
 }
 
+"""
+Represents metadata for MANE (Matched Annotation from NCBI and EMBL-EBI) transcripts, implementing ValueSetMetadata.
+"""
 type TranscriptManeMetadata implements ValueSetMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
-	ncbi_transcript: NCBITranscript!
+  """
+  The value of the MANE metadata.
+  """
+  value: String!
+
+  """
+  The label of the MANE metadata.
+  """
+  label: String!
+
+  """
+  The definition of the MANE metadata.
+  """
+  definition: String!
+
+  """
+  A description of the MANE metadata.
+  """
+  description: String
+
+  """
+  The NCBI transcript associated with the MANE metadata.
+  """
+  ncbi_transcript: NCBITranscript!
 }
 
+"""
+Represents metadata for Ensembl canonical transcripts, implementing ValueSetMetadata.
+"""
 type TranscriptEnsemblCanonicalMetadata implements ValueSetMetadata {
-	value: Boolean!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the Ensembl canonical metadata.
+  """
+  value: Boolean!
+
+  """
+  The label of the Ensembl canonical metadata.
+  """
+  label: String!
+
+  """
+  The definition of the Ensembl canonical metadata.
+  """
+  definition: String!
+
+  """
+  A description of the Ensembl canonical metadata.
+  """
+  description: String
 }
 
+"""
+Represents metadata associated with a transcript.
+"""
 type TranscriptMetadata {
-	gencode_basic: TranscriptGencodeBasicMetadata
-	biotype : TranscriptBiotypeMetadata!
-	appris: TranscriptApprisMetadata
-	tsl: TranscriptTSLMetadata
-	mane: TranscriptManeMetadata
-	canonical: TranscriptEnsemblCanonicalMetadata
+  """
+  Metadata for Gencode basic transcripts.
+  """
+  gencode_basic: TranscriptGencodeBasicMetadata
+
+  """
+  Metadata for the biotype of the transcript.
+  """
+  biotype: TranscriptBiotypeMetadata!
+
+  """
+  Metadata for Appris transcripts.
+  """
+  appris: TranscriptApprisMetadata
+
+  """
+  Metadata for the transcript support level (TSL).
+  """
+  tsl: TranscriptTSLMetadata
+
+  """
+  Metadata for MANE transcripts.
+  """
+  mane: TranscriptManeMetadata
+
+  """
+  Metadata for Ensembl canonical transcripts.
+  """
+  canonical: TranscriptEnsemblCanonicalMetadata
 }
 
+"""
+Represents metadata for a gene biotype.
+"""
 type GeneBiotypeMetadata {
-	value: String!
-	label: String!
-	definition: String!
-	description: String
+  """
+  The value of the gene biotype.
+  """
+  value: String!
+
+  """
+  The label of the gene biotype.
+  """
+  label: String!
+
+  """
+  The definition of the gene biotype.
+  """
+  definition: String!
+
+  """
+  A description of the gene biotype.
+  """
+  description: String
 }
 
+"""
+Represents metadata for a gene name, including temporary solutions for missing information.
+"""
 type GeneNameMetadata {
-    # Temp solution: Nullable because some xrefs doesnt have xref accession id eg: PF3D7_1314600
-	accession_id: String
+  """
+  The accession ID of the gene name.
+  """
+  # Temp solution: Nullable because some xrefs doesnt have xref accession id eg: PF3D7_1314600
+  accession_id: String
 
-	# Temp solution: Nullable because some xrefs doesnt have xref description eg: TraesCS1D02G435500
-	value: String
+  """
+  The value of the gene name.
+  """
+  # Temp solution: Nullable because some xrefs doesnt have xref description eg: TraesCS1D02G435500
+  value: String
 
-	# Temp solution: Nullable because URLs will be missing for some genes which has no source information
-	url: String
+  """
+  The URL of the gene name.
+  """
+  # Temp solution: Nullable because URLs will be missing for some genes which has no source information
+  url: String
 
-	# Temp solution: Nullable because some genes doesnt have source information in the DB
-	source: ExternalDB
+  """
+  The source database of the gene name.
+  """
+  # Temp solution: Nullable because some genes doesnt have source information in the DB
+  source: ExternalDB
 }
 
+"""
+Represents metadata associated with a gene.
+"""
 type GeneMetadata {
-	biotype: GeneBiotypeMetadata!
-	name: GeneNameMetadata
+  """
+  Metadata for the biotype of the gene.
+  """
+  biotype: GeneBiotypeMetadata!
+
+  """
+  Metadata for the name of the gene.
+  """
+  name: GeneNameMetadata
 }

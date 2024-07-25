@@ -1,42 +1,174 @@
+"""
+Represents an assembly of genomic data.
+"""
 type Assembly {
+  """
+  The unique identifier for the assembly.
+  """
   assembly_id: String!
+  
+  """
+  The name of the assembly.
+  """
   name: String!
+  
+  """
+  The accession ID of the assembly.
+  """
   accession_id: String!
+  
+  """
+  The body responsible for accessioning the assembly.
+  """
   accessioning_body: String!
+  
+  """
+  The organism associated with the assembly.
+  """
   organism: Organism!
+  
+  """
+  The regions included in the assembly.
+  """
   regions: [Region!]!
+  
+  """
+  Indicates if this assembly is the default one.
+  """
   default: Boolean!
+  
+  """
+  The Tree of Life ID (ToLID) of the assembly.
+  """
   tolid: String
 }
 
+"""
+Represents an organism, including its assemblies and species.
+"""
 type Organism {
+  """
+  The scientific name of the organism.
+  """
   scientific_name: String!
+  
+  """
+  The common parlance name of the organism.
+  """
   scientific_parlance_name: String
+  
+  """
+  The species to which the organism belongs.
+  """
   species: Species!
+  
+  """
+  The unique identifier for the organism.
+  """
   id: String!
+  
+  """
+  The assemblies associated with the organism.
+  """
   assemblies: [Assembly!]!
+  
+  """
+  Indicates if this organism is the reference organism.
+  """
   is_reference_organism: Boolean
 }
 
+"""
+Represents a species, including its scientific and common names.
+"""
 type Species {
+  """
+  The scientific name of the species.
+  """
   scientific_name: String!
+  
+  """
+  The NCBI common name of the species.
+  """
   ncbi_common_name: String
+  
+  """
+  Alternative names for the species.
+  """
   alternative_names: [String!]!
+  
+  """
+  The taxonomic ID of the species.
+  """
   taxon_id: Int!
+  
+  """
+  The organisms that belong to this species.
+  """
   organisms: [Organism!]!
 }
 
+"""
+Represents a genome with various associated data.
+"""
 type Genome {
+  """
+  The unique identifier for the genome.
+  """
   genome_id: String!
+  
+  """
+  The accession ID of the genome's assembly.
+  """
   assembly_accession: String!
+  
+  """
+  The scientific name of the genome.
+  """
   scientific_name: String!
+  
+  """
+  The release number of the genome.
+  """
   release_number: Float!
+  
+  """
+  The date when the genome was released.
+  """
   release_date: String!
+  
+  """
+  The taxonomic ID of the genome.
+  """
   taxon_id: Int!
+  
+  """
+  The Tree of Life ID (ToLID) of the genome.
+  """
   tol_id: String
+  
+  """
+  The common parlance name of the genome.
+  """
   parlance_name: String
+  
+  """
+  The genome tag.
+  """
   genome_tag: String
+  
+  """
+  Indicates if this genome is the reference genome.
+  """
   is_reference: Boolean!
+  
+  """
+  The assembly associated with the genome.
+  """
   assembly: Assembly
+  
+  """
+  The datasets associated with the genome.
+  """
   dataset: [Dataset]
 }
