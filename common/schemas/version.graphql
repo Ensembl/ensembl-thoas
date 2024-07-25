@@ -1,9 +1,29 @@
+"""
+Represents the version of the API.
+"""
 type Version {
+  """
+  The version information of the API.
+  """
   api: Api!
 }
 
+"""
+Represents the version information of the API.
+"""
 type Api {
+  """
+  The major version of the API.
+  """
   major: String!
+
+  """
+  The minor version of the API.
+  """
   minor: String!
+
+  """
+  The patch version of the API.
+  """
   patch: String!
 }

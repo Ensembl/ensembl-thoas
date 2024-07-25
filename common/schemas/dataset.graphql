@@ -1,11 +1,49 @@
+"""
+Represents a dataset containing various types of data.
+"""
 type Dataset {
+  """
+  The unique identifier for the dataset.
+  """
   dataset_id: String!
+  
+  """
+  The name of the dataset.
+  """
   name: String!
+  
+  """
+  The Ensembl release version the dataset is associated with.
+  """
   release: Float!
+  
+  """
+  The type of the dataset.
+  """
   type: String!
+  
+  """
+  The source from which the dataset was obtained.
+  """
   source: String!
+  
+  """
+  The type category of the dataset.
+  """
   dataset_type: String!
+  
+  """
+  The version of the dataset.
+  """
   version: String
+  
+  """
+  The date when the dataset was released.
+  """
   release_date: String!
+  
+  """
+  The release type of the dataset.
+  """
   release_type: String!
 }

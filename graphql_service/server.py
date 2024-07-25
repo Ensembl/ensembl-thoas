@@ -89,38 +89,34 @@ CUSTOM_GRAPHIQL_HTML = read_template(
 
 DEFAULT_QUERY = """
 #
-# GraphiQL is an in -browser tool for writing, validating, and
-# testing GraphQL queries.
+# Welcome to Ensembl Core GraphQL API!
 #
-# Type queries into this side of the screen, and you will see intelligent
-# typeaheads aware of the current GraphQL type schema and live syntax and
-# validation errors highlighted within the text.
+# This is an in-browser tool for writing, validating, and testing GraphQL queries.
 #
-# GraphQL queries typically start with a "{" character. Lines that start
-# with a # are ignored.
+# Type queries on the left side of the screen, and you'll see intelligent typeaheads
+# aware of the current GraphQL type schema. Live syntax and validation errors
+# are highlighted as you type.
 #
-# An example GraphQL query might look like:
+# GraphQL queries typically start with a "{" character. Lines starting with "#" are comments.
 #
-#     {
-#       field(arg: "value") {
-#         subField
+# Here's an example query:
 #
-#       }
+# {
+#   field(arg: "value") {
+#     subField
+#   }
+# }
 #
-#     }
+# In the example below, we've named the query "ENSG00000139618", which is optional.
 #
-# In the example below we added "query ENSG00000139618" 
-# to give the query a name which is optional
-# 
 # Keyboard shortcuts:
 #
-#   Prettify query: Shift - Ctrl - P(or press the prettify button)
+#   Prettify query: Shift + Ctrl + P (or press the prettify button)
+#   Merge fragments: Shift + Ctrl + M (or press the merge button)
+#   Run Query: Ctrl + Enter (or press the play button)
+#   Auto Complete: Ctrl + Space (or just start typing)
 #
-#  Merge fragments: Shift - Ctrl - M(or press the merge button)
-#
-#        Run Query: Ctrl - Enter(or press the play button)
-#
-#    Auto Complete: Ctrl - Space(or just start typing)
+# Try running the query below to fetch gene information:
 #
 query ENSG00000139618 {
   gene(
@@ -136,6 +132,8 @@ query ENSG00000139618 {
     }
   }
 }
+
+# Feel free to modify the query or add new ones to explore other data!
 """
 
 
