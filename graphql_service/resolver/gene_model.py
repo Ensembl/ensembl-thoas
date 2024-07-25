@@ -839,18 +839,31 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     if not genome.genome_uuid:
         raise GenomeNotFoundError(by_genome_uuid)
 
-    # Check if the dataset fields is requested in the query
-    fields_to_check = ["dataset"]
-    is_dataset_present = utils.check_requested_fields(info, fields_to_check)
+    # Check if the assembly and dataset fields are requested in the query
+    fields_to_check = ["assembly", "dataset"]
+    is_assembly_present, is_dataset_present = utils.check_requested_fields(
+        info, fields_to_check
+    )
 
+    set_db_conn_for_uuid(info, genome.genome_uuid)
+    connection_db = get_db_conn(info)
+    # logging.debug("Collections in the database:", connection_db.list_collection_names())
+    assembly_collection = connection_db["assembly"]
+    # logging.debug("assembly_collection.name:", assembly_collection.name)
+
+    assembly_data = (
+        fetch_assembly_data(assembly_collection, genome.assembly.name)
+        if is_assembly_present
+        else None
+    )
     dataset_data = (
         fetch_dataset_data(grpc_model, genome.genome_uuid)
         if is_dataset_present
         else None
     )
+    genome = create_genome_response(genome, dataset_data, assembly_data)
 
-    genomes = create_genome_response(genome=genome, dataset_data=dataset_data)
-    return genomes
+    return genome
 
 
 def create_genome_response(
