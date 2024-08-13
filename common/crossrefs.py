@@ -65,9 +65,9 @@ class XrefResolver:
                         source["ensembl_db_name"].lower()
                     ] = source
                 else:
-                    self.internal_mapping_file_indexed[
-                        source["db_name"].lower()
-                    ] = source
+                    self.internal_mapping_file_indexed[source["db_name"].lower()] = (
+                        source
+                    )
 
         self.info_types = {
             "PROJECTION": "A reference inferred via homology from an assembly with better annotation coverage",

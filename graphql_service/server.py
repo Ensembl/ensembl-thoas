@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import logging
 import os
 from typing import Optional
@@ -37,9 +38,9 @@ from graphql_service.ariadne_app import (
 load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
-EXTENSIONS: Optional[
-    ExtensionList
-] = None  # mypy will throw an incompatible type error without this type cast
+EXTENSIONS: Optional[ExtensionList] = (
+    None  # mypy will throw an incompatible type error without this type cast
+)
 
 # Including the execution time in the response
 EXTENSIONS = [extensions.QueryExecutionTimeExtension]
