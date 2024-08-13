@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import configparser
 import logging
 from typing import Dict, Optional, List, Any, Mapping
@@ -740,7 +741,7 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 
 @QUERY_TYPE.field("genomes")
 def resolve_genomes(
-    _, info: GraphQLResolveInfo, by_keyword: Dict[str, str] = None
+    _, info: GraphQLResolveInfo, by_keyword: Optional[Dict[str, str]] = None
 ) -> List:
     """
     Resolve the genomes based on provided keyword arguments.

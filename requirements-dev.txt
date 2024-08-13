@@ -3,5 +3,5 @@ pytest==8.0.2
 pytest-asyncio==0.18.3
 snapshottest==0.6.0
 pylint==2.14.3
-mypy==0.961
-black==22.6.0
+mypy==1.11.1
+black==24.3.0

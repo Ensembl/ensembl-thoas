@@ -24,7 +24,7 @@ jobs:
     # Include a strategy matrix in order to allow the job to run multiple times with different versions of Python
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: ["3.10"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
