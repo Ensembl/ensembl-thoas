@@ -1,44 +1,144 @@
+"""
+Represents a product such as a protein.
+"""
 type Product {
   """
-  the value of the type field is "Protein"
+  The value of the type field is "Protein".
   """
   type: String!
+
+  """
+  The stable identifier for the product.
+  """
   stable_id: String!
+
+  """
+  The unversioned stable identifier for the product.
+  """
   unversioned_stable_id: String!
+
+  """
+  The version number of the product.
+  """
   version: Int
+
   """
   length in amino acids if product is a protein
   """
   length: Int!
+
   """
   The value of checksum in the Sequence object can be used to retrieve the sequence from RefGet
   """
   sequence: Sequence!
+
+  """
+  The checksum of the sequence. Deprecated.
+  """
   sequence_checksum: String! @deprecated
+
+  """
+  The external references associated with the product.
+  """
   external_references: [ExternalReference!]!
+
+  """
+  The family matches for the product.
+  """
   family_matches: [FamilyMatch!]!
+
+  """
+  The context in which the product is generated.
+  """
+  product_generating_context: ProductGeneratingContext
 }
 
+"""
+Represents a family match for a sequence.
+"""
 type FamilyMatch {
+  """
+  The sequence family associated with the family match.
+  """
   sequence_family: SequenceFamily!
+
+  """
+  The closest data provider for the family match.
+  """
   via: ClosestDataProvider
+
+  """
+  The relative location of the family match.
+  """
   relative_location: Location!
+
+  """
+  The hit location of the family match.
+  """
   hit_location: Location
+
+  """
+  The score of the family match.
+  """
   score: Float
+
+  """
+  The e-value of the family match.
+  """
   evalue: Float
 }
 
+"""
+Represents a sequence family.
+"""
 type SequenceFamily {
+  """
+  The source database of the sequence family.
+  """
   source: ExternalDB!
+
+  """
+  The accession ID of the sequence family.
+  """
   accession_id: String!
+
+  """
+  The name of the sequence family.
+  """
   name: String!
+
+  """
+  The URL of the sequence family.
+  """
   url: String
+
+  """
+  A description of the sequence family.
+  """
   description: String
 }
 
+"""
+Represents the closest data provider for a sequence family.
+"""
 type ClosestDataProvider {
+  """
+  The source database of the closest data provider.
+  """
   source: ExternalDB!
+
+  """
+  The accession ID of the closest data provider.
+  """
   accession_id: String!
+
+  """
+  The URL of the closest data provider.
+  """
   url: String!
+
+  """
+  A description of the closest data provider.
+  """
   description: String
 }

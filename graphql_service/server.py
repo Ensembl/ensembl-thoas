@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import logging
 import os
 from typing import Optional
@@ -22,44 +23,42 @@ from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_q
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
 from pymongo import monitoring
-from starlette.applications import Starlette
-from starlette.middleware import Middleware
+from starlette import applications, middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from common.logger import CommandLogger
-from common.crossrefs import XrefResolver
-from common import db
+from dotenv import load_dotenv
+from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
-from common.extensions import QueryExecutionTimeExtension
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
 )
-from dotenv import load_dotenv
 
 
 load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
-EXTENSIONS: Optional[
-    ExtensionList
-] = None  # mypy will throw an incompatible type error without this type cast
+EXTENSIONS: Optional[ExtensionList] = (
+    None  # mypy will throw an incompatible type error without this type cast
+)
 
 # Including the execution time in the response
-EXTENSIONS = [QueryExecutionTimeExtension]
+EXTENSIONS = [extensions.QueryExecutionTimeExtension]
 
 if DEBUG_MODE:
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
 
-    monitoring.register(CommandLogger(log))
+    monitoring.register(logger.CommandLogger(log))
 
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
 
-MONGO_CLIENT = db.MongoDbClient(os.environ)
+
+utils.check_config_validity(os.environ)
+MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
@@ -67,18 +66,20 @@ GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
-RESOLVER = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
 CONTEXT_PROVIDER = prepare_context_provider(
     {
-        "mongo_db": MONGO_CLIENT.collection(),
+        "mongo_db_client": MONGO_DB_CLIENT,
         "XrefResolver": RESOLVER,
         "grpc_model": GRPC_MODEL,
     }
 )
 
 starlette_middleware = [
-    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
+    middleware.Middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"]
+    )
 ]
 
 # The original HTML file can be found under
@@ -89,38 +90,34 @@ CUSTOM_GRAPHIQL_HTML = read_template(
 
 DEFAULT_QUERY = """
 #
-# GraphiQL is an in -browser tool for writing, validating, and
-# testing GraphQL queries.
+# Welcome to Ensembl Core GraphQL API!
 #
-# Type queries into this side of the screen, and you will see intelligent
-# typeaheads aware of the current GraphQL type schema and live syntax and
-# validation errors highlighted within the text.
+# This is an in-browser tool for writing, validating, and testing GraphQL queries.
 #
-# GraphQL queries typically start with a "{" character. Lines that start
-# with a # are ignored.
+# Type queries on the left side of the screen, and you'll see intelligent typeaheads
+# aware of the current GraphQL type schema. Live syntax and validation errors
+# are highlighted as you type.
 #
-# An example GraphQL query might look like:
+# GraphQL queries typically start with a "{" character. Lines starting with "#" are comments.
 #
-#     {
-#       field(arg: "value") {
-#         subField
+# Here's an example query:
 #
-#       }
+# {
+#   field(arg: "value") {
+#     subField
+#   }
+# }
 #
-#     }
+# In the example below, we've named the query "ENSG00000139618", which is optional.
 #
-# In the example below we added "query ENSG00000139618" 
-# to give the query a name which is optional
-# 
 # Keyboard shortcuts:
 #
-#   Prettify query: Shift - Ctrl - P(or press the prettify button)
+#   Prettify query: Shift + Ctrl + P (or press the prettify button)
+#   Merge fragments: Shift + Ctrl + M (or press the merge button)
+#   Run Query: Ctrl + Enter (or press the play button)
+#   Auto Complete: Ctrl + Space (or just start typing)
 #
-#  Merge fragments: Shift - Ctrl - M(or press the merge button)
-#
-#        Run Query: Ctrl - Enter(or press the play button)
-#
-#    Auto Complete: Ctrl - Space(or just start typing)
+# Try running the query below to fetch gene information:
 #
 query ENSG00000139618 {
   gene(
@@ -136,6 +133,8 @@ query ENSG00000139618 {
     }
   }
 }
+
+# Feel free to modify the query or add new ones to explore other data!
 """
 
 
@@ -151,18 +150,18 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         explorer_plugin: bool = True,
         default_query: str = DEFAULT_QUERY,
     ):
-        super(CustomExplorerGraphiQL, self).__init__()
+        super().__init__()
         self.parsed_html = render_template(
             CUSTOM_GRAPHIQL_HTML,
             {
                 "title": title,
-                # "enable_explorer_plugin": explorer_plugin,
+                "enable_explorer_plugin": explorer_plugin,
                 "default_query": escape_default_query(default_query),
             },
         )
 
 
-APP = Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
 APP.mount(
     "/",
     GraphQL(

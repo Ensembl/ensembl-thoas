@@ -21,16 +21,26 @@ executable_schema, context = setup_test()
 
 
 @pytest.mark.asyncio
-async def test_region_retrieval_by_name(snapshot):
+async def test_version_retrieval(snapshot):
+    """
+    Test `version` query using
+    """
+
     query = """{
-      region (by_name: {genome_id: "homo_sapiens_GCA_000001405_28", name: "13"}) {
-        name
-        code
-        length
+      version {
+         api {
+          major
+          minor
+          patch
+        }
       }
     }"""
-
     query_data = {"query": query}
+
+    # Unlike 'context_value' in ariadne.asgi.GraphQL, 'context_value' of
+    # ariadne.graphql is not callable. It needs to be evaluated explicitly
+    # as context_value=context() when creating request
+
     (success, result) = await graphql(
         executable_schema, query_data, context_value=context()
     )

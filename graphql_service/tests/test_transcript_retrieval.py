@@ -14,7 +14,7 @@
 
 import pytest
 from ariadne import graphql
-from .snapshot_utils import setup_test, add_loaders_to_context
+from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
 
@@ -86,7 +86,7 @@ async def test_transcript_retrieval_by_id_camel_case(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]
@@ -103,7 +103,7 @@ async def test_transcript_retrieval_by_id_snake_case(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]
@@ -120,7 +120,7 @@ async def test_transcript_retrieval_by_symbol_camel_case(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]
@@ -137,7 +137,7 @@ async def test_transcript_retrieval_by_symbol_snake_case(snapshot):
     }"""
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]
@@ -161,9 +161,7 @@ async def test_transcript_splicing(snapshot):
         }
     }"""
     (success, result) = await graphql(
-        executable_schema,
-        {"query": query},
-        context_value=add_loaders_to_context(context),
+        executable_schema, {"query": query}, context_value=context()
     )
     assert success
     assert result["data"]["transcript"]

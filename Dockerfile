@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.10.14
 # Contains relevant basics for Python, like GCC and similar by default
 LABEL maintainer="ensembl-applications@ebi.ac.uk"
 

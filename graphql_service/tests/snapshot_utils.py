@@ -11,16 +11,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from unittest.mock import Mock
-
-import mongomock
-import requests
-from starlette.datastructures import State
 
 from common.crossrefs import XrefResolver
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.resolver.data_loaders import BatchLoaders
 from graphql_service.tests.fixtures.human_brca2 import (
     build_gene,
     build_transcripts,
@@ -31,39 +25,48 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
+from common.db import FakeMongoDbClient
 
 
-def prepare_db():
-    "Fill a mock database with data and provide a collection accessor"
+def prepare_mongo_instance():
+    mongo_client = FakeMongoDbClient()
+    database = mongo_client.mongo_db
+    gene_coll = database.create_collection("gene")
+    gene_coll.insert_one(build_gene())
+    transcript_coll = database.create_collection("transcript")
+    transcript_coll.insert_many(build_transcripts())
+    protein_coll = database.create_collection("protein")
+    protein_coll.insert_many(build_products())
+    region_coll = database.create_collection("region")
+    region_coll.insert_one(build_region())
+    assembly_coll = database.create_collection("assembly")
+    assembly_coll.insert_one(build_assembly())
+    organism_coll = database.create_collection("organism")
+    organism_coll.insert_one(build_organism())
+    species_coll = database.create_collection("species")
+    species_coll.insert_one(build_species())
+    # wheat_gene_coll = database.create_collection('gene')
+    gene_coll.insert_many(build_wheat_genes())
 
-    mocked_mongo_collection = mongomock.MongoClient().db.collection
-    try:
-        xref_resolver = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
-    except requests.exceptions.ConnectionError:
-        print("No network available, tests will fail")
-        xref_resolver = None
-
-    context = {
-        "mongo_db": mocked_mongo_collection,
-        "XrefResolver": xref_resolver,
-    }
-
-    mocked_mongo_collection.insert_one(build_gene())
-    mocked_mongo_collection.insert_many(build_transcripts())
-    mocked_mongo_collection.insert_many(build_products())
-    mocked_mongo_collection.insert_one(build_region())
-    mocked_mongo_collection.insert_one(build_assembly())
-    mocked_mongo_collection.insert_one(build_organism())
-    mocked_mongo_collection.insert_one(build_species())
-    mocked_mongo_collection.insert_many(build_wheat_genes())
-    return context
+    return mongo_client
 
 
-def add_loaders_to_context(context):
-    """This must be run per-request"""
+def prepare_context_provider(mongo_client, xref, grpc_model):
 
-    context["loaders"] = BatchLoaders(context["mongo_db"])
-    return context
+    # Dataloader should be bound to every request.
+    # mongo_client and xrefs are created only once but
+    # loaders is created for every request as this inner function closure
+    # is assigned to context_value which gets evaluated at the beginning
+    # of every request.
+    def context_provider():
+        context = {
+            "mongo_db_client": mongo_client,
+            "XrefResolver": xref,
+            "grpc_model": grpc_model,
+        }
+        return context
+
+    return context_provider
 
 
 def setup_test():
@@ -71,6 +74,11 @@ def setup_test():
     Run setup scripts once per module
     This is the one to use in other modules
     """
-    context = prepare_db()
     executable_schema = prepare_executable_schema()
+
+    mongo_client = prepare_mongo_instance()
+    xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+    grpc_model = "fake_grpc_model"  # TODO: find a way to test/mock gRPC
+    context = prepare_context_provider(mongo_client, xref, grpc_model)
+
     return executable_schema, context

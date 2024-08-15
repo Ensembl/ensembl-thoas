@@ -1,3 +1,6 @@
+"""
+Represents a paginated list of transcripts.
+"""
 type TranscriptsPage {
   transcripts: [Transcript!]!
   page_metadata: PageMetadata!
@@ -9,10 +12,11 @@ type PageMetadata {
   per_page: Int!
 }
 
+"""
+Represents a transcript.
+A Transcript of a Gene. Exons are listed in sequence order
+"""
 type Transcript {
-  """
-  A Transcript of a Gene. Exons are listed in sequence order
-  """
   type: String!
   stable_id: String!
   unversioned_stable_id: String!

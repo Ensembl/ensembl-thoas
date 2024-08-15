@@ -14,7 +14,7 @@
 import pytest
 from ariadne import graphql
 
-from .snapshot_utils import setup_test, add_loaders_to_context
+from .snapshot_utils import setup_test
 
 executable_schema, context = setup_test()
 
@@ -43,7 +43,7 @@ async def test_slice_retrieval(snapshot):
 
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"])
@@ -75,7 +75,7 @@ async def test_slice_retrieval_by_slice_input(snapshot):
 
     query_data = {"query": query}
     (success, result) = await graphql(
-        executable_schema, query_data, context_value=add_loaders_to_context(context)
+        executable_schema, query_data, context_value=context()
     )
     assert success
     snapshot.assert_match(result["data"])

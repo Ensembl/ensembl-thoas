@@ -64,7 +64,12 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+node_modules/
+appenv/
 
 # editor cruft
 .vscode
 .idea
+
+# development docker file
+local_devDockerfile

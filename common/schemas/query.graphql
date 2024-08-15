@@ -1,68 +1,219 @@
-# TODO remove deprecated parameters after clients have migrated
-
+"""
+The root query type.
+"""
 type Query {
+  """
+  Retrieves the current version of the API.
+  """
   version: Version
-  gene(byId: IdInput @deprecated(reason: "Use `by_id`"), by_id: IdInput): Gene
-  genes(by_symbol: SymbolInput!): [Gene]
-  transcript(bySymbol: SymbolInput @deprecated(reason: "Use `by_symbol`"),
-             by_symbol: SymbolInput,
-             byId: IdInput @deprecated(reason: "Use `by_id`"),
-             by_id: IdInput): Transcript
-  product(genome_id: String @deprecated(reason: "Use `by_id`"),
-          stable_id: String @deprecated(reason: "Use `by_id`"),
-          by_id: IdInput): Product
-  overlap_region(genomeId: String @deprecated(reason: "Use `by_slice`"),
-                 regionName: String @deprecated(reason: "Use `by_slice`"),
-                 start: Int @deprecated(reason: "Use `by_slice`"),
-                 end: Int @deprecated(reason: "Use `by_slice`")
-                 by_slice: SliceInput): Locus
-  region(by_name: RegionNameInput!): Region
-
-  genomes(by_keyword: GenomeByKeywordInput,
-          by_assembly_accession_id: AssemblyAccessionIDInput): [Genome]
-
-  genome(by_genome_uuid: GenomeUUIDInput!): Genome
-
+  
+  """
+  Fetches a gene by its ID.
+  """
+  gene(
+    byId: IdInput @deprecated(reason: "Use `by_id`"), 
+    by_id: IdInput
+  ): Gene
+  
+  """
+  Fetches genes by their symbol and genome ID.
+  """
+  genes(
+    by_symbol: SymbolInput!
+  ): [Gene]
+  
+  """
+  Fetches a transcript by its symbol or ID.
+  """
+  transcript(
+    bySymbol: SymbolInput @deprecated(reason: "Use `by_symbol`"),
+    by_symbol: SymbolInput,
+    byId: IdInput @deprecated(reason: "Use `by_id`"),
+    by_id: IdInput
+  ): Transcript
+  
+  """
+  Fetches a product by its genome ID or stable ID.
+  """
+  product(
+    genome_id: String @deprecated(reason: "Use `by_id`"),
+    stable_id: String @deprecated(reason: "Use `by_id`"),
+    by_id: IdInput
+  ): Product
+  
+  """
+  Fetches a locus that overlaps a specified region.
+  """
+  overlap_region(
+    genomeId: String @deprecated(reason: "Use `by_slice`"),
+    regionName: String @deprecated(reason: "Use `by_slice`"),
+    start: Int @deprecated(reason: "Use `by_slice`"),
+    end: Int @deprecated(reason: "Use `by_slice`"),
+    by_slice: SliceInput
+  ): Locus
+  
+  """
+  Fetches a region by its name.
+  """
+  region(
+    by_name: RegionNameInput!
+  ): Region
+  
+  """
+  Fetches genomes by a specific keyword.
+  """
+  genomes(
+    by_keyword: GenomeBySpecificKeywordInput
+  ): [Genome]
+  
+  """
+  Fetches a genome by its UUID.
+  """
+  genome(
+    by_genome_uuid: GenomeUUIDInput!
+  ): Genome
 }
 
+"""
+Input type for specifying a gene by its symbol and genome ID.
+"""
 input SymbolInput {
-  symbol: String!
+  """
+  The symbol of the gene.
+  """
+  symbol: String
+  """
+  The genome ID associated with the gene.
+  """
   genome_id: String!
 }
 
+"""
+Input type for specifying an ID.
+"""
 input IdInput {
+  """
+  The unique identifier for the genome.
+  """
   genome_id: String!
+  """
+  The stable ID of the gene.
+  """
   stable_id: String!
 }
 
+"""
+Input type for specifying a genomic slice.
+"""
 input SliceInput {
+  """
+  The unique identifier for the genome.
+  """
   genome_id: String!
+  """
+  The name of the region.
+  """
   region_name: String!
+  """
+  The start position of the slice.
+  """
   start: Int!
+  """
+  The end position of the slice.
+  """
   end: Int!
 }
 
+"""
+Represents a locus, a dynamically defined part of a region.
+"""
 type Locus {
-  # A dynamically defined part of a Region
+  """
+  The genes present in the locus.
+  """
   genes: [Gene!]!
+  """
+  The transcripts present in the locus.
+  """
   transcripts: [Transcript!]!
 }
 
-input RegionNameInput  {
+"""
+Input type for specifying a region by its name.
+"""
+input RegionNameInput {
+  """
+  The unique identifier for the genome.
+  """
   genome_id: String!
+  """
+  The name of the region.
+  """
   name: String!
 }
 
+"""
+Input type for specifying a genome by its UUID.
+"""
 input GenomeUUIDInput {
+  """
+  The UUID of the genome.
+  """
   genome_uuid: String!
+  """
+  The release version of the genome.
+  """
   release_version: Float
 }
 
-input GenomeByKeywordInput {
-  keyword: String!
+"""
+Input type for fetching genomes by specific keywords.
+"""
+input GenomeBySpecificKeywordInput {
+  """
+  The Tree of Life ID (ToLID) of the genome.
+  """
+  tolid: String
+  """
+  The accession ID of the assembly.
+  """
+  assembly_accession_id: String
+  """
+  The name of the assembly.
+  """
+  assembly_name: String
+  """
+  The Ensembl name of the genome.
+  """
+  ensembl_name: String
+  """
+  The common name of the genome.
+  """
+  common_name: String
+  """
+  The scientific name of the genome.
+  """
+  scientific_name: String
+  """
+  The common parlance name of the genome.
+  """
+  scientific_parlance_name: String
+  """
+  The taxonomy ID of the species.
+  """
+  species_taxonomy_id: String
+  """
+  The release version of the genome.
+  """
   release_version: Float
 }
 
+"""
+Input type for specifying an assembly by its accession ID.
+"""
 input AssemblyAccessionIDInput {
+  """
+  The accession ID of the assembly.
+  """
   assembly_accession_id: String!
 }

@@ -1,9 +1,10 @@
+"""
+Represents a slice of a gene.
+The container that combines Region and Location together to define a precise locus.
+The 'default' key defines whether this is the definitive locus for the parent feature.
+default:False implies there is another locus which is considered more definitive
+"""
 type Slice {
-  """
-  The container that combines Region and Location together to define a precise locus.
-  The 'default' key defines whether this is the definitive locus for the parent feature.
-  default:False implies there is another locus which is considered more definitive
-  """
   region: Region!
   location: Location!
   strand: Strand!
@@ -49,6 +50,8 @@ enum RegionCode {
   chromosome
   plasmid
   scaffold
+  primary_assembly
+  supercontig
 }
 
 enum RegionTopology {

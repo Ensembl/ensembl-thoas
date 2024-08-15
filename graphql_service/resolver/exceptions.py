@@ -1,6 +1,43 @@
+"""
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
+
 from typing import Optional, Dict
 
+import grpc
 from graphql import GraphQLError
+
+
+class DatabaseNotFoundError(GraphQLError):
+    """
+    Custom error to be raised if database is not found
+    """
+
+    def __init__(self, db_name: str):
+        self.extensions = {"code": "DATABASE_NOT_FOUND"}
+        message = f"Failed to find database: {db_name}"
+        super().__init__(message, extensions=self.extensions)
+
+
+class CollectionNotFoundError(GraphQLError):
+    """
+    Custom error to be raised if collection is not found
+    """
+
+    def __init__(self, collection_name: str):
+        self.extensions = {"code": "COLLECTION_NOT_FOUND"}
+        message = f"Failed to find collection: {collection_name}"
+        super().__init__(message, extensions=self.extensions)
 
 
 class FieldNotFoundError(GraphQLError):
@@ -117,6 +154,15 @@ class OrganismFromAssemblyNotFound(FieldNotFoundError):
         super().__init__("organism", {"organism_id": organism_id})
 
 
+class AssembliesFromGenomeNotFound(FieldNotFoundError):
+    """
+    Custom error to be raised if we can't find the assemblies for a genome
+    """
+
+    def __init__(self, assembly_id):
+        super().__init__("assemblies", {"assembly_id": assembly_id})
+
+
 class AssembliesFromOrganismNotFound(FieldNotFoundError):
     """
     Custom error to be raised if we can't find the assemblies for an organism
@@ -185,5 +231,19 @@ class MissingArgumentException(GraphQLError):
 
         Args:
             message: The error message describing the missing argument.
+        """
+        super().__init__(message)
+
+
+class FailedToConnectToGrpc(grpc.RpcError):
+    """
+    Exception raised when there is gRPC connection issue.
+    """
+
+    def __init__(self, message: str):
+        """Initializes a FailedToConnectToGrpc instance.
+
+        Args:
+            message: The error message describing the issue.
         """
         super().__init__(message)

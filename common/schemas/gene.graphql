@@ -1,16 +1,79 @@
+"""
+Represents a gene with various transcriptions.
+"""
 type Gene {
-  # The commonly understood concept of gene, with its various transcriptions.
+  """
+  The commonly understood concept of gene, with its various transcriptions.
+  """
   type: String!
+
+  """
+  The stable identifier of the gene.
+  """
   stable_id: String!
+
+  """
+  The unversioned stable identifier of the gene.
+  """
   unversioned_stable_id: String!
+
+  """
+  The version number of the gene.
+  """
   version: Int
+
+  """
+  The symbol of the gene.
+  """
   symbol: String
+
+  """
+  The name of the gene.
+  """
   name: String
+
+  """
+  The Sequence Ontology (SO) term associated with the gene.
+  """
   so_term: String!
+
+  """
+  The list of transcripts associated with the gene.
+  """
   transcripts: [Transcript!]!
-  transcripts_page(page: Int!, per_page: Int!): TranscriptsPage!
+
+  """
+  Fetches a paginated list of transcripts associated with the gene.
+  """
+  transcripts_page(
+    """
+    The page number to fetch.
+    """
+    page: Int!,
+
+    """
+    The number of transcripts per page.
+    """
+    per_page: Int!
+  ): TranscriptsPage!
+
+  """
+  The slice of the gene.
+  """
   slice: Slice!
+
+  """
+  The external references associated with the gene.
+  """
   external_references: [ExternalReference!]!
+
+  """
+  The alternative symbols for the gene.
+  """
   alternative_symbols: [String!]!
+
+  """
+  The metadata associated with the gene.
+  """
   metadata: GeneMetadata!
 }

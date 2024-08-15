@@ -65,6 +65,9 @@ build:
 # Template to deploy application to web's k8s cluster
 .deploy-web:
   extends: .deploy
+  before_script:
+    - kubectl config use-context ${AGENT}
+    - kubectl config set-context --current --namespace=${NAMESPACE}
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main" && $CI_PROJECT_NAMESPACE== "ensembl-web"'
 
@@ -77,36 +80,45 @@ build:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
 
 # deploy to staging at WP-HH
-staging:wp-hl:
+Staging:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/staging
+    AGENT: ${STAGING_AGENT}
+    NAMESPACE: ${SATGING_NS}
   environment:
-    name: wp40-hl-staging
+    name: staging
 
 # deploy to internal at WP-HH
-internal:wp-hl:
+Internal:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/internal
+    AGENT: ${INTERNAL_AGENT}
+    NAMESPACE: ${INTERNAL_NS}
   environment:
-    name: wp40-hl-internal
+    name: internal
 
  # deploy to live at WP-HX
-live:wp-hx:
+Live:Fallback:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/prod
+    AGENT: ${FALLBACK_AGENT}
+    NAMESPACE: ${FALLBACK_NS}
   environment:
-    name : wp41-hx-prod
+    name : fallback
+
 
 # deploy to live at WP-HL
-live:wp-hl:
+Live:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/prod
+    AGENT: ${PROD_AGENT}
+    NAMESPACE: ${PROD_NS}
   environment:
-    name : wp40-hl-prod
+    name : production
 
 # deploy to live at WP-HL
 dev:wp-hl:
@@ -114,29 +126,25 @@ dev:wp-hl:
   variables:
     BASE: k8s/web-prod/overlays/dev
   environment:
-    name : wp40-hl-development
+    name : development
 
-  # deploy to live at WP-HL
-dev:wp-hx:
-  extends: .deploy-web
-  variables:
-    BASE: k8s/web-prod/overlays/dev
-  environment:
-    name : wp41-hx-development
-
-deploy:public:
+Public:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/public-graphql
+    AGENT: ${PUBLIC_AGENT}
+    NAMESPACE: ${PUBLIC_NS}
   environment:
-    name: wp40-hl-public
+    name: public
 
-deploy:web:
+Dev:
   extends: .deploy-web
   variables:
     BASE: k8s/web-prod/overlays/dev
+    AGENT: ${DEV_AGENT}
+    NAMESPACE: ${DEV_NS}
   environment:
-    name: wp-hx-dev-grp
+    name: development
 
 # deploy application to k8s cluster for k8s-deploy branch
 deploy:apps:

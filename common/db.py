@@ -11,12 +11,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from configparser import NoOptionError
 
+import logging
 import pymongo
 import mongomock
 import grpc
-from ensembl.production.metadata import ensembl_metadata_pb2_grpc
+from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+
+from common.utils import process_release_version
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDbClient:
@@ -25,23 +29,41 @@ class MongoDbClient:
     management
     """
 
-    def __init__(self, config, collection_name=None):
+    def __init__(self, config):
         """
         Note that config here is a configparser object
         """
-        self.mongo_db = MongoDbClient.connect_mongo(config)
+        self.config = config
+        self.mongo_client = MongoDbClient.connect_mongo(self.config)
+
+    def get_database_conn(self, grpc_model, uuid, force_grpc=False):
+        grpc_response = None
+        chosen_db = self.config.get("mongo_default_db")
+        # Try to connect to gRPC
         try:
-            self.collection_name = config.get("mongo_collection")
-            print(
-                f"Using MongoDB collection with name {self.collection_name} from config file"
+            grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
+        except Exception as grpc_exp:
+            # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
+            logger.debug(
+                "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
-        except NoOptionError as no_option_error:
-            if not collection_name:
-                raise IOError(
-                    "Unable to find a MongoDB collection name"
-                ) from no_option_error
-            self.collection_name = collection_name
-            print(f"Using injected MongoDB collection with name {self.collection_name}")
+
+        if force_grpc:
+            chosen_db = process_release_version(grpc_response)
+        else:
+            if grpc_response and grpc_response.release_version:
+                chosen_db = process_release_version(grpc_response)
+            else:
+                # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
+                # if force_grpc is not True
+                logger.warning(
+                    "[get_database_conn] Falling back to the default Mongo DB: '%s'",
+                    chosen_db,
+                )
+
+        logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
+        data_database_connection = self.mongo_client[chosen_db]
+        return data_database_connection
 
     @staticmethod
     def connect_mongo(config):
@@ -51,11 +73,10 @@ class MongoDbClient:
         port = int(config.get("mongo_port"))
         user = config.get("mongo_user")
         password = config.get("mongo_password")
-        dbname = config.get("mongo_db")
 
         client = pymongo.MongoClient(
-            host,
-            port,
+            host=host,
+            port=port,
             username=user,
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
@@ -63,17 +84,11 @@ class MongoDbClient:
         try:
             # make sure the connection is established successfully
             client.server_info()
-            print(f"Connected to MongoDB {host}")
+            print(f"Connected to MongoDB, Host: {host}")
         except Exception as exc:
-            raise "Connection to mongo Failed" from exc
+            raise Exception("Connection to MongoDB failed") from exc
 
-        return client[dbname]
-
-    def collection(self):
-        """
-        Get the currently set default collection to run queries against
-        """
-        return self.mongo_db[self.collection_name]
+        return client
 
 
 class FakeMongoDbClient:
@@ -82,12 +97,13 @@ class FakeMongoDbClient:
     """
 
     def __init__(self):
-        "Override default setup"
-        self.mongo_db = mongomock.MongoClient().db
-        self.collection_name = "test"
+        self.mongo_client = mongomock.MongoClient()
+        self.mongo_db = self.mongo_client.db
 
-    def collection(self):
-        return self.mongo_db[self.collection_name]
+    def get_database_conn(self, grpc_model, uuid):
+        # we pretend that we did a gRPC call and got the chosen db
+        chosen_db = "db"
+        return self.mongo_client[chosen_db]
 
 
 class GRPCServiceClient:
