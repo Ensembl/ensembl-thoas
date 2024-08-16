@@ -85,7 +85,7 @@ Staging:
   variables:
     BASE: k8s/web-prod/overlays/staging
     AGENT: ${STAGING_AGENT}
-    NAMESPACE: ${SATGING_NS}
+    NAMESPACE: ${STAGING_NS}
   environment:
     name: staging
 
