@@ -59,9 +59,8 @@ test:
 # Build docker image for k8s-deploy branch
 build:
   extends: .build
-  only:
-    - develop
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
@@ -79,7 +78,6 @@ build:
     BASE: k8s/web-prod/overlays/apps
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "develop" && $CI_PROJECT_NAMESPACE== "ensembl-apps"'
-
 
 # deploy to staging at WP-HH
 Staging:
@@ -111,6 +109,7 @@ Live:Fallback:
   environment:
     name : fallback
 
+
 # deploy to live at WP-HL
 Live:
   extends: .deploy-web
@@ -120,6 +119,14 @@ Live:
     NAMESPACE: ${PROD_NS}
   environment:
     name : production
+
+# deploy to live at WP-HL
+dev:wp-hl:
+  extends: .deploy-web
+  variables:
+    BASE: k8s/web-prod/overlays/dev
+  environment:
+    name : development
 
 Public:
   extends: .deploy-web
