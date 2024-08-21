@@ -1026,7 +1026,7 @@ def set_db_conn_for_uuid(info, uuid):
     conn = {"db_conn": db_conn, "data_loader": BatchLoaders(db_conn)}
 
     parent_key = get_path_parent_key(info)
-    info.context.setdefault(parent_key, conn)
+    info.context[parent_key] = conn
 
 
 def get_db_conn(info):
