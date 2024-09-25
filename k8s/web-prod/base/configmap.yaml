@@ -2,11 +2,10 @@ apiVersion: v1
 data:
   DEBUG_MODE: "False"
   ENABLE_INTROSPECTION: "True"
-  HTTP_PROXY: "http://pg-wwwcache.ebi.ac.uk:3128"
-  HTTPS_PROXY: "http://pg-wwwcache.ebi.ac.uk:3128"
-  http_proxy: "http://pg-wwwcache.ebi.ac.uk:3128"
-  https_proxy: "http://pg-wwwcache.ebi.ac.uk:3128"
-  no_proxy: ".ebi.ac.uk,localhost,127.0.0.1,.cluster.local"
+  HTTP_PROXY: <HTTP_PROXY>
+  HTTPS_PROXY: <HTTP_PROXY>
+  http_proxy: <HTTP_PROXY>
+  https_proxy: <HTTP_PROXY>
 kind: ConfigMap
 metadata:
   name: proxy-configmap
