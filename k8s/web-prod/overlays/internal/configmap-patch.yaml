@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-configmap  # This matches the name in the base configmap.yaml
+data:
+  # The new values we want to override
+  ENABLE_INTROSPECTION: "False"

@@ -11,3 +11,8 @@ patches:
       kind: Deployment
       name: graphql-core-deployment
     path: patch.yaml
+  - target:
+      version: v1
+      kind: ConfigMap
+      name: proxy-configmap  # This must match the name in our base
+    path: configmap-patch.yaml  # Add our new patch for the ConfigMap
