@@ -37,7 +37,9 @@ from graphql_service.ariadne_app import (
 
 load_dotenv("connections.conf")
 
-DEBUG_MODE = os.getenv("DEBUG_MODE", False) == "True"
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+ENABLE_INTROSPECTION = os.getenv("ENABLE_INTROSPECTION", "true").lower() == "true"
+
 EXTENSIONS: Optional[ExtensionList] = (
     None  # mypy will throw an incompatible type error without this type cast
 )
@@ -172,5 +174,6 @@ APP.mount(
             extensions=EXTENSIONS,
         ),
         explorer=CustomExplorerGraphiQL(),
+        introspection=ENABLE_INTROSPECTION,
     ),
 )
