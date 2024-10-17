@@ -9,3 +9,4 @@ ensembl-metadata-api@git+https://github.com/Ensembl/ensembl-metadata-api.git@3.2
 grpcio==1.66.1
 grpcio-tools==1.66.1
 ensembl-utils==0.4.4
+ensembl-py==2.1.3
