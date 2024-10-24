@@ -9,7 +9,7 @@ GraphQL requires a schema (in /common) and implementation of resolver functions 
 https://www.ebi.ac.uk/seqdb/confluence/display/EA/Thoas+Docs
 
 ## Installation
-Requires Python 3.8+.  
+Requires Python 3.10+.  
 
 To install dependencies, run:
 
