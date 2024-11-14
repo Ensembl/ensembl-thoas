@@ -17,7 +17,10 @@ import pymongo
 import mongomock
 import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
-from graphql_service.resolver.exceptions import GenomeNotFoundError, FailedToConnectToGrpc
+from graphql_service.resolver.exceptions import (
+    GenomeNotFoundError,
+    FailedToConnectToGrpc,
+)
 
 from common.utils import process_release_version
 
@@ -49,14 +52,14 @@ class MongoDbClient:
             logger.debug(
                 "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
-            raise FailedToConnectToGrpc("Internal server error: Couldn't connect to gRPC Host")
-        
+            raise FailedToConnectToGrpc(
+                "Internal server error: Couldn't connect to gRPC Host"
+            )
+
         if grpc_response and grpc_response.release_version:
             chosen_db = process_release_version(grpc_response)
         else:
-            logger.warning(
-                "[get_database_conn] Release not found"
-            )
+            logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
 
         if chosen_db is not None:
