@@ -1,13 +1,14 @@
 import logging
 
-from ensembl.production.metadata.grpc import ensembl_metadata_pb2
+# from ensembl.production.metadata.grpc import ensembl_metadata_pb2
 
 logger = logging.getLogger(__name__)
 
 
 class GRPC_MODEL:  # pylint: disable=invalid-name
-    def __init__(self, grpc_stub):
+    def __init__(self, grpc_stub, grpc_reflector):
         self.grpc_stub = grpc_stub
+        self.reflector = grpc_reflector
 
     def get_genome_by_genome_uuid(self, genome_uuid, release_version=None):
         logger.debug(
@@ -15,10 +16,17 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
             genome_uuid,
             release_version,
         )
-        request = ensembl_metadata_pb2.GenomeUUIDRequest(
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeUUIDRequest"
+        )
+        # request = ensembl_metadata_pb2.GenomeUUIDRequest(
+        #     genome_uuid=genome_uuid, release_version=release_version
+        # )
+        request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
         response = self.grpc_stub.GetGenomeByUUID(request)
+
         return response
 
     def get_genome_by_specific_keyword(
@@ -47,7 +55,22 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
             species_taxonomy_id,
             release_version,
         )
-        request = ensembl_metadata_pb2.GenomeBySpecificKeywordRequest(
+
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeBySpecificKeywordRequest"
+        )
+        # request = ensembl_metadata_pb2.GenomeBySpecificKeywordRequest(
+        #     tolid=tolid,
+        #     assembly_accession_id=assembly_accession_id,
+        #     assembly_name=assembly_name,
+        #     ensembl_name=ensembl_name,
+        #     common_name=common_name,
+        #     scientific_name=scientific_name,
+        #     scientific_parlance_name=scientific_parlance_name,
+        #     species_taxonomy_id=species_taxonomy_id,
+        #     release_version=release_version,
+        # )
+        request = request_class(
             tolid=tolid,
             assembly_accession_id=assembly_accession_id,
             assembly_name=assembly_name,
@@ -67,13 +90,21 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
             genome_uuid,
             release_version,
         )
-        request = ensembl_metadata_pb2.DatasetsRequest(
+        request_class = self.reflector.message_class("ensembl_metadata.DatasetsRequest")
+        # request = ensembl_metadata_pb2.DatasetsRequest(
+        #     genome_uuid=genome_uuid, release_version=release_version
+        # )
+        request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
         response = self.grpc_stub.GetDatasetsListByUUID(request)
         return response
 
     def get_release_by_genome_uuid(self, genome_uuid):
-        request = ensembl_metadata_pb2.ReleaseVersionRequest(genome_uuid=genome_uuid)
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.ReleaseVersionRequest"
+        )
+        # request = ensembl_metadata_pb2.ReleaseVersionRequest(genome_uuid=genome_uuid)
+        request = request_class(genome_uuid=genome_uuid)
         response = self.grpc_stub.GetReleaseVersionByUUID(request)
         return response

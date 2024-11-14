@@ -16,7 +16,9 @@ import logging
 import pymongo
 import mongomock
 import grpc
-from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+
+# from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+from yagrc import reflector as yagrc_reflector
 
 from common.utils import process_release_version
 
@@ -117,8 +119,25 @@ class GRPCServiceClient:
             "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
         )
 
+        # create reflector for querying server using reflection
+        self.reflector = yagrc_reflector.GrpcReflectionClient()
+
+        # use reflection to load service definitions and message types
+        self.reflector.load_protocols(
+            self.channel, symbols=["ensembl_metadata.EnsemblMetadata"]
+        )
+
+        # dynamically retrieve the client stub class for service
+        stub_class = self.reflector.service_stub_class(
+            "ensembl_metadata.EnsemblMetadata"
+        )
+
         # bind the client and the server
-        self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
+        # self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
+        self.stub = stub_class(self.channel)
 
     def get_grpc_stub(self):
         return self.stub
+
+    def get_grpc_reflector(self):
+        return self.reflector
