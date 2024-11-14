@@ -235,7 +235,8 @@ class MissingArgumentException(GraphQLError):
         super().__init__(message)
 
 
-class FailedToConnectToGrpc(grpc.RpcError):
+# class FailedToConnectToGrpc(grpc.RpcError):
+class FailedToConnectToGrpc(GraphQLError):
     """
     Exception raised when there is gRPC connection issue.
     """
@@ -246,4 +247,5 @@ class FailedToConnectToGrpc(grpc.RpcError):
         Args:
             message: The error message describing the issue.
         """
-        super().__init__(message)
+        self.extensions = {"code": "SERVER_CONNECTION_FAILED"}
+        super().__init__(message, extensions=self.extensions)
