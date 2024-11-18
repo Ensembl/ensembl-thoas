@@ -235,7 +235,6 @@ class MissingArgumentException(GraphQLError):
         super().__init__(message)
 
 
-# class FailedToConnectToGrpc(grpc.RpcError):
 class FailedToConnectToGrpc(GraphQLError):
     """
     Exception raised when there is gRPC connection issue.

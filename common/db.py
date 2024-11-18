@@ -42,7 +42,7 @@ class MongoDbClient:
 
     def get_database_conn(self, grpc_model, uuid):
         grpc_response = None
-        # chosen_db = self.config.get("mongo_default_db")
+
         chosen_db = None
         # Try to connect to gRPC
         try:
