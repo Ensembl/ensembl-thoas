@@ -17,7 +17,6 @@ import pymongo
 import mongomock
 import grpc
 
-# from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 from yagrc import reflector as yagrc_reflector
 
 from common.utils import process_release_version
@@ -133,7 +132,6 @@ class GRPCServiceClient:
         )
 
         # bind the client and the server
-        # self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
         self.stub = stub_class(self.channel)
 
     def get_grpc_stub(self):

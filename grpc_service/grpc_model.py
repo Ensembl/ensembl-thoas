@@ -1,7 +1,5 @@
 import logging
 
-# from ensembl.production.metadata.grpc import ensembl_metadata_pb2
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,9 +17,7 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
-        # request = ensembl_metadata_pb2.GenomeUUIDRequest(
-        #     genome_uuid=genome_uuid, release_version=release_version
-        # )
+
         request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
@@ -59,17 +55,7 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeBySpecificKeywordRequest"
         )
-        # request = ensembl_metadata_pb2.GenomeBySpecificKeywordRequest(
-        #     tolid=tolid,
-        #     assembly_accession_id=assembly_accession_id,
-        #     assembly_name=assembly_name,
-        #     ensembl_name=ensembl_name,
-        #     common_name=common_name,
-        #     scientific_name=scientific_name,
-        #     scientific_parlance_name=scientific_parlance_name,
-        #     species_taxonomy_id=species_taxonomy_id,
-        #     release_version=release_version,
-        # )
+
         request = request_class(
             tolid=tolid,
             assembly_accession_id=assembly_accession_id,
@@ -91,9 +77,7 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
             release_version,
         )
         request_class = self.reflector.message_class("ensembl_metadata.DatasetsRequest")
-        # request = ensembl_metadata_pb2.DatasetsRequest(
-        #     genome_uuid=genome_uuid, release_version=release_version
-        # )
+
         request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
@@ -104,7 +88,7 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         request_class = self.reflector.message_class(
             "ensembl_metadata.ReleaseVersionRequest"
         )
-        # request = ensembl_metadata_pb2.ReleaseVersionRequest(genome_uuid=genome_uuid)
+
         request = request_class(genome_uuid=genome_uuid)
         response = self.grpc_stub.GetReleaseVersionByUUID(request)
         return response
