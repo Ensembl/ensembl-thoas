@@ -64,7 +64,8 @@ MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
-GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB)
+GRPC_REFLECTOR = GRPC_SERVER.get_grpc_reflector()
+GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB, GRPC_REFLECTOR)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 

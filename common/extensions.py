@@ -33,6 +33,5 @@ class QueryExecutionTimeExtension(Extension):
             )
             return {
                 "execution_time_in_seconds": exec_time_in_secs,
-                "metadata_api_version": utils.get_ensembl_metadata_api_version(),
             }
         return None
