@@ -17,7 +17,14 @@ import pymongo
 import mongomock
 import grpc
 
+from graphql_service.resolver.exceptions import (
+    GenomeNotFoundError,
+    FailedToConnectToGrpc,
+)
+
+
 from yagrc import reflector as yagrc_reflector
+
 
 from common.utils import process_release_version
 
@@ -37,9 +44,10 @@ class MongoDbClient:
         self.config = config
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
-    def get_database_conn(self, grpc_model, uuid, force_grpc=False):
+    def get_database_conn(self, grpc_model, uuid):
         grpc_response = None
-        chosen_db = self.config.get("mongo_default_db")
+
+        chosen_db = None
         # Try to connect to gRPC
         try:
             grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
@@ -48,23 +56,21 @@ class MongoDbClient:
             logger.debug(
                 "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
             )
+            raise FailedToConnectToGrpc(
+                "Internal server error: Couldn't connect to gRPC Host"
+            )
 
-        if force_grpc:
+        if grpc_response and grpc_response.release_version:
             chosen_db = process_release_version(grpc_response)
         else:
-            if grpc_response and grpc_response.release_version:
-                chosen_db = process_release_version(grpc_response)
-            else:
-                # chosen_db value will fall back to the default value, which is 'mongo_default_db' that is in the config
-                # if force_grpc is not True
-                logger.warning(
-                    "[get_database_conn] Falling back to the default Mongo DB: '%s'",
-                    chosen_db,
-                )
+            logger.warning("[get_database_conn] Release not found")
+            raise GenomeNotFoundError({"genome_id": uuid})
 
-        logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
-        data_database_connection = self.mongo_client[chosen_db]
-        return data_database_connection
+        if chosen_db is not None:
+            logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
+            data_database_connection = self.mongo_client[chosen_db]
+            return data_database_connection
+        raise GenomeNotFoundError({"genome_id": uuid})
 
     @staticmethod
     def connect_mongo(config):
