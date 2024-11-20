@@ -59,21 +59,6 @@ def process_release_version(grpc_response):
     return "release_" + release_version
 
 
-def get_ensembl_metadata_api_version():
-    """
-    Get the Metadata API tag from requirement.txt file
-    """
-    version = "unknown"  # default version
-    with open("requirements.txt", "r", encoding="UTF-8") as file:
-        lines = file.readlines()
-        for line in lines:
-            if "ensembl-metadata-api" in line:
-                # Extract the tag part from the line
-                version = line.strip().split("@")[-1]
-                break
-    return version
-
-
 def check_requested_fields(info: GraphQLResolveInfo, fields: List[str]) -> List[bool]:
     """
     Check if specific fields are requested in the GraphQL query.

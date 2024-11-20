@@ -17,7 +17,6 @@ import logging
 from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
-from ensembl.production.metadata.api.models import Genome
 from graphql import GraphQLResolveInfo, GraphQLError
 from pymongo.database import Database, Collection
 
@@ -868,7 +867,7 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
 
 
 def create_genome_response(
-    genome: Genome,
+    genome,
     dataset_data: Optional[List] = None,
     assembly_data: Optional[Mapping[Any, Any]] = None,
 ) -> Dict:
