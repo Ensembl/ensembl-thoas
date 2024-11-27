@@ -782,16 +782,22 @@ def resolve_genomes(
             "scientific_name",
             "scientific_parlance_name",
             "species_taxonomy_id",
+            "release_version",
         ]:
             # if one of the keys is provided
             if by_keyword.get(key):
-                # Fetch genomes data from metadata using gRPC
-                result = grpc_model.get_genome_by_specific_keyword(
-                    **{key: by_keyword.get(key)},
-                    release_version=by_keyword.get("release_version"),
-                )
-                genomes = list(result)
+                if by_keyword.get("release_version"):
+                    result = grpc_model.get_genome_by_release_version(
+                        release_version=by_keyword.get("release_version"),
+                    )
+                else:
+                    # Fetch genomes data from metadata using gRPC
+                    result = grpc_model.get_genome_by_specific_keyword(
+                        **{key: by_keyword.get(key)},
+                        release_version=by_keyword.get("release_version"),
+                    )
 
+                genomes = list(result)
                 if not genomes:
                     raise GenomeNotFoundError(by_keyword)
 
