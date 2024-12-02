@@ -37,7 +37,7 @@ def check_config_validity(config):
             )
 
 
-def process_release_version(grpc_response):
+def process_release_version(grpc_release_version):
     """
     Processes the release version from the gRPC response and formats it for use as a database name.
 
@@ -46,15 +46,18 @@ def process_release_version(grpc_response):
     name string.
 
     Args:
-        grpc_response: The gRPC response object containing the release version.
+        grpc_release_version: The release version returned by gRPC.
 
     Returns:
         str: A formatted string suitable for use as a database name, prefixed with 'release_'.
     """
-    logger.debug("[get_database_conn] grpc_response: %s", grpc_response)
+    logger.debug(
+        "[get_database_conn] release version from grpc_response: %s",
+        grpc_release_version,
+    )
     # replacing '.' with '_' to avoid
     # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
-    release_version = str(grpc_response.release_version).replace(".", "_")
+    release_version = str(grpc_release_version).replace(".", "_")
     logger.debug("[get_database_conn] release_version: %s", release_version)
     return "release_" + release_version
 
