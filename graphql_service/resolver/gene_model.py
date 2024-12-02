@@ -782,16 +782,21 @@ def resolve_genomes(
             "scientific_name",
             "scientific_parlance_name",
             "species_taxonomy_id",
+            "release_version",
         ]:
             # if one of the keys is provided
             if by_keyword.get(key):
-                # Fetch genomes data from metadata using gRPC
-                result = grpc_model.get_genome_by_specific_keyword(
-                    **{key: by_keyword.get(key)},
-                    release_version=by_keyword.get("release_version"),
-                )
-                genomes = list(result)
+                if by_keyword.get("release_version"):
+                    result = grpc_model.get_genome_by_release_version(
+                        release_version=by_keyword.get("release_version"),
+                    )
+                else:
+                    # Fetch genomes data from metadata using gRPC
+                    result = grpc_model.get_genome_by_specific_keyword(
+                        **{key: by_keyword.get(key)},
+                    )
 
+                genomes = list(result)
                 if not genomes:
                     raise GenomeNotFoundError(by_keyword)
 
@@ -803,7 +808,11 @@ def resolve_genomes(
 
                 combined_results = []
                 for genome in genomes:
-                    set_db_conn_for_uuid(info, genome.genome_uuid)
+                    set_db_conn_for_uuid(
+                        info,
+                        genome.genome_uuid,
+                        release_version=by_keyword.get("release_version"),
+                    )
                     connection_db = get_db_conn(info)
                     # logging.debug("Collections in the database:", connection_db.list_collection_names())
                     assembly_collection = connection_db["assembly"]
@@ -991,7 +1000,7 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
-def set_db_conn_for_uuid(info, uuid):
+def set_db_conn_for_uuid(info, uuid, release_version=None):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
     #
@@ -1020,7 +1029,9 @@ def set_db_conn_for_uuid(info, uuid):
 
     grpc_model = info.context["grpc_model"]
     # we pass the gRPC model instance and genome_uuid to get the release version used to infer Mongo DB's name
-    db_conn = info.context["mongo_db_client"].get_database_conn(grpc_model, uuid)
+    db_conn = info.context["mongo_db_client"].get_database_conn(
+        grpc_model, uuid, release_version
+    )
 
     conn = {"db_conn": db_conn, "data_loader": BatchLoaders(db_conn)}
 

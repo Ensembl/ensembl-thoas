@@ -44,10 +44,14 @@ class MongoDbClient:
         self.config = config
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
-    def get_database_conn(self, grpc_model, uuid):
+    def get_database_conn(self, grpc_model, uuid, release_version):
         grpc_response = None
-
         chosen_db = None
+
+        if release_version:
+            chosen_db = process_release_version(release_version)
+            return self.mongo_client[chosen_db]
+
         # Try to connect to gRPC
         try:
             grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
@@ -61,7 +65,7 @@ class MongoDbClient:
             )
 
         if grpc_response and grpc_response.release_version:
-            chosen_db = process_release_version(grpc_response)
+            chosen_db = process_release_version(grpc_response.release_version)
         else:
             logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
@@ -107,7 +111,7 @@ class FakeMongoDbClient:
         self.mongo_client = mongomock.MongoClient()
         self.mongo_db = self.mongo_client.db
 
-    def get_database_conn(self, grpc_model, uuid):
+    def get_database_conn(self, grpc_model, uuid, release_version):
         # we pretend that we did a gRPC call and got the chosen db
         chosen_db = "db"
         return self.mongo_client[chosen_db]
