@@ -111,7 +111,7 @@ class FakeMongoDbClient:
         self.mongo_client = mongomock.MongoClient()
         self.mongo_db = self.mongo_client.db
 
-    def get_database_conn(self, grpc_model, uuid):
+    def get_database_conn(self, grpc_model, uuid, release_version):
         # we pretend that we did a gRPC call and got the chosen db
         chosen_db = "db"
         return self.mongo_client[chosen_db]
