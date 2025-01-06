@@ -677,7 +677,14 @@ async def resolve_organism_from_assembly(
     organisms = await loader.load(key=assembly["organism_foreign_key"])
     if not organisms:
         raise OrganismFromAssemblyNotFound(assembly["organism_foreign_key"])
-    return organisms[0]
+
+    # we select the first organism from the list (they are identical anyway)
+    # Q: Why do we have duplicates? It has something to do with how the loading
+    # script works, it's another issue for another time
+    selected_organism = organisms[0]
+    # Map `organism_primary_key` to `id`
+    selected_organism["id"] = selected_organism.get("organism_primary_key")
+    return selected_organism
 
 
 @ORGANISM_TYPE.field("assemblies")

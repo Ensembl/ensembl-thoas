@@ -65,7 +65,7 @@ type Organism {
   """
   The unique identifier for the organism.
   """
-  id: String!
+  id: String! # This should be changes to a proper UUID to be CDM complaint
   
   """
   The assemblies associated with the organism.
