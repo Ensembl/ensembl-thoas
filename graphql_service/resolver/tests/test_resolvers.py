@@ -758,6 +758,7 @@ async def test_resolve_organism_from_assembly(genome_data):
     organism_result = await model.resolve_organism_from_assembly(assembly, info)
 
     assert remove_ids(organism_result) == {
+        "id": "test_organism_id_1",
         "type": "Organism",
         "scientific_name": "banana",
         "organism_primary_key": "test_organism_id_1",
