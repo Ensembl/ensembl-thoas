@@ -826,7 +826,9 @@ def resolve_genomes(
                     # logging.debug("assembly_collection.name:", assembly_collection.name)
 
                     assembly_data = (
-                        fetch_assembly_data(assembly_collection, genome.assembly.name)
+                        fetch_assembly_data(
+                            assembly_collection, genome.assembly.assembly_uuid
+                        )
                         if is_assembly_present
                         else None
                     )
@@ -868,7 +870,7 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
     # logging.debug("assembly_collection.name:", assembly_collection.name)
 
     assembly_data = (
-        fetch_assembly_data(assembly_collection, genome.assembly.name)
+        fetch_assembly_data(assembly_collection, genome.assembly.assembly_uuid)
         if is_assembly_present
         else None
     )
