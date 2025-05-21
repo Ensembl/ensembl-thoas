@@ -2,6 +2,7 @@ apiVersion: v1
 data:
   DEBUG_MODE: "False"
   ENABLE_INTROSPECTION: "True"
+  grpc_enable_cache: "True"
   HTTP_PROXY: <HTTP_PROXY>
   HTTPS_PROXY: <HTTP_PROXY>
   http_proxy: <HTTP_PROXY>
