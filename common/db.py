@@ -47,11 +47,11 @@ class MongoDbClient:
 
         # Setup Redis connection and caching toggle
         self.redis_cache_enabled = (
-            self.config.get("grpc_enable_cache", "true").lower() == "true"
+            self.config.get("GRPC_ENABLE_CACHE", "true").lower() == "true"
         )
-        self.redis_host = self.config.get("redis_host", "localhost")
-        self.redis_port = int(self.config.get("redis_port", 6379))
-        self.redis_expiry = int(self.config.get("redis_expiry_seconds", 6600))
+        self.redis_host = self.config.get("REDIS_HOST", "localhost")
+        self.redis_port = int(self.config.get("REDIS_PORT", 6379))
+        self.redis_expiry = int(self.config.get("REDIS_EXPIRY_SECONDS", 6600))
 
         try:
             self.cache = redis.StrictRedis(host=self.redis_host, port=self.redis_port)
@@ -119,10 +119,10 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("mongo_host").split(",")
-        port = int(config.get("mongo_port"))
-        user = config.get("mongo_user")
-        password = config.get("mongo_password")
+        host = config.get("MONGO_HOST").split(",")
+        port = int(config.get("MONGO_PORT"))
+        user = config.get("MONGO_USER")
+        password = config.get("MONGO_PASSWORD")
 
         client = pymongo.MongoClient(
             host=host,
@@ -159,8 +159,8 @@ class FakeMongoDbClient:
 class GRPCServiceClient:
     def __init__(self, config):
 
-        host = config.get("grpc_host")
-        port = config.get("grpc_port")
+        host = config.get("GRPC_HOST")
+        port = config.get("GRPC_PORT")
 
         # instantiate a channel
         self.channel = grpc.insecure_channel(
