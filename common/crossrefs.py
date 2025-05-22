@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-import json
+import ujson as json
 import re
 
 import requests

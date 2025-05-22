@@ -16,6 +16,7 @@ import logging
 import pymongo
 import mongomock
 import grpc
+import redis
 
 from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
@@ -44,6 +45,22 @@ class MongoDbClient:
         self.config = config
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
+        # Setup Redis connection and caching toggle
+        self.redis_cache_enabled = (
+            self.config.get("GRPC_ENABLE_CACHE", "true").lower() == "true"
+        )
+        self.redis_host = self.config.get("REDIS_HOST", "localhost")
+        self.redis_port = int(self.config.get("REDIS_PORT", 6379))
+        self.redis_expiry = int(self.config.get("REDIS_EXPIRY_SECONDS", 6600))
+
+        try:
+            self.cache = redis.StrictRedis(host=self.redis_host, port=self.redis_port)
+            self.cache.ping()  # Check Redis connection
+        except redis.RedisError as e:
+            logger.warning(f"[MongoDbClient] Redis not available: {e}")
+            self.cache = None
+            self.redis_cache_enabled = False
+
     def get_database_conn(self, grpc_model, uuid, release_version):
         grpc_response = None
         chosen_db = None
@@ -51,6 +68,19 @@ class MongoDbClient:
         if release_version:
             chosen_db = process_release_version(release_version)
             return self.mongo_client[chosen_db]
+
+        # Try cache if enabled
+        if self.redis_cache_enabled and self.cache:
+            try:
+                cached_version = self.cache.get(uuid)
+                if cached_version:
+                    logger.debug(
+                        f"[MongoDbClient] Using cached version: {cached_version}"
+                    )
+                    chosen_db = process_release_version(cached_version.decode("utf-8"))
+                    return self.mongo_client[chosen_db]
+            except redis.RedisError as e:
+                logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
 
         # Try to connect to gRPC
         try:
@@ -66,6 +96,15 @@ class MongoDbClient:
 
         if grpc_response and grpc_response.release_version:
             chosen_db = process_release_version(grpc_response.release_version)
+
+            if self.redis_cache_enabled and self.cache:
+                try:
+                    self.cache.set(
+                        uuid, grpc_response.release_version, ex=self.redis_expiry
+                    )
+                except redis.RedisError as e:
+                    logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
+
         else:
             logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
@@ -80,10 +119,10 @@ class MongoDbClient:
     def connect_mongo(config):
         "Get a MongoDB connection"
 
-        host = config.get("mongo_host").split(",")
-        port = int(config.get("mongo_port"))
-        user = config.get("mongo_user")
-        password = config.get("mongo_password")
+        host = config.get("MONGO_HOST").split(",")
+        port = int(config.get("MONGO_PORT"))
+        user = config.get("MONGO_USER")
+        password = config.get("MONGO_PASSWORD")
 
         client = pymongo.MongoClient(
             host=host,
@@ -120,8 +159,8 @@ class FakeMongoDbClient:
 class GRPCServiceClient:
     def __init__(self, config):
 
-        host = config.get("grpc_host")
-        port = config.get("grpc_port")
+        host = config.get("GRPC_HOST")
+        port = config.get("GRPC_PORT")
 
         # instantiate a channel
         self.channel = grpc.insecure_channel(
