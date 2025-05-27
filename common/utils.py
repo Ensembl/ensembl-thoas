@@ -22,13 +22,17 @@ logger = logging.getLogger(__name__)
 
 def check_config_validity(config):
     mandatory_fields = [
-        "mongo_host",
-        "mongo_port",
-        "mongo_user",
-        "mongo_password",
-        "mongo_default_db",
-        "grpc_host",
-        "grpc_port",
+        "MONGO_HOST",
+        "MONGO_PORT",
+        "MONGO_USER",
+        "MONGO_PASSWORD",
+        "MONGO_DEFAULT_DB",
+        "GRPC_HOST",
+        "GRPC_PORT",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_EXPIRY_SECONDS",
+        "GRPC_ENABLE_CACHE",
     ]
     for mandatory_field in mandatory_fields:
         if not config.get(mandatory_field):
