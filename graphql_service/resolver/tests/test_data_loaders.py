@@ -109,7 +109,7 @@ async def test_batch_product_load():
         ]
     )
 
-    loader = BatchLoaders(database)
+    loader = BatchLoaders(database, mongo_client)
 
     response = await loader.batch_product_load(["1_ENSP001.1"])
 
