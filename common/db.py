@@ -152,7 +152,7 @@ class FakeMongoDbClient:
     def __init__(self):
         self.mongo_client = mongomock.MongoClient()
         self.mongo_db = self.mongo_client.db
-        self.redis_cache_enabled = false
+        self.redis_cache_enabled = False
 
     def get_database_conn(self, grpc_model, uuid, release_version):
         # we pretend that we did a gRPC call and got the chosen db
