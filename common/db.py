@@ -150,7 +150,7 @@ class FakeMongoDbClient:
     """
 
     def __init__(self):
-        self.mongo_client = mongomock.MongoClient()
+        self.mongo_client = mongomock.MongoClient(document_class=RawBSONDocument)
         self.mongo_db = self.mongo_client.db
         self.redis_cache_enabled = False
 
