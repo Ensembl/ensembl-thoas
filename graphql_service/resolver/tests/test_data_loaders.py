@@ -59,7 +59,7 @@ async def test_batch_transcript_load():
             },
         ]
     )
-    loaders = BatchLoaders(database)
+    loaders = BatchLoaders(database, mongo_client)
 
     response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
