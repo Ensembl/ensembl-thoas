@@ -14,7 +14,7 @@
 
 import logging
 import os
-from typing import Optional
+from typing import Optional, List
 
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
@@ -24,9 +24,14 @@ from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
 from pymongo import monitoring
 from starlette import applications, middleware
+from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.errors import ServerErrorMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 from dotenv import load_dotenv
+from starlette.routing import Route
+
 from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
@@ -79,10 +84,14 @@ CONTEXT_PROVIDER = prepare_context_provider(
     }
 )
 
-starlette_middleware = [
-    middleware.Middleware(
-        CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"]
-    )
+starlette_middleware: List[Middleware] = [
+    # Enables Cross-Origin Resource Sharing (CORS) for all origins and allows GET and POST methods.
+    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"]),
+    # Compresses responses using gzip if they are at least 1000 bytes.
+    # The 'minimum_size' parameter sets the smallest response size (in bytes) that will be gzipped.
+    Middleware(GZipMiddleware, minimum_size=1000),
+    # Handles uncaught exceptions and, if debug is False, returns a friendly error page instead of a traceback.
+    Middleware(ServerErrorMiddleware, debug=DEBUG_MODE),
 ]
 
 # The original HTML file can be found under
