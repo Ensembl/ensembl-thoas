@@ -40,8 +40,6 @@ def decode_mongo_document(doc):
         dict: The document as a Python dictionary.
     """
     if hasattr(doc, "raw"):
-        import bson
-
         return bson.BSON(doc.raw).decode()
     return doc
 
@@ -169,14 +167,14 @@ class BatchLoaders:
             data = cache.get(key)
 
             if data is not None:
-                logger.debug(f"Found cache entry for key: {key}")
+                logger.debug("Found cache entry for key: %s", key)
                 # We recreate the object for the result
                 result = pickle.loads(data)
                 # The object is a list of bson entries, so we need to decode
                 # this, then return that as a list
                 return [bson.decode(doc.raw) for doc in result]
 
-            logger.debug(f"No cache entry found for key: {key}")
+            logger.debug(f"No cache entry found for key: %s", key)
 
         db = self.database_conn[doc_type]
         assert db is not None
@@ -194,7 +192,7 @@ class BatchLoaders:
         result = list(db.find(query))
 
         if self.mongo_client.redis_cache_enabled:
-            logger.debug(f"Storing result for key: {key}")
+            logger.debug(f"Storing result for key: %s", key)
 
             # The result is a list of bson documents. We use pickle to serialize
             # this
@@ -203,6 +201,6 @@ class BatchLoaders:
         # The object is a list of bson entries, so we need to decode
         # this, then return that as a list: This is the case for PyMongo
         # when handling real data, however when it comes to testing
-        # MongoMock doesn't talk/know BSON, this is where
+        # MongoMock doesn't talk/know BSON, that's where
         # decode_mongo_document is coming to the rescue
         return [decode_mongo_document(doc) for doc in result]
