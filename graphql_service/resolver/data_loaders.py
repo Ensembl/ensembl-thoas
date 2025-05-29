@@ -24,6 +24,28 @@ import bson
 logger = logging.getLogger(__name__)
 
 
+def decode_mongo_document(doc):
+    """
+    Ensures a MongoDB document is returned as a Python dictionary.
+
+    If the input document is a PyMongo RawBSONDocument (i.e., it has a BSON-encoded
+    binary representation), this function decodes the BSON to a dict. If the document
+    is already a dict (such as when using mongomock or standard PyMongo queries without
+    the 'as_raw' option), it is returned unchanged.
+
+    Args:
+        doc: The MongoDB document, either as a RawBSONDocument or a dict.
+
+    Returns:
+        dict: The document as a Python dictionary.
+    """
+    if hasattr(doc, "raw"):
+        import bson
+
+        return bson.BSON(doc.raw).decode()
+    return doc
+
+
 class BatchLoaders:
     """A collection of bulk data aggregators for "joins" in GraphQL"""
 
@@ -156,7 +178,6 @@ class BatchLoaders:
 
             logger.debug(f"No cache entry found for key: {key}")
 
-
         db = self.database_conn[doc_type]
         assert db is not None
 
@@ -180,5 +201,8 @@ class BatchLoaders:
             cache.set(key, pickle.dumps(result), ex=self.mongo_client.redis_expiry)
 
         # The object is a list of bson entries, so we need to decode
-        # this, then return that as a list
-        return [bson.decode(doc.raw) for doc in result]
+        # this, then return that as a list: This is the case for PyMongo
+        # when handling real data, however when it comes to testing
+        # MongoMock doesn't talk/know BSON, this is where
+        # decode_mongo_document is coming to the rescue
+        return [decode_mongo_document(doc) for doc in result]
