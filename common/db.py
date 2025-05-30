@@ -26,8 +26,6 @@ from graphql_service.resolver.exceptions import (
 
 from yagrc import reflector as yagrc_reflector
 
-from bson.raw_bson import RawBSONDocument
-
 from common.utils import process_release_version
 
 logger = logging.getLogger(__name__)
@@ -119,7 +117,7 @@ class MongoDbClient:
 
     @staticmethod
     def connect_mongo(config):
-        "Create a MongoDB connection that will give us non-decoded bson documents"
+        "Create a MongoDB connection"
 
         host = config.get("MONGO_HOST").split(",")
         port = int(config.get("MONGO_PORT"))
@@ -132,7 +130,6 @@ class MongoDbClient:
             username=user,
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-            document_class=RawBSONDocument,
         )
         try:
             # make sure the connection is established successfully
