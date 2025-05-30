@@ -172,7 +172,7 @@ class BatchLoaders:
                 result = pickle.loads(data)
                 # The object is a list of bson entries, so we need to decode
                 # this, then return that as a list
-                return [bson.decode(doc.raw) for doc in result]
+                return [decode_mongo_document(doc) for doc in result]
 
             logger.debug(f"No cache entry found for key: %s", key)
 
