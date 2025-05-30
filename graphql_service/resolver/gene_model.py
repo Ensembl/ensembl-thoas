@@ -1042,7 +1042,10 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
         grpc_model, uuid, release_version
     )
 
-    conn = {"db_conn": db_conn, "data_loader": BatchLoaders(db_conn)}
+    conn = {
+        "db_conn": db_conn,
+        "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
+    }
 
     parent_key = get_path_parent_key(info)
     info.context[parent_key] = conn

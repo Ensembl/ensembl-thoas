@@ -26,6 +26,7 @@ from graphql_service.resolver.exceptions import (
 
 from yagrc import reflector as yagrc_reflector
 
+from bson.raw_bson import RawBSONDocument
 
 from common.utils import process_release_version
 
@@ -56,6 +57,7 @@ class MongoDbClient:
         try:
             self.cache = redis.StrictRedis(host=self.redis_host, port=self.redis_port)
             self.cache.ping()  # Check Redis connection
+            logger.info(f"[MongoDbClient] Redis caching enabled")
         except redis.RedisError as e:
             logger.warning(f"[MongoDbClient] Redis not available: {e}")
             self.cache = None
@@ -117,7 +119,7 @@ class MongoDbClient:
 
     @staticmethod
     def connect_mongo(config):
-        "Get a MongoDB connection"
+        "Create a MongoDB connection that will give us non-decoded bson documents"
 
         host = config.get("MONGO_HOST").split(",")
         port = int(config.get("MONGO_PORT"))
@@ -130,11 +132,12 @@ class MongoDbClient:
             username=user,
             password=password,
             read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
+            document_class=RawBSONDocument,
         )
         try:
             # make sure the connection is established successfully
             client.server_info()
-            print(f"Connected to MongoDB, Host: {host}")
+            logger.info(f"Connected to MongoDB, Host: {host}")
         except Exception as exc:
             raise Exception("Connection to MongoDB failed") from exc
 
@@ -149,6 +152,7 @@ class FakeMongoDbClient:
     def __init__(self):
         self.mongo_client = mongomock.MongoClient()
         self.mongo_db = self.mongo_client.db
+        self.redis_cache_enabled = False
 
     def get_database_conn(self, grpc_model, uuid, release_version):
         # we pretend that we did a gRPC call and got the chosen db

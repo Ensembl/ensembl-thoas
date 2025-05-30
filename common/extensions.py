@@ -16,8 +16,6 @@ import time
 
 from ariadne.types import Extension, ContextValue
 
-from common import utils
-
 
 class QueryExecutionTimeExtension(Extension):
     def __init__(self):
