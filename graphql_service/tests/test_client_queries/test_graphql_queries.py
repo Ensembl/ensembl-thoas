@@ -5,15 +5,16 @@ import pytest
 from starlette.testclient import TestClient
 import json
 
-# import our ASGI application
-from graphql_service.server import APP
-
-# If MONGO_HOST is not set, skip all of these tests:
+# If MONGO_HOST is not set, skip the entire file before importing APP
+# to avoid: KeyError: "Missing information in configuration file - 'MONGO_HOST'
 if not os.getenv("MONGO_HOST"):
     pytest.skip(
         "Skipping GraphQL tests because no MONGO_HOST is configured",
         allow_module_level=True,
     )
+
+# import our ASGI application
+from graphql_service.server import APP
 
 # Directory where all your .graphql files live
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "queries")
