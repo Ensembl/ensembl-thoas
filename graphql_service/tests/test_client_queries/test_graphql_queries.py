@@ -8,6 +8,13 @@ import json
 # import our ASGI application
 from graphql_service.server import APP
 
+# If MONGO_HOST is not set, skip all of these tests:
+if not os.getenv("MONGO_HOST"):
+    pytest.skip(
+        "Skipping GraphQL tests because no MONGO_HOST is configured",
+        allow_module_level=True,
+    )
+
 # Directory where all your .graphql files live
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "queries")
 
