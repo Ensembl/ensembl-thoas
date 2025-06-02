@@ -1,0 +1,61 @@
+query GeneExternalReferences {
+  gene(by_id: { stable_id: "ENSG00000139618", genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3" }) {
+    stable_id
+    symbol
+    external_references {
+      accession_id
+      name
+      description
+      url
+      source {
+        id
+        name
+      }
+    }
+    transcripts {
+      stable_id
+      slice {
+        location {
+          length
+        }
+      }
+      external_references {
+        accession_id
+        name
+        description
+        url
+        source {
+          id
+          name
+        }
+      }
+      product_generating_contexts {
+        product_type
+        product {
+          length
+          external_references {
+            accession_id
+            name
+            description
+            url
+            source {
+              id
+              name
+            }
+          }
+        }
+      }
+      metadata {
+        canonical {
+          value
+        }
+        mane {
+          value
+        }
+        biotype {
+          value
+        }
+      }
+    }
+  }
+}

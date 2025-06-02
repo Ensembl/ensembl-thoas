@@ -1,0 +1,8 @@
+query Region {
+  region(by_name: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", name: "13" }) {
+    name
+    length
+    code
+    topology
+  }
+}

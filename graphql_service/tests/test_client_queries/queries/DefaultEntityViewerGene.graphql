@@ -1,0 +1,124 @@
+query DefaultEntityViewerGene {
+  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+    stable_id
+    symbol
+    unversioned_stable_id
+    version
+    slice {
+      location {
+        start
+        end
+        length
+      }
+      strand {
+        code
+      }
+    }
+    transcripts {
+      stable_id
+      unversioned_stable_id
+      slice {
+        location {
+          start
+          end
+          length
+        }
+        region {
+          name
+        }
+        strand {
+          code
+        }
+      }
+      relative_location {
+        start
+        end
+      }
+      spliced_exons {
+        relative_location {
+          start
+          end
+        }
+        exon {
+          stable_id
+          slice {
+            location {
+              length
+            }
+          }
+        }
+      }
+      product_generating_contexts {
+        product_type
+        cds {
+          relative_start
+          relative_end
+        }
+        cdna {
+          length
+        }
+        phased_exons {
+          start_phase
+          end_phase
+          exon {
+            stable_id
+          }
+        }
+        product {
+          stable_id
+          unversioned_stable_id
+          length
+          external_references {
+            accession_id
+            name
+            description
+            source {
+              id
+            }
+          }
+        }
+      }
+      external_references {
+        accession_id
+        name
+        url
+        source {
+          id
+          name
+        }
+      }
+      metadata {
+        biotype {
+          label
+          value
+          definition
+        }
+        tsl {
+          label
+          value
+        }
+        appris {
+          label
+          value
+        }
+        canonical {
+          value
+          label
+          definition
+        }
+        mane {
+          value
+          label
+          definition
+          ncbi_transcript {
+            id
+            url
+          }
+        }
+        gencode_basic {
+          label
+        }
+      }
+    }
+  }
+}
