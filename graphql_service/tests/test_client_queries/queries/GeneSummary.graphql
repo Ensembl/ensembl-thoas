@@ -1,0 +1,24 @@
+query GeneSummary {
+  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+    stable_id
+    unversioned_stable_id
+    symbol
+    slice {
+      location {
+        start
+        end
+      }
+      strand {
+        code
+      }
+      region {
+        name
+      }
+    }
+    metadata {
+      biotype {
+        label
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+query TranscriptAndGene {
+  transcript(by_id: {genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152.8"}) {
+    gene {
+      ...GeneAndTranscripts
+    }
+  }
+}
+fragment GeneAndTranscripts on Gene {
+  stable_id
+  slice {
+    location {
+      start
+      end
+    }
+    region {
+      sequence {
+        checksum
+      }
+    }
+    strand {
+      code
+    }
+  }
+  transcripts {
+    stable_id
+    relative_location {
+      start
+      end
+    }
+    spliced_exons {
+      index
+      relative_location {
+        start
+        end
+      }
+      exon {
+        stable_id
+      }
+    }
+    product_generating_contexts {
+      cds {
+        sequence {
+          checksum
+        }
+      }
+      cdna {
+        sequence {
+          checksum
+        }
+      }
+      product {
+        stable_id
+        sequence {
+          checksum
+        }
+      }
+    }
+  }
+}

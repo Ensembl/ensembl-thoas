@@ -1,0 +1,101 @@
+query TranscriptSummary {
+  transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152.8" }) {
+    stable_id
+    unversioned_stable_id
+    external_references {
+      accession_id
+      url
+      source {
+        id
+      }
+    }
+    spliced_exons {
+      relative_location {
+        start
+        end
+      }
+      exon {
+        stable_id
+        slice {
+          location {
+            length
+          }
+        }
+      }
+    }
+    product_generating_contexts {
+      product_type
+      default
+      cds {
+        protein_length
+        sequence {
+          checksum
+        }
+      }
+      cdna {
+        sequence {
+          checksum
+        }
+      }
+      phased_exons {
+        start_phase
+        end_phase
+        exon {
+          stable_id
+        }
+      }
+      product {
+        stable_id
+        external_references {
+          accession_id
+          url
+          source {
+            id
+          }
+        }
+        sequence {
+          checksum
+        }
+      }
+    }
+    slice {
+      strand {
+        code
+      }
+      location {
+        start
+        end
+        length
+      }
+      region {
+        name
+        sequence {
+          checksum
+        }
+      }
+    }
+    metadata {
+      biotype {
+        label
+        value
+        definition
+      }
+      canonical {
+        value
+        label
+        definition
+      }
+      mane {
+        value
+        label
+        definition
+      }
+    }
+    gene {
+      name
+      stable_id
+      unversioned_stable_id
+      symbol
+    }
+  }
+}

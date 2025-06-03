@@ -1,0 +1,27 @@
+query ProteinDomains {
+  product(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSP00000369497.3" }) {
+    length
+    family_matches {
+      relative_location {
+        start
+        end
+      }
+      sequence_family {
+        name
+        description
+        url
+        source {
+          name
+        }
+      }
+      via {
+        accession_id
+        description
+        url
+        source {
+          name
+        }
+      }
+    }
+  }
+}

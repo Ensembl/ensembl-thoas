@@ -1,0 +1,10 @@
+query Transcript {
+  transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000665585.2" }) {
+    product_generating_contexts {
+      product_type
+    }
+    gene {
+      stable_id
+    }
+  }
+}
