@@ -191,89 +191,36 @@ TracerProvider(
 
 tracer = trace.get_tracer(__name__)
 
-# create a JaegerExporter
-jaeger_exporter = JaegerExporter(
-    # configure agent
-    agent_host_name='localhost',
-    agent_port=6831,
-    # optional: configure also collector
-    #collector_endpoint='http://localhost:16686/api/traces?format=jaeger.thrift',
-    # username=xxxx, # optional
-    # password=xxxx, # optional
-    # max_tag_value_length=None # optional
-)
-
 otlp_exporter = OTLPSpanExporter()
 
 otlp_span_processor = BatchSpanProcessor(otlp_exporter)
 
 # Create a BatchSpanProcessor and add the exporter to it
-span_processor = BatchSpanProcessor(jaeger_exporter, max_export_batch_size=10)
+# span_processor = BatchSpanProcessor(jaeger_exporter, max_export_batch_size=10)
 console_processor = BatchSpanProcessor(ConsoleSpanExporter())
 # provider.add_span_processor(processor)
 # provider.add_span_processor(span_processor)
 # add to the tracer
-trace.get_tracer_provider().add_span_processor(span_processor)
+# trace.get_tracer_provider().add_span_processor(span_processor)
 trace.get_tracer_provider().add_span_processor(console_processor)
 trace.get_tracer_provider().add_span_processor(otlp_span_processor)
 
-APP = applications.Starlette(debug=True, middleware=starlette_middleware)
-APP.mount("/thoas", GraphQL(EXECUTABLE_SCHEMA, debug=True, context_value=CONTEXT_PROVIDER))
+APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+
+
+
+APP.mount(
+    "/thoas",
+    GraphQL(
+        EXECUTABLE_SCHEMA,
+        debug=DEBUG_MODE,
+        context_value=CONTEXT_PROVIDER,
+        http_handler=GraphQLHTTPHandler(
+            extensions=EXTENSIONS,
+        ),
+        explorer=CustomExplorerGraphiQL(),
+        introspection=ENABLE_INTROSPECTION,
+    ),
+)
+
 StarletteInstrumentor.instrument_app(APP)
-
-
-# provider = TracerProvider(
-#         resource=Resource.create({SERVICE_NAME: "thoas"})
-#     )
-# tracer = trace.get_tracer(__name__)
-
-# # create a JaegerExporter
-# jaeger_exporter = JaegerExporter(
-#     # configure agent
-#     #agent_host_name='localhost',
-#     #agent_port=6831,
-#     # optional: configure also collector
-#     # collector_endpoint='http://localhost:16686/api/traces?format=jaeger.thrift',
-#     collector_endpoint='http://localhost:16686/api/traces?format=jaeger.thrift',
-#     # username=xxxx, # optional
-#     # password=xxxx, # optional
-#     # max_tag_value_length=None # optional
-# )
-
-# # Sets the global default tracer provider
-# trace.set_tracer_provider(provider)
-
-
-# # Create a BatchSpanProcessor and add the exporter to it
-# span_processor = BatchSpanProcessor(jaeger_exporter, max_export_batch_size=10)
-
-# # add to the tracer
-# trace.get_tracer_provider().add_span_processor(span_processor)
-
-# processor = BatchSpanProcessor(ConsoleSpanExporter())
-# provider.add_span_processor(processor)
-# provider.add_span_processor(span_processor)
-
-# # Creates a tracer from the global tracer provider
-# tracer = trace.get_tracer("thoas-tracer")
-
-
-# APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
-
-
-
-# APP.mount(
-#     "/thoas",
-#     GraphQL(
-#         EXECUTABLE_SCHEMA,
-#         debug=DEBUG_MODE,
-#         context_value=CONTEXT_PROVIDER,
-#         http_handler=GraphQLHTTPHandler(
-#             extensions=EXTENSIONS,
-#         ),
-#         explorer=CustomExplorerGraphiQL(),
-#         introspection=ENABLE_INTROSPECTION,
-#     ),
-# )
-
-# StarletteInstrumentor.instrument_app(APP)
