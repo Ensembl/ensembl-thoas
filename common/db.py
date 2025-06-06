@@ -109,7 +109,6 @@ class MongoDbClient:
                         f"[MongoDbClient] Using cached version: {cached_version}"
                     )
                     chosen_db = process_release_version(cached_version.decode("utf-8"))
-                    chosen_db = 'release_110_1'
 #                    await self.mongo_client
                     return self.mongo_client[chosen_db]
             except redis.RedisError as e:
