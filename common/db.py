@@ -13,7 +13,7 @@
 """
 
 import logging
-import pymongo
+from pymongo import AsyncMongoClient
 import mongomock
 import grpc
 import redis
@@ -38,11 +38,11 @@ class MongoDbClient:
     """
 
     def __init__(self, config):
+        print("Creating PyMongo obj")
         """
         Note that config here is a configparser object
         """
         self.config = config
-        self.mongo_client = MongoDbClient.connect_mongo(self.config)
 
         # Setup Redis connection and caching toggle
         self.redis_cache_enabled = (
@@ -61,12 +61,43 @@ class MongoDbClient:
             self.cache = None
             self.redis_cache_enabled = False
 
-    def get_database_conn(self, grpc_model, uuid, release_version):
+    def __await__(self):
+        async def closure():
+            print("DB await")
+            return self
+
+        return closure().__await__()
+
+    async def __aenter__(self):
+        print("DB enter")
+        await self
+
+        host = self.config.get("MONGO_HOST").split(",")
+        port = int(self.config.get("MONGO_PORT"))
+        user = self.config.get("MONGO_USER")
+        password = self.config.get("MONGO_PASSWORD")
+
+        client = AsyncMongoClient(
+            host=host,
+            port=port,
+            username=user,
+            password=password,
+        )
+        self.mongo_client = client
+        await client.aconnect()
+        return self
+
+    async def __aexit__(self, *args):
+        print("DB exit")
+
+
+    async def get_database_conn(self, grpc_model, uuid, release_version):
         grpc_response = None
         chosen_db = None
 
         if release_version:
             chosen_db = process_release_version(release_version)
+#            await self.mongo_client
             return self.mongo_client[chosen_db]
 
         # Try cache if enabled
@@ -78,6 +109,8 @@ class MongoDbClient:
                         f"[MongoDbClient] Using cached version: {cached_version}"
                     )
                     chosen_db = process_release_version(cached_version.decode("utf-8"))
+                    chosen_db = 'release_110_1'
+#                    await self.mongo_client
                     return self.mongo_client[chosen_db]
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
@@ -111,34 +144,11 @@ class MongoDbClient:
 
         if chosen_db is not None:
             logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
+#            await self.mongo_client
             data_database_connection = self.mongo_client[chosen_db]
             return data_database_connection
         raise GenomeNotFoundError({"genome_id": uuid})
 
-    @staticmethod
-    def connect_mongo(config):
-        "Create a MongoDB connection"
-
-        host = config.get("MONGO_HOST").split(",")
-        port = int(config.get("MONGO_PORT"))
-        user = config.get("MONGO_USER")
-        password = config.get("MONGO_PASSWORD")
-
-        client = pymongo.MongoClient(
-            host=host,
-            port=port,
-            username=user,
-            password=password,
-            read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-        )
-        try:
-            # make sure the connection is established successfully
-            client.server_info()
-            logger.info(f"Connected to MongoDB, Host: {host}")
-        except Exception as exc:
-            raise Exception("Connection to MongoDB failed") from exc
-
-        return client
 
 
 class FakeMongoDbClient:

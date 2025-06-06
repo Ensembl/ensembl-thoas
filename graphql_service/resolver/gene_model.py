@@ -66,7 +66,7 @@ GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
-def resolve_gene(
+async def resolve_gene(
     _,
     info: GraphQLResolveInfo,
     byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
@@ -94,13 +94,13 @@ def resolve_gene(
         "genome_id": by_id["genome_id"],
     }
 
-    set_db_conn_for_uuid(info, by_id["genome_id"])
+    await set_db_conn_for_uuid(info, by_id["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
 
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
-        result = gene_collection.find_one(query)
+        result = await gene_collection.find_one(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
@@ -112,7 +112,7 @@ def resolve_gene(
 
 
 @QUERY_TYPE.field("genes")
-def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
+async def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     """
     Load Genes via potentially ambiguous symbol
     Or
@@ -125,19 +125,19 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol.get("symbol"),  # this makes symbol optional
     }
 
-    set_db_conn_for_uuid(info, by_symbol["genome_id"])
+    await set_db_conn_for_uuid(info, by_symbol["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
     logger.info("[resolve_genes] Getting Gene from DB: '%s'", connection_db.name)
 
     try:
-        result = gene_collection.find(query)
+        cursor = gene_collection.find(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
     # unpack cursor into a list. We're guaranteed relatively small results
-    result = list(result)
+    result = await cursor.to_list()
     if len(result) == 0:
         raise GeneNotFoundError(by_symbol=by_symbol)
     return result
@@ -200,7 +200,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 
 
 @QUERY_TYPE.field("transcript")
-def resolve_transcript(
+async def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
     bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
@@ -244,7 +244,7 @@ def resolve_transcript(
 
     assert genome_id
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     transcript_collection = connection_db["transcript"]
     logger.info(
@@ -252,7 +252,7 @@ def resolve_transcript(
     )
 
     try:
-        transcript = transcript_collection.find_one(query)
+        transcript = await transcript_collection.find_one(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
@@ -324,13 +324,13 @@ async def resolve_transcripts_page_transcripts(
         connection_db.name,
     )
 
-    results = (
+    cursor = (
         transcript_collection.find(query)
         .sort([("stable_id", 1)])
         .skip((page - 1) * per_page)
         .limit(per_page)
     )
-    return list(results)
+    return await cursor.to_list()
 
 
 @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
@@ -349,11 +349,12 @@ async def resolve_transcripts_page_metadata(
         connection_db.name,
     )
 
-    return {
-        "total_count": transcript_collection.count_documents(query),
+    result = {
+        "total_count": await transcript_collection.count_documents(query),
         "page": transcripts_page["page"],
         "per_page": transcripts_page["per_page"],
     }
+    return result
 
 
 @TRANSCRIPT_TYPE.field("product_generating_contexts")
@@ -361,7 +362,7 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
     pgcs = []
     for pgc in transcript["product_generating_contexts"]:
         pgc["genome_id"] = transcript["genome_id"]
-        pgcs.append(pgc)
+        await pgcs.append(pgc)
     return pgcs
 
 
@@ -379,7 +380,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
         "[resolve_transcript_gene] Getting Gene from DB: '%s'", connection_db.name
     )
 
-    gene = gene_collection.find_one(query)
+    gene = await gene_collection.find_one(query)
     if not gene:
         raise GeneNotFoundError(
             by_id={
@@ -391,7 +392,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 
 
 @QUERY_TYPE.field("overlap_region")
-def resolve_overlap(
+async def resolve_overlap(
     _,
     info: GraphQLResolveInfo,
     genomeId: Optional[str] = None,  # pylint: disable=invalid-name
@@ -424,7 +425,7 @@ def resolve_overlap(
     # Thoas only contains "chromosome"-type regions
     region_id = "_".join([genome_id, region_name, "chromosome"])
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     logger.info(
         "[resolve_overlap] Getting Gene and Transcript Overlap from DB: '%s'",
@@ -441,7 +442,7 @@ def resolve_overlap(
     }
 
 
-def overlap_region(
+async def overlap_region(
     connection: Database,
     genome_id: str,
     region_id: str,
@@ -472,7 +473,8 @@ def overlap_region(
     print(
         f"[INFO] Getting Overlap Region from DB: '{connection.name}', Collection: '{feature_type.lower()}'"
     )
-    results = list(feature_type_collection.find(query).limit(max_results_size))
+    cursor = feature_type_collection.find(query).limit(max_results_size)
+    results = await cursor.to_list()
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
@@ -491,7 +493,7 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 
 @QUERY_TYPE.field("product")
-def resolve_product_by_id(
+async def resolve_product_by_id(
     _,
     info: GraphQLResolveInfo,
     genome_id: Optional[str] = None,
@@ -519,7 +521,7 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(
@@ -530,7 +532,7 @@ def resolve_product_by_id(
     # 1. Keep it collection per type: collection for 'Protein' and another one for 'MatureRNA'
     #    and changing the code logic
     # 2. Put all products in one collection
-    result = protein_collection.find_one(query)
+    result = await protein_collection.find_one(query)
 
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
@@ -538,7 +540,7 @@ def resolve_product_by_id(
 
 
 @PRODUCT_TYPE.field("product_generating_context")
-def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
+async def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
     pipeline = [
         {
             "$match": {
@@ -558,14 +560,15 @@ def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional
     ]
 
     # get db connection
-    set_db_conn_for_uuid(info, product.get("genome_id"))
+    await set_db_conn_for_uuid(info, product.get("genome_id"))
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(
         "[resolve_pgc_for_product] Getting Protein from DB: '%s'", connection_db.name
     )
 
-    results = list(protein_collection.aggregate(pipeline))
+    cursor = protein_collection.aggregate(pipeline)
+    results = await cursor.to_list()
 
     result = results[0]
 
@@ -646,7 +649,7 @@ async def resolve_assembly_from_region(
         "[resolve_assembly_from_region] Getting Assembly from DB: '%s'",
         connection_db.name,
     )
-    assembly = assembly_collection.find_one(query)
+    assembly = await assembly_collection.find_one(query)
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -734,19 +737,19 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "name": by_name["name"],
     }
 
-    set_db_conn_for_uuid(info, by_name["genome_id"])
+    await set_db_conn_for_uuid(info, by_name["genome_id"])
     connection_db = get_db_conn(info)
     region_collection = connection_db["region"]
     logger.info("[resolve_region] Getting Region from DB: '%s'", connection_db.name)
 
-    result = region_collection.find_one(query)
+    result = await region_collection.find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
 
 
 @QUERY_TYPE.field("genomes")
-def resolve_genomes(
+async def resolve_genomes(
     _, info: GraphQLResolveInfo, by_keyword: Optional[Dict[str, str]] = None
 ) -> List:
     """
@@ -815,7 +818,7 @@ def resolve_genomes(
 
                 combined_results = []
                 for genome in genomes:
-                    set_db_conn_for_uuid(
+                    await set_db_conn_for_uuid(
                         info,
                         genome.genome_uuid,
                         release_version=by_keyword.get("release_version"),
@@ -848,7 +851,7 @@ def resolve_genomes(
 
 
 @QUERY_TYPE.field("genome")
-def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
+async def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
     grpc_model = info.context["grpc_model"]
 
     genome = grpc_model.get_genome_by_genome_uuid(
@@ -863,14 +866,14 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) 
         info, fields_to_check
     )
 
-    set_db_conn_for_uuid(info, genome.genome_uuid)
+    await set_db_conn_for_uuid(info, genome.genome_uuid)
     connection_db = get_db_conn(info)
     # logging.debug("Collections in the database:", connection_db.list_collection_names())
     assembly_collection = connection_db["assembly"]
     # logging.debug("assembly_collection.name:", assembly_collection.name)
 
     assembly_data = (
-        fetch_assembly_data(assembly_collection, genome.assembly.assembly_uuid)
+        await fetch_assembly_data(assembly_collection, genome.assembly.assembly_uuid)
         if is_assembly_present
         else None
     )
@@ -934,7 +937,7 @@ def create_genome_response(
     return response
 
 
-def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Mapping:
+async def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Mapping:
     """
     Fetch assembly data from a collection using the assembly ID.
 
@@ -951,7 +954,7 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     """
     query = {"assembly_id": assembly_id}
     try:
-        assembly = assembly_collection.find_one(query)
+        assembly = await assembly_collection.find_one(query)
     except Exception as coll_exp:
         logging.error("Exception: %s", coll_exp)
         raise (
@@ -1009,7 +1012,7 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
-def set_db_conn_for_uuid(info, uuid, release_version=None):
+async def set_db_conn_for_uuid(info, uuid, release_version=None):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
     #
@@ -1038,7 +1041,7 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
 
     grpc_model = info.context["grpc_model"]
     # we pass the gRPC model instance and genome_uuid to get the release version used to infer Mongo DB's name
-    db_conn = info.context["mongo_db_client"].get_database_conn(
+    db_conn = await info.context["mongo_db_client"].get_database_conn(
         grpc_model, uuid, release_version
     )
 
