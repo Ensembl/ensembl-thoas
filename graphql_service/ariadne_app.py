@@ -56,28 +56,3 @@ def prepare_executable_schema() -> GraphQLSchema:
     )
 
 
-def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
-    """
-    Returns function for injecting context to graphql executors.
-
-    context: The context objects that we want to inject to the graphql
-    executors.  The `context_provider` method is a closure, so the
-    `context` variable will be the same Python object for every request.
-    This means that it should only contain objects that we want to share
-    between requests, for example Mongo client, XrefResolver
-    """
-
-    def context_provider(request: Request) -> Dict:
-        """We must return a new object with every request,
-        otherwise the requests will pollute each other's state"""
-        mongo_db_client = context["mongo_db_client"]
-        xref_resolver = context["XrefResolver"]
-        grpc_model = context["grpc_model"]
-        return {
-            "request": request,
-            "mongo_db_client": mongo_db_client,
-            "XrefResolver": xref_resolver,
-            "grpc_model": grpc_model,
-        }
-
-    return context_provider

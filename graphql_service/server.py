@@ -14,7 +14,9 @@
 
 import logging
 import os
-from typing import Optional, List
+from typing import Optional, List, Dict, Callable
+from typing import AsyncIterator, TypedDict
+from starlette.requests import Request
 
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
@@ -36,8 +38,15 @@ from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
-    prepare_context_provider,
 )
+
+import contextlib
+
+from starlette.applications import Starlette
+#from starlette.requests import Request
+#from starlette.responses import PlainTextResponse
+#from starlette.routing import Route
+from common.db import MongoDbClient
 
 
 load_dotenv("connections.conf")
@@ -65,7 +74,7 @@ if DEBUG_MODE:
 
 
 utils.check_config_validity(os.environ)
-MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
+#MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
@@ -76,9 +85,38 @@ EXECUTABLE_SCHEMA = prepare_executable_schema()
 
 RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
+
+def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
+    """
+    Returns function for injecting context to graphql executors.
+
+    context: The context objects that we want to inject to the graphql
+    executors.  The `context_provider` method is a closure, so the
+    `context` variable will be the same Python object for every request.
+    This means that it should only contain objects that we want to share
+    between requests, for example Mongo client, XrefResolver
+    """
+
+    async def context_provider(request: Request) -> Dict:
+        mongo_db_client = request.state.db_client
+        await mongo_db_client
+        """We must return a new object with every request,
+        otherwise the requests will pollute each other's state"""
+#        mongo_db_client = context["mongo_db_client"]
+        xref_resolver = context["XrefResolver"]
+        grpc_model = context["grpc_model"]
+        return {
+            "request": request,
+            "mongo_db_client": mongo_db_client,
+            "XrefResolver": xref_resolver,
+            "grpc_model": grpc_model,
+        }
+
+    return context_provider
+
+
 CONTEXT_PROVIDER = prepare_context_provider(
     {
-        "mongo_db_client": MONGO_DB_CLIENT,
         "XrefResolver": RESOLVER,
         "grpc_model": GRPC_MODEL,
     }
@@ -173,7 +211,30 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         )
 
 
-APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+
+class State(TypedDict):
+    db_client: MongoDbClient
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app: Starlette) -> AsyncIterator[State]:
+    async with MongoDbClient(os.environ) as client:
+        print("Lifespan start")
+        yield {"db_client": client}
+        print("Lifespan end")
+
+
+#async def homepage(request: Request) -> PlainTextResponse:
+#    client = request.state.http_client
+#    response = await client.get("https://www.example.com")
+#    return PlainTextResponse(response.text)
+
+
+APP = applications.Starlette(
+    debug=DEBUG_MODE,
+    middleware=starlette_middleware,
+    lifespan=lifespan
+)
 APP.mount(
     "/",
     GraphQL(
