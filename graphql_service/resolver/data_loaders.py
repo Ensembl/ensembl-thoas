@@ -165,7 +165,8 @@ class BatchLoaders:
 
         # We need to fetch the full result because batch_transcript_load expects
         # this, but also since we may want to cache it
-        result = list(db.find(query))
+        cursor = db.find(query)
+        result = await cursor.to_list()
 
         if self.mongo_client.redis_cache_enabled:
             logger.debug(f"Storing result for key: %s", key)
