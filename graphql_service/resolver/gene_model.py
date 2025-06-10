@@ -362,7 +362,7 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
     pgcs = []
     for pgc in transcript["product_generating_contexts"]:
         pgc["genome_id"] = transcript["genome_id"]
-        await pgcs.append(pgc)
+        pgcs.append(pgc)
     return pgcs
 
 
