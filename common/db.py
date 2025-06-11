@@ -60,7 +60,11 @@ class MongoDbClient:
         self.redis_expiry = int(self.config.get("REDIS_EXPIRY_SECONDS", 6600))
 
         try:
-            self.cache = redis.StrictRedis(host=self.redis_host, port=self.redis_port)
+            self.cache = redis.StrictRedis(
+                host=self.redis_host,
+                port=self.redis_port,
+                max_connections=1000
+            )
             self.cache.ping()  # Check Redis connection
             logger.info(f"[MongoDbClient] Redis caching enabled")
         except redis.RedisError as e:
@@ -89,6 +93,8 @@ class MongoDbClient:
             port=port,
             username=user,
             password=password,
+            minPoolSize=10,
+            maxPoolSize=1000,
         )
         self.mongo_client = client
         await client.aconnect()
