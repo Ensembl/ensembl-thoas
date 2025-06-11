@@ -34,6 +34,8 @@ from starlette.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 from starlette.routing import Route
 
+from ariadne.contrib.tracing.opentelemetry import OpenTelemetryExtension
+
 from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
@@ -43,11 +45,22 @@ from graphql_service.ariadne_app import (
 import contextlib
 
 from starlette.applications import Starlette
-#from starlette.requests import Request
-#from starlette.responses import PlainTextResponse
-#from starlette.routing import Route
+
+# from starlette.requests import Request
+# from starlette.responses import PlainTextResponse
+# from starlette.routing import Route
 from common.db import MongoDbClient
 
+from opentelemetry import trace
+
+# from opentelemetry.instrumentation.requests import RequestsInstrumentor
+# # from opentelemetry.instrumentation.pymongo import PymongoInstrumentor
+from opentelemetry.instrumentation.starlette import StarletteInstrumentor
+# from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
 load_dotenv("connections.conf")
 
@@ -59,7 +72,10 @@ EXTENSIONS: Optional[ExtensionList] = (
 )
 
 # Including the execution time in the response
-EXTENSIONS = [extensions.QueryExecutionTimeExtension]
+EXTENSIONS = [
+    extensions.QueryExecutionTimeExtension,
+    OpenTelemetryExtension
+]
 
 if DEBUG_MODE:
     log = logging.getLogger()
@@ -74,7 +90,7 @@ if DEBUG_MODE:
 
 
 utils.check_config_validity(os.environ)
-#MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
+# MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
 
 GRPC_SERVER = db.GRPCServiceClient(os.environ)
 GRPC_STUB = GRPC_SERVER.get_grpc_stub()
@@ -102,7 +118,7 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         await mongo_db_client
         """We must return a new object with every request,
         otherwise the requests will pollute each other's state"""
-#        mongo_db_client = context["mongo_db_client"]
+        #        mongo_db_client = context["mongo_db_client"]
         xref_resolver = context["XrefResolver"]
         grpc_model = context["grpc_model"]
         return {
@@ -211,7 +227,6 @@ class CustomExplorerGraphiQL(ExplorerGraphiQL):
         )
 
 
-
 class State(TypedDict):
     db_client: MongoDbClient
 
@@ -224,16 +239,34 @@ async def lifespan(app: Starlette) -> AsyncIterator[State]:
         print("Lifespan end")
 
 
-#async def homepage(request: Request) -> PlainTextResponse:
+# async def homepage(request: Request) -> PlainTextResponse:
 #    client = request.state.http_client
 #    response = await client.get("https://www.example.com")
 #    return PlainTextResponse(response.text)
 
+# TRACER
+trace.set_tracer_provider(
+    TracerProvider(resource=Resource.create({SERVICE_NAME: "thoas-local-dev"}))
+)
+
+tracer = trace.get_tracer(__name__)
+
+otlp_exporter = OTLPSpanExporter()
+
+otlp_span_processor = BatchSpanProcessor(otlp_exporter)
+
+# Create a BatchSpanProcessor and add the exporter to it
+# span_processor = BatchSpanProcessor(jaeger_exporter, max_export_batch_size=10)
+console_processor = BatchSpanProcessor(ConsoleSpanExporter())
+# provider.add_span_processor(processor)
+# provider.add_span_processor(span_processor)
+# add to the tracer
+# trace.get_tracer_provider().add_span_processor(span_processor)
+# trace.get_tracer_provider().add_span_processor(console_processor)
+trace.get_tracer_provider().add_span_processor(otlp_span_processor)
 
 APP = applications.Starlette(
-    debug=DEBUG_MODE,
-    middleware=starlette_middleware,
-    lifespan=lifespan
+    debug=DEBUG_MODE, middleware=starlette_middleware, lifespan=lifespan
 )
 APP.mount(
     "/",
@@ -248,3 +281,5 @@ APP.mount(
         introspection=ENABLE_INTROSPECTION,
     ),
 )
+
+StarletteInstrumentor.instrument_app(APP)

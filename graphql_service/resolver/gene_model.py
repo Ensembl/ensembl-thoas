@@ -85,30 +85,46 @@ async def resolve_gene(
     # this is needed for mypy to pass
     assert by_id
 
-    query = {
-        "type": "Gene",
-        "$or": [
-            {"stable_id": by_id["stable_id"]},
-            {"unversioned_stable_id": by_id["stable_id"]},
-        ],
-        "genome_id": by_id["genome_id"],
-    }
-
     await set_db_conn_for_uuid(info, by_id["genome_id"])
-    connection_db = get_db_conn(info)
-    gene_collection = connection_db["gene"]
+    # Use the DataLoader pattern
+    data_loader = get_data_loader(info)
+    loader = data_loader.gene_loader
 
-    logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
-    try:
-        result = await gene_collection.find_one(query)
-    except Exception as db_exp:
-        logging.error("Exception: %s", db_exp)
-        raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
+    # gene_key = {"genome_id": by_id["genome_id"], "stable_id": by_id["stable_id"]}
+    gene_key = (by_id["genome_id"], by_id["stable_id"])
+    # DataLoader returns a list because of batch loading, but here it's one gene per key
+    results = await loader.load(gene_key)
 
-    if not result:
+    if not results:
         raise GeneNotFoundError(by_id=by_id)
 
-    return result
+        # If the loader returns a list, get the first item; otherwise, just return the result
+    return results[0] if isinstance(results, list) else results
+
+    # query = {
+    #     "type": "Gene",
+    #     "$or": [
+    #         {"stable_id": by_id["stable_id"]},
+    #         {"unversioned_stable_id": by_id["stable_id"]},
+    #     ],
+    #     "genome_id": by_id["genome_id"],
+    # }
+    #
+    # await set_db_conn_for_uuid(info, by_id["genome_id"])
+    # connection_db = get_db_conn(info)
+    # gene_collection = connection_db["gene"]
+    #
+    # logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
+    # try:
+    #     result = await gene_collection.find_one(query)
+    # except Exception as db_exp:
+    #     logging.error("Exception: %s", db_exp)
+    #     raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
+    #
+    # if not result:
+    #     raise GeneNotFoundError(by_id=by_id)
+    #
+    # return result
 
 
 @QUERY_TYPE.field("genes")

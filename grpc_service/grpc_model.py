@@ -1,6 +1,11 @@
 import logging
 
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+
 logger = logging.getLogger(__name__)
+
+grpc_client_instrumentor = GrpcInstrumentorClient()
+grpc_client_instrumentor.instrument()
 
 
 class GRPC_MODEL:  # pylint: disable=invalid-name
