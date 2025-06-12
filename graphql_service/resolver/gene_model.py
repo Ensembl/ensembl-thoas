@@ -308,8 +308,8 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     transcripts = await loader.load(key=gene_primary_key)
 
     # now batch the regions for _all_ of those transcripts in one go:
-    region_ids = [t["slice"]["region_id"] for t in transcripts]
-    await get_data_loader(info).region_loader.load_many(region_ids)
+    # region_ids = [t["slice"]["region_id"] for t in transcripts]
+    # await get_data_loader(info).region_loader.load_many(region_ids)
 
     return transcripts
 
