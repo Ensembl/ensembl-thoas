@@ -21,6 +21,7 @@ from graphql import GraphQLResolveInfo, GraphQLError
 from pymongo.database import Database, Collection
 
 from common import utils
+from graphql_service.profiler import profile_resolver
 from graphql_service.resolver.data_loaders import BatchLoaders
 
 from graphql_service.resolver.exceptions import (
@@ -66,7 +67,8 @@ GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
-def resolve_gene(
+@profile_resolver
+async def resolve_gene(
     _,
     info: GraphQLResolveInfo,
     byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
@@ -280,6 +282,7 @@ def resolve_api(
 
 
 @GENE_TYPE.field("transcripts")
+@profile_resolver
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     "Use a DataLoader to get transcripts for the parent gene"
 
