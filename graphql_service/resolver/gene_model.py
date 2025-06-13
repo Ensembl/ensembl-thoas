@@ -102,15 +102,24 @@ async def resolve_gene(
 
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
-        result = gene_collection.find_one(query)
+        gene = gene_collection.find_one(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
 
-    if not result:
+    if not gene:
         raise GeneNotFoundError(by_id=by_id)
 
-    return result
+    # Bypass DataLoader scheduling: call batch_load directly
+    batches: List[List[Dict]] = await get_data_loader(
+        info
+    ).batch_transcript_by_gene_load([gene["gene_primary_key"]])
+    #    ^—immediately runs our Mongo "$in" query, no event-loop hop
+
+    # Store the one result list on the gene payload
+    gene["_prefetched_transcripts"] = batches[0]
+
+    return gene
 
 
 @QUERY_TYPE.field("genes")
@@ -284,16 +293,19 @@ def resolve_api(
 @GENE_TYPE.field("transcripts")
 @profile_resolver
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
-    "Use a DataLoader to get transcripts for the parent gene"
+    # "Use a DataLoader to get transcripts for the parent gene"
+    #
+    # data_loader = get_data_loader(info)
+    #
+    # gene_primary_key = gene["gene_primary_key"]
+    # # Get a dataloader from info
+    # loader = data_loader.transcript_loader
+    # # Tell DataLoader to get this request done when it feels like it
+    # transcripts = await loader.load(key=gene_primary_key)
+    # return transcripts
 
-    data_loader = get_data_loader(info)
-
-    gene_primary_key = gene["gene_primary_key"]
-    # Get a dataloader from info
-    loader = data_loader.transcript_loader
-    # Tell DataLoader to get this request done when it feels like it
-    transcripts = await loader.load(key=gene_primary_key)
-    return transcripts
+    # Just return what was already fetched—no async, no DataLoader scheduling
+    return gene.get("_prefetched_transcripts", [])
 
 
 @GENE_TYPE.field("transcripts_page")
