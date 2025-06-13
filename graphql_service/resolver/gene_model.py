@@ -110,14 +110,14 @@ async def resolve_gene(
     if not gene:
         raise GeneNotFoundError(by_id=by_id)
 
-    # Bypass DataLoader scheduling: call batch_load directly
-    batches: List[List[Dict]] = await get_data_loader(
-        info
-    ).batch_transcript_by_gene_load([gene["gene_primary_key"]])
-    #    ^—immediately runs our Mongo "$in" query, no event-loop hop
-
-    # Store the one result list on the gene payload
-    gene["_prefetched_transcripts"] = batches[0]
+    # # Bypass DataLoader scheduling: call batch_load directly
+    # batches: List[List[Dict]] = await get_data_loader(
+    #     info
+    # ).batch_transcript_by_gene_load([gene["gene_primary_key"]])
+    # #    ^—immediately runs our Mongo "$in" query, no event-loop hop
+    #
+    # # Store the one result list on the gene payload
+    # gene["_prefetched_transcripts"] = batches[0]
 
     return gene
 
@@ -304,8 +304,15 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     # transcripts = await loader.load(key=gene_primary_key)
     # return transcripts
 
-    # Just return what was already fetched—no async, no DataLoader scheduling
-    return gene.get("_prefetched_transcripts", [])
+    # We grab the BatchLoaders
+    loaders = get_data_loader(info)
+    # And call the batch fn directly with a one-element list.
+    #    This runs your Mongo "$in" query immediately—no loop.call_soon hop.
+    batches: List[List[Dict]] = await loaders.batch_transcript_by_gene_load(
+        [gene["gene_primary_key"]]
+    )
+    # Then return the first (and only) batch
+    return batches[0]
 
 
 @GENE_TYPE.field("transcripts_page")
