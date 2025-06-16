@@ -1,0 +1,19 @@
+-r requirements.txt
+opentelemetry-api==1.33.1
+opentelemetry-distro==0.54b1
+opentelemetry-exporter-jaeger==1.21.0
+opentelemetry-exporter-jaeger-proto-grpc==1.21.0
+opentelemetry-exporter-jaeger-thrift==1.21.0
+opentelemetry-exporter-otlp-proto-common==1.33.1
+opentelemetry-exporter-otlp-proto-grpc==1.33.1
+opentelemetry-instrumentation==0.54b1
+opentelemetry-instrumentation-asgi==0.54b1
+opentelemetry-instrumentation-grpc==0.54b1
+opentelemetry-instrumentation-pymongo==0.54b1
+opentelemetry-instrumentation-pymongo==0.54b1
+opentelemetry-instrumentation-redis==0.54b1
+opentelemetry-instrumentation-starlette==0.54b1
+opentelemetry-proto==1.33.1
+opentelemetry-sdk==1.33.1
+opentelemetry-semantic-conventions==0.54b1
+opentelemetry-util-http==0.54b1

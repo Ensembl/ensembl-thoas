@@ -19,6 +19,7 @@ from typing import Optional, List
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
 from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
+from ariadne.contrib.tracing.opentelemetry import OpenTelemetryExtension
 from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_query
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
@@ -39,15 +40,18 @@ from graphql_service.ariadne_app import (
     prepare_context_provider,
 )
 
+from common.telemetry import configure_otel, instrument_app_if_enabled
 
 load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 ENABLE_INTROSPECTION = os.getenv("ENABLE_INTROSPECTION", "true").lower() == "true"
+ENABLE_OTEL = os.getenv("ENABLE_OTEL", "false").lower() == "true"
 
-EXTENSIONS: Optional[ExtensionList] = (
-    None  # mypy will throw an incompatible type error without this type cast
-)
+
+# EXTENSIONS: Optional[ExtensionList] = (
+#     None  # mypy will throw an incompatible type error without this type cast
+# )
 
 # Including the execution time in the response
 EXTENSIONS = [extensions.QueryExecutionTimeExtension]
@@ -62,6 +66,11 @@ if DEBUG_MODE:
     # Apollo Tracing extension will display information about which resolvers are used and their duration
     # https://ariadnegraphql.org/docs/apollo-tracing
     EXTENSIONS.append(ApolloTracingExtension)
+
+# # add OTEL extension only if it's enabled
+if configure_otel(ENABLE_OTEL):
+    # if configure_otel(False):
+    EXTENSIONS.append(OpenTelemetryExtension)
 
 
 utils.check_config_validity(os.environ)
@@ -187,3 +196,7 @@ APP.mount(
         introspection=ENABLE_INTROSPECTION,
     ),
 )
+
+# only instrument if we enabled OTEL
+instrument_app_if_enabled(APP, ENABLE_OTEL)
+# instrument_app_if_enabled(APP, False)

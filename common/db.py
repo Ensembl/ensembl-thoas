@@ -26,7 +26,14 @@ from graphql_service.resolver.exceptions import (
 
 from yagrc import reflector as yagrc_reflector
 
+from opentelemetry.instrumentation.pymongo import PymongoInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+
 from common.utils import process_release_version
+
+PymongoInstrumentor().instrument()
+# Instrument redis
+RedisInstrumentor().instrument()
 
 logger = logging.getLogger(__name__)
 
