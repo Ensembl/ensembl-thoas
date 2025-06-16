@@ -14,7 +14,7 @@
 
 import logging
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from aiodataloader import DataLoader
 from common.db import MongoDbClient
@@ -30,6 +30,7 @@ class BatchLoaders:
         self.database_conn = database_conn
         self.mongo_client = mongo_client
 
+        self.gene_loader = DataLoader(batch_load_fn=self.batch_gene_load)
         self.transcript_loader = DataLoader(
             batch_load_fn=self.batch_transcript_by_gene_load
         )
@@ -46,6 +47,22 @@ class BatchLoaders:
         self.organism_by_species_loader = DataLoader(
             batch_load_fn=self.batch_organism_by_species_load
         )
+
+    async def batch_gene_load(self, keys) -> List[Optional[Dict]]:
+        # print(f"^^^^^^^^ keys ---> {keys}")
+        query = {
+            "type": "Gene",
+            "$or": [
+                {"stable_id": keys[0][1]},
+                {"unversioned_stable_id": keys[0][1]},
+            ],
+            "genome_id": keys[0][0],
+        }
+        # print(f"^^^^^^^^ query ---> {query}")
+
+        data = await self.query_mongo(query=query, doc_type="gene")
+        print(f" **** data: {data}")
+        return data
 
     async def batch_transcript_by_gene_load(self, keys: List[str]) -> List[List]:
         """

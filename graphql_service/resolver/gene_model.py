@@ -67,7 +67,7 @@ GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
-@profile_resolver
+# @profile_resolver
 async def resolve_gene(
     _,
     info: GraphQLResolveInfo,
@@ -96,6 +96,7 @@ async def resolve_gene(
         "genome_id": by_id["genome_id"],
     }
 
+    # using find_one
     set_db_conn_for_uuid(info, by_id["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
@@ -110,6 +111,25 @@ async def resolve_gene(
     if not gene:
         raise GeneNotFoundError(by_id=by_id)
 
+    # ------
+    # # using the dataloader
+    # set_db_conn_for_uuid(info, by_id["genome_id"])
+    # # Use the DataLoader pattern
+    # data_loader = get_data_loader(info)
+    # loader = data_loader.gene_loader
+    #
+    # # gene_key = {"genome_id": by_id["genome_id"], "stable_id": by_id["stable_id"]}
+    # gene_key = (by_id["genome_id"], by_id["stable_id"])
+    # # DataLoader returns a list because of batch loading, but here it's one gene per key
+    # results = await loader.load(gene_key)
+    #
+    # if not results:
+    #     raise GeneNotFoundError(by_id=by_id)
+    #
+    # # If the loader returns a list, get the first item; otherwise, just return the result
+    # return results[0] if isinstance(results, list) else results
+
+    # ------
     # # Bypass DataLoader scheduling: call batch_load directly
     # batches: List[List[Dict]] = await get_data_loader(
     #     info
@@ -291,7 +311,7 @@ def resolve_api(
 
 
 @GENE_TYPE.field("transcripts")
-@profile_resolver
+# @profile_resolver
 async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List[Dict]:
     # "Use a DataLoader to get transcripts for the parent gene"
     #
@@ -304,10 +324,11 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     # transcripts = await loader.load(key=gene_primary_key)
     # return transcripts
 
+    # Bypassing th dataloader
     # We grab the BatchLoaders
     loaders = get_data_loader(info)
     # And call the batch fn directly with a one-element list.
-    #    This runs your Mongo "$in" query immediately—no loop.call_soon hop.
+    #    This runs our Mongo "$in" query immediately—no loop.call_soon hop.
     batches: List[List[Dict]] = await loaders.batch_transcript_by_gene_load(
         [gene["gene_primary_key"]]
     )
