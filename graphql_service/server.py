@@ -198,5 +198,6 @@ APP.mount(
 )
 
 # only instrument if we enabled OTEL
+print(f"******* ENABLE_OTEL: {ENABLE_OTEL}")
 instrument_app_if_enabled(APP, ENABLE_OTEL)
 # instrument_app_if_enabled(APP, False)

@@ -61,7 +61,7 @@ class BatchLoaders:
         # print(f"^^^^^^^^ query ---> {query}")
 
         data = await self.query_mongo(query=query, doc_type="gene")
-        print(f" **** data: {data}")
+        # print(f" **** data: {data}")
         return data
 
     async def batch_transcript_by_gene_load(self, keys: List[str]) -> List[List]:
