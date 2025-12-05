@@ -12,7 +12,7 @@
    limitations under the License.
 """
 
-# MAPK10 transcripts sample for testing
+# This will be used for testing
 
 dummy_transcripts_sample = [
   {
