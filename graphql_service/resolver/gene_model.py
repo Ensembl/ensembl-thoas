@@ -43,6 +43,7 @@ from graphql_service.resolver.exceptions import (
     DatabaseNotFoundError,
     CollectionNotFoundError,
 )
+from graphql_service.resolver import transcript_order
 from grpc_service.grpc_model import GRPC_MODEL
 
 logger = logging.getLogger(__name__)
@@ -290,7 +291,9 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     loader = data_loader.transcript_loader
     # Tell DataLoader to get this request done when it feels like it
     transcripts = await loader.load(key=gene_primary_key)
-    return transcripts
+    # Sort transcripts based on either rank (for human and mouse) or default sort (see `_transcript_value`)
+    sorted_transcripts = transcript_order.sort_gene_transcripts(transcripts)
+    return sorted_transcripts
 
 
 @GENE_TYPE.field("transcripts_page")
