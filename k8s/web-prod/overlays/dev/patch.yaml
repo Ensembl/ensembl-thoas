@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: graphql-core-deployment
 spec:
+  replicas: 2
   template:
     spec:
       affinity:
