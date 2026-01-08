@@ -3,14 +3,4 @@ kind: Deployment
 metadata:
   name: graphql-core-deployment
 spec:
-  template:
-    spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: workload
-                operator: In
-                values:
-                - non-webteam
+  replicas: 6
