@@ -110,7 +110,7 @@ class MongoDbClient:
             raise GenomeNotFoundError({"genome_id": uuid})
 
         # TODO: Remove forced DB
-        chosen_db = 'release_add_tr_rank'
+        chosen_db = "release_add_tr_rank"
         if chosen_db is not None:
             logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
             data_database_connection = self.mongo_client[chosen_db]

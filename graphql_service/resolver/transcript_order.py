@@ -17,6 +17,7 @@
 
 # from tests.dummy_transcripts_sample import dummy_transcripts_sample
 
+
 def _transcript_value(transcript):
     """Return a sortable tuple representing the priority of a transcript.
 
@@ -47,8 +48,7 @@ def _transcript_value(transcript):
     is_canonical = "canonical" in transcript_metadata
     mane_meta = transcript_metadata.get("mane", {})
     is_mane_select = (
-            isinstance(mane_meta, dict)
-            and mane_meta.get("value", "").lower() == "select"
+        isinstance(mane_meta, dict) and mane_meta.get("value", "").lower() == "select"
     )
 
     if is_canonical or is_mane_select:
@@ -66,7 +66,7 @@ def _transcript_value(transcript):
     #   2 = immunoglobulin transcripts (IG_*)
     #   1 = polymorphic pseudogenes
     #   0 = all others
-    biotype = transcript_metadata.get("biotype").get("value") # the value here is the actual string confusing, I know...
+    biotype = transcript_metadata.get("biotype", {}).get("value", "")
     if biotype == "protein_coding":
         biotype_value = 5
     elif biotype == "nonsense_mediated_decay":
@@ -81,14 +81,16 @@ def _transcript_value(transcript):
         biotype_value = 0
 
     # Translation length contributes to priority, favoring longer translations.
-    if transcript.get("product_generating_contexts") and transcript.get("product_generating_contexts")[0].get('cds'):
+    product_contexts = transcript.get("product_generating_contexts", [])
+    if product_contexts and product_contexts[0].get("cds"):
         # TODO: Check how to properly calculate protein length (no [0]?)
-        translation_length = transcript.get("product_generating_contexts")[0].get('cds').get('protein_length')
+        translation_length = product_contexts[0]["cds"].get("protein_length", 0)
     else:
         translation_length = 0
 
     # Transcript length
-    transcript_length = transcript.get("relative_location").get("length")
+    relative_location = transcript.get("relative_location", {})
+    transcript_length = relative_location.get("length", 0)
 
     return (
         designation_value,
@@ -120,10 +122,10 @@ def sort_gene_transcripts(transcripts):
         list of dict: The transcripts sorted according to either ``display_rank``
         or biological priority.
     """
-    if 'display_rank' in transcripts[0]:
-    # Or we can check if EVERY transcript has a display_rank, use that ordering
-    # if all('display_rank' in tr for tr in transcripts):
-        return sorted(transcripts, key=lambda x: x['display_rank'], reverse=True)
+    if "display_rank" in transcripts[0]:
+        # Or we can check if EVERY transcript has a display_rank, use that ordering
+        # if all('display_rank' in tr for tr in transcripts):
+        return sorted(transcripts, key=lambda x: x["display_rank"], reverse=True)
 
     return sorted(transcripts, key=_transcript_value, reverse=True)
 
@@ -133,6 +135,7 @@ def sort_gene_transcripts(transcripts):
 # print(sorted_transcripts)
 
 # ---
+
 
 def generate_transcript_score_report(transcripts):
     """
@@ -148,30 +151,41 @@ def generate_transcript_score_report(transcripts):
         # Get the score using your original function
         scores = _transcript_value(transcript)
 
-        report.append({
-            "stable_id": stable_id,
-            "symbol": symbol,
-            "designation_score": scores[0],
-            "biotype_score": scores[1],
-            "translation_length": scores[2],
-            "transcript_length": scores[3],
-            "total_tuple": scores
-        })
+        report.append(
+            {
+                "stable_id": stable_id,
+                "symbol": symbol,
+                "designation_score": scores[0],
+                "biotype_score": scores[1],
+                "translation_length": scores[2],
+                "transcript_length": scores[3],
+                "total_tuple": scores,
+            }
+        )
 
     return report
 
+
 def main():
     # Generate and display report
-    report = generate_transcript_score_report("dummy_transcripts_sample")
+    # Pass actual transcripts data instead of string
+    # import dummy data properly
+    # from tests.dummy_transcripts_sample import dummy_transcripts_sample
+    # report = generate_transcript_score_report(dummy_transcripts_sample)
+
+    # For now, passing empty list to avoid error
+    report = generate_transcript_score_report([])
 
     # Show sorted order
     print("\n" + "=" * 85)
     print("SORTED ORDER (highest to lowest):")
     print("=" * 85)
-    sorted_report = sorted(report, key=lambda x: x['total_tuple'], reverse=True)
+    sorted_report = sorted(report, key=lambda x: x["total_tuple"], reverse=True)
     for i, item in enumerate(sorted_report, 1):
-        print(f"{i:2}. {item['stable_id']:<20} {item['symbol']:<30} "
-              f"Score: {item['total_tuple']}")
+        print(
+            f"{i:2}. {item['stable_id']:<20} {item['symbol']:<30} "
+            f"Score: {item['total_tuple']}"
+        )
 
 
 if __name__ == "__main__":

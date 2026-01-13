@@ -66,9 +66,7 @@ def test_sort_prefers_translation_length_then_transcript_length():
     translation_less["relative_location"]["length"] = 200
     translation_less["stable_id"] = "translation_less"
 
-    ordered = sort_gene_transcripts(
-        [translation_less, protein_poor, protein_rich]
-    )
+    ordered = sort_gene_transcripts([translation_less, protein_poor, protein_rich])
 
     assert [tr["stable_id"] for tr in ordered] == [
         "protein_rich",
