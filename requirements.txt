@@ -6,11 +6,11 @@ grpcio==1.66.1
 grpcio-tools==1.66.1
 httpx==0.28.1
 mongomock==4.0.0
-pymongo==4.6.3
+pymongo==4.13.0
 python-dotenv==1.0.1
 redis==5.2.0
 requests==2.32.0
-ujson==5.10.0
-uvicorn==0.18.1
 types-ujson==5.10.0.20250326
+ujson==5.10.0
+uvicorn==0.34.3
 yagrc==1.1.2
