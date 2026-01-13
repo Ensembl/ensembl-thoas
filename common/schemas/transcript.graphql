@@ -31,6 +31,8 @@ type Transcript {
   introns: [Intron!]!
   metadata: TranscriptMetadata!
   gene: Gene!
+  # TODO: Remove display_rank (here for testing purposes)
+  display_rank: String
 }
 
 type CDS {

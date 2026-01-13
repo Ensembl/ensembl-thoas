@@ -60,7 +60,8 @@ test:
 build:
   extends: .build
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
+    # TODO: Remove feature branch (here for testing purposes)
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "add-transcript-sorting-logic"'
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
