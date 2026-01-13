@@ -22,7 +22,7 @@ variables:
 # Template to build docker image
 .build:
   stage: build
-  image: docker
+  image: docker:28.5.0
   services:
     - docker:dind
   before_script:
