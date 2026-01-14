@@ -178,13 +178,14 @@ def generate_transcript_score_report(transcripts):
 
 def main():
     # Generate and display report
-    # import dummy data properly
-    from tests.dummy_transcripts_sample import dummy_transcripts_sample
+    # Only import when the script is run directly for debugging purposes
+    try:
+        from tests.dummy_transcripts_sample import dummy_transcripts_sample  # type: ignore[import-not-found]
+    except ImportError:
+        # Otherwise, pass an empty list to avoid error
+        dummy_transcripts_sample = None
 
     report = generate_transcript_score_report(dummy_transcripts_sample)
-
-    # For now, passing empty list to avoid error
-    # report = generate_transcript_score_report([])
 
     # Show sorted order
     print("\n" + "=" * 85)
