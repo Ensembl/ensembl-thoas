@@ -81,7 +81,6 @@ def _transcript_value(transcript):
     # Translation length contributes to priority, favoring longer translations.
     product_contexts = transcript.get("product_generating_contexts", [])
     if product_contexts and product_contexts[0].get("cds"):
-        # TODO: Check how to properly calculate protein length (no [0]?)
         translation_length = product_contexts[0]["cds"].get("protein_length", 0)
     else:
         translation_length = 0
@@ -127,14 +126,13 @@ def sort_gene_transcripts(transcripts):
 
     first_transcript = transcripts[0]
 
-    # Check if display_rank exists and is not None in first transcript
+    # Check if display_rank exists and is not None in the first transcript
     if first_transcript.get("display_rank") is not None:
-        # ASSUMPTION: All transcripts have display_rank if first one does
-        return sorted(transcripts, key=lambda x: x["display_rank"], reverse=False)
+        # ASSUMPTION: All transcripts have display_rank if the first one does
+        return sorted(transcripts, key=lambda x: x["display_rank"])
 
-    # Fall back to biological priority
-    # Don't get confused by the `reverse=True` here, this second sorted call for biological priority
-    # still uses reverse=True, which makes sense because higher scores from _transcript_value indicate higher priority
+    # Sort transcripts by biological priority (higher scores = higher priority)
+    # The `reverse=True` below ensures transcripts with higher biological relevance appear first
     return sorted(transcripts, key=_transcript_value, reverse=True)
 
 
