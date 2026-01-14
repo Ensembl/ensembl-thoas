@@ -12,6 +12,8 @@
    limitations under the License.
 """
 
+# pylint: disable=no-member
+
 import logging
 import os
 from typing import Optional, List
@@ -23,15 +25,13 @@ from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_q
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
 from pymongo import monitoring
-from starlette import applications, middleware
+from starlette import applications
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
 from dotenv import load_dotenv
-from starlette.routing import Route
-
 from common import crossrefs, db, extensions, utils, logger
 from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
@@ -150,7 +150,7 @@ query ENSG00000139618 {
 """
 
 
-class CustomExplorerGraphiQL(ExplorerGraphiQL):
+class CustomExplorerGraphiQL(ExplorerGraphiQL):  # pylint: disable=too-few-public-methods
     """
     We can customize the GraphiQL interface in Ariadne by overriding the ExplorerGraphiQL class
     which is responsible for rendering the default GraphiQL UI
