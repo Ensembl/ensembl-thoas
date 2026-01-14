@@ -77,18 +77,18 @@ def test_sort_prefers_translation_length_then_transcript_length():
 
 def test_sort_honors_display_rank_override():
     """Confirm that display_rank bypasses biological ordering."""
-    # When display_rank is present it should fully determine the ordering.
+    # When display_rank is present, it should fully determine the ordering.
     ranked = [
         {
-            "stable_id": "low_rank",
+            "stable_id": "high_rank",
             "display_rank": 1,
-            "metadata": {"biotype": {"value": "protein_coding"}},
+            "metadata": {"biotype": {"value": "retained_intron"}},
             "relative_location": {"length": 10},
         },
         {
-            "stable_id": "high_rank",
+            "stable_id": "low_rank",
             "display_rank": 99,
-            "metadata": {"biotype": {"value": "retained_intron"}},
+            "metadata": {"biotype": {"value": "protein_coding"}},
             "relative_location": {"length": 10},
         },
     ]

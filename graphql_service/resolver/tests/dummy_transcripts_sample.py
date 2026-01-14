@@ -26,14 +26,14 @@ dummy_transcripts_sample = [
         "relative_location": {
             "length": 293802,
         },
-        "product_generating_contexts": [  # we can have multiple, how to handle those?
+        "product_generating_contexts": [
             {
                 "cdna": {"length": 2826, "type": "CDNA"},
                 "cds": {
                     "nucleotide_length": 1155,
                     "protein_length": 384,  # translation length comes from this field
                 },
-                "default": "True",  # hmmm?
+                "default": "True",
             }
         ],
         "stable_id": "tr_stable_id_2",

@@ -107,35 +107,40 @@ def sort_gene_transcripts(transcripts):
     strategies:
 
     1. If the transcripts contain a ``display_rank`` field, then this field
-       overrides all other logic and transcripts are sorted in descending
+       overrides all other logic and transcripts are sorted in **ascending**
        order of ``display_rank``. This allows external or precomputed ranking
        to take full priority.
 
+       IMPORTANT ASSUMPTION: display_rank field is consistent within a gene, either all transcripts have it or none do.
+
     2. Otherwise, transcripts are sorted using the internal scoring function
        ``_transcript_value``, which ranks transcripts based on biological
-       criteria (designation, biotype, translation length, etc.).
+       criteria (designation, biotype, translation length, etc.) in **descending** order.
 
     Args:
         transcripts (list of dict): A non-empty list of transcript dictionaries.
 
     Returns:
-        list of dict: The transcripts sorted according to either ``display_rank``
+        list of dict: The transcripts are sorted according to either ``display_rank``
         or biological priority.
     """
-    if "display_rank" in transcripts[0]:
-        # Or we can check if EVERY transcript has a display_rank, use that ordering
-        # if all('display_rank' in tr for tr in transcripts):
-        return sorted(transcripts, key=lambda x: x["display_rank"], reverse=True)
+    if not transcripts:
+        return transcripts
 
+    first_transcript = transcripts[0]
+
+    # Check if display_rank exists and is not None in first transcript
+    if first_transcript.get("display_rank") is not None:
+        # ASSUMPTION: All transcripts have display_rank if first one does
+        return sorted(transcripts, key=lambda x: x["display_rank"], reverse=False)
+
+    # Fall back to biological priority
+    # Don't get confused by the `reverse=True` here my friend, this second sorted call for biological priority
+    # still uses reverse=True, which makes sense because higher scores from _transcript_value indicate higher priority
     return sorted(transcripts, key=_transcript_value, reverse=True)
 
 
-# sorted_transcripts = sort_gene_transcripts(transcripts_sample_mapk10)
-# print([tr["symbol"] for tr in sorted_transcripts])
-# print(sorted_transcripts)
-
-# ---
-
+# --- The code below is kept for Debugging purposes --- #
 
 def generate_transcript_score_report(transcripts):
     """
@@ -168,13 +173,12 @@ def generate_transcript_score_report(transcripts):
 
 def main():
     # Generate and display report
-    # Pass actual transcripts data instead of string
     # import dummy data properly
-    # from tests.dummy_transcripts_sample import dummy_transcripts_sample
-    # report = generate_transcript_score_report(dummy_transcripts_sample)
+    from tests.dummy_transcripts_sample import dummy_transcripts_sample
+    report = generate_transcript_score_report(dummy_transcripts_sample)
 
     # For now, passing empty list to avoid error
-    report = generate_transcript_score_report([])
+    # report = generate_transcript_score_report([])
 
     # Show sorted order
     print("\n" + "=" * 85)

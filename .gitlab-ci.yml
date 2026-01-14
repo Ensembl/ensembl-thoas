@@ -22,7 +22,7 @@ variables:
 # Template to build docker image
 .build:
   stage: build
-  image: docker:28.5.0
+  image: docker
   services:
     - docker:dind
   before_script:
@@ -60,8 +60,7 @@ test:
 build:
   extends: .build
   rules:
-    # TODO: Remove feature branch (here for testing purposes)
-    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "add-transcript-sorting-logic"'
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
