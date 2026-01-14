@@ -140,7 +140,11 @@ def sort_gene_transcripts(transcripts):
     return sorted(transcripts, key=_transcript_value, reverse=True)
 
 
-# --- The code below is kept for Debugging purposes --- #
+""" 
+The code below is kept for Debugging purposes
+Usage:
+    python graphql_service/resolver/transcript_order.py
+"""
 
 def generate_transcript_score_report(transcripts):
     """
