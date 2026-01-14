@@ -60,7 +60,7 @@ test:
 build:
   extends: .build
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
 
 # Template to deploy application to web's k8s cluster
 .deploy-web:
