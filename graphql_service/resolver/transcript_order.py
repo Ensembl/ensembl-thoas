@@ -146,6 +146,7 @@ Usage:
     python graphql_service/resolver/transcript_order.py
 """
 
+
 def generate_transcript_score_report(transcripts):
     """
     Generate a formatted report of transcript scores.
@@ -179,6 +180,7 @@ def main():
     # Generate and display report
     # import dummy data properly
     from tests.dummy_transcripts_sample import dummy_transcripts_sample
+
     report = generate_transcript_score_report(dummy_transcripts_sample)
 
     # For now, passing empty list to avoid error
