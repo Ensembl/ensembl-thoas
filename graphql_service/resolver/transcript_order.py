@@ -15,6 +15,7 @@
 # Sorting logic shamelessly stolen from:
 # https://github.com/Ensembl/ensembl-dauphin-style-compiler/blob/master/backend-server/app/data/v16/gene/transcriptorder.py
 
+
 def _transcript_value(transcript):
     """Return a sortable tuple representing the priority of a transcript.
 
