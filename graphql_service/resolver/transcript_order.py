@@ -15,9 +15,6 @@
 # Sorting logic shamelessly stolen from:
 # https://github.com/Ensembl/ensembl-dauphin-style-compiler/blob/master/backend-server/app/data/v16/gene/transcriptorder.py
 
-# from tests.dummy_transcripts_sample import dummy_transcripts_sample
-
-
 def _transcript_value(transcript):
     """Return a sortable tuple representing the priority of a transcript.
 
@@ -135,13 +132,13 @@ def sort_gene_transcripts(transcripts):
         return sorted(transcripts, key=lambda x: x["display_rank"], reverse=False)
 
     # Fall back to biological priority
-    # Don't get confused by the `reverse=True` here my friend, this second sorted call for biological priority
+    # Don't get confused by the `reverse=True` here, this second sorted call for biological priority
     # still uses reverse=True, which makes sense because higher scores from _transcript_value indicate higher priority
     return sorted(transcripts, key=_transcript_value, reverse=True)
 
 
 """ 
-The code below is kept for Debugging purposes
+The code below is kept for debugging purposes
 Usage:
     python graphql_service/resolver/transcript_order.py
 """
