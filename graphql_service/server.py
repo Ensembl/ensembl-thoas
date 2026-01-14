@@ -150,7 +150,9 @@ query ENSG00000139618 {
 """
 
 
-class CustomExplorerGraphiQL(ExplorerGraphiQL):  # pylint: disable=too-few-public-methods
+class CustomExplorerGraphiQL(
+    ExplorerGraphiQL
+):  # pylint: disable=too-few-public-methods
     """
     We can customize the GraphiQL interface in Ariadne by overriding the ExplorerGraphiQL class
     which is responsible for rendering the default GraphiQL UI
