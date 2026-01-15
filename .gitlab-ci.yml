@@ -25,7 +25,7 @@ variables:
   stage: build
   image: docker:20.10.24
   services:
-    - name: docker:dind:20.10.24-dind
+    - name: docker:20.10.24-dind
       alias: docker  # ensures the hostname docker resolves reliably
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
