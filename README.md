@@ -38,6 +38,28 @@ looks like this:
 
 ## Development
 
+### Pre-commit hook (local)
+
+To run Black, Pylint, and Mypy automatically before each commit, create `pre-commit` hook under `.git/hooks/`:
+
+```
+cat <<'EOF' > .git/hooks/pre-commit
+#!/bin/sh
+set -e
+
+black . --check --verbose --diff --color
+pylint $(git ls-files '*.py') --fail-under=9.5
+mypy graphql_service
+EOF
+chmod +x .git/hooks/pre-commit
+```
+
+> Note: 
+> * `.git/hooks` is not versioned, so each developer needs to run this once locally.
+> * You can test it by running `.git/hooks/pre-commit`
+> * If any of Black/pylint/mypy fails, the commit will be blocked.
+
+
 ### Testing
 
 ```
