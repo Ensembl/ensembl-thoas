@@ -22,12 +22,14 @@ variables:
 # Template to build docker image
 .build:
   stage: build
-  image: docker
+  image: docker:20.10.24
   services:
-    - docker:dind
+    - name: docker:20.10.24-dind
+      alias: docker  # ensures the hostname docker resolves reliably
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - docker version
     - docker build -t ${DOCKER_IMAGE} --no-cache -f Dockerfile .
     - docker push ${DOCKER_IMAGE}
     # remove local image from shared runner
