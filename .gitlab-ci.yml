@@ -121,14 +121,8 @@ Live:
     NAMESPACE: ${PROD_NS}
   environment:
     name : production
+  when: manual
 
-# deploy to live at WP-HL
-dev:wp-hl:
-  extends: .deploy-web
-  variables:
-    BASE: k8s/web-prod/overlays/dev
-  environment:
-    name : development
 
 Public:
   extends: .deploy-web
@@ -138,6 +132,7 @@ Public:
     NAMESPACE: ${PUBLIC_NS}
   environment:
     name: public
+  when: manual
 
 Dev:
   extends: .deploy-web
