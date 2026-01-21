@@ -327,13 +327,21 @@ async def resolve_transcripts_page_transcripts(
         connection_db.name,
     )
 
-    results = (
+    cursor = (
         transcript_collection.find(query)
         .sort([("stable_id", 1)])
         .skip((page - 1) * per_page)
         .limit(per_page)
     )
-    return list(results)
+
+    # Materialize the cursor into a list, and short-circuit if empty
+    transcripts = list(cursor)
+    if not transcripts:
+        return []
+
+    # Sort transcripts based on either rank (for human and mouse) or default sort (see `_transcript_value`)
+    sorted_transcripts = transcript_order.sort_gene_transcripts(transcripts)
+    return sorted_transcripts
 
 
 @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
