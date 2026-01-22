@@ -123,7 +123,7 @@ def sort_gene_transcripts(transcripts):
     """
     transcripts = list(transcripts)
     if not transcripts:
-        return transcripts
+        return []
 
     first_transcript = transcripts[0]
 
