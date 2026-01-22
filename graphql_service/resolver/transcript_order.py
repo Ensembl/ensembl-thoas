@@ -121,8 +121,9 @@ def sort_gene_transcripts(transcripts):
         list of dict: The transcripts are sorted according to either ``display_rank``
         or biological priority.
     """
+    transcripts = list(transcripts)
     if not transcripts:
-        return transcripts
+        return []
 
     first_transcript = transcripts[0]
 
