@@ -332,7 +332,7 @@ async def resolve_transcripts_page_transcripts(
     # We are sorting all transcripts first before slicing/paginating
     sorted_all = transcript_order.sort_gene_transcripts(all_transcripts)
     start = (page - 1) * per_page
-    return sorted_all[start:start + per_page]
+    return sorted_all[start : start + per_page]
 
 
 @TRANSCRIPT_PAGE_TYPE.field("page_metadata")
