@@ -30,6 +30,9 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.staticfiles import StaticFiles
+from starlette.responses import PlainTextResponse, Response
+from graphql import print_schema
 
 from dotenv import load_dotenv
 from common import crossrefs, db, extensions, utils, logger
@@ -106,47 +109,48 @@ DEFAULT_QUERY = """
 #
 # This is an in-browser tool for writing, validating, and testing GraphQL queries.
 #
-# Type queries on the left side of the screen, and you'll see intelligent typeaheads
-# aware of the current GraphQL type schema. Live syntax and validation errors
-# are highlighted as you type.
+# Interface overview (left sidebar):
+#   • Documentation: browse the schema, types, and field descriptions.
+#   • History: review and re-run previous queries from this session.
+#   • Explorer: interactively build queries using the schema tree.
+#   • Examples: curated, ready-to-run queries grouped by operation.
+#   • Show SDL: view, copy, or download the full schema (SDL).
 #
-# GraphQL queries typically start with a "{" character. Lines starting with "#" are comments.
-#
-# Here's an example query:
-#
-# {
-#   field(arg: "value") {
-#     subField
-#   }
-# }
-#
-# In the example below, we've named the query "ENSG00000139618", which is optional.
+# General notes:
+#   • Lines starting with "#" are comments.
+#   • Queries can be written as `query Name { ... }` or simply `{ ... }`.
 #
 # Keyboard shortcuts:
-#
 #   Prettify query: Shift + Ctrl + P (or press the prettify button)
 #   Merge fragments: Shift + Ctrl + M (or press the merge button)
 #   Run Query: Ctrl + Enter (or press the play button)
 #   Auto Complete: Ctrl + Space (or just start typing)
 #
-# Try running the query below to fetch gene information:
+# Tip:
+#   Use the Examples panel (especially the "genomes" section) to discover valid genome_id values.
 #
-query ENSG00000139618 {
+# Example: fetch a gene and its transcripts
+#
+query GeneWithTranscripts {
   gene(
-    by_id: {genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618"}
+    by_id: {
+      genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3"
+      stable_id: "ENSG00000139618"
+    }
   ) {
-    alternative_symbols
+    stable_id
+    symbol
     name
     so_term
-    stable_id
     transcripts {
       stable_id
       symbol
+      so_term
     }
   }
 }
 
-# Feel free to modify the query or add new ones to explore other data!
+# Explore further using the Examples panel or the Explorer to build your own queries.
 """
 
 
@@ -176,6 +180,27 @@ class CustomExplorerGraphiQL(
 
 
 APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+
+APP.mount(
+    "/static",
+    StaticFiles(
+        directory=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "static",
+        )
+    ),
+    name="static",
+)
+
+
+def sdl_endpoint(request) -> Response:
+    # Prints the server schema as SDL
+    sdl = print_schema(EXECUTABLE_SCHEMA)
+    return PlainTextResponse(sdl, media_type="text/plain; charset=utf-8")
+
+
+APP.add_route("/sdl", sdl_endpoint, methods=["GET"])
+
 APP.mount(
     "/",
     GraphQL(
