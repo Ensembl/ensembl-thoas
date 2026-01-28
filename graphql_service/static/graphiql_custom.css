@@ -83,8 +83,8 @@ body {
 
 #ensembl-logo {
   box-sizing: border-box;
-  color: var(--panel-fg);
-  fill: var(--panel-fg);
+  color: var(--accent);
+  fill: var(--accent);
   font-size: 13px;
   width: 100px;
 }
@@ -92,7 +92,7 @@ body {
 #ensembl-help {
   box-sizing: border-box;
   color: var(--accent);
-  fill: var(--panel-fg);
+  fill: var(--accent);
   font-size: 0; /* icon-only */
   width: 25px;
   float: right;
@@ -104,6 +104,7 @@ body {
   font-weight: 400;
   height: 32px;
   align-items: center;
+  padding: 20px 30px 0 22px;
   text-align: center;
 }
 
@@ -296,6 +297,19 @@ a {
   color: var(--panel-muted);
 }
 
+/* ==========================================================================
+   GraphiQL logo / brand
+   ========================================================================== */
+
+#graphiql .graphiql-logo,
+#graphiql .graphiql-logo a {
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-size: 13px !important;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  text-align: center;
+}
 /* ==========================================================================
    GraphiQL sidebar: active plugin indicator (works with your markup)
    ========================================================================== */

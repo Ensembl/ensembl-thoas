@@ -295,7 +295,9 @@
 
       variables: variables,
       onEditVariables: setVariables,
-    });
+      },
+      React.createElement(GraphiQL.Logo, null, "Core API")
+    );
   }
 
   // Mount
