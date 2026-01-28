@@ -127,7 +127,8 @@ DEFAULT_QUERY = """
 #   Auto Complete: Ctrl + Space (or just start typing)
 #
 # Tip:
-#   Use the Examples panel (especially the "genomes" section) to discover valid genome_id values.
+#   Use the Examples panel (especially the "genomes" section) 
+#   to discover valid genome_id values.
 #
 # Example: fetch a gene and its transcripts
 #

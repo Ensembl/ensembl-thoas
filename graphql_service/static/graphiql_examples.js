@@ -24,11 +24,13 @@
           name: "Genomes by assembly accession",
           description: "Search genomes by assembly accession. Use this to discover genome_id values",
           query: `query GenomesByAssemblyAccession {
-  genomes(by_keyword: { assembly_accession_id: "GCA_000001405.29" }) {
+  genomes(by_keyword: { 
+    assembly_accession_id: "GCA_000001405.29" 
+  }) {
     genome_id
     scientific_name
     assembly_accession
-    release_number
+    release_date
   }
 }`,
         },
@@ -51,10 +53,12 @@
       section: "genome",
       items: [
         {
-          name: "Genome by UUID",
-          description: "Fetch a genome using a UUID. See 'genomes' section above for an example of how to find a genome UUID",
-          query: `query GenomeByUUID {
-  genome(by_genome_uuid: { genome_uuid: "a7335667-93e7-11ec-a39d-005056b38ce3" }) {
+          name: "Genome by ID",
+          description: "Fetch a genome using its ID. See 'genomes' section above for an example of how to find a genome ID",
+          query: `query GenomeByID {
+  genome(by_genome_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3" 
+  }) {
     genome_id
     scientific_name
     assembly_accession
@@ -74,7 +78,10 @@
           name: "Gene minimal (stable_id + name)",
           description: "Smallest useful gene query by_id",
           query: `query GeneMinimal {
-  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSG00000139618" 
+  }) {
     stable_id
     symbol
     name
@@ -86,7 +93,10 @@
           name: "Gene with transcripts (first fields)",
           description: "Traverse from a gene to its transcripts",
           query: `query GeneWithTranscripts {
-  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSG00000139618" 
+  }) {
     stable_id
     symbol
     transcripts {
@@ -102,7 +112,10 @@
           name: "Gene transcripts page (pagination)",
           description: "Paginated transcripts (page/per_page)",
           query: `query GeneTranscriptsPage {
-  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSG00000139618" 
+  }) {
     stable_id
     transcripts_page(page: 1, per_page: 5) {
       page_metadata {
@@ -122,7 +135,10 @@
           name: "Gene external references",
           description: "Show xrefs attached to a gene (accession, name, method, url)",
           query: `query GeneExternalReferences {
-  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSG00000139618" 
+  }) {
     stable_id
     symbol
     external_references {
@@ -150,7 +166,10 @@
           name: "Genes by symbol (BRCA2)",
           description: "Search genes by symbol + genome_id",
           query: `query GenesBySymbol {
-  genes(by_symbol: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", symbol: "BRCA2" }) {
+  genes(by_symbol: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    symbol: "BRCA2" 
+  }) {
     stable_id
     symbol
     name
@@ -168,7 +187,10 @@
           name: "Transcript minimal",
           description: "Fetch a transcript by_id",
           query: `query TranscriptMinimal {
-  transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152" }) {
+  transcript(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENST00000380152" 
+  }) {
     stable_id
     symbol
     so_term
@@ -180,7 +202,10 @@
           name: "Transcript with parent gene",
           description: "Get the parent gene of a transcript",
           query: `query TranscriptWithGene {
-  transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152" }) {
+  transcript(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENST00000380152" 
+  }) {
     stable_id
     symbol
     gene {
@@ -196,7 +221,10 @@
           name: "Transcript slice + relative location",
           description: "Shows the transcript's slice and its relative location (handy for coordinates)",
           query: `query TranscriptSliceAndLocation {
-  transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152" }) {
+  transcript(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENST00000380152" 
+  }) {
     stable_id
     slice {
       region {
@@ -228,10 +256,13 @@
       section: "product (e.g protein)",
       items: [
         {
-          name: "Product by_id (replace stable_id)",
+          name: "Product by_id",
           description: "Fetch a product (protein) by genome_id + product stable_id",
           query: `query ProductById {
-  product(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSP00000369497.3" }) {
+  product(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSP00000369497.3" 
+  }) {
     stable_id
     unversioned_stable_id
     version
@@ -247,7 +278,10 @@
           name: "Product external references",
           description: "Show xrefs for a product. Replace the product stable_id",
           query: `query ProductExternalReferences {
-  product(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSP00000369497.3" }) {
+  product(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSP00000369497.3" 
+  }) {
     stable_id
     external_references {
       accession_id
@@ -303,7 +337,10 @@
           name: "Region by name (chr13)",
           description: "Fetch a region by name. If your region names differ (e.g. 'chr13'), update the name field.",
           query: `query RegionByName {
-  region(by_name: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", name: "13" }) {
+  region(by_name: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    name: "13" 
+  }) {
     name
     length
     code
@@ -321,7 +358,10 @@
           name: "Region sequence checksum (Refget-friendly)",
           description: "Gets the sequence checksum and length (you can get the sequence by providing the checksum to our RefGet API).",
           query: `query RegionSequenceChecksum {
-  region(by_name: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", name: "13" }) {
+  region(by_name: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    name: "13" 
+  }) {
     code
     name
     length
@@ -341,12 +381,18 @@
           name: "Gene + Transcript in one request",
           description: "Demonstrates aliases and fetching multiple roots without variables.",
           query: `query GeneAndTranscript {
-  gene: gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene: gene(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENSG00000139618" 
+  }) {
     stable_id
     symbol
     name
   }
-  tx: transcript(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENST00000380152" }) {
+  tx: transcript(by_id: { 
+    genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", 
+    stable_id: "ENST00000380152" 
+  }) {
     stable_id
     symbol
     so_term
