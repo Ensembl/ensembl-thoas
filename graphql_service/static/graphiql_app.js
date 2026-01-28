@@ -31,6 +31,7 @@
 
   // Examples from external file
   var EXAMPLES = window.GRAPHIQL_EXAMPLES || [];
+  var EXAMPLES_OPEN_MAP = null;
 
   function ExamplesIcon() {
     return React.createElement(
@@ -43,6 +44,25 @@
         strokeLinecap: "round",
       })
     );
+  }
+
+  function sectionKey(group, index) {
+    return (group && group.section) || "section-" + index;
+  }
+
+  function buildDefaultOpenMap(groups) {
+    var map = {};
+    (groups || []).forEach(function (group, index) {
+      map[sectionKey(group, index)] = true;
+    });
+    return map;
+  }
+
+  function getExamplesOpenMap() {
+    if (!EXAMPLES_OPEN_MAP) {
+      EXAMPLES_OPEN_MAP = buildDefaultOpenMap(EXAMPLES);
+    }
+    return EXAMPLES_OPEN_MAP;
   }
 
   function SdlIcon() {
@@ -69,6 +89,12 @@
       title: "Examples",
       icon: ExamplesIcon,
       content: function ExamplesPanel() {
+        var _a = React.useState(function () {
+            return getExamplesOpenMap();
+          }),
+          openMap = _a[0],
+          setOpenMap = _a[1];
+
         function renderExampleButton(ex) {
           return React.createElement(
             "button",
@@ -118,13 +144,23 @@
           "div",
           { className: "examples-panel" },
           React.createElement("h3", null, "Examples"),
-          (EXAMPLES || []).map(function (group) {
+          (EXAMPLES || []).map(function (group, index) {
+            var key = sectionKey(group, index);
             return React.createElement(
               "details",
               {
-                key: group.section,
+                key: key,
                 className: "examples-section",
-                open: true,
+                open: !!openMap[key],
+                onToggle: function (event) {
+                  var isOpen = event.currentTarget.open;
+                  setOpenMap(function (prev) {
+                    var next = Object.assign({}, prev);
+                    next[key] = isOpen;
+                    EXAMPLES_OPEN_MAP = next;
+                    return next;
+                  });
+                },
               },
               React.createElement("summary", null, group.section || "Section"),
               React.createElement(
@@ -139,10 +175,10 @@
     };
   }
 
-  // "Show SDL" plugin (loads from a server endpoint like /sdl)
+  // "SDL" plugin (loads from a server endpoint like /sdl)
   function makeSdlPlugin() {
     return {
-      title: "Show SDL",
+      title: "SDL",
       icon: SdlIcon,
       content: function SdlPanel() {
         var _a = React.useState(false),
