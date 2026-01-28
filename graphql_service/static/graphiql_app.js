@@ -60,6 +60,11 @@
 
   // Custom "Examples" sidebar plugin with sections
   function makeExamplesPlugin(setQuery, setVariables) {
+    function ensureExamplesOpen() {
+      var btn = document.querySelector('button[aria-label="Show Examples"]');
+      if (btn) btn.click();
+    }
+
     return {
       title: "Examples",
       icon: ExamplesIcon,
@@ -73,6 +78,8 @@
               onClick: function () {
                 setQuery(ex.query || "");
                 setVariables(ex.variables || "{}");
+                // If GraphiQL auto-closes the plugin, reopen the Examples panel.
+                window.requestAnimationFrame(ensureExamplesOpen);
               },
             },
             React.createElement("div", null, ex.name || "Untitled"),
