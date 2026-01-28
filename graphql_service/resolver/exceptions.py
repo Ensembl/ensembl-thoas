@@ -216,8 +216,8 @@ class GenomeNotFoundError(FieldNotFoundError):
     Custom error to be raised if product is not found
     """
 
-    def __init__(self, by_genome_uuid):
-        super().__init__("genome", by_genome_uuid)
+    def __init__(self, by_genome_id):
+        super().__init__("genome", by_genome_id)
 
 
 class MissingArgumentException(GraphQLError):

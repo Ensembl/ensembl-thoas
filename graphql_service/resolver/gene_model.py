@@ -850,14 +850,14 @@ def resolve_genomes(
 
 
 @QUERY_TYPE.field("genome")
-def resolve_genome(_, info: GraphQLResolveInfo, by_genome_uuid: Dict[str, str]) -> Dict:
+def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) -> Dict:
     grpc_model = info.context["grpc_model"]
 
     genome = grpc_model.get_genome_by_genome_uuid(
-        by_genome_uuid.get("genome_uuid"), by_genome_uuid.get("release_version")
+        by_genome_id.get("genome_id"), by_genome_id.get("release_version")
     )
     if not genome.genome_uuid:
-        raise GenomeNotFoundError(by_genome_uuid)
+        raise GenomeNotFoundError(by_genome_id)
 
     # Check if the assembly and dataset fields are requested in the query
     fields_to_check = ["assembly", "dataset"]

@@ -1,0 +1,338 @@
+/* ==========================================================================
+   Theme variables (used by header/footer + custom plugin panels)
+   ========================================================================== */
+
+/* Default: dark-ish fallback */
+:root {
+  /* App background (outside GraphiQL) */
+  --app-bg: #1b2c39;
+  /* GraphiQL playground background */
+  --graphiql-bg: #1b2c39;
+
+  /* Custom panels (Examples / SDL) */
+  --panel-fg: #ffffff;
+  --panel-muted: rgba(255, 255, 255, 0.8);
+  --panel-border: rgba(255, 255, 255, 0.18);
+  --panel-surface: rgba(255, 255, 255, 0.06);
+  --panel-surface-hover: rgba(255, 255, 255, 0.12);
+  --panel-textarea: rgba(0, 0, 0, 0.25);
+
+  /* Privacy banner background */
+  --privacy-bg: #1b2c39;
+
+  /* Accent color */
+  --accent: #09f;
+
+  /* Sidebar hover color */
+  --sidebar-hover: rgba(255, 255, 255, 0.85);
+}
+
+/* Light-mode overrides.
+   GraphiQL can expose theme in different ways depending on build/version,
+   so we support a few common hooks. */
+.graphiql-light,
+[data-theme="light"],
+[data-color-scheme="light"] {
+  --app-bg: #ffffff;
+  --graphiql-bg: #ffffff;
+
+  --panel-fg: #1b2c39;
+  --panel-muted: rgba(27, 44, 57, 0.8);
+  --panel-border: rgba(27, 44, 57, 0.18);
+  --panel-surface: rgba(27, 44, 57, 0.06);
+  --panel-surface-hover: rgba(27, 44, 57, 0.12);
+  --panel-textarea: rgba(255, 255, 255, 0.95);
+
+  --privacy-bg: #ffffff;
+  --sidebar-hover: rgba(27, 44, 57, 0.85);
+}
+
+/* ==========================================================================
+   Page layout (outside GraphiQL)
+   ========================================================================== */
+
+body {
+  background-color: var(--app-bg);
+}
+
+#graphiql {
+  height: 90vh;
+}
+
+/* GraphiQL playground background (dark theme default) */
+#graphiql .graphiql-container,
+#graphiql .graphiql-main {
+  background-color: var(--graphiql-bg);
+}
+
+#graphiql-loading {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--panel-fg);
+  font-size: 1.5em;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   Ensembl header/footer + privacy banner
+   ========================================================================== */
+
+#ensembl-header {
+  color: var(--panel-fg);
+  padding: 10px 30px 0 22px;
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-weight: 400;
+  height: 32px;
+  align-items: center;
+}
+
+#ensembl-logo {
+  box-sizing: border-box;
+  color: var(--accent);
+  fill: var(--accent);
+  font-size: 13px;
+  width: 100px;
+}
+
+#ensembl-help {
+  box-sizing: border-box;
+  color: var(--accent);
+  fill: var(--accent);
+  font-size: 0; /* icon-only */
+  width: 25px;
+  float: right;
+}
+
+#ensembl-footer {
+  color: var(--panel-fg);
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-weight: 400;
+  height: 32px;
+  align-items: center;
+  padding: 20px 30px 0 22px;
+  text-align: center;
+}
+
+a {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+#ensembl-copyright-link {
+  margin-left: 50px;
+  float: left;
+}
+
+#privacy-policy-link {
+  margin-right: 50px;
+  float: right;
+}
+
+#privacy-banner {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 10000;
+
+  background: var(--privacy-bg);
+  color: var(--panel-fg);
+  font-size: 13px;
+  line-height: 2;
+  padding: 5px;
+  text-align: center;
+  margin-bottom: 10px;
+
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+}
+
+#privacy-accept {
+  background: #47d147;
+  border-radius: 2px;
+  color: #ffffff;
+  font-weight: 700;
+  margin-left: 30px;
+  padding: 6px 18px;
+  cursor: pointer;
+  border: 0;
+}
+
+#privacy-accept:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Examples panel (plugin)
+   ========================================================================== */
+
+.examples-panel {
+  padding: 10px;
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  color: var(--panel-fg);
+}
+
+.examples-panel h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.examples-section {
+  margin-bottom: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.examples-section summary {
+  cursor: pointer;
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  user-select: none;
+  outline: none;
+}
+
+.examples-section[open] summary {
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.examples-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface);
+  color: var(--panel-fg);
+
+  cursor: pointer;
+}
+
+.examples-btn:hover {
+  background: var(--panel-surface-hover);
+}
+
+.examples-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.examples-desc {
+  font-size: 12px;
+  margin-top: 4px;
+  color: var(--panel-muted);
+}
+
+/* ==========================================================================
+   SDL panel (plugin)
+   ========================================================================== */
+
+.sdl-panel {
+  padding: 10px;
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  color: var(--panel-fg);
+}
+
+.sdl-panel h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sdl-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sdl-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface);
+  color: var(--panel-fg);
+
+  cursor: pointer;
+}
+
+.sdl-btn:hover {
+  background: var(--panel-surface-hover);
+}
+
+.sdl-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sdl-textarea {
+  width: 100%;
+  height: 65vh;
+  resize: none;
+
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-textarea);
+  color: var(--panel-fg);
+
+  padding: 10px;
+  box-sizing: border-box;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.sdl-hint {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--panel-muted);
+}
+
+/* ==========================================================================
+   GraphiQL logo / brand
+   ========================================================================== */
+
+#graphiql .graphiql-logo,
+#graphiql .graphiql-logo a {
+  font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-size: 13px !important;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  text-align: center;
+}
+/* ==========================================================================
+   GraphiQL sidebar: active plugin indicator (works with your markup)
+   ========================================================================== */
+
+button.graphiql-un-styled.active {
+  color: var(--accent) !important;
+  opacity: 1 !important;
+}
+
+button.graphiql-un-styled:not(.active) {
+  opacity: 0.7;
+}
+
+button.graphiql-un-styled:not(.active):hover {
+  color: var(--sidebar-hover);
+  opacity: 1;
+}

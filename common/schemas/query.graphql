@@ -67,10 +67,10 @@ type Query {
   ): [Genome]
   
   """
-  Fetches a genome by its UUID.
+  Fetches a genome by its ID.
   """
   genome(
-    by_genome_uuid: GenomeUUIDInput!
+    by_genome_id: GenomeIDInput!
   ): Genome
 }
 
@@ -153,13 +153,13 @@ input RegionNameInput {
 }
 
 """
-Input type for specifying a genome by its UUID.
+Input type for specifying a genome by its ID.
 """
-input GenomeUUIDInput {
+input GenomeIDInput {
   """
-  The UUID of the genome.
+  The ID of the genome.
   """
-  genome_uuid: String!
+  genome_id: String!
   """
   The release version of the genome.
   """
