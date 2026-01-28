@@ -6,6 +6,8 @@
 :root {
   /* App background (outside GraphiQL) */
   --app-bg: #1b2c39;
+  /* GraphiQL playground background */
+  --graphiql-bg: #1b2c39;
 
   /* Custom panels (Examples / SDL) */
   --panel-fg: #ffffff;
@@ -32,6 +34,7 @@
 [data-theme="light"],
 [data-color-scheme="light"] {
   --app-bg: #ffffff;
+  --graphiql-bg: #ffffff;
 
   --panel-fg: #1b2c39;
   --panel-muted: rgba(27, 44, 57, 0.8);
@@ -54,6 +57,12 @@ body {
 
 #graphiql {
   height: 90vh;
+}
+
+/* GraphiQL playground background (dark theme default) */
+#graphiql .graphiql-container,
+#graphiql .graphiql-main {
+  background-color: var(--graphiql-bg);
 }
 
 #graphiql-loading {

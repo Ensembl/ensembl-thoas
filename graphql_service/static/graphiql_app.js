@@ -245,7 +245,18 @@
           React.createElement(
             "div",
             { className: "sdl-hint" },
-            "If " + SDL_URL + " returns 404/403, it may be disabled in this environment."
+            // "If " + SDL_URL + " returns 404/403, it may be disabled in this environment."
+            "Tip: Feel free to use ",
+            React.createElement(
+              "a",
+              {
+                href: "https://apis.guru/graphql-voyager/",
+                target: "_blank",
+                rel: "noreferrer",
+              },
+              "graphql-voyager"
+            ),
+            " to visualize the schema."
           )
         );
       },
