@@ -178,11 +178,11 @@ class XrefResolver:
         url_pattern_prefix = tail.split(":", 1)[0].lower() if ":" in tail else ""
 
         if (
-                acc.lower().startswith(f"{id_org_ns_prefix.lower()}:")
-                and url_pattern_prefix == id_org_ns_prefix.lower()
+            acc.lower().startswith(f"{id_org_ns_prefix.lower()}:")
+            and url_pattern_prefix == id_org_ns_prefix.lower()
         ):
             # Strip "PREFIX:" from the accession
-            acc = acc[len(id_org_ns_prefix) + 1:]
+            acc = acc[len(id_org_ns_prefix) + 1 :]
 
         # ------------------------------------------------------------------
         # Step 3: Substitute the accession into the URL pattern
