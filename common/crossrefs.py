@@ -114,35 +114,82 @@ class XrefResolver:
         """
         Given an xref ID and a identifiers.org Namespace Prefix, generate a url that resolves to the
         original site page for that xref (fingers crossed)
+
+        Resolution strategy:
+          1. Prefer an official resource
+          2. Otherwise, use a non-deprecated resource
+          3. As a last resort, fall back to the first available resource
         """
-        url = None
-        if id_org_ns_prefix in self.id_org_indexed:
-            resources = self.id_org_indexed[id_org_ns_prefix]["resources"]
-            for i in resources:
-                if i["official"] is True:
-                    url_base = i["urlPattern"]
-
-                    # The logic below takes care of cases where the prefix is duplicated generating a broken URL EA-1188
-                    # Extract the part of the URL after the last "/"
-                    # e.g: Extracts "MGI:" from "http://www.informatics.jax.org/accession/MGI:{$id}"
-                    url_prefix = url_base.split("/")[-1].split(":")[0].lower()
-                    # Check and strip prefix if necessary
-                    if (
-                        xref_acc_id.lower().startswith(f"{id_org_ns_prefix}:")
-                        and url_prefix == id_org_ns_prefix
-                    ):
-                        xref_acc_id = xref_acc_id[len(id_org_ns_prefix) + 1 :].lower()
-
-                    (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
-
-        else:
+        # Look up the namespace entry in the Identifiers.org index
+        entry = self.id_org_indexed.get(id_org_ns_prefix)
+        if entry is None:
+            # Namespace not known by identifiers.org
             print(f"*** {id_org_ns_prefix} namespace not in identifiers.org ***")
             return None
-        # some sources seemingly have no official entry.
-        # Take the first arbitrarily
-        if url is None:
-            url_base = resources[0]["urlPattern"]
-            (url, _) = self.id_substitution.subn(xref_acc_id, url_base)
+
+        resources = entry.get("resources") or []
+        if not resources:
+            # Namespace exists but has no resolvable resources
+            return None
+
+        # ------------------------------------------------------------------
+        # Step 1: Select the best resource
+        # Priority: official > non-deprecated > first available
+        # ------------------------------------------------------------------
+        resource = None
+
+        # First pass: look for an official resource
+        for r in resources:
+            if r.get("official") is True:
+                resource = r
+                break
+
+        # Second pass: no official found, use a non-deprecated resource
+        if resource is None:
+            for r in resources:
+                if r.get("deprecated") is False:
+                    resource = r
+                    break
+
+        # Final fallback: take the first resource arbitrarily
+        if resource is None:
+            resource = resources[0]
+
+        url_base = resource.get("urlPattern")
+        if not url_base:
+            # Selected resource cannot generate URLs
+            return None
+
+        # ------------------------------------------------------------------
+        # Step 2: Prepare the accession ID for substitution
+        # ------------------------------------------------------------------
+        # Work on a copy so we don't mutate the caller's value
+        acc = xref_acc_id
+
+        # EA-1188:
+        # Some URL patterns already include the namespace prefix (e.g. "MGI:{$id}").
+        # If the accession ALSO starts with that prefix ("MGI:12345"),
+        # substituting blindly would generate a broken URL like "MGI:MGI:12345".
+        #
+        # To avoid this:
+        #   - Extract the prefix used in the URL pattern
+        #   - Strip the prefix from the accession *only* when both sides match
+        tail = url_base.rsplit("/", 1)[-1]
+        url_pattern_prefix = tail.split(":", 1)[0].lower() if ":" in tail else ""
+
+        if (
+            acc.lower().startswith(f"{id_org_ns_prefix.lower()}:")
+            and url_pattern_prefix == id_org_ns_prefix.lower()
+        ):
+            # Strip "PREFIX:" from the accession
+            acc = acc[len(id_org_ns_prefix) + 1 :]
+
+        # ------------------------------------------------------------------
+        # Step 3: Substitute the accession into the URL pattern
+        # ------------------------------------------------------------------
+        # id_substitution is expected to replace "{$id}" or similar placeholders
+        url, _ = self.id_substitution.subn(acc, url_base)
+
         return url
 
     def source_information_retriever(self, dbname, field):
