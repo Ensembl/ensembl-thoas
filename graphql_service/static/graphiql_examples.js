@@ -15,7 +15,11 @@
 (function () {
   "use strict";
 
-  // Export for the GraphiQL UI code to consume (supports grouped format)
+  // Export for the GraphiQL UI code to consume.
+  // The UI supports both:
+  // - grouped format: [{ section, items: [...] }, ...]
+  // - flat format: [{ name, description, query, variables? }, ...]
+  // We keep grouped here so the sidebar can render collapsible sections.
   window.GRAPHIQL_EXAMPLES = [
     {
       section: "genomes",

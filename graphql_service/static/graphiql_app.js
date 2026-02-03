@@ -18,19 +18,22 @@
 (function () {
   "use strict";
 
+  // Config is injected by the HTML template at runtime.
   var CFG = window.__GRAPHIQL_CONFIG__ || {};
   var ROOT_EL_ID = CFG.rootElId || "graphiql";
   var SDL_URL = CFG.sdlUrl || "/sdl";
   var ENABLE_EXPLORER = !!CFG.enableExplorerPlugin;
+  // Default query shows up in the editor on first load.
   var DEFAULT_QUERY = CFG.defaultQuery || "";
 
-  // GraphiQL fetcher
+  // GraphiQL fetcher (keeps existing behavior: post to the current URL)
   var fetcher = GraphiQL.createFetcher({
     url: window.location.href,
   });
 
-  // Examples from external file
+  // Examples live in a separate static file so the HTML template stays small.
   var EXAMPLES = window.GRAPHIQL_EXAMPLES || [];
+  // Cached "details open" state so collapsing a section doesn't reset on rerender.
   var EXAMPLES_OPEN_MAP = null;
 
   function ExamplesIcon() {
@@ -50,6 +53,7 @@
     return (group && group.section) || "section-" + index;
   }
 
+  // Cache which sections are expanded so toggles persist while the page is open.
   function buildDefaultOpenMap(groups) {
     var map = {};
     (groups || []).forEach(function (group, index) {
@@ -78,7 +82,10 @@
     );
   }
 
-  // Custom "Examples" sidebar plugin with sections
+  // Custom "Examples" sidebar plugin:
+  // - Supports both grouped and flat example formats
+  // - Loads query + variables into the editors
+  // - Re-opens the panel if GraphiQL auto-collapses it after a click
   function makeExamplesPlugin(setQuery, setVariables) {
     function ensureExamplesOpen() {
       var btn = document.querySelector('button[aria-label="Show Examples"]');
@@ -95,6 +102,7 @@
           openMap = _a[0],
           setOpenMap = _a[1];
 
+        // Clicking an example should load both query and variables.
         function renderExampleButton(ex) {
           return React.createElement(
             "button",
@@ -125,7 +133,7 @@
           typeof EXAMPLES[0] === "object" &&
           Array.isArray(EXAMPLES[0].items);
 
-        // Flat fallback
+        // Flat fallback for older example lists.
         if (!isGrouped) {
           return React.createElement(
             "div",
@@ -139,7 +147,7 @@
           );
         }
 
-        // Grouped rendering with collapsible sections
+        // Grouped rendering with collapsible sections.
         return React.createElement(
           "div",
           { className: "examples-panel" },
@@ -175,7 +183,8 @@
     };
   }
 
-  // "SDL" plugin (loads from a server endpoint like /sdl)
+  // "SDL" plugin (loads from a server endpoint like /sdl).
+  // Exposes load/copy/download to make schema inspection easier.
   function makeSdlPlugin() {
     return {
       title: "SDL",
@@ -314,7 +323,7 @@
       variables = _b[0],
       setVariables = _b[1];
 
-    // Optional explorer plugin
+    // Optional explorer plugin is only enabled if the bundle is loaded.
     var explorerPlugin = null;
     if (ENABLE_EXPLORER && window.GraphiQLPluginExplorer) {
       explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
@@ -323,6 +332,7 @@
       });
     }
 
+    // Custom plugins are always appended after the optional explorer plugin.
     var examplesPlugin = makeExamplesPlugin(setQuery, setVariables);
     var sdlPlugin = makeSdlPlugin();
 
@@ -331,7 +341,7 @@
     plugins.push(examplesPlugin);
     plugins.push(sdlPlugin);
 
-    // Open Examples by default (matches your current DOM behavior)
+    // Open Examples by default (matches the prior HTML toggle behavior).
     React.useEffect(function () {
       var btn =
         document.querySelector('button[aria-label="Show Examples"]') ||

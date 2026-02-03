@@ -779,6 +779,7 @@ def resolve_genomes(
     if provided_count != 1:
         raise GraphQLError("Exactly one of the fields must be provided")
 
+    # gRPC metadata service is the source of truth for genome records.
     grpc_model = info.context["grpc_model"]
 
     if by_keyword:
@@ -809,7 +810,8 @@ def resolve_genomes(
                 if not genomes:
                     raise GenomeNotFoundError(by_keyword)
 
-                # Check if the assembly and dataset fields are requested in the query
+                # Only fetch assembly/dataset if the client asked for them.
+                # This avoids extra DB/gRPC calls on small queries.
                 fields_to_check = ["assembly", "dataset"]
                 is_assembly_present, is_dataset_present = utils.check_requested_fields(
                     info, fields_to_check
@@ -827,6 +829,7 @@ def resolve_genomes(
                     assembly_collection = connection_db["assembly"]
                     # logging.debug("assembly_collection.name:", assembly_collection.name)
 
+                    # Assembly is stored in MongoDB, dataset lives in metadata (gRPC).
                     assembly_data = (
                         fetch_assembly_data(
                             assembly_collection, genome.assembly.assembly_uuid
@@ -853,6 +856,7 @@ def resolve_genomes(
 def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) -> Dict:
     grpc_model = info.context["grpc_model"]
 
+    # gRPC fetch first; Mongo access only if assembly is requested.
     genome = grpc_model.get_genome_by_genome_uuid(
         by_genome_id.get("genome_id"), by_genome_id.get("release_version")
     )

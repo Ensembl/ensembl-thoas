@@ -29,12 +29,20 @@ To run a Uvicorn server with automatic reload for development purposes, you can 
 ```
 uvicorn --workers 1 --host 0.0.0.0 --reload graphql_service.server:APP
 ```
-
 Also, if you're developing in PyCharm, you will probably find it useful to create a run 
 configuration so that you can use the debugger.  Create a run configuration that 
 looks like this:
 
 ![Uvicorn run config](thoas_run_config.png)
+
+## GraphiQL UI wiring
+The in-browser GraphiQL UI is assembled from a custom HTML template plus static assets:
+
+- `graphql_service/server.py` loads `graphql_service/templates/custom_graphiql.html` and injects a default query string.
+- `graphql_service/templates/custom_graphiql.html` pulls in the GraphiQL CDN assets, then loads the local static files.
+- `graphql_service/static/graphiql_examples.js` defines `window.GRAPHIQL_EXAMPLES` (used by the Examples sidebar).
+- `graphql_service/static/graphiql_app.js` reads `window.__GRAPHIQL_CONFIG__` and mounts GraphiQL with the custom plugins.
+- `graphql_service/static/graphiql_custom.css` provides the visual styling layer for the UI.
 
 ## Development
 

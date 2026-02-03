@@ -99,10 +99,15 @@ starlette_middleware: List[Middleware] = [
 
 # The original HTML file can be found under
 # [venv]/ariadne/explorer/templates/graphiql.html
+# We override it to:
+# - load static JS/CSS assets
+# - inject the example library and custom sidebar plugins
 CUSTOM_GRAPHIQL_HTML = read_template(
     os.path.dirname(os.path.realpath(__file__)) + "/templates/custom_graphiql.html"
 )
 
+# Default query shown in GraphiQL's editor on first load.
+# Kept in Python so it can be templated directly into the HTML.
 DEFAULT_QUERY = """
 #
 # Welcome to Ensembl Core GraphQL API!

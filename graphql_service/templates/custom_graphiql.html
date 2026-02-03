@@ -89,10 +89,12 @@
     ></script>
     {% endif %}
 
-    <!-- Load our example data (served by Starlette StaticFiles) -->
+    <!-- Load our example data (served by Starlette StaticFiles).
+         This file defines window.GRAPHIQL_EXAMPLES. -->
     <script src="/static/graphiql_examples.js"></script>
 
-    <!-- Small config object (Jinja renders values into this) -->
+    <!-- Small config object (Jinja renders values into this).
+         The JS bootstrap reads window.__GRAPHIQL_CONFIG__. -->
     <script>
       window.__GRAPHIQL_CONFIG__ = {
         defaultQuery: '{% raw default_query %}',
@@ -102,7 +104,7 @@
       };
     </script>
 
-    <!-- Custom GraphiQL bootstrap + plugins -->
+    <!-- Custom GraphiQL bootstrap + plugins (Examples + SDL sidebar). -->
     <script src="/static/graphiql_app.js"></script>
 
     <footer id="ensembl-footer">
@@ -121,6 +123,7 @@
       </span>
     </footer>
 
+    <!-- Simple cookie/privacy banner (localStorage persisted). -->
     <div id="privacy-banner" style="display: none">
       <span>
         This website requires cookies, and the limited processing of your personal
