@@ -187,6 +187,8 @@ class CustomExplorerGraphiQL(
 
 APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
 
+# Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
+# Resolve from `__file__` so it works regardless of the process working directory.
 APP.mount(
     "/static",
     StaticFiles(
@@ -200,11 +202,13 @@ APP.mount(
 
 
 def sdl_endpoint(request) -> Response:
-    # Prints the server schema as SDL
+    # Expose the executable GraphQL schema as raw SDL text.
+    # The custom GraphiQL "SDL" plugin calls this endpoint to load/copy/download schema text.
     sdl = print_schema(EXECUTABLE_SCHEMA)
     return PlainTextResponse(sdl, media_type="text/plain; charset=utf-8")
 
 
+# Dedicated read-only route for schema introspection via SDL text (separate from `/graphql`).
 APP.add_route("/sdl", sdl_endpoint, methods=["GET"])
 
 APP.mount(

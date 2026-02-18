@@ -36,6 +36,7 @@
   // Cached "details open" state so collapsing a section doesn't reset on rerender.
   var EXAMPLES_OPEN_MAP = null;
 
+  // Toolbar icon for the custom Examples plugin tab.
   function ExamplesIcon() {
     return React.createElement(
       "svg",
@@ -49,6 +50,7 @@
     );
   }
 
+  // Builds a stable key for a section so open/closed state survives rerenders.
   function sectionKey(group, index) {
     return (group && group.section) || "section-" + index;
   }
@@ -62,6 +64,7 @@
     return map;
   }
 
+  // Lazily initialize the cached section open map the first time it is needed.
   function getExamplesOpenMap() {
     if (!EXAMPLES_OPEN_MAP) {
       EXAMPLES_OPEN_MAP = buildDefaultOpenMap(EXAMPLES);
@@ -69,6 +72,7 @@
     return EXAMPLES_OPEN_MAP;
   }
 
+  // Toolbar icon for the custom SDL plugin tab.
   function SdlIcon() {
     return React.createElement(
       "svg",
@@ -87,6 +91,8 @@
   // - Loads query + variables into the editors
   // - Re-opens the panel if GraphiQL auto-collapses it after a click
   function makeExamplesPlugin(setQuery, setVariables) {
+    // GraphiQL can auto-collapse side panels after click handlers run.
+    // Re-clicking the Examples tab keeps the panel visible after selecting an example.
     function ensureExamplesOpen() {
       var btn = document.querySelector('button[aria-label="Show Examples"]');
       if (btn) btn.click();
@@ -96,6 +102,8 @@
       title: "Examples",
       icon: ExamplesIcon,
       content: function ExamplesPanel() {
+        // Use a lazy state initializer so we only compute defaults on initial mount.
+        // The map is shared via EXAMPLES_OPEN_MAP to preserve toggles across remounts.
         var _a = React.useState(function () {
             return getExamplesOpenMap();
           }),
@@ -110,6 +118,7 @@
               key: ex.name,
               className: "examples-btn",
               onClick: function () {
+                // Loading both fields mirrors how GraphiQL expects operation + variables.
                 setQuery(ex.query || "");
                 setVariables(ex.variables || "{}");
                 // If GraphiQL auto-closes the plugin, reopen the Examples panel.
@@ -132,6 +141,7 @@
           EXAMPLES[0] &&
           typeof EXAMPLES[0] === "object" &&
           Array.isArray(EXAMPLES[0].items);
+        // The checks above intentionally guard against malformed global data.
 
         // Flat fallback for older example lists.
         if (!isGrouped) {
@@ -162,6 +172,8 @@
                 open: !!openMap[key],
                 onToggle: function (event) {
                   var isOpen = event.currentTarget.open;
+                  // Keep React state and module-level cache in sync so section
+                  // expansion persists even if this plugin panel remounts.
                   setOpenMap(function (prev) {
                     var next = Object.assign({}, prev);
                     next[key] = isOpen;
@@ -190,6 +202,7 @@
       title: "SDL",
       icon: SdlIcon,
       content: function SdlPanel() {
+        // Local panel state: network activity, load errors, and fetched SDL text.
         var _a = React.useState(false),
           loading = _a[0],
           setLoading = _a[1];
@@ -201,12 +214,15 @@
           setSdl = _c[1];
 
         async function loadSDL() {
+          // Clear stale errors when starting a new fetch cycle.
           setLoading(true);
           setError("");
 
           try {
             var res = await fetch(SDL_URL, { method: "GET" });
             if (!res.ok) {
+              // Try to include response text in the error for easier debugging.
+              // If body parsing fails, fallback to HTTP status text.
               var text = await res.text().catch(function () {
                 return "";
               });
@@ -222,14 +238,17 @@
             var body = await res.text();
             setSdl(body);
           } catch (e) {
+            // Normalize unknown thrown values into a string for display.
             setError(e && e.message ? e.message : String(e));
           } finally {
+            // Always release loading state, whether request succeeded or failed.
             setLoading(false);
           }
         }
 
         async function copySDL() {
           try {
+            // Clipboard API may fail in non-secure contexts or due to permissions.
             await navigator.clipboard.writeText(sdl || "");
           } catch (e) {
             alert(
@@ -239,6 +258,7 @@
         }
 
         function downloadSDL() {
+          // Use an object URL so users can download the in-memory SDL text as a file.
           var blob = new Blob([sdl || ""], { type: "text/plain;charset=utf-8" });
           var url = URL.createObjectURL(blob);
           var a = document.createElement("a");
@@ -247,6 +267,7 @@
           document.body.appendChild(a);
           a.click();
           a.remove();
+          // Explicit cleanup prevents leaking temporary object URLs.
           URL.revokeObjectURL(url);
         }
 
@@ -316,6 +337,7 @@
   }
 
   function AriadneGraphiQL() {
+    // Controlled state for both query editor panes.
     var _a = React.useState(DEFAULT_QUERY),
       query = _a[0],
       setQuery = _a[1];
@@ -328,6 +350,7 @@
     if (ENABLE_EXPLORER && window.GraphiQLPluginExplorer) {
       explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
         query: query,
+        // Keep explorer edits and main query editor in sync.
         onEdit: setQuery,
       });
     }
@@ -343,6 +366,8 @@
 
     // Open Examples by default (matches the prior HTML toggle behavior).
     React.useEffect(function () {
+      // Prefer aria-label selector; data-index is a compatibility fallback.
+      // This keeps Examples open by default to match prior UX.
       var btn =
         document.querySelector('button[aria-label="Show Examples"]') ||
         document.querySelector('button[data-index="3"]');
