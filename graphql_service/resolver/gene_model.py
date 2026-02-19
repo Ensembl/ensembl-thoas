@@ -11,13 +11,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import asyncio
 import configparser
 import logging
 from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
-from graphql import GraphQLResolveInfo, GraphQLError
+from graphql import GraphQLResolveInfo, GraphQLError, FieldNode
 from pymongo.database import Database, Collection
 
 from common import utils
@@ -263,6 +263,79 @@ def resolve_transcript(
     return transcript
 
 
+@QUERY_TYPE.field("transcript_search_sync")
+def resolve_transcript_search_sync(
+    _,
+    info: GraphQLResolveInfo,
+    search_payload: Optional[Dict] = None
+) -> dict[str, Any]:
+    """Fetch Transcripts by its stable_id and list of genome uuids"""
+    if search_payload is None:
+        raise MissingArgumentException("You must provide either 'search_payload' argument.")
+
+    stable_id = search_payload["query"]
+    page = search_payload["page"]
+    per_page = search_payload["per_page"]
+    genome_ids = search_payload["genome_ids"] or []
+    transcripts = []
+
+    for genome_id in genome_ids:
+        query: dict[str, Any] = {"type": "Transcript", "$or": [
+            {"stable_id": stable_id},
+            {"unversioned_stable_id": stable_id},
+        ], "genome_id": genome_id}
+
+        set_db_conn_for_uuid(info, genome_id)
+        connection_db = get_db_conn(info, genome_id)
+
+        try:
+            transcript = connection_db["transcript"].find_one(query)
+            if transcript:
+                transcripts.append(transcript)
+        except Exception as db_exp:
+            logging.error("Failed to retrieve transcript: %s", db_exp)
+
+    return parse_search_response(transcripts, page, per_page)
+
+
+async def fetch_transcript(
+    info: GraphQLResolveInfo, stable_id: str, genome_id: str ) -> Any | None:
+    query: dict[str, Any] = {"type": "Transcript", "$or": [
+        {"stable_id": stable_id},
+        {"unversioned_stable_id": stable_id},
+    ], "genome_id": genome_id}
+
+    await set_async_db_conn_for_uuid(info, genome_id)
+    connection_db = get_db_conn(info, genome_id)
+
+    try:
+        return await connection_db["transcript"].find_one(query)
+    except Exception as db_exp:
+        logging.error("Failed to retrieve transcript: %s", db_exp)
+        return None
+
+
+@QUERY_TYPE.field("transcript_search")
+async def resolve_transcript_search(
+    _,
+    info: GraphQLResolveInfo,
+    search_payload: Optional[Dict] = None
+) -> dict[str, Any]:
+    """Fetch Transcripts by its stable_id and list of genome uuids"""
+    if search_payload is None:
+        raise MissingArgumentException("You must provide either 'search_payload' argument.")
+
+    stable_id = search_payload["query"]
+    page = search_payload["page"]
+    per_page = search_payload["per_page"]
+    genome_ids = search_payload["genome_ids"] or []
+
+    tasks = [fetch_transcript(info, stable_id, genome_id) for genome_id in genome_ids]
+    results = await asyncio.gather(*tasks)
+    transcripts = [t for t in results if t is not None]
+    return parse_search_response(transcripts, page, per_page)
+
+
 @QUERY_TYPE.field("version")
 def resolve_api(
     _: None,
@@ -369,23 +442,31 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
 
 @TRANSCRIPT_TYPE.field("gene")
 async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) -> Dict:
+    genome_id = transcript["genome_id"]
     query = {
         "type": "Gene",  # TODO: no need to select a type if we have collection per type anyway
-        "genome_id": transcript["genome_id"],
+        "genome_id": genome_id,
         "stable_id": transcript["gene"],
     }
 
-    connection_db = get_db_conn(info)
+    connection_db = get_db_conn(info, genome_id)
     gene_collection = connection_db["gene"]
+
+    request_context = get_request_context(info, genome_id)
+    is_async_connection = request_context["is_async_connection"]
     logger.info(
         "[resolve_transcript_gene] Getting Gene from DB: '%s'", connection_db.name
     )
 
-    gene = gene_collection.find_one(query)
+    if is_async_connection:
+        gene = await gene_collection.find_one(query)
+    else:
+        gene = gene_collection.find_one(query)
+
     if not gene:
         raise GeneNotFoundError(
             by_id={
-                "genome_id": transcript["genome_id"],
+                "genome_id": genome_id,
                 "stable_id": transcript["gene"],
             }
         )
@@ -1011,6 +1092,23 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
+async def set_async_db_conn_for_uuid(info, uuid):
+    async_grpc_model = info.context.get("async_grpc_model")
+    db_conn = await info.context["mongo_db_client"].get_async_database_conn(
+        async_grpc_model, uuid
+    )
+    conn = {
+        "db_conn": db_conn,
+        "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
+        "is_async_connection": True,
+    }
+
+    parent_key = get_path_parent_key(info)
+    info.context[parent_key] = conn
+    # Additional context for querying with multiple ids in a single query
+    info.context[parent_key + uuid] = conn
+
+
 def set_db_conn_for_uuid(info, uuid, release_version=None):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
@@ -1047,15 +1145,27 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
     conn = {
         "db_conn": db_conn,
         "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
+        "is_async_connection": False,
     }
 
     parent_key = get_path_parent_key(info)
     info.context[parent_key] = conn
+    # Additional context for querying with multiple ids in a single query
+    info.context[parent_key + uuid] = conn
 
 
-def get_db_conn(info):
+def get_db_conn(info, uuid=None):
     parent_key = get_path_parent_key(info)
+    if uuid:
+        return info.context[parent_key + uuid]["db_conn"]
     return info.context[parent_key]["db_conn"]
+
+
+def get_request_context(info, uuid=None):
+    parent_key = get_path_parent_key(info)
+    if uuid:
+        return info.context[parent_key + uuid]
+    return info.context[parent_key]
 
 
 def get_data_loader(info):
@@ -1067,3 +1177,15 @@ def get_path_parent_key(info):
     path_keys = info.path.as_list()
     parent_key = path_keys[0]
     return parent_key
+
+
+def parse_search_response(transcripts: list[Any], page: int, per_page: int):
+    meta = {
+        "total_hits": len(transcripts),
+        "page": page,
+        "per_page": per_page,
+    }
+    return {
+        "meta": meta,
+        "matches": transcripts,
+    }

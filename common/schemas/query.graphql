@@ -31,6 +31,20 @@ type Query {
     byId: IdInput @deprecated(reason: "Use `by_id`"),
     by_id: IdInput
   ): Transcript
+
+  """
+  Fetches transcripts by its ID and list of genome uuids
+  """
+  transcript_search(
+    search_payload: TranscriptIdGenomeIdsInput
+  ): TranscriptSearchResponse
+
+  """
+  Fetches transcripts by its ID and list of genome uuids
+  """
+  transcript_search_sync(
+    search_payload: TranscriptIdGenomeIdsInput
+  ): TranscriptSearchResponse
   
   """
   Fetches a product by its genome ID or stable ID.
@@ -72,6 +86,33 @@ type Query {
   genome(
     by_genome_uuid: GenomeUUIDInput!
   ): Genome
+}
+
+"""
+Input type for querying by transcript stable id and list of genome uuids
+"""
+input TranscriptIdGenomeIdsInput {
+    genome_ids: [String!]!
+    query: String!
+    page: Int!
+    per_page: Int!
+}
+
+"""
+Transcript search response
+"""
+type TranscriptSearchResponse {
+    meta: SearchMeta!
+    matches: [Transcript!]!
+}
+
+"""
+Search meta information
+"""
+type SearchMeta {
+    total_hits: Int!
+    page: Int!
+    per_page: Int!
 }
 
 """

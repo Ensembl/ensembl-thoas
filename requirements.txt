@@ -2,11 +2,12 @@ aiodataloader==0.4.0
 ariadne==0.24.0
 ensembl-py==2.1.3
 ensembl-utils==0.4.4
-grpcio==1.66.1
+grpcio==1.78.0
 grpcio-tools==1.66.1
 httpx==0.28.1
-mongomock==4.0.0
-pymongo==4.6.3
+mongomock==4.3.0
+pymongo==4.16.0
+mongomock-motor==0.0.36
 python-dotenv==1.0.1
 redis==5.2.0
 requests==2.32.0

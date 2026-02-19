@@ -11,12 +11,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import asyncio
 import logging
+
 import pymongo
 import mongomock
 import grpc
 import redis
+from pymongo import AsyncMongoClient
 
 from graphql_service.resolver.exceptions import (
     GenomeNotFoundError,
@@ -43,6 +45,7 @@ class MongoDbClient:
         """
         self.config = config
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
+        self.async_mongo_client = MongoDbClient.connect_async_mongo(self.config)
 
         # Setup Redis connection and caching toggle
         self.redis_cache_enabled = (
@@ -60,6 +63,48 @@ class MongoDbClient:
             logger.warning(f"[MongoDbClient] Redis not available: {e}")
             self.cache = None
             self.redis_cache_enabled = False
+
+    async def get_cached_connection(self, uuid):
+        if self.redis_cache_enabled and self.cache:
+            try:
+                cached_version = await asyncio.to_thread(self.cache.get, uuid)
+                if cached_version:
+                    chosen_db = process_release_version(cached_version.decode("utf-8"))
+                    return self.async_mongo_client[chosen_db]
+            except redis.RedisError as e:
+                logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
+        return None
+
+    async def get_async_database_conn(self, async_grpc_model, uuid):
+        cached_connection = await self.get_cached_connection(uuid)
+        if cached_connection:
+            return cached_connection
+
+        try:
+            grpc_response = await async_grpc_model.get_release_by_genome_uuid(uuid)
+        except Exception as grpc_exp:
+            raise FailedToConnectToGrpc(
+                f"Internal server error: Couldn't connect to gRPC Host, {str(grpc_exp)}"
+            )
+
+        if not grpc_response or not grpc_response.release_version:
+            logger.warning("[get_database_conn] Release not found")
+            raise GenomeNotFoundError({"genome_id": uuid})
+
+        chosen_db = process_release_version(grpc_response.release_version)
+        if self.redis_cache_enabled and self.cache:
+            try:
+                await asyncio.to_thread(
+                    self.cache.set, uuid, grpc_response.release_version, self.redis_expiry
+                )
+            except redis.RedisError as e:
+                logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
+
+        if not chosen_db:
+            raise GenomeNotFoundError({"genome_id": uuid})
+
+        logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
+        return self.async_mongo_client[chosen_db]
 
     def get_database_conn(self, grpc_model, uuid, release_version):
         grpc_response = None
@@ -140,6 +185,24 @@ class MongoDbClient:
 
         return client
 
+    @staticmethod
+    def connect_async_mongo(config):
+        """Create async MongoDB connection"""
+        host = config.get("MONGO_HOST").split(",")
+        port = int(config.get("MONGO_PORT"))
+        user = config.get("MONGO_USER")
+        password = config.get("MONGO_PASSWORD")
+
+        client = AsyncMongoClient(
+            host=host,
+            port=port,
+            username=user,
+            password=password,
+            read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
+        )
+        logger.info(f"Async MongoDB client created for host: {host}")
+        return client
+
 
 class FakeMongoDbClient:
     """
@@ -183,6 +246,40 @@ class GRPCServiceClient:
 
         # bind the client and the server
         self.stub = stub_class(self.channel)
+
+    def get_grpc_stub(self):
+        return self.stub
+
+    def get_grpc_reflector(self):
+        return self.reflector
+
+
+class AsyncGRPCServiceClient:
+    def __init__(self, config):
+
+        host = config.get("GRPC_HOST")
+        port = config.get("GRPC_PORT")
+        target = "{}:{}".format(host, port)
+
+        # yagrc is synchronous and requires a standard grpc.insecure_channel
+        with grpc.insecure_channel(target) as sync_channel:
+            self.reflector = yagrc_reflector.GrpcReflectionClient()
+            self.reflector.load_protocols(
+                sync_channel,
+                symbols=["ensembl_metadata.EnsemblMetadata"]
+            )
+
+        self.aio_channel = grpc.aio.insecure_channel(
+            "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
+        )
+
+        # dynamically retrieve the client stub class for service
+        stub_class = self.reflector.service_stub_class(
+            "ensembl_metadata.EnsemblMetadata"
+        )
+
+        # bind the client and the server
+        self.stub = stub_class(self.aio_channel)
 
     def get_grpc_stub(self):
         return self.stub
