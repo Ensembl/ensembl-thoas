@@ -6,16 +6,6 @@ from graphql_service.ariadne_app import prepare_executable_schema
 from graphql_service.tests.test_db_client import FakeAsyncMongoDbClient
 
 
-# to test searching for the transcript stable in multiple genomes
-GENOME_IDS = [
-    "a7335667-93e7-11ec-a39d-005056b38ce3",
-    "2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb",
-    "3704ceb1-948d-11ec-a39d-005056b38ce3",
-    "4c07817b-c7c5-463f-8624-982286bc4355",
-    "7569f6f1-e742-4e50-a829-1e8f2dd6db87",
-]
-
-
 @pytest_asyncio.fixture
 async def async_setup():
     executable_schema = prepare_executable_schema()
@@ -48,8 +38,8 @@ async def populate_data(context_value):
         "name": "Abelson helper integration site 1",
     }
 
-    first_genome = GENOME_IDS[0]
-    second_genome = GENOME_IDS[1]
+    first_genome = "a7335667-93e7-11ec-a39d-005056b38ce3"
+    second_genome = "2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb"
     await db["transcript"].insert_many(
         [
             {**transcript_doc, "genome_id": first_genome},
