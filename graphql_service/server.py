@@ -75,7 +75,9 @@ GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB, GRPC_REFLECTOR)
 ASYNC_GRPC_CLIENT = db.AsyncGRPCServiceClient(os.environ)
 ASYNC_GRPC_STUB = ASYNC_GRPC_CLIENT.get_grpc_stub()
 ASYNC_GRPC_REFLECTOR = ASYNC_GRPC_CLIENT.get_grpc_reflector()
-ASYNC_GRPC_MODEL = async_grpc_model.AsyncGrpcModel(ASYNC_GRPC_STUB, ASYNC_GRPC_REFLECTOR)
+ASYNC_GRPC_MODEL = async_grpc_model.AsyncGrpcModel(
+    ASYNC_GRPC_STUB, ASYNC_GRPC_REFLECTOR
+)
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 

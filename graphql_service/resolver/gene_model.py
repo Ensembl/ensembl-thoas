@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import asyncio
 import configparser
 import logging
@@ -265,13 +266,13 @@ def resolve_transcript(
 
 @QUERY_TYPE.field("transcript_search_sync")
 def resolve_transcript_search_sync(
-    _,
-    info: GraphQLResolveInfo,
-    search_payload: Optional[Dict] = None
+    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
 ) -> dict[str, Any]:
     """Fetch Transcripts by its stable_id and list of genome uuids"""
     if search_payload is None:
-        raise MissingArgumentException("You must provide either 'search_payload' argument.")
+        raise MissingArgumentException(
+            "You must provide either 'search_payload' argument."
+        )
 
     stable_id = search_payload["query"]
     page = search_payload["page"]
@@ -280,10 +281,14 @@ def resolve_transcript_search_sync(
     transcripts = []
 
     for genome_id in genome_ids:
-        query: dict[str, Any] = {"type": "Transcript", "$or": [
-            {"stable_id": stable_id},
-            {"unversioned_stable_id": stable_id},
-        ], "genome_id": genome_id}
+        query: dict[str, Any] = {
+            "type": "Transcript",
+            "$or": [
+                {"stable_id": stable_id},
+                {"unversioned_stable_id": stable_id},
+            ],
+            "genome_id": genome_id,
+        }
 
         set_db_conn_for_uuid(info, genome_id)
         connection_db = get_db_conn(info, genome_id)
@@ -299,11 +304,16 @@ def resolve_transcript_search_sync(
 
 
 async def fetch_transcript(
-    info: GraphQLResolveInfo, stable_id: str, genome_id: str ) -> Any | None:
-    query: dict[str, Any] = {"type": "Transcript", "$or": [
-        {"stable_id": stable_id},
-        {"unversioned_stable_id": stable_id},
-    ], "genome_id": genome_id}
+    info: GraphQLResolveInfo, stable_id: str, genome_id: str
+) -> Any | None:
+    query: dict[str, Any] = {
+        "type": "Transcript",
+        "$or": [
+            {"stable_id": stable_id},
+            {"unversioned_stable_id": stable_id},
+        ],
+        "genome_id": genome_id,
+    }
 
     await set_async_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info, genome_id)
@@ -317,13 +327,13 @@ async def fetch_transcript(
 
 @QUERY_TYPE.field("transcript_search")
 async def resolve_transcript_search(
-    _,
-    info: GraphQLResolveInfo,
-    search_payload: Optional[Dict] = None
+    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
 ) -> dict[str, Any]:
     """Fetch Transcripts by its stable_id and list of genome uuids"""
     if search_payload is None:
-        raise MissingArgumentException("You must provide either 'search_payload' argument.")
+        raise MissingArgumentException(
+            "You must provide either 'search_payload' argument."
+        )
 
     stable_id = search_payload["query"]
     page = search_payload["page"]

@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 # Note: Copy of GRPC_MODEL class but just uses async channels
 class AsyncGrpcModel:
     def __init__(self, grpc_stub, grpc_reflector):

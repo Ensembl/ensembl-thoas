@@ -11,6 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import asyncio
 import logging
 
@@ -95,7 +96,10 @@ class MongoDbClient:
         if self.redis_cache_enabled and self.cache:
             try:
                 await asyncio.to_thread(
-                    self.cache.set, uuid, grpc_response.release_version, self.redis_expiry
+                    self.cache.set,
+                    uuid,
+                    grpc_response.release_version,
+                    self.redis_expiry,
                 )
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
@@ -265,8 +269,7 @@ class AsyncGRPCServiceClient:
         with grpc.insecure_channel(target) as sync_channel:
             self.reflector = yagrc_reflector.GrpcReflectionClient()
             self.reflector.load_protocols(
-                sync_channel,
-                symbols=["ensembl_metadata.EnsemblMetadata"]
+                sync_channel, symbols=["ensembl_metadata.EnsemblMetadata"]
             )
 
         self.aio_channel = grpc.aio.insecure_channel(

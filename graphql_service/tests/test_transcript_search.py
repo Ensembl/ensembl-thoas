@@ -15,15 +15,18 @@ GENOME_IDS = [
     "7569f6f1-e742-4e50-a829-1e8f2dd6db87",
 ]
 
+
 @pytest_asyncio.fixture
 async def async_setup():
     executable_schema = prepare_executable_schema()
     mongo_client = FakeAsyncMongoDbClient()
+
     def context_provider():
         return {
             "mongo_db_client": mongo_client,
             "grpc_model": "fake_grpc_model",
         }
+
     return executable_schema, context_provider
 
 
@@ -273,7 +276,7 @@ async def test_transcript_search_multiple_genome_ids(async_setup):
                 "stable_id": "ENSG00000135541.22",
                 "name": "Abelson helper integration site 1",
             },
-        }
+        },
     ]
 
 
@@ -318,5 +321,11 @@ async def test_transcript_search_missing_fields(async_setup):
     #      'locations': [{'line': 4, 'column': 25}]},
     #     {'message': "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided.",
     #      'locations': [{'line': 4, 'column': 25}]}]}
-    assert "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided." in result["errors"][0]["message"]
-    assert "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided." in result["errors"][1]["message"]
+    assert (
+        "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided."
+        in result["errors"][0]["message"]
+    )
+    assert (
+        "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided."
+        in result["errors"][1]["message"]
+    )
