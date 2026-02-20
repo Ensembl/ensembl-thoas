@@ -23,6 +23,7 @@ class DatabaseNotFoundError(GraphQLError):
     """
 
     def __init__(self, db_name: str):
+        # GraphQL clients read `extensions.code` for stable error categories.
         self.extensions = {"code": "DATABASE_NOT_FOUND"}
         message = f"Failed to find database: {db_name}"
         super().__init__(message, extensions=self.extensions)
@@ -45,6 +46,7 @@ class FieldNotFoundError(GraphQLError):
     """
 
     def __init__(self, field_type: str, key_dict: Dict[str, str]):
+        # Use a type-specific code so consumers can map errors to UI messages.
         self.extensions = {"code": f"{field_type.upper()}_NOT_FOUND"}
         ids_string = ", ".join([f"{key}={val}" for key, val in key_dict.items()])
         message = f"Failed to find {field_type} with ids: {ids_string}"
@@ -216,8 +218,8 @@ class GenomeNotFoundError(FieldNotFoundError):
     Custom error to be raised if product is not found
     """
 
-    def __init__(self, by_genome_uuid):
-        super().__init__("genome", by_genome_uuid)
+    def __init__(self, by_genome_id):
+        super().__init__("genome", by_genome_id)
 
 
 class MissingArgumentException(GraphQLError):
