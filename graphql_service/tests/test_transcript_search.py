@@ -164,6 +164,49 @@ async def test_transcript_search_invalid_query(async_setup):
 
 
 @pytest.mark.asyncio
+async def test_transcript_search_no_genome_ids(async_setup):
+    executable_schema, context = async_setup
+    context_value = context()
+
+    query = """
+    query AsyncQuery {
+      transcript_search(
+        search_payload: {
+          query: "ENST00000680071.1", 
+          genome_ids: [],
+          page: 1,
+          per_page: 50
+        }
+      ) {
+        meta {
+          total_hits
+          page
+          per_page
+        }
+        matches {
+          stable_id
+          symbol
+          gene {
+            stable_id
+            name
+          }
+        }
+      }
+    }
+    """
+
+    success, result = await graphql(
+        executable_schema, {"query": query}, context_value=context_value
+    )
+
+    assert success
+    assert result["data"]["transcript_search"] == {
+        "meta": {"total_hits": 0, "page": 1, "per_page": 50},
+        "matches": [],
+    }
+
+
+@pytest.mark.asyncio
 async def test_transcript_search_multiple_genome_ids(async_setup):
     executable_schema, context = async_setup
     context_value = context()
@@ -232,3 +275,48 @@ async def test_transcript_search_multiple_genome_ids(async_setup):
             },
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_transcript_search_missing_fields(async_setup):
+    executable_schema, context = async_setup
+    context_value = context()
+
+    query = """
+    query AsyncQuery {
+      transcript_search(
+        search_payload: {
+          query: "ENST00000680071.1",
+          per_page: 50
+        }
+      ) {
+        meta {
+          total_hits
+          page
+          per_page
+        }
+        matches {
+          stable_id
+          symbol
+          gene {
+            stable_id
+            name
+          }
+        }
+      }
+    }
+    """
+
+    success, result = await graphql(
+        executable_schema, {"query": query}, context_value=context_value
+    )
+
+    assert success is False
+    assert "errors" in result
+    # {'errors': [
+    #     {'message': "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided.",
+    #      'locations': [{'line': 4, 'column': 25}]},
+    #     {'message': "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided.",
+    #      'locations': [{'line': 4, 'column': 25}]}]}
+    assert "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided." in result["errors"][0]["message"]
+    assert "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided." in result["errors"][1]["message"]
