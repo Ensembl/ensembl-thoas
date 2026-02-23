@@ -1,0 +1,12 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: graphql-core-ingress
+spec:
+  rules:
+    - host: beta.ensembl.org
+      http:
+        paths:
+          # Strip /data/graphql before proxying to the app.
+          - path: /data/graphql(/|$)(.*)
+            pathType: ImplementationSpecific

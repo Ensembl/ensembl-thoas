@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: graphql-core-ingress
   annotations:
+    # Required for capture groups used by rewrite-target.
+    nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
@@ -15,5 +17,6 @@ spec:
             name: graphql-core-svc
             port:
               number: 8000
-        path: path
-        pathType: Prefix
+        # Overlay replaces `path`; capture group 2 is rewritten to app root.
+        path: path(/|$)(.*)
+        pathType: ImplementationSpecific
