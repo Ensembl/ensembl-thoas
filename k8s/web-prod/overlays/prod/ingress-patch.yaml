@@ -10,3 +10,8 @@ spec:
           # Strip /api/graphql/core before proxying to the app.
           - path: /api/graphql/core(/|$)(.*)
             pathType: ImplementationSpecific
+            backend:
+              service:
+                name: graphql-core-svc
+                port:
+                  number: 8000
