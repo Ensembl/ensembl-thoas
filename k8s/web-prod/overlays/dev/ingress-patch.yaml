@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: graphql-core-ingress
+spec:
+  rules:
+    - host: dev-2020.ensembl.org
+      http:
+        paths:
+          # Strip /api/graphql/core before proxying to the app.
+          - path: /api/graphql/core(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: graphql-core-svc
+                port:
+                  number: 8000

@@ -23,7 +23,7 @@
       href="https://unpkg.com/@graphiql/plugin-explorer@0.1.21/dist/style.css"
     />
     {% endif %}
-    <link rel="stylesheet" href="/static/graphiql_custom.css" />
+    <link rel="stylesheet" href="{{ static_base_url }}/graphiql_custom.css" />
 
   </head>
 
@@ -91,7 +91,7 @@
 
     <!-- Load our example data (served by Starlette StaticFiles).
          This file defines window.GRAPHIQL_EXAMPLES. -->
-    <script src="/static/graphiql_examples.js"></script>
+    <script src="{{ static_base_url }}/graphiql_examples.js"></script>
 
     <!-- Small config object (Jinja renders values into this).
          The JS bootstrap reads window.__GRAPHIQL_CONFIG__. -->
@@ -99,13 +99,13 @@
       window.__GRAPHIQL_CONFIG__ = {
         defaultQuery: '{% raw default_query %}',
         enableExplorerPlugin: {% if enable_explorer_plugin %} true {% else %} false {% endif %},
-        sdlUrl: "/sdl",
+        sdlUrl: "{{ sdl_url }}",
         rootElId: "graphiql",
       };
     </script>
 
     <!-- Custom GraphiQL bootstrap + plugins (Examples + SDL sidebar). -->
-    <script src="/static/graphiql_app.js"></script>
+    <script src="{{ static_base_url }}/graphiql_app.js"></script>
 
     <footer id="ensembl-footer">
       <span id="ensembl-copyright-link">

@@ -47,6 +47,12 @@ load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 ENABLE_INTROSPECTION = os.getenv("ENABLE_INTROSPECTION", "true").lower() == "true"
+# Base URL prefix (e.g. /api/graphql/core) when served behind ingress path rewriting.
+GRAPHIQL_BASE_PATH = os.getenv("GRAPHIQL_BASE_PATH", "").strip()
+if GRAPHIQL_BASE_PATH == "/":
+    GRAPHIQL_BASE_PATH = ""
+elif GRAPHIQL_BASE_PATH:
+    GRAPHIQL_BASE_PATH = "/" + GRAPHIQL_BASE_PATH.strip("/")
 
 EXTENSIONS: Optional[ExtensionList] = (
     None  # mypy will throw an incompatible type error without this type cast
@@ -181,6 +187,8 @@ class CustomExplorerGraphiQL(
                 "title": title,
                 "enable_explorer_plugin": explorer_plugin,
                 "default_query": escape_default_query(default_query),
+                "static_base_url": f"{GRAPHIQL_BASE_PATH}/static",
+                "sdl_url": f"{GRAPHIQL_BASE_PATH}/sdl",
             },
         )
 
