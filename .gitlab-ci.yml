@@ -91,16 +91,6 @@ Staging:
   environment:
     name: staging
 
-# deploy to internal at WP-HH
-Internal:
-  extends: .deploy-web
-  variables:
-    BASE: k8s/web-prod/overlays/internal
-    AGENT: ${INTERNAL_AGENT}
-    NAMESPACE: ${INTERNAL_NS}
-  environment:
-    name: internal
-
  # deploy to live at WP-HX
 Live:Fallback:
   extends: .deploy-web
