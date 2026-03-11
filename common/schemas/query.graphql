@@ -38,13 +38,6 @@ type Query {
   transcript_search(
     search_payload: TranscriptIdGenomeIdsInput
   ): TranscriptSearchResponse
-
-  """
-  Fetches transcripts by its ID and list of genome uuids
-  """
-  transcript_search_sync(
-    search_payload: TranscriptIdGenomeIdsInput
-  ): TranscriptSearchResponse
   
   """
   Fetches a product by its genome ID or stable ID.

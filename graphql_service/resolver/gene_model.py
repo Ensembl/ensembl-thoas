@@ -264,45 +264,6 @@ def resolve_transcript(
     return transcript
 
 
-@QUERY_TYPE.field("transcript_search_sync")
-def resolve_transcript_search_sync(
-    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
-) -> dict[str, Any]:
-    """Fetch Transcripts by its stable_id and list of genome uuids"""
-    if search_payload is None:
-        raise MissingArgumentException(
-            "You must provide either 'search_payload' argument."
-        )
-
-    stable_id = search_payload["query"]
-    page = search_payload["page"]
-    per_page = search_payload["per_page"]
-    genome_ids = search_payload["genome_ids"] or []
-    transcripts = []
-
-    for genome_id in genome_ids:
-        query: dict[str, Any] = {
-            "type": "Transcript",
-            "$or": [
-                {"stable_id": stable_id},
-                {"unversioned_stable_id": stable_id},
-            ],
-            "genome_id": genome_id,
-        }
-
-        set_db_conn_for_uuid(info, genome_id)
-        connection_db = get_db_conn(info, genome_id)
-
-        try:
-            transcript = connection_db["transcript"].find_one(query)
-            if transcript:
-                transcripts.append(transcript)
-        except Exception as db_exp:
-            logging.error("Failed to retrieve transcript: %s", db_exp)
-
-    return parse_search_response(transcripts, page, per_page)
-
-
 async def fetch_transcript(
     info: GraphQLResolveInfo, stable_id: str, genome_id: str
 ) -> Any | None:
