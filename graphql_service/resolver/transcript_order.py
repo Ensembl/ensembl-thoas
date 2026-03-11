@@ -43,7 +43,8 @@ def _transcript_value(transcript):
     #   0 = No special designation
     transcript_metadata = transcript.get("metadata", {})
     # print(transcript_metadata)
-    is_canonical = "canonical" in transcript_metadata
+    canonical_meta = transcript_metadata.get("canonical")
+    is_canonical = canonical_meta is not None
     mane_meta = transcript_metadata.get("mane", {})
     is_mane_select = (
         isinstance(mane_meta, dict) and mane_meta.get("value", "").lower() == "select"
@@ -51,7 +52,7 @@ def _transcript_value(transcript):
 
     if is_canonical or is_mane_select:
         designation_value = 2
-    elif any(key.startswith("mane") for key in transcript_metadata):
+    elif isinstance(mane_meta, dict) and mane_meta.get("value"):
         designation_value = 1
     else:
         designation_value = 0
@@ -79,15 +80,41 @@ def _transcript_value(transcript):
         biotype_value = 0
 
     # Translation length contributes to priority, favoring longer translations.
+    # The original transcript ordering algorithm uses translation length as a
+    # tie-breaker. If `protein_length` is available we use it directly; otherwise
+    # we approximate it from the CDS span (cds_length / 3).
     product_contexts = transcript.get("product_generating_contexts", [])
     if product_contexts and product_contexts[0].get("cds"):
-        translation_length = product_contexts[0]["cds"].get("protein_length", 0)
+        cds = product_contexts[0]["cds"]
+        translation_length = cds.get("protein_length")
+        if translation_length is None:
+            relative_start = cds.get("relative_start")
+            relative_end = cds.get("relative_end")
+            if relative_start is not None and relative_end is not None:
+                translation_length = ((relative_end - relative_start) + 1) // 3
+            else:
+                translation_length = 0
     else:
         translation_length = 0
 
     # Transcript length
-    relative_location = transcript.get("relative_location", {})
-    transcript_length = relative_location.get("length", 0)
+    # The original transcript ordering algorithm uses the sum of block sizes
+    # (spliced exon lengths) as the final tie-breaker. We therefore compute the
+    # transcript length by summing exon lengths from `spliced_exons`.
+    spliced_exons = transcript.get("spliced_exons", [])
+    if spliced_exons:
+        transcript_length = 0
+        for exon in spliced_exons:
+            location = (
+                exon.get("exon", {})
+                .get("slice", {})
+                .get("location", {})
+            )
+            transcript_length += location.get("length", 0)
+    else:
+        # Fallback to transcript-level span if exon information is unavailable.
+        relative_location = transcript.get("relative_location", {})
+        transcript_length = relative_location.get("length", 0)
 
     return (
         designation_value,
