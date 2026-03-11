@@ -105,11 +105,7 @@ def _transcript_value(transcript):
     if spliced_exons:
         transcript_length = 0
         for exon in spliced_exons:
-            location = (
-                exon.get("exon", {})
-                .get("slice", {})
-                .get("location", {})
-            )
+            location = exon.get("exon", {}).get("slice", {}).get("location", {})
             transcript_length += location.get("length", 0)
     else:
         # Fallback to transcript-level span if exon information is unavailable.
