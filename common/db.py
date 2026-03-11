@@ -189,13 +189,15 @@ class MongoDbClient:
                 if re.compile(r"^release_\d+_\d+$").match(db_name)
             ]
 
-            logger.info("Starting genome id-> release version redis warm-up from MongoDB")
+            logger.info(
+                "Starting genome id-> release version redis warm-up from MongoDB"
+            )
 
             for db_name in release_dbs:
                 # release_115_4 -> 115.4
                 # we could diretly store release_115_4 but sync resolvers use process_release_version
                 # to get db name
-                release_version = db_name[len("release_"):].replace("_", ".")
+                release_version = db_name[len("release_") :].replace("_", ".")
                 genome_collection = self.mongo_client[db_name]["genome"]
 
                 db_keys = 0
@@ -213,7 +215,8 @@ class MongoDbClient:
                     cursor.close()
 
                 total_keys += db_keys
-                logger.debug("[warmup_cache_from_mongo] Stored %d entries from %s",
+                logger.debug(
+                    "[warmup_cache_from_mongo] Stored %d entries from %s",
                     db_keys,
                     db_name,
                 )
@@ -225,7 +228,7 @@ class MongoDbClient:
                 time_taken,
             )
         except Exception as ex:
-            logger.warning("[warmup_cache_from_mongo] Redis warm-up failed: %s",ex)
+            logger.warning("[warmup_cache_from_mongo] Redis warm-up failed: %s", ex)
 
     @staticmethod
     def connect_mongo(config):
