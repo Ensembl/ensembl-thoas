@@ -332,14 +332,16 @@ class AsyncGRPCServiceClient:
         target = "{}:{}".format(host, port)
 
         # yagrc is synchronous and requires a standard grpc.insecure_channel
-        with grpc.insecure_channel(target) as sync_channel:
+        with grpc.insecure_channel(
+            target, options=(("grpc.enable_http_proxy", 0),)
+        ) as sync_channel:
             self.reflector = yagrc_reflector.GrpcReflectionClient()
             self.reflector.load_protocols(
                 sync_channel, symbols=["ensembl_metadata.EnsemblMetadata"]
             )
 
         self.aio_channel = grpc.aio.insecure_channel(
-            "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
+            target, options=(("grpc.enable_http_proxy", 0),)
         )
 
         # dynamically retrieve the client stub class for service
