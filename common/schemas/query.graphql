@@ -9,6 +9,7 @@ type Query {
   
   """
   Fetches a gene by its ID.
+  Use `by_id` for new clients; `byId` is kept for backwards compatibility.
   """
   gene(
     byId: IdInput @deprecated(reason: "Use `by_id`"), 
@@ -24,6 +25,7 @@ type Query {
   
   """
   Fetches a transcript by its symbol or ID.
+  Prefer snake_case inputs; camelCase arguments are deprecated.
   """
   transcript(
     bySymbol: SymbolInput @deprecated(reason: "Use `by_symbol`"),
@@ -41,6 +43,7 @@ type Query {
   
   """
   Fetches a product by its genome ID or stable ID.
+  Use `by_id` for new clients; legacy args are deprecated.
   """
   product(
     genome_id: String @deprecated(reason: "Use `by_id`"),
@@ -50,6 +53,7 @@ type Query {
   
   """
   Fetches a locus that overlaps a specified region.
+  `by_slice` is the preferred shape; deprecated fields map to the same resolver.
   """
   overlap_region(
     genomeId: String @deprecated(reason: "Use `by_slice`"),
@@ -74,10 +78,10 @@ type Query {
   ): [Genome]
   
   """
-  Fetches a genome by its UUID.
+  Fetches a genome by its ID.
   """
   genome(
-    by_genome_uuid: GenomeUUIDInput!
+    by_genome_id: GenomeIDInput!
   ): Genome
 }
 
@@ -187,13 +191,13 @@ input RegionNameInput {
 }
 
 """
-Input type for specifying a genome by its UUID.
+Input type for specifying a genome by its ID.
 """
-input GenomeUUIDInput {
+input GenomeIDInput {
   """
-  The UUID of the genome.
+  The ID of the genome.
   """
-  genome_uuid: String!
+  genome_id: String!
   """
   The release version of the genome.
   """

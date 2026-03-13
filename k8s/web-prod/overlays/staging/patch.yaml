@@ -14,3 +14,9 @@ spec:
                 operator: In
                 values:
                 - webteam
+      containers:
+        - name: graphql-core
+          env:
+            # Keeps GraphiQL static/sdl URLs under the same ingress prefix.
+            - name: GRAPHIQL_BASE_PATH
+              value: /api/graphql/core

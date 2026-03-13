@@ -31,6 +31,9 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.staticfiles import StaticFiles
+from starlette.responses import PlainTextResponse, Response
+from graphql import print_schema
 
 from dotenv import load_dotenv
 from common import crossrefs, db, extensions, utils, logger
@@ -45,6 +48,12 @@ load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 ENABLE_INTROSPECTION = os.getenv("ENABLE_INTROSPECTION", "true").lower() == "true"
+# Base URL prefix (e.g. /api/graphql/core) when served behind ingress path rewriting.
+GRAPHIQL_BASE_PATH = os.getenv("GRAPHIQL_BASE_PATH", "").strip()
+if GRAPHIQL_BASE_PATH == "/":
+    GRAPHIQL_BASE_PATH = ""
+elif GRAPHIQL_BASE_PATH:
+    GRAPHIQL_BASE_PATH = "/" + GRAPHIQL_BASE_PATH.strip("/")
 
 EXTENSIONS: Optional[ExtensionList] = (
     None  # mypy will throw an incompatible type error without this type cast
@@ -105,57 +114,64 @@ starlette_middleware: List[Middleware] = [
 
 # The original HTML file can be found under
 # [venv]/ariadne/explorer/templates/graphiql.html
+# We override it to:
+# - load static JS/CSS assets
+# - inject the example library and custom sidebar plugins
 CUSTOM_GRAPHIQL_HTML = read_template(
     os.path.dirname(os.path.realpath(__file__)) + "/templates/custom_graphiql.html"
 )
 
+# Default query shown in GraphiQL's editor on first load.
+# Kept in Python so it can be templated directly into the HTML.
 DEFAULT_QUERY = """
 #
 # Welcome to Ensembl Core GraphQL API!
 #
 # This is an in-browser tool for writing, validating, and testing GraphQL queries.
 #
-# Type queries on the left side of the screen, and you'll see intelligent typeaheads
-# aware of the current GraphQL type schema. Live syntax and validation errors
-# are highlighted as you type.
+# Interface overview (left sidebar):
+#   • Documentation: browse the schema, types, and field descriptions.
+#   • History: review and re-run previous queries from this session.
+#   • Explorer: interactively build queries using the schema tree.
+#   • Examples: curated, ready-to-run queries grouped by operation.
+#   • Show SDL: view, copy, or download the full schema (SDL).
 #
-# GraphQL queries typically start with a "{" character. Lines starting with "#" are comments.
-#
-# Here's an example query:
-#
-# {
-#   field(arg: "value") {
-#     subField
-#   }
-# }
-#
-# In the example below, we've named the query "ENSG00000139618", which is optional.
+# General notes:
+#   • Lines starting with "#" are comments.
+#   • Queries can be written as `query Name { ... }` or simply `{ ... }`.
 #
 # Keyboard shortcuts:
-#
 #   Prettify query: Shift + Ctrl + P (or press the prettify button)
 #   Merge fragments: Shift + Ctrl + M (or press the merge button)
 #   Run Query: Ctrl + Enter (or press the play button)
 #   Auto Complete: Ctrl + Space (or just start typing)
 #
-# Try running the query below to fetch gene information:
+# Tip:
+#   Use the Examples panel (especially the "genomes" section) 
+#   to discover valid genome_id values.
 #
-query ENSG00000139618 {
+# Example: fetch a gene and its transcripts
+#
+query GeneWithTranscripts {
   gene(
-    by_id: {genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618"}
+    by_id: {
+      genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3"
+      stable_id: "ENSG00000139618"
+    }
   ) {
-    alternative_symbols
+    stable_id
+    symbol
     name
     so_term
-    stable_id
     transcripts {
       stable_id
       symbol
+      so_term
     }
   }
 }
 
-# Feel free to modify the query or add new ones to explore other data!
+# Explore further using the Examples panel or the Explorer to build your own queries.
 """
 
 
@@ -180,6 +196,8 @@ class CustomExplorerGraphiQL(
                 "title": title,
                 "enable_explorer_plugin": explorer_plugin,
                 "default_query": escape_default_query(default_query),
+                "static_base_url": f"{GRAPHIQL_BASE_PATH}/static",
+                "sdl_url": f"{GRAPHIQL_BASE_PATH}/sdl",
             },
         )
 
@@ -200,6 +218,31 @@ APP = applications.Starlette(
     middleware=starlette_middleware,
     lifespan=lifespan,
 )
+
+# Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
+# Resolve from `__file__` so it works regardless of the process working directory.
+APP.mount(
+    "/static",
+    StaticFiles(
+        directory=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "static",
+        )
+    ),
+    name="static",
+)
+
+
+def sdl_endpoint(request) -> Response:
+    # Expose the executable GraphQL schema as raw SDL text.
+    # The custom GraphiQL "SDL" plugin calls this endpoint to load/copy/download schema text.
+    sdl = print_schema(EXECUTABLE_SCHEMA)
+    return PlainTextResponse(sdl, media_type="text/plain; charset=utf-8")
+
+
+# Dedicated read-only route for schema introspection via SDL text (separate from `/graphql`).
+APP.add_route("/sdl", sdl_endpoint, methods=["GET"])
+
 APP.mount(
     "/",
     GraphQL(
