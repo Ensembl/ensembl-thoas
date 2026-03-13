@@ -230,6 +230,31 @@ class MongoDbClient:
         except Exception as ex:
             logger.warning("[warmup_cache_from_mongo] Redis warm-up failed: %s", ex)
 
+    async def close(self):
+        if self.async_cache:
+            try:
+                await self.async_cache.aclose()
+            except Exception as exc:
+                logger.warning("Failed to close async redis cache client: %s", exc)
+
+        if self.cache:
+            try:
+                self.cache.close()
+            except Exception as exc:
+                logger.warning("Failed to close redis cache client: %s", exc)
+
+        if self.async_mongo_client:
+            try:
+                await self.async_mongo_client.aclose()
+            except Exception as exc:
+                logger.warning("Failed to close async mongo client: %s", exc)
+
+        if self.mongo_client:
+            try:
+                self.mongo_client.close()
+            except Exception as exc:
+                logger.warning("Failed to close mongo client: %s", exc)
+
     @staticmethod
     def connect_mongo(config):
         "Create a MongoDB connection"
@@ -323,6 +348,12 @@ class GRPCServiceClient:
     def get_grpc_reflector(self):
         return self.reflector
 
+    def close(self):
+        try:
+            self.channel.close()
+        except Exception as exc:
+            logger.warning("Failed to close grpc client: %s", exc)
+
 
 class AsyncGRPCServiceClient:
     def __init__(self, config):
@@ -357,3 +388,9 @@ class AsyncGRPCServiceClient:
 
     def get_grpc_reflector(self):
         return self.reflector
+
+    async def close(self):
+        try:
+            await self.aio_channel.close()
+        except Exception as exc:
+            logger.warning("Failed to close async grpc client: %s", exc)

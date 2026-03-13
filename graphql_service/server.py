@@ -16,6 +16,7 @@
 
 import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from ariadne.asgi import GraphQL
@@ -183,7 +184,22 @@ class CustomExplorerGraphiQL(
         )
 
 
-APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+# https://starlette.dev/lifespan/
+@asynccontextmanager
+async def lifespan(_app):
+    try:
+        yield
+    finally:
+        await MONGO_DB_CLIENT.close()
+        await ASYNC_GRPC_CLIENT.close()
+        GRPC_SERVER.close()
+
+
+APP = applications.Starlette(
+    debug=DEBUG_MODE,
+    middleware=starlette_middleware,
+    lifespan=lifespan,
+)
 APP.mount(
     "/",
     GraphQL(
