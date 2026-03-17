@@ -306,7 +306,9 @@ async def resolve_transcript_search(
 
     tasks = [fetch_transcript(info, stable_id, genome_id) for genome_id in genome_ids]
     results = await asyncio.gather(*tasks)
-    transcripts = [transcript for genome_matches in results for transcript in genome_matches]
+    transcripts = [
+        transcript for genome_matches in results for transcript in genome_matches
+    ]
     return parse_search_response(transcripts, page, per_page)
 
 
