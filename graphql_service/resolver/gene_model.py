@@ -1157,6 +1157,8 @@ def get_path_parent_key(info):
 
 
 def parse_search_response(transcripts: list[Any], page: int, per_page: int):
+    start = (page - 1) * per_page
+    end = start + per_page
     meta = {
         "total_hits": len(transcripts),
         "page": page,
@@ -1164,5 +1166,5 @@ def parse_search_response(transcripts: list[Any], page: int, per_page: int):
     }
     return {
         "meta": meta,
-        "matches": transcripts,
+        "matches": transcripts[start:end],
     }
