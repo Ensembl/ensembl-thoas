@@ -276,13 +276,15 @@ async def fetch_transcript(
         "genome_id": genome_id,
     }
 
-    await set_async_db_conn_for_uuid(info, genome_id)
-    connection_db = get_db_conn(info, genome_id)
-
     try:
+        await set_async_db_conn_for_uuid(info, genome_id)
+        connection_db = get_db_conn(info, genome_id)
         return await connection_db["transcript"].find_one(query)
+    except GenomeNotFoundError:
+        logging.warning("Ignoring unknown genome_id %s in transcript_search", genome_id)
+        return None
     except Exception as db_exp:
-        logging.error("Failed to retrieve transcript: %s", db_exp)
+        logging.error("Failed to retrieve transcript for %s: %s", genome_id, db_exp)
         return None
 
 
