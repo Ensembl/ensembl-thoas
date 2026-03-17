@@ -266,7 +266,7 @@ def resolve_transcript(
 
 async def fetch_transcript(
     info: GraphQLResolveInfo, stable_id: str, genome_id: str
-) -> Any | None:
+) -> list[Any]:
     query: dict[str, Any] = {
         "type": "Transcript",
         "$or": [
@@ -279,13 +279,14 @@ async def fetch_transcript(
     try:
         await set_async_db_conn_for_uuid(info, genome_id)
         connection_db = get_db_conn(info, genome_id)
-        return await connection_db["transcript"].find_one(query)
+        matches = await connection_db["transcript"].find(query).to_list(length=None)
+        return sorted(matches, key=lambda transcript: transcript["stable_id"])
     except GenomeNotFoundError:
         logging.warning("Ignoring unknown genome_id %s in transcript_search", genome_id)
-        return None
+        return []
     except Exception as db_exp:
         logging.error("Failed to retrieve transcript for %s: %s", genome_id, db_exp)
-        return None
+        return []
 
 
 @QUERY_TYPE.field("transcript_search")
@@ -305,7 +306,7 @@ async def resolve_transcript_search(
 
     tasks = [fetch_transcript(info, stable_id, genome_id) for genome_id in genome_ids]
     results = await asyncio.gather(*tasks)
-    transcripts = [t for t in results if t is not None]
+    transcripts = [transcript for genome_matches in results for transcript in genome_matches]
     return parse_search_response(transcripts, page, per_page)
 
 
