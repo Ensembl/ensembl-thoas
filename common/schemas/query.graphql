@@ -38,7 +38,7 @@ type Query {
   Fetches transcripts by its ID and list of genome uuids
   """
   transcript_search(
-    search_payload: TranscriptIdGenomeIdsInput
+    search_payload: TranscriptsSearchInput
   ): TranscriptSearchResponse
   
   """
@@ -88,7 +88,7 @@ type Query {
 """
 Input type for querying by transcript stable id and list of genome uuids
 """
-input TranscriptIdGenomeIdsInput {
+input TranscriptsSearchInput {
     genome_ids: [String!]!
     query: String!
     page: Int!

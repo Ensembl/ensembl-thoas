@@ -307,15 +307,15 @@ async def test_transcript_search_missing_fields(async_setup):
     assert success is False
     assert "errors" in result
     # {'errors': [
-    #     {'message': "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided.",
+    #     {'message': "Field 'TranscriptsSearchInput.genome_ids' of required type '[String!]!' was not provided.",
     #      'locations': [{'line': 4, 'column': 25}]},
-    #     {'message': "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided.",
+    #     {'message': "Field 'TranscriptsSearchInput.page' of required type 'Int!' was not provided.",
     #      'locations': [{'line': 4, 'column': 25}]}]}
     assert (
-        "Field 'TranscriptIdGenomeIdsInput.genome_ids' of required type '[String!]!' was not provided."
+        "Field 'TranscriptsSearchInput.genome_ids' of required type '[String!]!' was not provided."
         in result["errors"][0]["message"]
     )
     assert (
-        "Field 'TranscriptIdGenomeIdsInput.page' of required type 'Int!' was not provided."
+        "Field 'TranscriptsSearchInput.page' of required type 'Int!' was not provided."
         in result["errors"][1]["message"]
     )
