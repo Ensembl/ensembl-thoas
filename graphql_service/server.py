@@ -16,6 +16,7 @@
 
 import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from ariadne.asgi import GraphQL
@@ -36,7 +37,7 @@ from graphql import print_schema
 
 from dotenv import load_dotenv
 from common import crossrefs, db, extensions, utils, logger
-from grpc_service import grpc_model
+from grpc_service import grpc_model, async_grpc_model
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
@@ -81,6 +82,13 @@ GRPC_STUB = GRPC_SERVER.get_grpc_stub()
 GRPC_REFLECTOR = GRPC_SERVER.get_grpc_reflector()
 GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB, GRPC_REFLECTOR)
 
+ASYNC_GRPC_CLIENT = db.AsyncGRPCServiceClient(os.environ)
+ASYNC_GRPC_STUB = ASYNC_GRPC_CLIENT.get_grpc_stub()
+ASYNC_GRPC_REFLECTOR = ASYNC_GRPC_CLIENT.get_grpc_reflector()
+ASYNC_GRPC_MODEL = async_grpc_model.AsyncGrpcModel(
+    ASYNC_GRPC_STUB, ASYNC_GRPC_REFLECTOR
+)
+
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 
 RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
@@ -90,6 +98,7 @@ CONTEXT_PROVIDER = prepare_context_provider(
         "mongo_db_client": MONGO_DB_CLIENT,
         "XrefResolver": RESOLVER,
         "grpc_model": GRPC_MODEL,
+        "async_grpc_model": ASYNC_GRPC_MODEL,
     }
 )
 
@@ -193,7 +202,22 @@ class CustomExplorerGraphiQL(
         )
 
 
-APP = applications.Starlette(debug=DEBUG_MODE, middleware=starlette_middleware)
+# https://starlette.dev/lifespan/
+@asynccontextmanager
+async def lifespan(_app):
+    try:
+        yield
+    finally:
+        await MONGO_DB_CLIENT.close()
+        await ASYNC_GRPC_CLIENT.close()
+        GRPC_SERVER.close()
+
+
+APP = applications.Starlette(
+    debug=DEBUG_MODE,
+    middleware=starlette_middleware,
+    lifespan=lifespan,
+)
 
 # Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
 # Resolve from `__file__` so it works regardless of the process working directory.

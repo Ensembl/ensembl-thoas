@@ -76,6 +76,11 @@ type Organism {
   Indicates if this organism is the reference organism.
   """
   is_reference_organism: Boolean
+
+  """
+  The Tree of Life ID (ToLID) of the genome.
+  """
+  tol_id: String
 }
 
 """
@@ -141,11 +146,6 @@ type Genome {
   The taxonomic ID of the genome.
   """
   taxon_id: Int!
-  
-  """
-  The Tree of Life ID (ToLID) of the genome.
-  """
-  tol_id: String
   
   """
   The common parlance name of the genome.

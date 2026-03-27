@@ -39,14 +39,14 @@
 }`,
         },
         {
-          name: "Genomes by common name (bee)",
+          name: "Genomes by common name (mouse)",
           description: "Another keyword search to discover genome_id by common_name",
           query: `query GenomesByCommonName {
-  genomes(by_keyword: { common_name: "bee" }) {
+  genomes(by_keyword: { common_name: "mouse" }) {
     genome_id
     scientific_name
     assembly_accession
-    release_number
+    genome_tag
   }
 }`,
         },
