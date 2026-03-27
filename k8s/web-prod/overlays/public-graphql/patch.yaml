@@ -11,4 +11,4 @@ spec:
           env:
             # Keeps GraphiQL static/sdl URLs under the same ingress prefix.
             - name: GRAPHIQL_BASE_PATH
-              value: /data/graphql
+              value: /data/graphql/core

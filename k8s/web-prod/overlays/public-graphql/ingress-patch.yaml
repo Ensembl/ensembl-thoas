@@ -7,7 +7,7 @@ spec:
     - host: beta.ensembl.org
       http:
         paths:
-          - path: /data/graphql/core/?$
+          - path: /data/graphql/core(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
