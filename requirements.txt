@@ -10,7 +10,7 @@ pymongo==4.16.0
 mongomock-motor==0.0.36
 python-dotenv==1.0.1
 redis==5.2.0
-requests==2.32.0
+requests==2.33.0
 ujson==5.10.0
 uvicorn==0.18.1
 types-ujson==5.10.0.20250326
