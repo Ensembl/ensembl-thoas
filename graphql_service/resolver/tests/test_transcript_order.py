@@ -39,6 +39,7 @@ def test_sort_prioritizes_designation_and_translation_length():
         "tr_stable_id_8",
         "tr_stable_id_12",
         "tr_stable_id_11",
+        "tr_stable_id_33",
         "tr_stable_id_3",
     ]
 
