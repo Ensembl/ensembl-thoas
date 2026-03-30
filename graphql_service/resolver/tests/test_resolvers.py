@@ -104,6 +104,10 @@ def fixture_transcript_data():
                         "product_type": "Protein",
                         "product_id": "ENSP001.1",
                         "product_foreign_key": "1_ENSP001.1",
+                        "cds": {  # This bit became important after we introduced transcript sorting
+                            "nucleotide_length": 1234,
+                            "protein_length": 411,
+                        },
                     }
                 ],
                 "gene_foreign_key": "1_ENSG001.1",
