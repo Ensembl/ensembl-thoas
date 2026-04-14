@@ -27,7 +27,45 @@
   --sidebar-hover: rgba(255, 255, 255, 0.85);
 }
 
-/* Light-mode overrides.
+/* "System" theme can resolve via the OS media query without GraphiQL exposing
+   a light-specific class/attribute. Mirror that behavior so our custom shell
+   (header/footer/custom panels) stays in sync with the GraphiQL canvas. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --app-bg: #ffffff;
+    --graphiql-bg: #ffffff;
+
+    --panel-fg: #1b2c39;
+    --panel-muted: rgba(27, 44, 57, 0.8);
+    --panel-border: rgba(27, 44, 57, 0.18);
+    --panel-surface: rgba(27, 44, 57, 0.06);
+    --panel-surface-hover: rgba(27, 44, 57, 0.12);
+    --panel-textarea: rgba(255, 255, 255, 0.95);
+
+    --privacy-bg: #ffffff;
+    --sidebar-hover: rgba(27, 44, 57, 0.85);
+  }
+}
+
+/* Explicit dark-mode hooks should override the system media query. */
+.graphiql-dark,
+[data-theme="dark"],
+[data-color-scheme="dark"] {
+  --app-bg: #1b2c39;
+  --graphiql-bg: #1b2c39;
+
+  --panel-fg: #ffffff;
+  --panel-muted: rgba(255, 255, 255, 0.8);
+  --panel-border: rgba(255, 255, 255, 0.18);
+  --panel-surface: rgba(255, 255, 255, 0.06);
+  --panel-surface-hover: rgba(255, 255, 255, 0.12);
+  --panel-textarea: rgba(0, 0, 0, 0.25);
+
+  --privacy-bg: #1b2c39;
+  --sidebar-hover: rgba(255, 255, 255, 0.85);
+}
+
+/* Explicit light-mode hooks.
    GraphiQL can expose theme in different ways depending on build/version,
    so we support a few common hooks. */
 .graphiql-light,
