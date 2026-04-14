@@ -160,4 +160,14 @@ dummy_transcripts_sample = [
         "stable_id": "tr_stable_id_12",
         "symbol": "PrCo CDS not defined",
     },
+    {
+        "metadata": {
+            "biotype": {"label": "retained_intron", "value": "retained_intron"}
+        },
+        "relative_location": {
+            "length": 14501,
+        },
+        "stable_id": "tr_stable_id_33",  # This would be ranked before tr_stable_id_3 (sorted alphabetically)
+        "symbol": "Retained Intron",
+    },
 ]

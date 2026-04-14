@@ -112,11 +112,14 @@ def _transcript_value(transcript):
         relative_location = transcript.get("relative_location", {})
         transcript_length = relative_location.get("length", 0)
 
+    transcript_stable_id = transcript.get("stable_id", "")
+
     return (
         designation_value,
         biotype_value,
         int(translation_length),
         transcript_length,
+        transcript_stable_id,  # We want to sort alphabetically in case the scoring is even across two or more transcripts
     )
 
 
