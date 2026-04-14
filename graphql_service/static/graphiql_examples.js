@@ -68,7 +68,6 @@
     assembly_accession
     release_date
     taxon_id
-    tol_id
   }
 }`,
         },
