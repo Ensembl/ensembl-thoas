@@ -150,6 +150,24 @@ async def test_gene_retrieval_by_symbol(snapshot):
 
 
 @pytest.mark.asyncio
+async def test_gene_transcript_count():
+    "Test `transcript_count` on `Gene`"
+
+    query = """{
+      gene(by_id: { genome_id: "homo_sapiens_GCA_000001405_28", stable_id: "ENSG00000139618.15" }) {
+        transcript_count
+      }
+    }"""
+    query_data = {"query": query}
+
+    (success, result) = await graphql(
+        executable_schema, query_data, context_value=context()
+    )
+    assert success
+    assert result["data"]["gene"]["transcript_count"] == 2
+
+
+@pytest.mark.asyncio
 async def test_transcript_pagination(snapshot):
     """
     Run a query checking pagination
