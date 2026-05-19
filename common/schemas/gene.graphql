@@ -43,6 +43,11 @@ type Gene {
   transcripts: [Transcript!]!
 
   """
+  The total number of transcripts associated with the gene.
+  """
+  transcript_count: Int!
+
+  """
   Fetches a paginated list of transcripts associated with the gene.
   """
   transcripts_page(

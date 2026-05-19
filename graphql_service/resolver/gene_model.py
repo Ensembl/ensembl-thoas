@@ -345,6 +345,24 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     return sorted_transcripts
 
 
+@GENE_TYPE.field("transcript_count")
+def resolve_gene_transcript_count(gene: Dict, info: GraphQLResolveInfo) -> int:
+    "Count transcripts for the parent gene"
+    query = {
+        "type": "Transcript",
+        "gene_foreign_key": gene["gene_primary_key"],
+    }
+
+    connection_db = get_db_conn(info)
+    transcript_collection = connection_db["transcript"]
+    logger.info(
+        "[resolve_gene_transcript_count] Getting Transcript count from DB: '%s'",
+        connection_db.name,
+    )
+
+    return transcript_collection.count_documents(query)
+
+
 @GENE_TYPE.field("transcripts_page")
 async def resolve_gene_transcripts_page(
     gene: Dict, _: GraphQLResolveInfo, page: int, per_page: int
