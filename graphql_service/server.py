@@ -16,6 +16,7 @@
 
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Optional, List
 
@@ -25,6 +26,8 @@ from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
 from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_query
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
+from prometheus_client import Counter, Histogram
+from prometheus_fastapi_instrumentator import Instrumentator
 from pymongo import monitoring
 from starlette import applications
 from starlette.middleware import Middleware
@@ -61,6 +64,17 @@ EXTENSIONS: Optional[ExtensionList] = (
 
 # Including the execution time in the response
 EXTENSIONS = [extensions.QueryExecutionTimeExtension]
+
+GRAPHQL_OPERATIONS = Counter(
+    "graphql_operations_total",
+    "Total number of GraphQL operations",
+    ["operation_name", "status"],
+)
+GRAPHQL_OPERATION_DURATION = Histogram(
+    "graphql_operation_duration_seconds",
+    "GraphQL operation execution time",
+    ["operation_name"],
+)
 
 if DEBUG_MODE:
     log = logging.getLogger()
@@ -202,6 +216,40 @@ class CustomExplorerGraphiQL(
         )
 
 
+class PrometheusGraphQLHTTPHandler(GraphQLHTTPHandler):
+    """Record low overhead Prometheus metrics for GraphQL operations"""
+
+    async def execute_graphql_query(
+        self,
+        request,
+        data,
+        *,
+        context_value=None,
+        query_document=None,
+    ):
+        """Execute an operation and record its count, status, and duration."""
+        operation_name = data.get("operationName") if isinstance(data, dict) else None
+        if not isinstance(operation_name, str) or not operation_name:
+            operation_name = "anonymous"
+
+        start_time = time.perf_counter()
+        status = "error"
+        try:
+            success, result = await super().execute_graphql_query(
+                request,
+                data,
+                context_value=context_value,
+                query_document=query_document,
+            )
+            status = "success" if success else "error"
+            return success, result
+        finally:
+            GRAPHQL_OPERATIONS.labels(operation_name, status).inc()
+            GRAPHQL_OPERATION_DURATION.labels(operation_name).observe(
+                time.perf_counter() - start_time
+            )
+
+
 # https://starlette.dev/lifespan/
 @asynccontextmanager
 async def lifespan(_app):
@@ -217,6 +265,10 @@ APP = applications.Starlette(
     debug=DEBUG_MODE,
     middleware=starlette_middleware,
     lifespan=lifespan,
+)
+
+Instrumentator(excluded_handlers=["/metrics"]).instrument(APP).expose(
+    APP, endpoint="/metrics"
 )
 
 # Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
@@ -249,7 +301,7 @@ APP.mount(
         EXECUTABLE_SCHEMA,
         debug=DEBUG_MODE,
         context_value=CONTEXT_PROVIDER,
-        http_handler=GraphQLHTTPHandler(
+        http_handler=PrometheusGraphQLHTTPHandler(
             extensions=EXTENSIONS,
         ),
         explorer=CustomExplorerGraphiQL(),
