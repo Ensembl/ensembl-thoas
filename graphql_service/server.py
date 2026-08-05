@@ -286,9 +286,7 @@ Instrumentator(excluded_handlers=["/metrics"]).instrument(
         10,
         30,
     ),
-).expose(
-    APP, endpoint="/metrics"
-)
+).expose(APP, endpoint="/metrics")
 
 # Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
 # Resolve from `__file__` so it works regardless of the process working directory.
