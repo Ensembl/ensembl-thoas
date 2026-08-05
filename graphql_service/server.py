@@ -267,7 +267,26 @@ APP = applications.Starlette(
     lifespan=lifespan,
 )
 
-Instrumentator(excluded_handlers=["/metrics"]).instrument(APP).expose(
+Instrumentator(excluded_handlers=["/metrics"]).instrument(
+    APP,
+    latency_lowr_buckets=(
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1,
+        1.25,
+        1.5,
+        1.75,
+        2,
+        2.5,
+        5,
+        10,
+        30,
+    ),
+).expose(
     APP, endpoint="/metrics"
 )
 
