@@ -36,7 +36,7 @@ from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.staticfiles import StaticFiles
 from starlette.responses import PlainTextResponse, Response
-from graphql import print_schema
+from graphql import FieldNode, GraphQLError, get_operation_ast, parse, print_schema
 
 from dotenv import load_dotenv
 from common import crossrefs, db, extensions, utils, logger
@@ -65,15 +65,34 @@ EXTENSIONS: Optional[ExtensionList] = (
 # Including the execution time in the response
 EXTENSIONS = [extensions.QueryExecutionTimeExtension]
 
-GRAPHQL_OPERATIONS = Counter(
-    "graphql_operations_total",
-    "Total number of GraphQL operations",
-    ["operation_name", "status"],
+LATENCY_BUCKETS = (
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1,
+    1.25,
+    1.5,
+    1.75,
+    2,
+    2.5,
+    5,
+    10,
+    30,
 )
-GRAPHQL_OPERATION_DURATION = Histogram(
-    "graphql_operation_duration_seconds",
-    "GraphQL operation execution time",
-    ["operation_name"],
+
+GRAPHQL_ROOT_FIELD_REQUESTS = Counter(
+    "graphql_root_field_requests_total",
+    "Total number of GraphQL requests by root field",
+    ["root_field", "status"],
+)
+GRAPHQL_ROOT_FIELD_DURATION = Histogram(
+    "graphql_root_field_duration_seconds",
+    "GraphQL operation execution time by root field",
+    ["root_field"],
+    buckets=LATENCY_BUCKETS,
 )
 
 if DEBUG_MODE:
@@ -104,6 +123,16 @@ ASYNC_GRPC_MODEL = async_grpc_model.AsyncGrpcModel(
 )
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
+ROOT_FIELD_NAMES = frozenset(
+    field_name
+    for root_type in (
+        EXECUTABLE_SCHEMA.query_type,
+        EXECUTABLE_SCHEMA.mutation_type,
+        EXECUTABLE_SCHEMA.subscription_type,
+    )
+    if root_type
+    for field_name in root_type.fields
+)
 
 RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
 
@@ -228,11 +257,36 @@ class PrometheusGraphQLHTTPHandler(GraphQLHTTPHandler):
         query_document=None,
     ):
         """Execute an operation and record its count, status, and duration."""
-        operation_name = data.get("operationName") if isinstance(data, dict) else None
-        if not isinstance(operation_name, str) or not operation_name:
-            operation_name = "anonymous"
-
         start_time = time.perf_counter()
+        root_fields = ("unknown",)
+
+        if isinstance(data, dict):
+            operation_name = data.get("operationName")
+            if query_document is None and isinstance(data.get("query"), str):
+                try:
+                    query_document = parse(data["query"])
+                except GraphQLError:
+                    pass
+
+            if query_document is not None:
+                operation = get_operation_ast(query_document, operation_name)
+                if operation:
+                    selections = operation.selection_set.selections
+                    fields = {
+                        selection.name.value
+                        for selection in selections
+                        if isinstance(selection, FieldNode)
+                        and selection.name.value in ROOT_FIELD_NAMES
+                    }
+                    if fields:
+                        root_fields = tuple(sorted(fields))
+                    elif any(
+                        isinstance(selection, FieldNode)
+                        and selection.name.value.startswith("__")
+                        for selection in selections
+                    ):
+                        root_fields = ("introspection",)
+
         status = "error"
         try:
             success, result = await super().execute_graphql_query(
@@ -241,13 +295,16 @@ class PrometheusGraphQLHTTPHandler(GraphQLHTTPHandler):
                 context_value=context_value,
                 query_document=query_document,
             )
-            status = "success" if success else "error"
+            if not success or result.get("errors"):
+                status = "error"
+            else:
+                status = "success"
             return success, result
         finally:
-            GRAPHQL_OPERATIONS.labels(operation_name, status).inc()
-            GRAPHQL_OPERATION_DURATION.labels(operation_name).observe(
-                time.perf_counter() - start_time
-            )
+            duration = time.perf_counter() - start_time
+            for root_field in root_fields:
+                GRAPHQL_ROOT_FIELD_REQUESTS.labels(root_field, status).inc()
+                GRAPHQL_ROOT_FIELD_DURATION.labels(root_field).observe(duration)
 
 
 # https://starlette.dev/lifespan/
@@ -269,23 +326,7 @@ APP = applications.Starlette(
 
 Instrumentator(excluded_handlers=["/metrics"]).instrument(
     APP,
-    latency_lowr_buckets=(
-        0.01,
-        0.025,
-        0.05,
-        0.1,
-        0.25,
-        0.5,
-        1,
-        1.25,
-        1.5,
-        1.75,
-        2,
-        2.5,
-        5,
-        10,
-        30,
-    ),
+    latency_lowr_buckets=LATENCY_BUCKETS,
 ).expose(APP, endpoint="/metrics")
 
 # Serve GraphiQL frontend assets (JS/CSS/examples) from this package's `static` dir.
