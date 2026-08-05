@@ -8,6 +8,7 @@ httpx==0.28.1
 mongomock==4.3.0
 pymongo==4.16.0
 mongomock-motor==0.0.36
+prometheus-fastapi-instrumentator==7.1.0
 python-dotenv==1.0.1
 redis==5.2.0
 requests==2.32.0
