@@ -6,7 +6,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$3
 spec:
   rules:
-    - host: beta.ensembl.org
+    - host: www.ensembl.org
       http:
         paths:
           - path: /data/graphql(/core)?(/|$)(.*)
