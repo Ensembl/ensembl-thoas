@@ -312,6 +312,53 @@ async def resolve_transcript_search(
     return parse_search_response(transcripts, page, per_page)
 
 
+async def fetch_product(
+    info: GraphQLResolveInfo, stable_id: str, genome_id: str
+) -> list[Any]:
+    """Fetch proteins matching a versioned or unversioned stable ID."""
+    query: dict[str, Any] = {
+        "type": "Protein",
+        "$or": [
+            {"stable_id": stable_id},
+            {"unversioned_stable_id": stable_id},
+        ],
+        "genome_id": genome_id,
+    }
+
+    try:
+        await set_async_db_conn_for_uuid(info, genome_id)
+        connection_db = get_db_conn(info, genome_id)
+        matches = await connection_db["protein"].find(query).to_list(length=None)
+        return sorted(matches, key=lambda product: product["stable_id"])
+    except GenomeNotFoundError:
+        logging.warning("Ignoring unknown genome_id %s in protein_search", genome_id)
+        return []
+    except Exception as db_exp:
+        logging.error("Failed to retrieve protein for %s: %s", genome_id, db_exp)
+        return []
+
+
+@QUERY_TYPE.field("protein_search")
+async def resolve_protein_search(
+    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
+) -> dict[str, Any]:
+    """Fetch proteins by stable ID across a list of genome UUIDs."""
+    if search_payload is None:
+        raise MissingArgumentException(
+            "You must provide either 'search_payload' argument."
+        )
+
+    tasks = [
+        fetch_product(info, search_payload["query"], genome_id)
+        for genome_id in search_payload["genome_ids"]
+    ]
+    results = await asyncio.gather(*tasks)
+    products = [product for genome_matches in results for product in genome_matches]
+    return parse_search_response(
+        products, search_payload["page"], search_payload["per_page"]
+    )
+
+
 @QUERY_TYPE.field("version")
 def resolve_api(
     _: None,
