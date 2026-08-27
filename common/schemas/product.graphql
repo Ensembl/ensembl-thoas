@@ -18,6 +18,11 @@ type Product {
   unversioned_stable_id: String!
 
   """
+  The stable identifier of the transcript that generates this product.
+  """
+  transcript_id: String!
+
+  """
   The genome identifier associated with the product.
   """
   genome_id: String!
