@@ -40,6 +40,13 @@ type Query {
   transcript_search(
     search_payload: TranscriptsSearchInput
   ): TranscriptSearchResponse
+
+  """
+  Fetches proteins by ID and list of genome UUIDs.
+  """
+  protein_search(
+    search_payload: ProductsSearchInput
+  ): ProductSearchResponse
   
   """
   Fetches a product by its genome ID or stable ID.
@@ -95,12 +102,24 @@ input TranscriptsSearchInput {
     per_page: Int!
 }
 
+input ProductsSearchInput {
+    genome_ids: [String!]!
+    query: String!
+    page: Int!
+    per_page: Int!
+}
+
 """
 Transcript search response
 """
 type TranscriptSearchResponse {
     meta: SearchMeta!
     matches: [Transcript!]!
+}
+
+type ProductSearchResponse {
+    meta: SearchMeta!
+    matches: [Product!]!
 }
 
 """
