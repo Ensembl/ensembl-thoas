@@ -545,8 +545,9 @@ def resolve_overlap(
     # this is needed for mypy to pass
     assert genome_id and region_name and start and end
 
-    # Thoas only contains "chromosome"-type regions
-    region_id = "_".join([genome_id, region_name, "chromosome"])
+    # Thoas only contains "chromosome" and "primary_assembly" -type regions
+    chromosomal_region_id = "_".join([genome_id, region_name, "chromosome"])
+    primary_assembly_region_id = "_".join([genome_id, region_name, "primary_assembly"])
 
     set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
@@ -557,10 +558,22 @@ def resolve_overlap(
 
     return {
         "genes": overlap_region(
-            connection_db, genome_id, region_id, start, end, "Gene"
+            connection_db,
+            genome_id,
+            chromosomal_region_id,
+            primary_assembly_region_id,
+            start,
+            end,
+            "Gene",
         ),
         "transcripts": overlap_region(
-            connection_db, genome_id, region_id, start, end, "Transcript"
+            connection_db,
+            genome_id,
+            chromosomal_region_id,
+            primary_assembly_region_id,
+            start,
+            end,
+            "Transcript",
         ),
     }
 
@@ -568,7 +581,8 @@ def resolve_overlap(
 def overlap_region(
     connection: Database,
     genome_id: str,
-    region_id: str,
+    chromosomal_region_id: str,
+    primary_assembly_region_id: str,
     start: int,
     end: int,
     feature_type: str,
@@ -583,7 +597,7 @@ def overlap_region(
     query = {
         "type": feature_type,
         "genome_id": genome_id,
-        "slice.region_id": region_id,
+        "slice.region_id": {"$in": [chromosomal_region_id, primary_assembly_region_id]},
         # A query region does not intersect a slice if, and only if, either the start of the slice is greater than the
         # end of the query region, or the end of the slice is less than the start of the query region.  Therefore, the
         # query region does intersect a slice if, and only if, the start of the slice is less than the end of the query
