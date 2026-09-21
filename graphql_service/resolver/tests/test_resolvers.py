@@ -517,7 +517,8 @@ def test_overlap_region(start, end, expected_ids, slice_data):
     result = model.overlap_region(
         connection=connection,
         genome_id="test_genome_id",
-        region_id="test_genome_id_chr1_chromosome",
+        chromosomal_region_id="test_genome_id_chr1_chromosome",
+        primary_assembly_region_id="test_genome_id_chr1_primary_assembly",
         start=start,
         end=end,
         feature_type="Gene",
@@ -538,7 +539,8 @@ def test_overlap_region_too_many_results(slice_data):
         result = model.overlap_region(
             connection=connection,
             genome_id="test_genome_id",
-            region_id="test_genome_id_chr1_chromosome",
+            chromosomal_region_id="test_genome_id_chr1_chromosome",
+            primary_assembly_region_id="test_genome_id_chr1_primary_assembly",
             start=205,
             end=305,
             feature_type="Gene",
