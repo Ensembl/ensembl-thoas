@@ -35,6 +35,26 @@ looks like this:
 
 ![Uvicorn run config](thoas_run_config.png)
 
+## Genome-to-release mapping
+
+Database routing checks Redis first (when `GRPC_ENABLE_CACHE` is enabled), then
+`metadata.genome_mapping` on the configured MongoDB deployment. Documents are
+matched by `genome_uuid`; the highest numeric `release_version` is selected
+(for example, `110.10` takes precedence over `110.9`). The version is converted
+to a database name such as `release_110_10`. An explicitly supplied release in
+the synchronous routing API bypasses this lookup.
+
+If there is no valid mapping, or the MongoDB mapping query fails, routing falls
+back to the metadata gRPC service. Both lookup paths cache successful results
+for `REDIS_EXPIRY_SECONDS`. A non-unique index on `genome_uuid` is recommended
+for the mapping collection, and the MongoDB user needs read access to it.
+
+`WARMUP_CACHE_ON_START` now reads this collection and caches the highest release
+per genome with the same expiry. Mapping cache keys use `genome_mapping:<uuid>`
+so legacy bare-UUID entries without expiry do not override the new mappings.
+Mapping changes become visible after cache expiry or the next warm-up.
+gRPC is still used for other metadata queries and initialized at startup.
+
 ## GraphiQL UI wiring
 The in-browser GraphiQL UI is assembled from a custom HTML template plus static assets:
 
