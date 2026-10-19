@@ -28,7 +28,7 @@ from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 from yagrc import reflector as yagrc_reflector
 
-from common.utils import process_release_version
+from common.utils import release_database_name
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +42,32 @@ def release_version_key(version):
     return tuple(int(part) for part in version.split("."))
 
 
-def highest_mapping_release(mappings):
-    """Ignore malformed mappings and select by numeric rather than string order."""
-    versions = [mapping.get("release_version") for mapping in mappings]
-    valid_versions = [v for v in versions if release_version_key(v) is not None]
-    return max(valid_versions, key=release_version_key, default=None)
+def highest_release_mapping(mappings):
+    """Keep version and name together when selecting the highest valid release."""
+    valid = [
+        m for m in mappings if release_version_key(m.get("release_version")) is not None
+    ]
+    return max(
+        valid, key=lambda m: release_version_key(m["release_version"]), default=None
+    )
+
+
+def mapping_database_name(mapping, database_names):
+    """Prefer the version database, then the name from the same mapping."""
+    if mapping is None:
+        return None
+    for release in (mapping["release_version"], mapping.get("release_name")):
+        if release is None or str(release).strip() == "":
+            continue
+        database = release_database_name(release)
+        if database in database_names:
+            return database
+    return None
 
 
 def genome_mapping_cache_key(uuid):
-    # Avoid legacy bare-UUID warm-up entries, which could have no expiry.
-    return f"genome_mapping:{uuid}"
+    # Cache resolved database names separately from legacy release-version values.
+    return f"genome_mapping:database:{uuid}"
 
 
 class MongoDbClient:
@@ -99,11 +115,11 @@ class MongoDbClient:
     async def get_cached_connection(self, uuid):
         if self.redis_cache_enabled and self.async_cache:
             try:
-                cached_version = await self.async_cache.get(
+                cached_database = await self.async_cache.get(
                     genome_mapping_cache_key(uuid)
                 )
-                if cached_version:
-                    chosen_db = process_release_version(cached_version.decode("utf-8"))
+                if cached_database:
+                    chosen_db = cached_database.decode("utf-8")
                     return self.async_mongo_client[chosen_db]
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
@@ -114,34 +130,37 @@ class MongoDbClient:
         if cached_connection is not None:
             return cached_connection
 
-        release_version = None
+        chosen_db = None
         try:
             mappings = (
                 await self.async_mongo_client["metadata"]["genome_mapping"]
-                .find({"genome_uuid": uuid}, {"release_version": 1, "_id": 0})
+                .find(
+                    {"genome_uuid": uuid},
+                    {"release_version": 1, "release_name": 1, "_id": 0},
+                )
                 .to_list(length=None)
             )
-            release_version = highest_mapping_release(mappings)
+            mapping = highest_release_mapping(mappings)
+            if mapping is not None:
+                chosen_db = mapping_database_name(
+                    mapping, await self.async_mongo_client.list_database_names()
+                )
         except pymongo.errors.PyMongoError as exc:
             logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
 
-        if not release_version:
+        if not chosen_db:
             logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
 
-        chosen_db = process_release_version(release_version)
         if self.redis_cache_enabled and self.async_cache:
             try:
                 await self.async_cache.set(
                     genome_mapping_cache_key(uuid),
-                    release_version,
+                    chosen_db,
                     ex=self.redis_expiry,
                 )
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
-
-        if not chosen_db:
-            raise GenomeNotFoundError({"genome_id": uuid})
 
         logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
         return self.async_mongo_client[chosen_db]
@@ -150,39 +169,42 @@ class MongoDbClient:
         chosen_db = None
 
         if release_version:
-            chosen_db = process_release_version(release_version)
+            chosen_db = release_database_name(release_version)
             return self.mongo_client[chosen_db]
 
         # Try cache if enabled
         if self.redis_cache_enabled and self.cache:
             try:
-                cached_version = self.cache.get(genome_mapping_cache_key(uuid))
-                if cached_version:
+                cached_database = self.cache.get(genome_mapping_cache_key(uuid))
+                if cached_database:
                     logger.debug(
-                        f"[MongoDbClient] Using cached version: {cached_version}"
+                        f"[MongoDbClient] Using cached database: {cached_database}"
                     )
-                    chosen_db = process_release_version(cached_version.decode("utf-8"))
+                    chosen_db = cached_database.decode("utf-8")
                     return self.mongo_client[chosen_db]
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
 
-        release_version = None
+        chosen_db = None
         try:
             with self.mongo_client["metadata"]["genome_mapping"].find(
-                {"genome_uuid": uuid}, {"release_version": 1, "_id": 0}
+                {"genome_uuid": uuid},
+                {"release_version": 1, "release_name": 1, "_id": 0},
             ) as mappings:
-                release_version = highest_mapping_release(mappings)
+                mapping = highest_release_mapping(mappings)
+            if mapping is not None:
+                chosen_db = mapping_database_name(
+                    mapping, self.mongo_client.list_database_names()
+                )
         except pymongo.errors.PyMongoError as exc:
             logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
 
-        if release_version:
-            chosen_db = process_release_version(release_version)
-
+        if chosen_db:
             if self.redis_cache_enabled and self.cache:
                 try:
                     self.cache.set(
                         genome_mapping_cache_key(uuid),
-                        release_version,
+                        chosen_db,
                         ex=self.redis_expiry,
                     )
                 except redis.RedisError as e:
@@ -209,7 +231,8 @@ class MongoDbClient:
             logger.info("Starting genome mapping Redis warm-up from MongoDB")
             latest = {}
             with self.mongo_client["metadata"]["genome_mapping"].find(
-                {}, {"genome_uuid": 1, "release_version": 1, "_id": 0}
+                {},
+                {"genome_uuid": 1, "release_version": 1, "release_name": 1, "_id": 0},
             ) as mappings:
                 for mapping in mappings:
                     uuid = mapping.get("genome_uuid")
@@ -218,13 +241,17 @@ class MongoDbClient:
                     if not uuid or version_key is None:
                         continue
                     if uuid not in latest or version_key > release_version_key(
-                        latest[uuid]
+                        latest[uuid]["release_version"]
                     ):
-                        latest[uuid] = version
+                        latest[uuid] = mapping
 
-            for uuid, version in latest.items():
+            database_names = self.mongo_client.list_database_names()
+            for uuid, mapping in latest.items():
+                chosen_db = mapping_database_name(mapping, database_names)
+                if chosen_db is None:
+                    continue
                 self.cache.set(
-                    genome_mapping_cache_key(uuid), version, ex=self.redis_expiry
+                    genome_mapping_cache_key(uuid), chosen_db, ex=self.redis_expiry
                 )
                 total_keys += 1
 

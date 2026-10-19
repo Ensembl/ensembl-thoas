@@ -35,6 +35,12 @@ def routing(request):
         else:
             collection.insert_many(documents)
 
+    async def create_database(name):
+        if is_async:
+            await mongo[name].data.insert_one({"test": True})
+        else:
+            mongo[name].data.insert_one({"test": True})
+
     async def lookup(uuid="genome-1"):
         if is_async:
             return await client.get_async_database_conn(uuid)
@@ -46,6 +52,7 @@ def routing(request):
         collection=collection,
         insert=insert,
         lookup=lookup,
+        create_database=create_database,
     )
 
 
@@ -69,10 +76,11 @@ async def test_highest_numeric_release_wins(routing, versions, expected):
         ]
         + [{"genome_uuid": "other", "release_version": "999.1"}]
     )
+    await routing.create_database("release_" + expected.replace(".", "_"))
     database = await routing.lookup()
     assert database.name == "release_" + expected.replace(".", "_")
     routing.cache.set.assert_called_once_with(
-        genome_mapping_cache_key("genome-1"), expected, ex=6600
+        genome_mapping_cache_key("genome-1"), database.name, ex=6600
     )
 
 
@@ -108,7 +116,7 @@ async def test_mapping_read_failure_raises_not_found(routing, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_cache_hit_bypasses_mongo(routing, monkeypatch):
-    routing.cache.get.return_value = b"108.2"
+    routing.cache.get.return_value = b"release_108_2"
     find = Mock(side_effect=AssertionError("Mongo should not be queried"))
     monkeypatch.setattr(routing.collection, "find", find)
     assert (await routing.lookup()).name == "release_108_2"
@@ -121,6 +129,7 @@ async def test_redis_failure_does_not_prevent_mongo_mapping(routing):
     routing.cache.get.side_effect = RedisConnectionError("unavailable")
     routing.cache.set.side_effect = RedisConnectionError("unavailable")
     await routing.insert([{"genome_uuid": "genome-1", "release_version": "110.1"}])
+    await routing.create_database("release_110_1")
     assert (await routing.lookup()).name == "release_110_1"
 
 
@@ -128,6 +137,7 @@ async def test_redis_failure_does_not_prevent_mongo_mapping(routing):
 async def test_disabled_cache_still_uses_mongo(routing):
     routing.client.redis_cache_enabled = False
     await routing.insert([{"genome_uuid": "genome-1", "release_version": "110.1"}])
+    await routing.create_database("release_110_1")
     assert (await routing.lookup()).name == "release_110_1"
     routing.cache.get.assert_not_called()
     routing.cache.set.assert_not_called()
@@ -155,7 +165,105 @@ def test_warmup_uses_highest_mapping_and_refreshes_with_expiry():
             {"release_version": "111.2"},
         ]
     )
+    client.mongo_client.release_110_10.data.insert_one({"test": True})
+    client.mongo_client.release_111_1.data.insert_one({"test": True})
     client.warmup_cache_from_mongo()
     assert client.cache.set.call_count == 2
-    client.cache.set.assert_any_call(genome_mapping_cache_key("one"), "110.10", ex=6600)
-    client.cache.set.assert_any_call(genome_mapping_cache_key("two"), "111.1", ex=6600)
+    client.cache.set.assert_any_call(
+        genome_mapping_cache_key("one"), "release_110_10", ex=6600
+    )
+    client.cache.set.assert_any_call(
+        genome_mapping_cache_key("two"), "release_111_1", ex=6600
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("version_exists", [False, True])
+async def test_version_database_preferred_then_release_name(routing, version_exists):
+    await routing.insert(
+        [{"genome_uuid": "genome-1", "release_version": "110.1", "release_name": "1"}]
+    )
+    await routing.create_database("release_1")
+    if version_exists:
+        await routing.create_database("release_110_1")
+    expected = "release_110_1" if version_exists else "release_1"
+    assert (await routing.lookup()).name == expected
+    routing.cache.set.assert_called_once_with(
+        genome_mapping_cache_key("genome-1"), expected, ex=6600
+    )
+
+
+@pytest.mark.asyncio
+async def test_missing_databases_raise_not_found(routing):
+    await routing.insert(
+        [{"genome_uuid": "genome-1", "release_version": "110.1", "release_name": "1"}]
+    )
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_fallback_uses_name_from_highest_mapping(routing):
+    await routing.insert(
+        [
+            {
+                "genome_uuid": "genome-1",
+                "release_version": "110.1",
+                "release_name": "1",
+            },
+            {
+                "genome_uuid": "genome-1",
+                "release_version": "110.2",
+                "release_name": "2",
+            },
+        ]
+    )
+    await routing.create_database("release_1")
+    await routing.create_database("release_2")
+    assert (await routing.lookup()).name == "release_2"
+
+
+def test_warmup_caches_fallback_and_skips_missing_databases():
+    client = MongoDbClient.__new__(MongoDbClient)
+    client.mongo_client = mongomock.MongoClient()
+    client.redis_cache_enabled = True
+    client.redis_expiry = 6600
+    client.cache = Mock()
+    client.mongo_client.metadata.genome_mapping.insert_many(
+        [
+            {"genome_uuid": "one", "release_version": "110.1", "release_name": "1"},
+            {"genome_uuid": "two", "release_version": "110.2", "release_name": "2"},
+        ]
+    )
+    client.mongo_client.release_1.data.insert_one({"test": True})
+    client.warmup_cache_from_mongo()
+    client.cache.set.assert_called_once_with(
+        genome_mapping_cache_key("one"), "release_1", ex=6600
+    )
+
+
+@pytest.mark.asyncio
+async def test_database_list_failure_does_not_cache(routing, monkeypatch):
+    await routing.insert(
+        [{"genome_uuid": "genome-1", "release_version": "110.1", "release_name": "1"}]
+    )
+    mongo = (
+        routing.client.async_mongo_client
+        if isinstance(routing.cache, AsyncMock)
+        else routing.client.mongo_client
+    )
+    monkeypatch.setattr(
+        mongo, "list_database_names", Mock(side_effect=OperationFailure("denied"))
+    )
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_missing_release_name_and_version_database_raise_not_found(routing):
+    await routing.insert([{"genome_uuid": "genome-1", "release_version": "110.1"}])
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
