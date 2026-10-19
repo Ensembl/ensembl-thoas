@@ -23,10 +23,7 @@ import redis
 import redis.asyncio as redis_async
 from pymongo import AsyncMongoClient
 
-from graphql_service.resolver.exceptions import (
-    GenomeNotFoundError,
-    FailedToConnectToGrpc,
-)
+from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 
 from yagrc import reflector as yagrc_reflector
@@ -112,7 +109,7 @@ class MongoDbClient:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
         return None
 
-    async def get_async_database_conn(self, async_grpc_model, uuid):
+    async def get_async_database_conn(self, uuid):
         cached_connection = await self.get_cached_connection(uuid)
         if cached_connection is not None:
             return cached_connection
@@ -127,18 +124,6 @@ class MongoDbClient:
             release_version = highest_mapping_release(mappings)
         except pymongo.errors.PyMongoError as exc:
             logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
-
-        if release_version is None:
-            logger.debug("No usable MongoDB mapping for %s; falling back to gRPC", uuid)
-            try:
-                grpc_response = await async_grpc_model.get_release_by_genome_uuid(uuid)
-                release_version = (
-                    grpc_response.release_version if grpc_response else None
-                )
-            except Exception as grpc_exp:
-                raise FailedToConnectToGrpc(
-                    f"Internal server error: Couldn't connect to gRPC Host, {str(grpc_exp)}"
-                ) from grpc_exp
 
         if not release_version:
             logger.warning("[get_database_conn] Release not found")
@@ -161,8 +146,7 @@ class MongoDbClient:
         logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
         return self.async_mongo_client[chosen_db]
 
-    def get_database_conn(self, grpc_model, uuid, release_version):
-        grpc_response = None
+    def get_database_conn(self, uuid, release_version=None):
         chosen_db = None
 
         if release_version:
@@ -190,18 +174,6 @@ class MongoDbClient:
                 release_version = highest_mapping_release(mappings)
         except pymongo.errors.PyMongoError as exc:
             logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
-
-        if release_version is None:
-            logger.debug("No usable MongoDB mapping for %s; falling back to gRPC", uuid)
-            try:
-                grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
-                release_version = (
-                    grpc_response.release_version if grpc_response else None
-                )
-            except Exception as grpc_exp:
-                raise FailedToConnectToGrpc(
-                    "Internal server error: Couldn't connect to gRPC Host"
-                ) from grpc_exp
 
         if release_version:
             chosen_db = process_release_version(release_version)
@@ -344,8 +316,8 @@ class FakeMongoDbClient:
         self.mongo_db = self.mongo_client.db
         self.redis_cache_enabled = False
 
-    def get_database_conn(self, grpc_model, uuid, release_version):
-        # we pretend that we did a gRPC call and got the chosen db
+    def get_database_conn(self, uuid, release_version=None):
+        # Return the test database without resolving a release.
         chosen_db = "db"
         return self.mongo_client[chosen_db]
 

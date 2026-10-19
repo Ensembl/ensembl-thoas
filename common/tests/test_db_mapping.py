@@ -1,4 +1,4 @@
-"""Regression tests for Mongo-first genome routing, shared by sync/async paths."""
+"""Regression tests for Mongo-only genome routing, shared by sync/async paths."""
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -10,10 +10,7 @@ from pymongo.errors import OperationFailure
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from common.db import MongoDbClient, genome_mapping_cache_key
-from graphql_service.resolver.exceptions import (
-    FailedToConnectToGrpc,
-    GenomeNotFoundError,
-)
+from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 
 @pytest.fixture(params=[False, True], ids=["sync", "async"])
@@ -29,11 +26,6 @@ def routing(request):
     cache.get.return_value = None
     client.cache = cache
     client.async_cache = cache
-    grpc = Mock()
-    grpc.get_release_by_genome_uuid = AsyncMock() if is_async else Mock()
-    grpc.get_release_by_genome_uuid.return_value = SimpleNamespace(
-        release_version="109.1"
-    )
     mongo = client.async_mongo_client if is_async else client.mongo_client
     collection = mongo.metadata.genome_mapping
 
@@ -45,13 +37,12 @@ def routing(request):
 
     async def lookup(uuid="genome-1"):
         if is_async:
-            return await client.get_async_database_conn(grpc, uuid)
-        return client.get_database_conn(grpc, uuid, None)
+            return await client.get_async_database_conn(uuid)
+        return client.get_database_conn(uuid, None)
 
     return SimpleNamespace(
         client=client,
         cache=cache,
-        grpc=grpc,
         collection=collection,
         insert=insert,
         lookup=lookup,
@@ -80,51 +71,48 @@ async def test_highest_numeric_release_wins(routing, versions, expected):
     )
     database = await routing.lookup()
     assert database.name == "release_" + expected.replace(".", "_")
-    routing.grpc.get_release_by_genome_uuid.assert_not_called()
     routing.cache.set.assert_called_once_with(
         genome_mapping_cache_key("genome-1"), expected, ex=6600
     )
 
 
 @pytest.mark.asyncio
-async def test_missing_mapping_falls_back_to_grpc(routing):
-    database = await routing.lookup()
-    assert database.name == "release_109_1"
-    routing.grpc.get_release_by_genome_uuid.assert_called_once_with("genome-1")
-    routing.cache.set.assert_called_once_with(
-        genome_mapping_cache_key("genome-1"), "109.1", ex=6600
-    )
+async def test_missing_mapping_raises_not_found(routing):
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_invalid_mappings_fall_back_to_grpc(routing):
+async def test_invalid_mappings_raise_not_found(routing):
     await routing.insert(
         [
             {"genome_uuid": "genome-1", "release_version": version}
             for version in [None, "", "latest", "110.bad", 110.1]
         ]
     )
-    assert (await routing.lookup()).name == "release_109_1"
-    routing.grpc.get_release_by_genome_uuid.assert_called_once()
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_mapping_read_failure_falls_back(routing, monkeypatch):
+async def test_mapping_read_failure_raises_not_found(routing, monkeypatch):
     monkeypatch.setattr(
         routing.collection, "find", Mock(side_effect=OperationFailure("denied"))
     )
-    assert (await routing.lookup()).name == "release_109_1"
-    routing.grpc.get_release_by_genome_uuid.assert_called_once()
+    with pytest.raises(GenomeNotFoundError):
+        await routing.lookup()
+    routing.cache.set.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_cache_hit_bypasses_mongo_and_grpc(routing, monkeypatch):
+async def test_cache_hit_bypasses_mongo(routing, monkeypatch):
     routing.cache.get.return_value = b"108.2"
     find = Mock(side_effect=AssertionError("Mongo should not be queried"))
     monkeypatch.setattr(routing.collection, "find", find)
     assert (await routing.lookup()).name == "release_108_2"
     routing.cache.get.assert_called_once_with(genome_mapping_cache_key("genome-1"))
-    routing.grpc.get_release_by_genome_uuid.assert_not_called()
     find.assert_not_called()
 
 
@@ -134,7 +122,6 @@ async def test_redis_failure_does_not_prevent_mongo_mapping(routing):
     routing.cache.set.side_effect = RedisConnectionError("unavailable")
     await routing.insert([{"genome_uuid": "genome-1", "release_version": "110.1"}])
     assert (await routing.lookup()).name == "release_110_1"
-    routing.grpc.get_release_by_genome_uuid.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -144,33 +131,12 @@ async def test_disabled_cache_still_uses_mongo(routing):
     assert (await routing.lookup()).name == "release_110_1"
     routing.cache.get.assert_not_called()
     routing.cache.set.assert_not_called()
-    routing.grpc.get_release_by_genome_uuid.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_missing_grpc_release_preserves_not_found(routing):
-    routing.grpc.get_release_by_genome_uuid.return_value = SimpleNamespace(
-        release_version=""
-    )
-    with pytest.raises(GenomeNotFoundError):
-        await routing.lookup()
-    routing.cache.set.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_grpc_failure_preserves_connection_error(routing):
-    routing.grpc.get_release_by_genome_uuid.side_effect = RuntimeError("unavailable")
-    with pytest.raises(FailedToConnectToGrpc):
-        await routing.lookup()
-    routing.cache.set.assert_not_called()
 
 
 def test_explicit_release_bypasses_mapping_and_cache():
     client = MongoDbClient.__new__(MongoDbClient)
     client.mongo_client = mongomock.MongoClient()
-    grpc = Mock()
-    assert client.get_database_conn(grpc, "genome-1", "108.1").name == "release_108_1"
-    grpc.get_release_by_genome_uuid.assert_not_called()
+    assert client.get_database_conn("genome-1", "108.1").name == "release_108_1"
 
 
 def test_warmup_uses_highest_mapping_and_refreshes_with_expiry():

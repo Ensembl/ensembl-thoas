@@ -1152,10 +1152,7 @@ def get_version_details() -> Dict[str, str]:
 
 
 async def set_async_db_conn_for_uuid(info, uuid):
-    async_grpc_model = info.context.get("async_grpc_model")
-    db_conn = await info.context["mongo_db_client"].get_async_database_conn(
-        async_grpc_model, uuid
-    )
+    db_conn = await info.context["mongo_db_client"].get_async_database_conn(uuid)
     conn = {
         "db_conn": db_conn,
         "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
@@ -1195,11 +1192,8 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
     # its own copy of the new dynamic context
     # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
 
-    grpc_model = info.context["grpc_model"]
-    # we pass the gRPC model instance and genome_uuid to get the release version used to infer Mongo DB's name
-    db_conn = info.context["mongo_db_client"].get_database_conn(
-        grpc_model, uuid, release_version
-    )
+    # Resolve the release database from the genome mapping or explicit version.
+    db_conn = info.context["mongo_db_client"].get_database_conn(uuid, release_version)
 
     conn = {
         "db_conn": db_conn,
