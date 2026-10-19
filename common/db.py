@@ -36,6 +36,27 @@ from common.utils import process_release_version
 logger = logging.getLogger(__name__)
 
 
+def release_version_key(version):
+    """Return numeric release components, or None for an invalid mapping."""
+    if not isinstance(version, str) or not re.fullmatch(
+        r"[0-9]+(?:\.[0-9]+)*", version
+    ):
+        return None
+    return tuple(int(part) for part in version.split("."))
+
+
+def highest_mapping_release(mappings):
+    """Ignore malformed mappings and select by numeric rather than string order."""
+    versions = [mapping.get("release_version") for mapping in mappings]
+    valid_versions = [v for v in versions if release_version_key(v) is not None]
+    return max(valid_versions, key=release_version_key, default=None)
+
+
+def genome_mapping_cache_key(uuid):
+    # Avoid legacy bare-UUID warm-up entries, which could have no expiry.
+    return f"genome_mapping:{uuid}"
+
+
 class MongoDbClient:
     """
     A pymongo wrapper class to take care of configuration and collection
@@ -81,7 +102,9 @@ class MongoDbClient:
     async def get_cached_connection(self, uuid):
         if self.redis_cache_enabled and self.async_cache:
             try:
-                cached_version = await self.async_cache.get(uuid)
+                cached_version = await self.async_cache.get(
+                    genome_mapping_cache_key(uuid)
+                )
                 if cached_version:
                     chosen_db = process_release_version(cached_version.decode("utf-8"))
                     return self.async_mongo_client[chosen_db]
@@ -94,22 +117,40 @@ class MongoDbClient:
         if cached_connection is not None:
             return cached_connection
 
+        release_version = None
         try:
-            grpc_response = await async_grpc_model.get_release_by_genome_uuid(uuid)
-        except Exception as grpc_exp:
-            raise FailedToConnectToGrpc(
-                f"Internal server error: Couldn't connect to gRPC Host, {str(grpc_exp)}"
+            mappings = (
+                await self.async_mongo_client["metadata"]["genome_mapping"]
+                .find({"genome_uuid": uuid}, {"release_version": 1, "_id": 0})
+                .to_list(length=None)
             )
+            release_version = highest_mapping_release(mappings)
+        except pymongo.errors.PyMongoError as exc:
+            logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
 
-        if not grpc_response or not grpc_response.release_version:
+        if release_version is None:
+            logger.debug("No usable MongoDB mapping for %s; falling back to gRPC", uuid)
+            try:
+                grpc_response = await async_grpc_model.get_release_by_genome_uuid(uuid)
+                release_version = (
+                    grpc_response.release_version if grpc_response else None
+                )
+            except Exception as grpc_exp:
+                raise FailedToConnectToGrpc(
+                    f"Internal server error: Couldn't connect to gRPC Host, {str(grpc_exp)}"
+                ) from grpc_exp
+
+        if not release_version:
             logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
 
-        chosen_db = process_release_version(grpc_response.release_version)
+        chosen_db = process_release_version(release_version)
         if self.redis_cache_enabled and self.async_cache:
             try:
                 await self.async_cache.set(
-                    uuid, grpc_response.release_version, ex=self.redis_expiry
+                    genome_mapping_cache_key(uuid),
+                    release_version,
+                    ex=self.redis_expiry,
                 )
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
@@ -131,7 +172,7 @@ class MongoDbClient:
         # Try cache if enabled
         if self.redis_cache_enabled and self.cache:
             try:
-                cached_version = self.cache.get(uuid)
+                cached_version = self.cache.get(genome_mapping_cache_key(uuid))
                 if cached_version:
                     logger.debug(
                         f"[MongoDbClient] Using cached version: {cached_version}"
@@ -141,25 +182,36 @@ class MongoDbClient:
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
 
-        # Try to connect to gRPC
+        release_version = None
         try:
-            grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
-        except Exception as grpc_exp:
-            # TODO: check why "except graphql.error.graphql_error.GraphQLError as grpc_exp:" didn't catch the error
-            logger.debug(
-                "[get_database_conn] Couldn't connect to gRPC Host: %s", grpc_exp
-            )
-            raise FailedToConnectToGrpc(
-                "Internal server error: Couldn't connect to gRPC Host"
-            )
+            with self.mongo_client["metadata"]["genome_mapping"].find(
+                {"genome_uuid": uuid}, {"release_version": 1, "_id": 0}
+            ) as mappings:
+                release_version = highest_mapping_release(mappings)
+        except pymongo.errors.PyMongoError as exc:
+            logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
 
-        if grpc_response and grpc_response.release_version:
-            chosen_db = process_release_version(grpc_response.release_version)
+        if release_version is None:
+            logger.debug("No usable MongoDB mapping for %s; falling back to gRPC", uuid)
+            try:
+                grpc_response = grpc_model.get_release_by_genome_uuid(uuid)
+                release_version = (
+                    grpc_response.release_version if grpc_response else None
+                )
+            except Exception as grpc_exp:
+                raise FailedToConnectToGrpc(
+                    "Internal server error: Couldn't connect to gRPC Host"
+                ) from grpc_exp
+
+        if release_version:
+            chosen_db = process_release_version(release_version)
 
             if self.redis_cache_enabled and self.cache:
                 try:
                     self.cache.set(
-                        uuid, grpc_response.release_version, ex=self.redis_expiry
+                        genome_mapping_cache_key(uuid),
+                        release_version,
+                        ex=self.redis_expiry,
                     )
                 except redis.RedisError as e:
                     logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
@@ -182,44 +234,27 @@ class MongoDbClient:
         total_keys = 0
 
         try:
-            # ex: ["release_110_1", "release_110_2", ..]
-            release_dbs = [
-                db_name
-                for db_name in self.mongo_client.list_database_names()
-                if re.compile(r"^release_\d+_\d+$").match(db_name)
-            ]
+            logger.info("Starting genome mapping Redis warm-up from MongoDB")
+            latest = {}
+            with self.mongo_client["metadata"]["genome_mapping"].find(
+                {}, {"genome_uuid": 1, "release_version": 1, "_id": 0}
+            ) as mappings:
+                for mapping in mappings:
+                    uuid = mapping.get("genome_uuid")
+                    version = mapping.get("release_version")
+                    version_key = release_version_key(version)
+                    if not uuid or version_key is None:
+                        continue
+                    if uuid not in latest or version_key > release_version_key(
+                        latest[uuid]
+                    ):
+                        latest[uuid] = version
 
-            logger.info(
-                "Starting genome id-> release version redis warm-up from MongoDB"
-            )
-
-            for db_name in release_dbs:
-                # release_115_4 -> 115.4
-                # we could diretly store release_115_4 but sync resolvers use process_release_version
-                # to get db name
-                release_version = db_name[len("release_") :].replace("_", ".")
-                genome_collection = self.mongo_client[db_name]["genome"]
-
-                db_keys = 0
-                cursor = genome_collection.find({})
-                try:
-                    for genome in cursor:
-                        genome_id = genome.get("genome_id")
-                        if not genome_id:
-                            continue
-
-                        # set only if there is no entry
-                        self.cache.set(genome_id, release_version, nx=True)
-                        db_keys += 1
-                finally:
-                    cursor.close()
-
-                total_keys += db_keys
-                logger.debug(
-                    "[warmup_cache_from_mongo] Stored %d entries from %s",
-                    db_keys,
-                    db_name,
+            for uuid, version in latest.items():
+                self.cache.set(
+                    genome_mapping_cache_key(uuid), version, ex=self.redis_expiry
                 )
+                total_keys += 1
 
             time_taken = time.time() - started
             logger.info(
