@@ -44,15 +44,24 @@ matched by `genome_uuid`; the highest numeric `release_version` is selected
 to a database name such as `release_110_10`. An explicitly supplied release in
 the synchronous routing API bypasses this lookup.
 
-If there is no valid mapping, or the MongoDB mapping query fails, routing falls
-back to the metadata gRPC service. Both lookup paths cache successful results
-for `REDIS_EXPIRY_SECONDS`. A non-unique index on `genome_uuid` is recommended
-for the mapping collection, and the MongoDB user needs read access to it.
+If the version database does not exist, routing tries the `release_name` from
+that same mapping (for example, `"1"` selects `release_1`). MongoDB database
+names cannot contain dots, so `"110.1"` selects `release_110_1`. Routing checks
+the databases visible to the MongoDB user; obtaining a database handle alone
+does not establish that it exists. If neither database exists, there is no
+valid mapping, or the lookup fails, routing raises `GenomeNotFoundError`.
+There is no gRPC fallback.
 
-`WARMUP_CACHE_ON_START` now reads this collection and caches the highest release
-per genome with the same expiry. Mapping cache keys use `genome_mapping:<uuid>`
-so legacy bare-UUID entries without expiry do not override the new mappings.
-Mapping changes become visible after cache expiry or the next warm-up.
+> This is temporary for backward compatibility, once we move to percona with the release name in the DB name instead of the release version we will remove the release_version logic
+
+Successful lookups cache the resolved database name for `REDIS_EXPIRY_SECONDS`.
+A non-unique index on `genome_uuid` is recommended. The MongoDB user needs read
+access to the mapping and visibility of the release databases.
+
+`WARMUP_CACHE_ON_START` uses the same selection and database-existence checks.
+Mapping cache keys use `genome_mapping:database:<uuid>` to avoid reusing legacy
+entries containing release versions. Mapping or database changes become visible
+after cache expiry or the next warm-up.
 gRPC is still used for other metadata queries and initialized at startup.
 
 ## GraphiQL UI wiring
