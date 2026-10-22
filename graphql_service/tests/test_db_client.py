@@ -7,6 +7,6 @@ class FakeAsyncMongoDbClient:
         self.mongo_db = self.async_mongo_client.db
         self.redis_cache_enabled = False
 
-    async def get_async_database_conn(self, _grpc_model, _uuid):
-        # we pretend that we did a gRPC call and got the chosen db
+    async def get_async_database_conn(self, _uuid):
+        # Return the test database without resolving a release.
         return self.async_mongo_client["db"]
