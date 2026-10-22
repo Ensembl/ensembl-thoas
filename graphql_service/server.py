@@ -22,7 +22,6 @@ from typing import Optional, List
 
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
-from ariadne.contrib.tracing.apollotracing import ApolloTracingExtension
 from ariadne.explorer import ExplorerGraphiQL, render_template, escape_default_query
 from ariadne.explorer.template import read_template
 from ariadne.types import ExtensionList
@@ -100,10 +99,6 @@ if DEBUG_MODE:
     logging.basicConfig(level=logging.DEBUG)
 
     monitoring.register(logger.CommandLogger(log))
-
-    # Apollo Tracing extension will display information about which resolvers are used and their duration
-    # https://ariadnegraphql.org/docs/apollo-tracing
-    EXTENSIONS.append(ApolloTracingExtension)
 
 
 utils.check_config_validity(os.environ)
