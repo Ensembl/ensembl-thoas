@@ -41,29 +41,28 @@ def check_config_validity(config):
             )
 
 
-def process_release_version(grpc_release_version):
+def release_database_name(release):
     """
-    Processes the release version from the gRPC response and formats it for use as a database name.
+    Formats a release version or release name for use as a MongoDB database name.
 
-    This function extracts the release version from the provided gRPC response, replaces any dots ('.')
-    with underscores ('_') to avoid pymongo.errors.InvalidName errors, and returns a formatted database
-    name string.
+    This function replaces any dots ('.') with underscores ('_') to avoid
+    pymongo.errors.InvalidName errors, and returns a formatted database name string.
+    For example, "110.1" becomes "release_110_1" and "1" becomes "release_1".
+    It only formats the name; it does not check whether the database exists.
 
     Args:
-        grpc_release_version: The release version returned by gRPC.
+        release: The release version or release name from the MongoDB mapping,
+            or an explicitly supplied release version.
 
     Returns:
         str: A formatted string suitable for use as a database name, prefixed with 'release_'.
     """
-    logger.debug(
-        "[get_database_conn] release version from grpc_response: %s",
-        grpc_release_version,
-    )
+    logger.debug("[release_database_name] release: %s", release)
     # replacing '.' with '_' to avoid
     # "pymongo.errors.InvalidName: database names cannot contain the character '.'" error ¯\_(ツ)_/¯
-    release_version = str(grpc_release_version).replace(".", "_")
-    logger.debug("[get_database_conn] release_version: %s", release_version)
-    return "release_" + release_version
+    formatted_release = str(release).replace(".", "_")
+    logger.debug("[release_database_name] formatted_release: %s", formatted_release)
+    return "release_" + formatted_release
 
 
 def check_requested_fields(info: GraphQLResolveInfo, fields: List[str]) -> List[bool]:

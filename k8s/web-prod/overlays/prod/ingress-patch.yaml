@@ -4,7 +4,7 @@ metadata:
   name: graphql-core-ingress
 spec:
   rules:
-    - host: beta.ensembl.org
+    - host: www.ensembl.org
       http:
         paths:
           # Strip /api/graphql/core before proxying to the app.

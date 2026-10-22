@@ -112,6 +112,53 @@ async def test_transcript_search_happy_path(async_setup):
 
 
 @pytest.mark.asyncio
+async def test_protein_search_returns_transcript_id(async_setup):
+    executable_schema, context = async_setup
+    context_value = context()
+    db = context_value["mongo_db_client"].mongo_db
+    genome_id = "a7335667-93e7-11ec-a39d-005056b38ce3"
+    await db["protein"].insert_one(
+        {
+            "type": "Protein",
+            "stable_id": "ENSP00000369497.3",
+            "unversioned_stable_id": "ENSP00000369497",
+            "transcript_id": "ENST00000380152",
+            "genome_id": genome_id,
+        }
+    )
+
+    query = """
+    {
+      protein_search(search_payload: {
+        genome_ids: ["a7335667-93e7-11ec-a39d-005056b38ce3"]
+        query: "ENSP00000369497"
+        page: 1
+        per_page: 50
+      }) {
+        matches {
+          stable_id
+          genome_id
+          transcript_id
+        }
+      }
+    }
+    """
+
+    success, result = await graphql(
+        executable_schema, {"query": query}, context_value=context_value
+    )
+
+    assert success
+    assert result["data"]["protein_search"]["matches"] == [
+        {
+            "stable_id": "ENSP00000369497.3",
+            "genome_id": genome_id,
+            "transcript_id": "ENST00000380152",
+        }
+    ]
+
+
+@pytest.mark.asyncio
 async def test_transcript_search_invalid_query(async_setup):
     executable_schema, context = async_setup
     context_value = context()
