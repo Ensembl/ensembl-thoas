@@ -12,7 +12,7 @@ python-dotenv==1.2.2
 prometheus-fastapi-instrumentator==7.1.0
 redis==5.2.0
 requests==2.33.0
-ujson==5.12.1
+ujson==5.13.0
 uvicorn==0.18.1
 types-ujson==5.10.0.20250326
 yagrc==1.1.2
