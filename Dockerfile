@@ -7,6 +7,8 @@ COPY . /app
 RUN pip3 install -r /app/requirements.txt -e /app/
 
 ENV PYTHONPATH=\$PYTHONPATH:/app
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus-multiproc
+RUN mkdir -p /tmp/prometheus-multiproc
 
 EXPOSE 8000
 

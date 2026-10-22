@@ -9,6 +9,7 @@ spec:
     app: graphql-core
   type: ClusterIP
   ports:
-    - port: 8000
+    - name: graphql-core
+      port: 8000
       protocol: TCP
       targetPort: 8000

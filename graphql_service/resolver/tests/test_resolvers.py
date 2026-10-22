@@ -435,6 +435,22 @@ async def test_resolve_gene_transcripts(transcript_data):
         assert hit["symbol"] in ["kumquat", "grape"]
 
 
+def test_resolve_gene_transcript_count(transcript_data):
+    "Check transcript count for a gene"
+
+    info = create_graphql_resolve_info(transcript_data)
+
+    # Finding the collection here as we are not using the base resolver
+    model.set_db_conn_for_uuid(info, "1")
+
+    result = model.resolve_gene_transcript_count(
+        {"stable_id": "ENSG001.1", "genome_id": "1", "gene_primary_key": "1_ENSG001.1"},
+        info,
+    )
+
+    assert result == 2
+
+
 @pytest.mark.asyncio
 async def test_resolve_gene_from_transcript(transcript_data):
     "Check the DataLoader for gene is working via transcript. Requires event loop for DataLoader"
@@ -501,7 +517,8 @@ def test_overlap_region(start, end, expected_ids, slice_data):
     result = model.overlap_region(
         connection=connection,
         genome_id="test_genome_id",
-        region_id="test_genome_id_chr1_chromosome",
+        chromosomal_region_id="test_genome_id_chr1_chromosome",
+        primary_assembly_region_id="test_genome_id_chr1_primary_assembly",
         start=start,
         end=end,
         feature_type="Gene",
@@ -522,7 +539,8 @@ def test_overlap_region_too_many_results(slice_data):
         result = model.overlap_region(
             connection=connection,
             genome_id="test_genome_id",
-            region_id="test_genome_id_chr1_chromosome",
+            chromosomal_region_id="test_genome_id_chr1_chromosome",
+            primary_assembly_region_id="test_genome_id_chr1_primary_assembly",
             start=205,
             end=305,
             feature_type="Gene",
