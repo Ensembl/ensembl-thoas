@@ -46,7 +46,6 @@ from graphql_service.ariadne_app import (
     prepare_context_provider,
 )
 
-
 load_dotenv("connections.conf")
 
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"

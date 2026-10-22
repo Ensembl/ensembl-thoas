@@ -15,7 +15,6 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 
-
 with open(Path(__file__).parent / "LICENSE") as f:
     LICENSE_CT = f.read()
 

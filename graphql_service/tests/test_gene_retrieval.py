@@ -1,15 +1,15 @@
 """
-   See the NOTICE file distributed with this work for additional information
-   regarding copyright ownership.
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-       http://www.apache.org/licenses/LICENSE-2.0
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+See the NOTICE file distributed with this work for additional information
+regarding copyright ownership.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 
 import pytest
@@ -96,7 +96,7 @@ async def test_gene_retrieval_by_id_camel_case(snapshot):
     # ariadne.graphql is not callable. It needs to be evaluated explicitly
     # as context_value=context() when creating request
 
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     print(f"_____ result ---> {result}")
@@ -120,7 +120,7 @@ async def test_gene_retrieval_by_id_snake_case(snapshot):
     # ariadne.graphql is not callable. It needs to be evaluated explicitly
     # as context_value=context() when creating request
 
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -142,7 +142,7 @@ async def test_gene_retrieval_by_symbol(snapshot):
     # ariadne.graphql is not callable. It needs to be evaluated explicitly
     # as context_value=context() when creating request
 
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -160,7 +160,7 @@ async def test_gene_transcript_count():
     }"""
     query_data = {"query": query}
 
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -197,7 +197,7 @@ async def test_transcript_pagination(snapshot):
     # ariadne.graphql is not callable. It needs to be evaluated explicitly
     # as context_value=context() when creating request
 
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success

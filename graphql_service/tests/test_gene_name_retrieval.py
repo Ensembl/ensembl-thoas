@@ -52,7 +52,7 @@ async def test_no_xref_acc_id(snapshot):
     template = get_generic_query_template()
     query = template.substitute(stable_id="TraesCS2A02G142500")
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -65,7 +65,7 @@ async def test_no_xref_description(snapshot):
     template = get_generic_query_template()
     query = template.substitute(stable_id="TraesCS2A02G142501")
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -77,7 +77,7 @@ async def test_no_externaldb_source_id(snapshot):
     template = get_generic_query_template()
     query = template.substitute(stable_id="TraesCS2A02G142502")
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -89,7 +89,7 @@ async def test_no_externaldb_source_name(snapshot):
     template = get_generic_query_template()
     query = template.substitute(stable_id="TraesCS2A02G142503")
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
