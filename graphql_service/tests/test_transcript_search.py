@@ -353,16 +353,16 @@ async def test_transcript_search_missing_fields(async_setup):
 
     assert success is False
     assert "errors" in result
-    # {'errors': [
-    #     {'message': "Field 'TranscriptsSearchInput.genome_ids' of required type '[String!]!' was not provided.",
-    #      'locations': [{'line': 4, 'column': 25}]},
-    #     {'message': "Field 'TranscriptsSearchInput.page' of required type 'Int!' was not provided.",
-    #      'locations': [{'line': 4, 'column': 25}]}]}
-    assert (
-        "Field 'TranscriptsSearchInput.genome_ids' of required type '[String!]!' was not provided."
-        in result["errors"][0]["message"]
-    )
-    assert (
-        "Field 'TranscriptsSearchInput.page' of required type 'Int!' was not provided."
-        in result["errors"][1]["message"]
-    )
+    assert result.get("data") is None
+    messages = [error["message"] for error in result["errors"]]
+    assert len(messages) == 2
+    # graphql-core 3.2 and 3.3 use different required-field messages.
+    for field, field_type in {"genome_ids": "[String!]!", "page": "Int!"}.items():
+        expected_prefixes = (
+            f"Field 'TranscriptsSearchInput.{field}' of required type '{field_type}' was not provided.",
+            "Expected value of type 'TranscriptsSearchInput' to include "
+            f"required field '{field}', found:",
+        )
+        assert any(
+            message.startswith(expected_prefixes) for message in messages
+        ), messages
