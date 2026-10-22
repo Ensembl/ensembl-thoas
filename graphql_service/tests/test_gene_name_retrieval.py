@@ -92,7 +92,8 @@ async def test_no_externaldb_source_name(snapshot):
     success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
-    assert not success
+    # Partial data counts as success, even with a field execution error.
+    assert success
     assert len(result["errors"]) == 1
     assert result["errors"][0]["message"] == (
         "Cannot return null for non-nullable field ExternalDB.name."
