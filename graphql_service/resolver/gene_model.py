@@ -12,12 +12,13 @@
    limitations under the License.
 """
 
+import asyncio
 import configparser
 import logging
 from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
-from graphql import GraphQLResolveInfo, GraphQLError
+from graphql import GraphQLResolveInfo, GraphQLError, FieldNode
 from pymongo.database import Database, Collection
 
 from common import utils
@@ -263,6 +264,101 @@ def resolve_transcript(
     return transcript
 
 
+async def fetch_transcript(
+    info: GraphQLResolveInfo, stable_id: str, genome_id: str
+) -> list[Any]:
+    query: dict[str, Any] = {
+        "type": "Transcript",
+        "$or": [
+            {"stable_id": stable_id},
+            {"unversioned_stable_id": stable_id},
+        ],
+        "genome_id": genome_id,
+    }
+
+    try:
+        await set_async_db_conn_for_uuid(info, genome_id)
+        connection_db = get_db_conn(info, genome_id)
+        matches = await connection_db["transcript"].find(query).to_list(length=None)
+        return sorted(matches, key=lambda transcript: transcript["stable_id"])
+    except GenomeNotFoundError:
+        logging.warning("Ignoring unknown genome_id %s in transcript_search", genome_id)
+        return []
+    except Exception as db_exp:
+        logging.error("Failed to retrieve transcript for %s: %s", genome_id, db_exp)
+        return []
+
+
+@QUERY_TYPE.field("transcript_search")
+async def resolve_transcript_search(
+    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
+) -> dict[str, Any]:
+    """Fetch Transcripts by its stable_id and list of genome uuids"""
+    if search_payload is None:
+        raise MissingArgumentException(
+            "You must provide either 'search_payload' argument."
+        )
+
+    stable_id = search_payload["query"]
+    page = search_payload["page"]
+    per_page = search_payload["per_page"]
+    genome_ids = search_payload["genome_ids"] or []
+
+    tasks = [fetch_transcript(info, stable_id, genome_id) for genome_id in genome_ids]
+    results = await asyncio.gather(*tasks)
+    transcripts = [
+        transcript for genome_matches in results for transcript in genome_matches
+    ]
+    return parse_search_response(transcripts, page, per_page)
+
+
+async def fetch_product(
+    info: GraphQLResolveInfo, stable_id: str, genome_id: str
+) -> list[Any]:
+    """Fetch proteins matching a versioned or unversioned stable ID."""
+    query: dict[str, Any] = {
+        "type": "Protein",
+        "$or": [
+            {"stable_id": stable_id},
+            {"unversioned_stable_id": stable_id},
+        ],
+        "genome_id": genome_id,
+    }
+
+    try:
+        await set_async_db_conn_for_uuid(info, genome_id)
+        connection_db = get_db_conn(info, genome_id)
+        matches = await connection_db["protein"].find(query).to_list(length=None)
+        return sorted(matches, key=lambda product: product["stable_id"])
+    except GenomeNotFoundError:
+        logging.warning("Ignoring unknown genome_id %s in protein_search", genome_id)
+        return []
+    except Exception as db_exp:
+        logging.error("Failed to retrieve protein for %s: %s", genome_id, db_exp)
+        return []
+
+
+@QUERY_TYPE.field("protein_search")
+async def resolve_protein_search(
+    _, info: GraphQLResolveInfo, search_payload: Optional[Dict] = None
+) -> dict[str, Any]:
+    """Fetch proteins by stable ID across a list of genome UUIDs."""
+    if search_payload is None:
+        raise MissingArgumentException(
+            "You must provide either 'search_payload' argument."
+        )
+
+    tasks = [
+        fetch_product(info, search_payload["query"], genome_id)
+        for genome_id in search_payload["genome_ids"]
+    ]
+    results = await asyncio.gather(*tasks)
+    products = [product for genome_matches in results for product in genome_matches]
+    return parse_search_response(
+        products, search_payload["page"], search_payload["per_page"]
+    )
+
+
 @QUERY_TYPE.field("version")
 def resolve_api(
     _: None,
@@ -294,6 +390,24 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
     # Sort transcripts based on either rank (for human and mouse) or default sort (see `_transcript_value`)
     sorted_transcripts = transcript_order.sort_gene_transcripts(transcripts)
     return sorted_transcripts
+
+
+@GENE_TYPE.field("transcript_count")
+def resolve_gene_transcript_count(gene: Dict, info: GraphQLResolveInfo) -> int:
+    "Count transcripts for the parent gene"
+    query = {
+        "type": "Transcript",
+        "gene_foreign_key": gene["gene_primary_key"],
+    }
+
+    connection_db = get_db_conn(info)
+    transcript_collection = connection_db["transcript"]
+    logger.info(
+        "[resolve_gene_transcript_count] Getting Transcript count from DB: '%s'",
+        connection_db.name,
+    )
+
+    return transcript_collection.count_documents(query)
 
 
 @GENE_TYPE.field("transcripts_page")
@@ -369,23 +483,31 @@ async def resolve_transcript_pgc(transcript: Dict, _: GraphQLResolveInfo) -> Lis
 
 @TRANSCRIPT_TYPE.field("gene")
 async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) -> Dict:
+    genome_id = transcript["genome_id"]
     query = {
         "type": "Gene",  # TODO: no need to select a type if we have collection per type anyway
-        "genome_id": transcript["genome_id"],
+        "genome_id": genome_id,
         "stable_id": transcript["gene"],
     }
 
-    connection_db = get_db_conn(info)
+    connection_db = get_db_conn(info, genome_id)
     gene_collection = connection_db["gene"]
+
+    request_context = get_request_context(info, genome_id)
+    is_async_connection = request_context["is_async_connection"]
     logger.info(
         "[resolve_transcript_gene] Getting Gene from DB: '%s'", connection_db.name
     )
 
-    gene = gene_collection.find_one(query)
+    if is_async_connection:
+        gene = await gene_collection.find_one(query)
+    else:
+        gene = gene_collection.find_one(query)
+
     if not gene:
         raise GeneNotFoundError(
             by_id={
-                "genome_id": transcript["genome_id"],
+                "genome_id": genome_id,
                 "stable_id": transcript["gene"],
             }
         )
@@ -423,8 +545,9 @@ def resolve_overlap(
     # this is needed for mypy to pass
     assert genome_id and region_name and start and end
 
-    # Thoas only contains "chromosome"-type regions
-    region_id = "_".join([genome_id, region_name, "chromosome"])
+    # Thoas only contains "chromosome" and "primary_assembly" -type regions
+    chromosomal_region_id = "_".join([genome_id, region_name, "chromosome"])
+    primary_assembly_region_id = "_".join([genome_id, region_name, "primary_assembly"])
 
     set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
@@ -435,10 +558,22 @@ def resolve_overlap(
 
     return {
         "genes": overlap_region(
-            connection_db, genome_id, region_id, start, end, "Gene"
+            connection_db,
+            genome_id,
+            chromosomal_region_id,
+            primary_assembly_region_id,
+            start,
+            end,
+            "Gene",
         ),
         "transcripts": overlap_region(
-            connection_db, genome_id, region_id, start, end, "Transcript"
+            connection_db,
+            genome_id,
+            chromosomal_region_id,
+            primary_assembly_region_id,
+            start,
+            end,
+            "Transcript",
         ),
     }
 
@@ -446,7 +581,8 @@ def resolve_overlap(
 def overlap_region(
     connection: Database,
     genome_id: str,
-    region_id: str,
+    chromosomal_region_id: str,
+    primary_assembly_region_id: str,
     start: int,
     end: int,
     feature_type: str,
@@ -461,7 +597,7 @@ def overlap_region(
     query = {
         "type": feature_type,
         "genome_id": genome_id,
-        "slice.region_id": region_id,
+        "slice.region_id": {"$in": [chromosomal_region_id, primary_assembly_region_id]},
         # A query region does not intersect a slice if, and only if, either the start of the slice is greater than the
         # end of the query region, or the end of the slice is less than the start of the query region.  Therefore, the
         # query region does intersect a slice if, and only if, the start of the slice is less than the end of the query
@@ -930,9 +1066,9 @@ def create_genome_response(
         "release_number": genome.release.release_version,
         "release_date": genome.release.release_date,
         "taxon_id": genome.taxon.taxonomy_id,
-        "tol_id": genome.assembly.tol_id,
+        "tol_id": genome.organism.tol_id,
         "parlance_name": genome.organism.scientific_parlance_name,
-        "genome_tag": genome.assembly.url_name if not None else genome.assembly.tol_id,
+        "genome_tag": genome.url_name if not None else genome.organism.tol_id,
         "is_reference": genome.assembly.is_reference,
         "assembly": assembly_data,
         "dataset": datasets_response,
@@ -1015,6 +1151,20 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
+async def set_async_db_conn_for_uuid(info, uuid):
+    db_conn = await info.context["mongo_db_client"].get_async_database_conn(uuid)
+    conn = {
+        "db_conn": db_conn,
+        "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
+        "is_async_connection": True,
+    }
+
+    parent_key = get_path_parent_key(info)
+    info.context[parent_key] = conn
+    # Additional context for querying with multiple ids in a single query
+    info.context[parent_key + uuid] = conn
+
+
 def set_db_conn_for_uuid(info, uuid, release_version=None):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
@@ -1042,24 +1192,33 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
     # its own copy of the new dynamic context
     # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
 
-    grpc_model = info.context["grpc_model"]
-    # we pass the gRPC model instance and genome_uuid to get the release version used to infer Mongo DB's name
-    db_conn = info.context["mongo_db_client"].get_database_conn(
-        grpc_model, uuid, release_version
-    )
+    # Resolve the release database from the genome mapping or explicit version.
+    db_conn = info.context["mongo_db_client"].get_database_conn(uuid, release_version)
 
     conn = {
         "db_conn": db_conn,
         "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
+        "is_async_connection": False,
     }
 
     parent_key = get_path_parent_key(info)
     info.context[parent_key] = conn
+    # Additional context for querying with multiple ids in a single query
+    info.context[parent_key + uuid] = conn
 
 
-def get_db_conn(info):
+def get_db_conn(info, uuid=None):
     parent_key = get_path_parent_key(info)
+    if uuid:
+        return info.context[parent_key + uuid]["db_conn"]
     return info.context[parent_key]["db_conn"]
+
+
+def get_request_context(info, uuid=None):
+    parent_key = get_path_parent_key(info)
+    if uuid:
+        return info.context[parent_key + uuid]
+    return info.context[parent_key]
 
 
 def get_data_loader(info):
@@ -1071,3 +1230,17 @@ def get_path_parent_key(info):
     path_keys = info.path.as_list()
     parent_key = path_keys[0]
     return parent_key
+
+
+def parse_search_response(transcripts: list[Any], page: int, per_page: int):
+    start = (page - 1) * per_page
+    end = start + per_page
+    meta = {
+        "total_hits": len(transcripts),
+        "page": page,
+        "per_page": per_page,
+    }
+    return {
+        "meta": meta,
+        "matches": transcripts[start:end],
+    }

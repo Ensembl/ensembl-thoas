@@ -2,13 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: graphql-core-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$3
 spec:
   rules:
-    - host: beta.ensembl.org
+    - host: www.ensembl.org
       http:
         paths:
-          # Strip /data/graphql before proxying to the app.
-          - path: /data/graphql(/|$)(.*)
+          - path: /data/graphql(/core)?(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:

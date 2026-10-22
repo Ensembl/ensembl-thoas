@@ -1513,21 +1513,21 @@
         "ensembl_db_name": "KNETMINER_WHEAT",
         "feature_type": "gene",
         "manual_source_url" : "https://knetminer.com",
-        "manual_xref_url" : "https://knetminer.com/Triticum_aestivum/"
+        "manual_xref_url" : "https://app.knetminer.com/genepage/Triticum_aestivum/?list="
     },
     {
         "db_name": "WHEATEXP_GENE",
         "ensembl_db_name": "WHEATEXP_GENE",
         "feature_type": "gene",
         "manual_source_url" : "https://wheat.pw.usda.gov",
-        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+        "manual_xref_url" : "https://www.wheat-expression.com/genes/show?gene_set=RefSeq1.1&search_by=gene&name="
     },
     {
         "db_name": "WHEATEXP_TRANS",
         "ensembl_db_name": "WHEATEXP_TRANS",
         "feature_type": "transcript",
         "manual_source_url" : "https://wheat.pw.usda.gov",
-        "manual_xref_url" : "https://wheat.pw.usda.gov/WheatExp/"
+        "manual_xref_url" : "https://www.wheat-expression.com/genes/show?gene_set=RefSeq1.1&search_by=transcript&name="
     },
     {
         "db_name": "TRNASCAN_SE",

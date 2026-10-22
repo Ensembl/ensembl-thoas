@@ -73,11 +73,13 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
         mongo_db_client = context["mongo_db_client"]
         xref_resolver = context["XrefResolver"]
         grpc_model = context["grpc_model"]
+        async_grpc_model = context["async_grpc_model"]
         return {
             "request": request,
             "mongo_db_client": mongo_db_client,
             "XrefResolver": xref_resolver,
             "grpc_model": grpc_model,
+            "async_grpc_model": async_grpc_model,
         }
 
     return context_provider

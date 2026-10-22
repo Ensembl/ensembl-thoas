@@ -22,6 +22,7 @@ type Transcript {
   unversioned_stable_id: String!
   symbol: String
   version: Int
+  genome_id: String!
   so_term: String!
   slice: Slice!
   external_references: [ExternalReference!]!
