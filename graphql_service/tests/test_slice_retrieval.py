@@ -42,7 +42,7 @@ async def test_slice_retrieval(snapshot):
     }"""
 
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
@@ -74,7 +74,7 @@ async def test_slice_retrieval_by_slice_input(snapshot):
     }"""
 
     query_data = {"query": query}
-    (success, result) = await graphql(
+    success, result = await graphql(
         executable_schema, query_data, context_value=context()
     )
     assert success
