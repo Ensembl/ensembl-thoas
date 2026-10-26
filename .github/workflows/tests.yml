@@ -1,6 +1,9 @@
 # Workflow name
 name: PyTest, Black, Pylint and Mypy
 
+permissions:
+  contents: read
+
 # Controls when the workflow will run
 on:
   # Triggers the workflow on pull request (on main and develop only) events

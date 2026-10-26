@@ -56,7 +56,7 @@ def prepare_executable_schema() -> GraphQLSchema:
     )
 
 
-def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
+def prepare_context_provider(context: Dict) -> Callable[[Request, Dict], Dict]:
     """
     Returns function for injecting context to graphql executors.
 
@@ -67,7 +67,7 @@ def prepare_context_provider(context: Dict) -> Callable[[Request], Dict]:
     between requests, for example Mongo client, XrefResolver
     """
 
-    def context_provider(request: Request) -> Dict:
+    def context_provider(request: Request, _data: Dict) -> Dict:
         """We must return a new object with every request,
         otherwise the requests will pollute each other's state"""
         mongo_db_client = context["mongo_db_client"]
