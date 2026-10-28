@@ -12,10 +12,18 @@
    limitations under the License.
 """
 
+import logging
+
 import ujson as json
 import re
 
-import requests
+import httpx
+
+logger = logging.getLogger(__name__)
+
+IDENTIFIERS_ORG_API_URL = (
+    "https://registry.api.identifiers.org/resolutionApi/getResolverDataset"
+)
 
 
 class XrefResolver:
@@ -34,21 +42,24 @@ class XrefResolver:
     """
 
     def __init__(
-        self, from_file=None, internal_mapping_file="docs/xref_LOD_mapping.json"
+        self,
+        from_file=None,
+        internal_mapping_file="docs/xref_LOD_mapping.json",
+        identifiers_org_data=None,
     ):
 
         self.internal_mapping_file = internal_mapping_file
-        self.identifiers_org_api_url = (
-            "https://registry.api.identifiers.org/resolutionApi/getResolverDataset"
-        )
+        self.identifiers_org_api_url = IDENTIFIERS_ORG_API_URL
 
-        if from_file:
+        if identifiers_org_data is not None:
+            self.identifiers_org_data = identifiers_org_data
+        elif from_file:
             self.identifiers_org_data = self._load_from_file(from_file)
         else:
-            self.identifiers_org_data = self._load_from_url(
-                self.identifiers_org_api_url
+            raise ValueError(
+                "Provide identifiers_org_data or from_file, or use "
+                "'await XrefResolver.from_identifiers_org()' to fetch it"
             )
-            print("Loaded identifiers.org data via web service")
 
         self.id_org_indexed = {}
         self._index_identifiers_org_data()
@@ -91,16 +102,48 @@ class XrefResolver:
             data = json.loads(content)
         return data
 
-    def _load_from_url(self, url):
+    async def _load_from_url(self, url, timeout=30):
         "Get JSON from identifiers.org"
 
-        response = requests.get(url, headers={"Accepts": "application/json"})
-        if response.status_code != 200:
-            raise Exception(
-                f"Unable to load data from Identifiers.org. HTTP response code: {response.status_code}"
-            )
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            try:
+                response = await client.get(
+                    url, headers={"Accepts": "application/json"}
+                )
+                response.raise_for_status()
+                if response.status_code != 200:
+                    raise Exception(
+                        f"Unable to load data from Identifiers.org. HTTP response code: {response.status_code}"
+                    )
+            except Exception as e:
+                raise Exception(
+                    f"Unable to load data from Identifiers.org. HTTP response code: {getattr(e, 'response', None) and e.response.status_code or 'N/A'}"
+                )
 
         return response.json()
+
+    @classmethod
+    async def from_identifiers_org(
+        cls,
+        from_file=None,
+        internal_mapping_file="docs/xref_LOD_mapping.json",
+        timeout=30,
+    ):
+        """
+        Fetch the identifiers.org registry without blocking the event loop
+        and build a resolver from it.
+        """
+        if from_file is None:
+            identifiers_org_data = await cls._load_from_url(
+                IDENTIFIERS_ORG_API_URL,
+                timeout=timeout,
+            )
+            logger.info("Loaded identifiers.org data via web service")
+        return cls(
+            from_file=from_file,
+            internal_mapping_file=internal_mapping_file,
+            identifiers_org_data=identifiers_org_data,
+        )
 
     def _index_identifiers_org_data(self):
         """
@@ -124,7 +167,9 @@ class XrefResolver:
         entry = self.id_org_indexed.get(id_org_ns_prefix)
         if entry is None:
             # Namespace not known by identifiers.org
-            print(f"*** {id_org_ns_prefix} namespace not in identifiers.org ***")
+            logger.warning(
+                f"*** {id_org_ns_prefix} namespace not in identifiers.org ***"
+            )
             return None
 
         resources = entry.get("resources") or []

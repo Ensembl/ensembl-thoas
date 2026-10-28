@@ -884,7 +884,7 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
 
 
 @QUERY_TYPE.field("genomes")
-def resolve_genomes(
+async def resolve_genomes(
     _, info: GraphQLResolveInfo, by_keyword: Optional[Dict[str, str]] = None
 ) -> List:
     """
@@ -933,12 +933,12 @@ def resolve_genomes(
             # if one of the keys is provided
             if by_keyword.get(key):
                 if by_keyword.get("release_version"):
-                    result = grpc_model.get_genome_by_release_version(
+                    result = await grpc_model.get_genome_by_release_version(
                         release_version=by_keyword.get("release_version"),
                     )
                 else:
                     # Fetch genomes data from metadata using gRPC
-                    result = grpc_model.get_genome_by_specific_keyword(
+                    result = await grpc_model.get_genome_by_specific_keyword(
                         **{key: by_keyword.get(key)},
                     )
 
@@ -974,7 +974,7 @@ def resolve_genomes(
                         else None
                     )
                     dataset_data = (
-                        fetch_dataset_data(grpc_model, genome.genome_uuid)
+                        await fetch_dataset_data(grpc_model, genome.genome_uuid)
                         if is_dataset_present
                         else None
                     )
@@ -989,11 +989,13 @@ def resolve_genomes(
 
 
 @QUERY_TYPE.field("genome")
-def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) -> Dict:
+async def resolve_genome(
+    _, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]
+) -> Dict:
     grpc_model = info.context["grpc_model"]
 
     # gRPC fetch first; Mongo access only if assembly is requested.
-    genome = grpc_model.get_genome_by_genome_uuid(
+    genome = await grpc_model.get_genome_by_genome_uuid(
         by_genome_id.get("genome_id"), by_genome_id.get("release_version")
     )
     if not genome.genome_uuid:
@@ -1017,7 +1019,7 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) ->
         else None
     )
     dataset_data = (
-        fetch_dataset_data(grpc_model, genome.genome_uuid)
+        await fetch_dataset_data(grpc_model, genome.genome_uuid)
         if is_dataset_present
         else None
     )
@@ -1105,7 +1107,7 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     return assembly
 
 
-def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
+async def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
     """
     Fetch dataset data using a gRPC model based on the genome UUID.
 
@@ -1116,7 +1118,7 @@ def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
     Returns:
         List: A list of datasets associated with the given genome UUID.
     """
-    result = grpc_model.get_datasets_list_by_uuid(genome_uuid)
+    result = await grpc_model.get_datasets_list_by_uuid(genome_uuid)
     datasets = list(result.datasets)
     return datasets
 

@@ -17,7 +17,7 @@ import re
 import time
 
 import pymongo
-import mongomock
+import asyncio
 import grpc
 import redis
 import redis.asyncio as redis_async
@@ -81,8 +81,9 @@ class MongoDbClient:
         Note that config here is a configparser object
         """
         self.config = config
+
+        # create MongoDB client
         self.mongo_client = MongoDbClient.connect_mongo(self.config)
-        self.async_mongo_client = MongoDbClient.connect_async_mongo(self.config)
 
         # Setup Redis connection and caching toggle
         self.redis_cache_enabled = (
@@ -94,46 +95,49 @@ class MongoDbClient:
         self.warmup_cache_on_start = (
             self.config.get("WARMUP_CACHE_ON_START", "false").lower() == "true"
         )
+        self.cache = None
 
         try:
-            self.cache = redis.StrictRedis(host=self.redis_host, port=self.redis_port)
-            self.async_cache = redis_async.Redis(
-                host=self.redis_host, port=self.redis_port
-            )
-            self.cache.ping()  # Check Redis connection
-            logger.debug(f"[MongoDbClient] Redis caching enabled")
+            if self.redis_cache_enabled:
+                self.cache = redis_async.Redis(
+                    host=self.redis_host, port=self.redis_port
+                )
+                logger.debug("[MongoDbClient] Redis caching enabled")
 
-            if self.redis_cache_enabled and self.warmup_cache_on_start:
-                self.warmup_cache_from_mongo()
-
+            else:
+                logger.debug("[MongoDbClient] Redis caching disabled")
+                self.cache = None
         except redis.RedisError as e:
             logger.warning(f"[MongoDbClient] Redis not available: {e}")
             self.cache = None
-            self.async_cache = None
             self.redis_cache_enabled = False
 
+    # Get a cached MongoDB connection if available in Redis
     async def get_cached_connection(self, uuid):
-        if self.redis_cache_enabled and self.async_cache:
+        if self.redis_cache_enabled and self.cache:
             try:
-                cached_database = await self.async_cache.get(
-                    genome_mapping_cache_key(uuid)
-                )
+                cached_database = await self.cache.get(genome_mapping_cache_key(uuid))
                 if cached_database:
                     chosen_db = cached_database.decode("utf-8")
-                    return self.async_mongo_client[chosen_db]
+                    return self.mongo_client[chosen_db]
             except redis.RedisError as e:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
         return None
 
-    async def get_async_database_conn(self, uuid):
+    async def get_database_conn(self, uuid, release_version=None):
+        chosen_db = None
+
+        if release_version:
+            chosen_db = release_database_name(release_version)
+            return self.mongo_client[chosen_db]
+
         cached_connection = await self.get_cached_connection(uuid)
         if cached_connection is not None:
             return cached_connection
 
-        chosen_db = None
         try:
             mappings = (
-                await self.async_mongo_client["metadata"]["genome_mapping"]
+                await self.mongo_client["metadata"]["genome_mapping"]
                 .find(
                     {"genome_uuid": uuid},
                     {"release_version": 1, "release_name": 1, "_id": 0},
@@ -143,7 +147,7 @@ class MongoDbClient:
             mapping = highest_release_mapping(mappings)
             if mapping is not None:
                 chosen_db = mapping_database_name(
-                    mapping, await self.async_mongo_client.list_database_names()
+                    mapping, await self.mongo_client.list_database_names()
                 )
         except pymongo.errors.PyMongoError as exc:
             logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
@@ -152,9 +156,9 @@ class MongoDbClient:
             logger.warning("[get_database_conn] Release not found")
             raise GenomeNotFoundError({"genome_id": uuid})
 
-        if self.redis_cache_enabled and self.async_cache:
+        if self.redis_cache_enabled and self.cache:
             try:
-                await self.async_cache.set(
+                await self.cache.set(
                     genome_mapping_cache_key(uuid),
                     chosen_db,
                     ex=self.redis_expiry,
@@ -163,64 +167,9 @@ class MongoDbClient:
                 logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
 
         logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
-        return self.async_mongo_client[chosen_db]
+        return self.mongo_client[chosen_db]
 
-    def get_database_conn(self, uuid, release_version=None):
-        chosen_db = None
-
-        if release_version:
-            chosen_db = release_database_name(release_version)
-            return self.mongo_client[chosen_db]
-
-        # Try cache if enabled
-        if self.redis_cache_enabled and self.cache:
-            try:
-                cached_database = self.cache.get(genome_mapping_cache_key(uuid))
-                if cached_database:
-                    logger.debug(
-                        f"[MongoDbClient] Using cached database: {cached_database}"
-                    )
-                    chosen_db = cached_database.decode("utf-8")
-                    return self.mongo_client[chosen_db]
-            except redis.RedisError as e:
-                logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
-
-        chosen_db = None
-        try:
-            with self.mongo_client["metadata"]["genome_mapping"].find(
-                {"genome_uuid": uuid},
-                {"release_version": 1, "release_name": 1, "_id": 0},
-            ) as mappings:
-                mapping = highest_release_mapping(mappings)
-            if mapping is not None:
-                chosen_db = mapping_database_name(
-                    mapping, self.mongo_client.list_database_names()
-                )
-        except pymongo.errors.PyMongoError as exc:
-            logger.warning("MongoDB genome mapping lookup failed for %s: %s", uuid, exc)
-
-        if chosen_db:
-            if self.redis_cache_enabled and self.cache:
-                try:
-                    self.cache.set(
-                        genome_mapping_cache_key(uuid),
-                        chosen_db,
-                        ex=self.redis_expiry,
-                    )
-                except redis.RedisError as e:
-                    logger.warning(f"[MongoDbClient] Redis cache set failed: {e}")
-
-        else:
-            logger.warning("[get_database_conn] Release not found")
-            raise GenomeNotFoundError({"genome_id": uuid})
-
-        if chosen_db is not None:
-            logger.debug("[get_database_conn] Connected to '%s' MongoDB", chosen_db)
-            data_database_connection = self.mongo_client[chosen_db]
-            return data_database_connection
-        raise GenomeNotFoundError({"genome_id": uuid})
-
-    def warmup_cache_from_mongo(self):
+    async def warmup_cache_from_mongo(self):
         if not self.redis_cache_enabled or not self.cache:
             return
 
@@ -230,11 +179,11 @@ class MongoDbClient:
         try:
             logger.info("Starting genome mapping Redis warm-up from MongoDB")
             latest = {}
-            with self.mongo_client["metadata"]["genome_mapping"].find(
+            async with self.mongo_client["metadata"]["genome_mapping"].find(
                 {},
                 {"genome_uuid": 1, "release_version": 1, "release_name": 1, "_id": 0},
             ) as mappings:
-                for mapping in mappings:
+                async for mapping in mappings:
                     uuid = mapping.get("genome_uuid")
                     version = mapping.get("release_version")
                     version_key = release_version_key(version)
@@ -245,15 +194,20 @@ class MongoDbClient:
                     ):
                         latest[uuid] = mapping
 
-            database_names = self.mongo_client.list_database_names()
-            for uuid, mapping in latest.items():
-                chosen_db = mapping_database_name(mapping, database_names)
-                if chosen_db is None:
-                    continue
-                self.cache.set(
-                    genome_mapping_cache_key(uuid), chosen_db, ex=self.redis_expiry
-                )
-                total_keys += 1
+            database_names = await self.mongo_client.list_database_names()
+
+            # Use a Redis pipeline to batch set genome mapping cache keys
+            async with self.cache.pipeline() as pipe:
+                for uuid, mapping in latest.items():
+                    chosen_db = mapping_database_name(mapping, database_names)
+                    if chosen_db is None:
+                        continue
+                    pipe.set(
+                        genome_mapping_cache_key(uuid), chosen_db, ex=self.redis_expiry
+                    )
+                    total_keys += 1
+                # Execute the pipeline to set all keys in Redis at once
+                await pipe.execute()
 
             time_taken = time.time() - started
             logger.info(
@@ -264,59 +218,43 @@ class MongoDbClient:
         except Exception as ex:
             logger.warning("[warmup_cache_from_mongo] Redis warm-up failed: %s", ex)
 
-    async def close(self):
-        if self.async_cache:
+    async def connect(self):
+        # Test connection to MongoDB
+        try:
+            await self.mongo_client.admin.command("ping")
+            logger.debug("[MongoDbClient] Connected to MongoDB")
+        except pymongo.errors.PyMongoError as exc:
+            logger.error("[MongoDbClient] MongoDB connection failed: %s", exc)
+            raise
+
+        # Test connection to Redis if caching is enabled
+        if self.redis_cache_enabled and self.cache:
             try:
-                await self.async_cache.aclose()
+                await self.cache.ping()
+                logger.debug("[MongoDbClient] Connected to Redis")
+                if self.warmup_cache_on_start:
+                    await self.warmup_cache_from_mongo()
+            except redis.RedisError as exc:
+                logger.error("[MongoDbClient] Redis connection failed: %s", exc)
+                self.redis_cache_enabled = False
+                self.cache = None
+
+    async def close(self):
+        if self.cache:
+            try:
+                await self.cache.aclose()
             except Exception as exc:
                 logger.warning("Failed to close async redis cache client: %s", exc)
 
-        if self.cache:
-            try:
-                self.cache.close()
-            except Exception as exc:
-                logger.warning("Failed to close redis cache client: %s", exc)
-
-        if self.async_mongo_client:
-            try:
-                await self.async_mongo_client.aclose()
-            except Exception as exc:
-                logger.warning("Failed to close async mongo client: %s", exc)
-
         if self.mongo_client:
             try:
-                self.mongo_client.close()
+                await self.mongo_client.aclose()
             except Exception as exc:
                 logger.warning("Failed to close mongo client: %s", exc)
 
     @staticmethod
     def connect_mongo(config):
-        "Create a MongoDB connection"
-
-        host = config.get("MONGO_HOST").split(",")
-        port = int(config.get("MONGO_PORT"))
-        user = config.get("MONGO_USER")
-        password = config.get("MONGO_PASSWORD")
-
-        client = pymongo.MongoClient(
-            host=host,
-            port=port,
-            username=user,
-            password=password,
-            read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-        )
-        try:
-            # make sure the connection is established successfully
-            client.server_info()
-            logger.debug(f"Connected to MongoDB, Host: {host}")
-        except Exception as exc:
-            raise Exception("Connection to MongoDB failed") from exc
-
-        return client
-
-    @staticmethod
-    def connect_async_mongo(config):
-        """Create async MongoDB connection"""
+        """Create MongoDB connection"""
         host = config.get("MONGO_HOST").split(",")
         port = int(config.get("MONGO_PORT"))
         user = config.get("MONGO_USER")
@@ -333,89 +271,41 @@ class MongoDbClient:
         return client
 
 
-class FakeMongoDbClient:
-    """
-    Sets up a mongomock collection for thoas code to test with
-    """
+METADATA_SERVICE = "ensembl_metadata.EnsemblMetadata"
+GRPC_CHANNEL_OPTIONS = (("grpc.enable_http_proxy", 0),)
 
-    def __init__(self):
-        self.mongo_client = mongomock.MongoClient()
-        self.mongo_db = self.mongo_client.db
-        self.redis_cache_enabled = False
 
-    def get_database_conn(self, uuid, release_version=None):
-        # Return the test database without resolving a release.
-        chosen_db = "db"
-        return self.mongo_client[chosen_db]
+def load_metadata_reflector(target):
+    """Load the metadata service protocols over a short-lived sync channel."""
+    # yagrc only supports synchronous channels; this runs once at startup
+    with grpc.insecure_channel(target, options=GRPC_CHANNEL_OPTIONS) as channel:
+        reflector = yagrc_reflector.GrpcReflectionClient()
+        reflector.load_protocols(channel, symbols=[METADATA_SERVICE])
+    return reflector
 
 
 class GRPCServiceClient:
-    def __init__(self, config):
 
-        host = config.get("GRPC_HOST")
-        port = config.get("GRPC_PORT")
+    def __init__(self, channel, reflector):
 
-        # instantiate a channel
-        self.channel = grpc.insecure_channel(
-            "{}:{}".format(host, port), options=(("grpc.enable_http_proxy", 0),)
-        )
+        self.channel = channel
+        self.reflector = reflector
 
-        # create reflector for querying server using reflection
-        self.reflector = yagrc_reflector.GrpcReflectionClient()
+        stub_class = self.reflector.service_stub_class(METADATA_SERVICE)
+        self.stub_class = stub_class(self.channel)
 
-        # use reflection to load service definitions and message types
-        self.reflector.load_protocols(
-            self.channel, symbols=["ensembl_metadata.EnsemblMetadata"]
-        )
+        self.stub = self.stub_class
 
-        # dynamically retrieve the client stub class for service
-        stub_class = self.reflector.service_stub_class(
-            "ensembl_metadata.EnsemblMetadata"
-        )
-
-        # bind the client and the server
-        self.stub = stub_class(self.channel)
-
-    def get_grpc_stub(self):
-        return self.stub
-
-    def get_grpc_reflector(self):
-        return self.reflector
-
-    def close(self):
-        try:
-            self.channel.close()
-        except Exception as exc:
-            logger.warning("Failed to close grpc client: %s", exc)
-
-
-class AsyncGRPCServiceClient:
-    def __init__(self, config):
-
+    @classmethod
+    async def create(cls, config):
+        """Run reflection off the event loop, then bind an aio channel to this loop."""
         host = config.get("GRPC_HOST")
         port = config.get("GRPC_PORT")
         target = "{}:{}".format(host, port)
 
-        # yagrc is synchronous and requires a standard grpc.insecure_channel
-        with grpc.insecure_channel(
-            target, options=(("grpc.enable_http_proxy", 0),)
-        ) as sync_channel:
-            self.reflector = yagrc_reflector.GrpcReflectionClient()
-            self.reflector.load_protocols(
-                sync_channel, symbols=["ensembl_metadata.EnsemblMetadata"]
-            )
-
-        self.aio_channel = grpc.aio.insecure_channel(
-            target, options=(("grpc.enable_http_proxy", 0),)
-        )
-
-        # dynamically retrieve the client stub class for service
-        stub_class = self.reflector.service_stub_class(
-            "ensembl_metadata.EnsemblMetadata"
-        )
-
-        # bind the client and the server
-        self.stub = stub_class(self.aio_channel)
+        reflector = await asyncio.to_thread(load_metadata_reflector, target)
+        channel = grpc.aio.insecure_channel(target, options=GRPC_CHANNEL_OPTIONS)
+        return cls(channel, reflector)
 
     def get_grpc_stub(self):
         return self.stub
@@ -425,6 +315,6 @@ class AsyncGRPCServiceClient:
 
     async def close(self):
         try:
-            await self.aio_channel.close()
+            await self.channel.close()
         except Exception as exc:
             logger.warning("Failed to close async grpc client: %s", exc)
