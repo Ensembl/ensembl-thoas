@@ -310,7 +310,11 @@ async def resolve_transcript_search(
     transcripts = [
         transcript for genome_matches in results for transcript in genome_matches
     ]
-    return parse_search_response(transcripts, page, per_page)
+
+    response = parse_search_response(transcripts, page, per_page)
+    # Remember the genomes that matched for this search response
+    remember_match_genomes(info, response["matches"])
+    return response
 
 
 async def fetch_product(
@@ -355,9 +359,12 @@ async def resolve_protein_search(
     ]
     results = await asyncio.gather(*tasks)
     products = [product for genome_matches in results for product in genome_matches]
-    return parse_search_response(
+    response = parse_search_response(
         products, search_payload["page"], search_payload["per_page"]
     )
+    # Remember the genomes that matched for this search response
+    remember_match_genomes(info, response["matches"])
+    return response
 
 
 @QUERY_TYPE.field("version")
@@ -1225,18 +1232,53 @@ async def set_db_conn_for_uuid(info, uuid, release_version=None):
     return conn
 
 
-def get_db_conn(info, uuid=None):
-    parent_key = get_path_parent_key(info)
+# Context key suffix for the per-match genome list kept by search root fields
+MATCH_GENOMES_SUFFIX = ":match_genome_ids"
+
+
+# Fixes trascript and protein search bugs which arise from concurrent genome loading and shared context keys
+# The last genome loaded will overwrite the shared context key, so we need to remember the match genomes separately
+def remember_match_genomes(info, matches: list[Any]) -> None:
+    """
+    Record which genome each returned search match belongs to, in response order.
+
+    Search root fields load several genomes concurrently, and each one overwrites
+    the root field's shared context key, so that key ends up holding whichever
+    genome finished last. get_conn_for_field() uses this list instead for
+    anything nested under a match.
+    """
+    info.context[get_path_parent_key(info) + MATCH_GENOMES_SUFFIX] = [
+        match["genome_id"] for match in matches
+    ]
+
+
+def get_conn_for_field(info, uuid=None) -> Dict:
+    """
+    Return the {db_conn, data_loader} for the field being resolved.
+
+    For fields under a search match (transcript or protein search), the path looks like
+    ["transcript_search", "matches", 3, "slice", "region"]: the integer is the
+    match's position, which tells us its genome.
+    """
+    path = info.path.as_list()
+    parent_key = path[0]
+    # Check if this field is under a search match and determine the genome UUID accordingly
+    # The genome UUID for this field is determined by the match's position gotten from the response list.
+    match_genome_ids = info.context.get(parent_key + MATCH_GENOMES_SUFFIX)
+    if match_genome_ids and len(path) > 2 and isinstance(path[2], int):
+        uuid = match_genome_ids[path[2]]
+
     if uuid:
-        return info.context[parent_key + uuid]["db_conn"]
-    return info.context[parent_key]["db_conn"]
+        return info.context[parent_key + uuid]
+    return info.context[parent_key]
+
+
+def get_db_conn(info, uuid=None):
+    return get_conn_for_field(info, uuid)["db_conn"]
 
 
 def get_data_loader(info, uuid=None):
-    parent_key = get_path_parent_key(info)
-    if uuid:
-        return info.context[parent_key + uuid]["data_loader"]
-    return info.context[parent_key]["data_loader"]
+    return get_conn_for_field(info, uuid)["data_loader"]
 
 
 def get_path_parent_key(info):
