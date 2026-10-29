@@ -124,6 +124,9 @@ class MongoDbClient:
                 logger.warning(f"[MongoDbClient] Redis cache read failed: {e}")
         return None
 
+    # Get a MongoDB connection for the specified genome UUID and optional release version.
+    # If a release version is provided, it directly resolves the corresponding database.
+    # Otherwise, it checks the Redis cache and falls back to the genome mapping collection.
     async def get_database_conn(self, uuid, release_version=None):
         chosen_db = None
 

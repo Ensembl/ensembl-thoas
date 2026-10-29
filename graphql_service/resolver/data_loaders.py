@@ -15,7 +15,8 @@
 import logging
 from collections import defaultdict
 from typing import List, Dict
-
+from pymongo.asynchronous.database import AsyncDatabase
+import redis
 from aiodataloader import DataLoader
 from common.db import MongoDbClient
 import pickle
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 class BatchLoaders:
     """A collection of bulk data aggregators for "joins" in GraphQL"""
 
-    def __init__(self, database_conn, mongo_client: MongoDbClient):
+    def __init__(self, database_conn: AsyncDatabase, mongo_client: MongoDbClient):
         self.database_conn = database_conn
         self.mongo_client = mongo_client
 
@@ -132,7 +133,7 @@ class BatchLoaders:
 
         # The mongo db connection also gives access to the redis cache
         # connection
-        if self.mongo_client.redis_cache_enabled:
+        if self.mongo_client.redis_cache_enabled and self.mongo_client.cache:
             cache = self.mongo_client.cache
 
             # We use pickle to get a binary representation of the query object.
@@ -143,14 +144,18 @@ class BatchLoaders:
 
             # If we find the key, we return the associated result.
             # If not, we fall through
-            data = cache.get(key)
+            try:
+                data = await cache.get(key)
+            except redis.RedisError as e:
+                logger.warning("Error accessing cache for key %s: %s", key, e)
+                data = None
 
             if data is not None:
                 logger.debug("Found cache entry for key: %s", key)
                 # We recreate the object for the result
                 return pickle.loads(data)
 
-            logger.debug(f"No cache entry found for key: %s", key)
+            logger.debug("No cache entry found for key: %s", key)
 
         db = self.database_conn[doc_type]
         assert db is not None
@@ -165,12 +170,17 @@ class BatchLoaders:
 
         # We need to fetch the full result because batch_transcript_load expects
         # this, but also since we may want to cache it
-        result = list(db.find(query))
+        result = await db.find(query).to_list(length=None)
 
-        if self.mongo_client.redis_cache_enabled:
-            logger.debug(f"Storing result for key: %s", key)
+        if self.mongo_client.redis_cache_enabled and self.mongo_client.cache:
+            logger.debug("Storing result for key: %s", key)
 
             # The result is a list of documents. We use pickle to serialize this
-            cache.set(key, pickle.dumps(result), ex=self.mongo_client.redis_expiry)
+            try:
+                await cache.set(
+                    key, pickle.dumps(result), ex=self.mongo_client.redis_expiry
+                )
+            except redis.RedisError as e:
+                logger.warning("Error storing cache for key %s: %s", key, e)
 
         return result
