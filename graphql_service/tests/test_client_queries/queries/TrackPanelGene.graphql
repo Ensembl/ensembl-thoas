@@ -1,56 +1,55 @@
 query TrackPanelGene {
-    gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+  gene(by_id: { genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3", stable_id: "ENSG00000139618" }) {
+    stable_id
+    unversioned_stable_id
+    symbol
+    slice {
+      region {
+        name
+      }
+      location {
+        start
+        end
+      }
+      strand {
+        code
+      }
+    }
+    metadata {
+      biotype {
+        label
+      }
+    }
+    transcripts_page(page: 1, per_page: 100) {
+      transcripts {
         stable_id
-        unversioned_stable_id
-        symbol
         slice {
-        region {
-            name
-        }
-        location {
-            start
-            end
-        }
-        strand {
-            code
-        }
-        }
-        metadata {
-        biotype {
-            label
-        }
-        }
-        transcripts {
-        stable_id
-        slice {
-            location {
+          location {
             length
-            }
+          }
         }
         product_generating_contexts {
-            product_type
-            product {
-            length
-            }
+          product_type
         }
         metadata {
-            biotype {
+          biotype {
             label
             value
-            }
-            canonical {
+          }
+          canonical {
             value
             label
-            }
-            mane {
+          }
+          mane {
             value
             label
             ncbi_transcript {
-                id
-                url
+              id
+              url
             }
-            }
+          }
         }
-        }
+      }
     }
+  }
 }
