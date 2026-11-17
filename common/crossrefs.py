@@ -134,6 +134,7 @@ class XrefResolver:
         Fetch the identifiers.org registry without blocking the event loop
         and build a resolver from it.
         """
+        identifiers_org_data = None
         if from_file is None:
             identifiers_org_data = await cls._load_from_url(
                 IDENTIFIERS_ORG_API_URL,
