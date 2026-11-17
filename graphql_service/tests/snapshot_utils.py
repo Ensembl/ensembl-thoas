@@ -25,7 +25,7 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
-from common.db import FakeMongoDbClient
+from graphql_service.tests.test_db_client import FakeMongoDbClient
 
 
 def prepare_mongo_instance():

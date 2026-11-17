@@ -182,20 +182,21 @@ class MongoDbClient:
         try:
             logger.info("Starting genome mapping Redis warm-up from MongoDB")
             latest = {}
-            async with self.mongo_client["metadata"]["genome_mapping"].find(
+            mappings = self.mongo_client["metadata"]["genome_mapping"].find(
                 {},
                 {"genome_uuid": 1, "release_version": 1, "release_name": 1, "_id": 0},
-            ) as mappings:
-                async for mapping in mappings:
-                    uuid = mapping.get("genome_uuid")
-                    version = mapping.get("release_version")
-                    version_key = release_version_key(version)
-                    if not uuid or version_key is None:
-                        continue
-                    if uuid not in latest or version_key > release_version_key(
-                        latest[uuid]["release_version"]
-                    ):
-                        latest[uuid] = mapping
+            )
+            # The cursor closes itself once fully iterated
+            async for mapping in mappings:
+                uuid = mapping.get("genome_uuid")
+                version = mapping.get("release_version")
+                version_key = release_version_key(version)
+                if not uuid or version_key is None:
+                    continue
+                if uuid not in latest or version_key > release_version_key(
+                    latest[uuid]["release_version"]
+                ):
+                    latest[uuid] = mapping
 
             database_names = await self.mongo_client.list_database_names()
 

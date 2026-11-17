@@ -1,4 +1,4 @@
-"""Regression tests for Mongo-only genome routing, shared by sync/async paths."""
+"""Regression tests for Mongo-only genome routing in MongoDbClient."""
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -13,38 +13,40 @@ from common.db import MongoDbClient, genome_mapping_cache_key
 from graphql_service.resolver.exceptions import GenomeNotFoundError
 
 
-@pytest.fixture(params=[False, True], ids=["sync", "async"])
-def routing(request):
-    """Use real mock collections but avoid opening network connections."""
-    is_async = request.param
+def make_client():
+    """
+    Build a MongoDbClient without running __init__, so nothing connects.
+
+    Returns the client and a sync mongomock client that shares its storage,
+    which tests use to seed data.
+    """
+    sync_mongo = mongomock.MongoClient()
     client = MongoDbClient.__new__(MongoDbClient)
-    client.mongo_client = mongomock.MongoClient()
-    client.async_mongo_client = mongomock_motor.AsyncMongoMockClient()
+    client.mongo_client = mongomock_motor.AsyncMongoMockClient(
+        mock_mongo_client=sync_mongo
+    )
     client.redis_cache_enabled = True
     client.redis_expiry = 6600
-    cache = AsyncMock() if is_async else Mock()
+    return client, sync_mongo
+
+
+@pytest.fixture
+def routing():
+    """Use real mock collections but avoid opening network connections."""
+    client, sync_mongo = make_client()
+    cache = AsyncMock()
     cache.get.return_value = None
     client.cache = cache
-    client.async_cache = cache
-    mongo = client.async_mongo_client if is_async else client.mongo_client
-    collection = mongo.metadata.genome_mapping
+    collection = client.mongo_client.metadata.genome_mapping
 
     async def insert(documents):
-        if is_async:
-            await collection.insert_many(documents)
-        else:
-            collection.insert_many(documents)
+        await collection.insert_many(documents)
 
     async def create_database(name):
-        if is_async:
-            await mongo[name].data.insert_one({"test": True})
-        else:
-            mongo[name].data.insert_one({"test": True})
+        sync_mongo[name].data.insert_one({"test": True})
 
     async def lookup(uuid="genome-1"):
-        if is_async:
-            return await client.get_async_database_conn(uuid)
-        return client.get_database_conn(uuid, None)
+        return await client.get_database_conn(uuid)
 
     return SimpleNamespace(
         client=client,
@@ -54,6 +56,31 @@ def routing(request):
         lookup=lookup,
         create_database=create_database,
     )
+
+
+class FakePipeline:
+    """Records `set` calls the way a redis.asyncio pipeline buffers them."""
+
+    def __init__(self):
+        self.set = Mock()
+        self.executed = False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_exc_info):
+        return False
+
+    async def execute(self):
+        self.executed = True
+
+
+def make_warmup_client():
+    client, sync_mongo = make_client()
+    pipeline = FakePipeline()
+    client.cache = Mock()
+    client.cache.pipeline.return_value = pipeline
+    return client, sync_mongo, pipeline
 
 
 @pytest.mark.asyncio
@@ -143,19 +170,19 @@ async def test_disabled_cache_still_uses_mongo(routing):
     routing.cache.set.assert_not_called()
 
 
-def test_explicit_release_bypasses_mapping_and_cache():
-    client = MongoDbClient.__new__(MongoDbClient)
-    client.mongo_client = mongomock.MongoClient()
-    assert client.get_database_conn("genome-1", "108.1").name == "release_108_1"
+@pytest.mark.asyncio
+async def test_explicit_release_bypasses_mapping_and_cache():
+    client, _ = make_client()
+    client.cache = AsyncMock()
+    database = await client.get_database_conn("genome-1", "108.1")
+    assert database.name == "release_108_1"
+    client.cache.get.assert_not_called()
 
 
-def test_warmup_uses_highest_mapping_and_refreshes_with_expiry():
-    client = MongoDbClient.__new__(MongoDbClient)
-    client.mongo_client = mongomock.MongoClient()
-    client.redis_cache_enabled = True
-    client.redis_expiry = 6600
-    client.cache = Mock()
-    client.mongo_client.metadata.genome_mapping.insert_many(
+@pytest.mark.asyncio
+async def test_warmup_uses_highest_mapping_and_refreshes_with_expiry():
+    client, sync_mongo, pipeline = make_warmup_client()
+    sync_mongo.metadata.genome_mapping.insert_many(
         [
             {"genome_uuid": "one", "release_version": "110.9"},
             {"genome_uuid": "one", "release_version": "110.10"},
@@ -165,14 +192,15 @@ def test_warmup_uses_highest_mapping_and_refreshes_with_expiry():
             {"release_version": "111.2"},
         ]
     )
-    client.mongo_client.release_110_10.data.insert_one({"test": True})
-    client.mongo_client.release_111_1.data.insert_one({"test": True})
-    client.warmup_cache_from_mongo()
-    assert client.cache.set.call_count == 2
-    client.cache.set.assert_any_call(
+    sync_mongo.release_110_10.data.insert_one({"test": True})
+    sync_mongo.release_111_1.data.insert_one({"test": True})
+    await client.warmup_cache_from_mongo()
+    assert pipeline.executed
+    assert pipeline.set.call_count == 2
+    pipeline.set.assert_any_call(
         genome_mapping_cache_key("one"), "release_110_10", ex=6600
     )
-    client.cache.set.assert_any_call(
+    pipeline.set.assert_any_call(
         genome_mapping_cache_key("two"), "release_111_1", ex=6600
     )
 
@@ -224,21 +252,18 @@ async def test_fallback_uses_name_from_highest_mapping(routing):
     assert (await routing.lookup()).name == "release_2"
 
 
-def test_warmup_caches_fallback_and_skips_missing_databases():
-    client = MongoDbClient.__new__(MongoDbClient)
-    client.mongo_client = mongomock.MongoClient()
-    client.redis_cache_enabled = True
-    client.redis_expiry = 6600
-    client.cache = Mock()
-    client.mongo_client.metadata.genome_mapping.insert_many(
+@pytest.mark.asyncio
+async def test_warmup_caches_fallback_and_skips_missing_databases():
+    client, sync_mongo, pipeline = make_warmup_client()
+    sync_mongo.metadata.genome_mapping.insert_many(
         [
             {"genome_uuid": "one", "release_version": "110.1", "release_name": "1"},
             {"genome_uuid": "two", "release_version": "110.2", "release_name": "2"},
         ]
     )
-    client.mongo_client.release_1.data.insert_one({"test": True})
-    client.warmup_cache_from_mongo()
-    client.cache.set.assert_called_once_with(
+    sync_mongo.release_1.data.insert_one({"test": True})
+    await client.warmup_cache_from_mongo()
+    pipeline.set.assert_called_once_with(
         genome_mapping_cache_key("one"), "release_1", ex=6600
     )
 
@@ -248,13 +273,10 @@ async def test_database_list_failure_does_not_cache(routing, monkeypatch):
     await routing.insert(
         [{"genome_uuid": "genome-1", "release_version": "110.1", "release_name": "1"}]
     )
-    mongo = (
-        routing.client.async_mongo_client
-        if isinstance(routing.cache, AsyncMock)
-        else routing.client.mongo_client
-    )
     monkeypatch.setattr(
-        mongo, "list_database_names", Mock(side_effect=OperationFailure("denied"))
+        routing.client.mongo_client,
+        "list_database_names",
+        AsyncMock(side_effect=OperationFailure("denied")),
     )
     with pytest.raises(GenomeNotFoundError):
         await routing.lookup()

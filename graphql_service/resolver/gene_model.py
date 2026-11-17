@@ -669,7 +669,7 @@ async def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(

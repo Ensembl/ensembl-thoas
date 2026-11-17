@@ -14,7 +14,7 @@
 
 import pytest
 
-from common.db import FakeMongoDbClient
+from graphql_service.tests.test_db_client import FakeMongoDbClient
 from graphql_service.resolver.data_loaders import BatchLoaders
 
 
@@ -59,7 +59,7 @@ async def test_batch_transcript_load():
             },
         ]
     )
-    loaders = BatchLoaders(database, mongo_client)
+    loaders = BatchLoaders(mongo_client.mongo_client["db"], mongo_client)
 
     response = await loaders.batch_transcript_by_gene_load(["1_ENSG001.1"])
 
@@ -109,7 +109,7 @@ async def test_batch_product_load():
         ]
     )
 
-    loader = BatchLoaders(database, mongo_client)
+    loader = BatchLoaders(mongo_client.mongo_client["db"], mongo_client)
 
     response = await loader.batch_product_load(["1_ENSP001.1"])
 

@@ -102,7 +102,8 @@ class XrefResolver:
             data = json.loads(content)
         return data
 
-    async def _load_from_url(self, url, timeout=30):
+    @staticmethod
+    async def _load_from_url(url, timeout=30):
         "Get JSON from identifiers.org"
 
         async with httpx.AsyncClient(timeout=timeout) as client:
