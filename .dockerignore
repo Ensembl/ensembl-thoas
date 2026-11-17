@@ -7,3 +7,4 @@ web/
 .gitlab-ci.yml
 example.conf
 example_load.conf
+connections.conf

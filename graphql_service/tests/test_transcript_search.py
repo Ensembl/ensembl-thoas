@@ -3,13 +3,13 @@ import pytest_asyncio
 from ariadne import graphql
 
 from graphql_service.ariadne_app import prepare_executable_schema
-from graphql_service.tests.test_db_client import FakeAsyncMongoDbClient
+from graphql_service.tests.test_db_client import FakeMongoDbClient
 
 
 @pytest_asyncio.fixture
 async def async_setup():
     executable_schema = prepare_executable_schema()
-    mongo_client = FakeAsyncMongoDbClient()
+    mongo_client = FakeMongoDbClient()
 
     def context_provider():
         return {
@@ -20,7 +20,7 @@ async def async_setup():
     return executable_schema, context_provider
 
 
-async def populate_data(context_value):
+def populate_data(context_value):
     db = context_value["mongo_db_client"].mongo_db
     # set up data , transcript ENST00000680071.1 is present in
     # a7335667-93e7-11ec-a39d-005056b38ce3 and 2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb
@@ -40,13 +40,13 @@ async def populate_data(context_value):
 
     first_genome = "a7335667-93e7-11ec-a39d-005056b38ce3"
     second_genome = "2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb"
-    await db["transcript"].insert_many(
+    db["transcript"].insert_many(
         [
             {**transcript_doc, "genome_id": first_genome},
             {**transcript_doc, "genome_id": second_genome},
         ]
     )
-    await db["gene"].insert_many(
+    db["gene"].insert_many(
         [
             {**gene_doc, "genome_id": first_genome},
             {**gene_doc, "genome_id": second_genome},
@@ -58,7 +58,7 @@ async def populate_data(context_value):
 async def test_transcript_search_happy_path(async_setup):
     executable_schema, context = async_setup
     context_value = context()
-    await populate_data(context_value)
+    populate_data(context_value)
 
     query = """
     query AsyncQuery {
@@ -117,7 +117,7 @@ async def test_protein_search_returns_transcript_id(async_setup):
     context_value = context()
     db = context_value["mongo_db_client"].mongo_db
     genome_id = "a7335667-93e7-11ec-a39d-005056b38ce3"
-    await db["protein"].insert_one(
+    db["protein"].insert_one(
         {
             "type": "Protein",
             "stable_id": "ENSP00000369497.3",
@@ -250,7 +250,7 @@ async def test_transcript_search_no_genome_ids(async_setup):
 async def test_transcript_search_multiple_genome_ids(async_setup):
     executable_schema, context = async_setup
     context_value = context()
-    await populate_data(context_value)
+    populate_data(context_value)
 
     query = """
     query AsyncQuery {
@@ -366,3 +366,65 @@ async def test_transcript_search_missing_fields(async_setup):
         assert any(
             message.startswith(expected_prefixes) for message in messages
         ), messages
+
+
+@pytest.mark.asyncio
+async def test_transcript_search_routes_nested_fields_to_each_genome():
+    """Nested fields of each match must read from that match's own release DB."""
+    first_genome = "a7335667-93e7-11ec-a39d-005056b38ce3"
+    second_genome = "2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb"
+    mongo_client = FakeMongoDbClient(
+        {first_genome: "release_1", second_genome: "release_2"}
+    )
+
+    for genome_id, db_name in (
+        (first_genome, "release_1"),
+        (second_genome, "release_2"),
+    ):
+        db = mongo_client.sync_client[db_name]
+        region_id = f"{genome_id}_13_chromosome"
+        db["transcript"].insert_one(
+            {
+                "type": "Transcript",
+                "genome_id": genome_id,
+                "stable_id": "ENST00000680071.1",
+                "unversioned_stable_id": "ENST00000680071",
+                "slice": {"region_id": region_id},
+            }
+        )
+        db["region"].insert_one(
+            {"type": "Region", "region_id": region_id, "name": f"13 in {db_name}"}
+        )
+
+    query = """
+    query {
+      transcript_search(
+        search_payload: {
+          query: "ENST00000680071.1",
+          genome_ids: [
+            "a7335667-93e7-11ec-a39d-005056b38ce3",
+            "2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb"
+          ],
+          page: 1,
+          per_page: 10
+        }
+      ) {
+        matches {
+          genome_id
+          slice { region { name } }
+        }
+      }
+    }
+    """
+    success, result = await graphql(
+        prepare_executable_schema(),
+        {"query": query},
+        context_value={"mongo_db_client": mongo_client, "grpc_model": None},
+    )
+
+    assert success
+    assert "errors" not in result
+    assert result["data"]["transcript_search"]["matches"] == [
+        {"genome_id": first_genome, "slice": {"region": {"name": "13 in release_1"}}},
+        {"genome_id": second_genome, "slice": {"region": {"name": "13 in release_2"}}},
+    ]

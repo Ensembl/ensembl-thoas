@@ -73,3 +73,5 @@ appenv/
 
 # development docker file
 local_devDockerfile
+
+codebase_exploration/

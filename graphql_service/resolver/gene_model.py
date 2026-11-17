@@ -19,7 +19,8 @@ from typing import Dict, Optional, List, Any, Mapping
 
 from ariadne import QueryType, ObjectType
 from graphql import GraphQLResolveInfo, GraphQLError, FieldNode
-from pymongo.database import Database, Collection
+from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.asynchronous.database import AsyncDatabase
 
 from common import utils
 from graphql_service.resolver.data_loaders import BatchLoaders
@@ -68,7 +69,7 @@ GENOME_TYPE = ObjectType("Genome")
 
 
 @QUERY_TYPE.field("gene")
-def resolve_gene(
+async def resolve_gene(
     _,
     info: GraphQLResolveInfo,
     byId: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
@@ -96,13 +97,13 @@ def resolve_gene(
         "genome_id": by_id["genome_id"],
     }
 
-    set_db_conn_for_uuid(info, by_id["genome_id"])
+    await set_db_conn_for_uuid(info, by_id["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
 
     logger.info("[resolve_gene] Getting Gene from DB: '%s'", connection_db.name)
     try:
-        result = gene_collection.find_one(query)
+        result = await gene_collection.find_one(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
@@ -114,7 +115,7 @@ def resolve_gene(
 
 
 @QUERY_TYPE.field("genes")
-def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
+async def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> List:
     """
     Load Genes via potentially ambiguous symbol
     Or
@@ -127,13 +128,13 @@ def resolve_genes(_, info: GraphQLResolveInfo, by_symbol: Dict[str, str]) -> Lis
         "symbol": by_symbol.get("symbol"),  # this makes symbol optional
     }
 
-    set_db_conn_for_uuid(info, by_symbol["genome_id"])
+    await set_db_conn_for_uuid(info, by_symbol["genome_id"])
     connection_db = get_db_conn(info)
     gene_collection = connection_db["gene"]
     logger.info("[resolve_genes] Getting Gene from DB: '%s'", connection_db.name)
 
     try:
-        result = gene_collection.find(query)
+        result = await gene_collection.find(query).to_list(length=None)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
@@ -202,7 +203,7 @@ def insert_gene_name_urls(gene_metadata: Dict, info: GraphQLResolveInfo) -> Dict
 
 
 @QUERY_TYPE.field("transcript")
-def resolve_transcript(
+async def resolve_transcript(
     _,
     info: GraphQLResolveInfo,
     bySymbol: Optional[Dict[str, str]] = None,  # pylint: disable=invalid-name
@@ -246,7 +247,7 @@ def resolve_transcript(
 
     assert genome_id
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     transcript_collection = connection_db["transcript"]
     logger.info(
@@ -254,7 +255,7 @@ def resolve_transcript(
     )
 
     try:
-        transcript = transcript_collection.find_one(query)
+        transcript = await transcript_collection.find_one(query)
     except Exception as db_exp:
         logging.error("Exception: %s", db_exp)
         raise (DatabaseNotFoundError(db_name=connection_db.name)) from db_exp
@@ -277,8 +278,8 @@ async def fetch_transcript(
     }
 
     try:
-        await set_async_db_conn_for_uuid(info, genome_id)
-        connection_db = get_db_conn(info, genome_id)
+        conn = await set_db_conn_for_uuid(info, genome_id)
+        connection_db = conn["db_conn"]
         matches = await connection_db["transcript"].find(query).to_list(length=None)
         return sorted(matches, key=lambda transcript: transcript["stable_id"])
     except GenomeNotFoundError:
@@ -309,7 +310,11 @@ async def resolve_transcript_search(
     transcripts = [
         transcript for genome_matches in results for transcript in genome_matches
     ]
-    return parse_search_response(transcripts, page, per_page)
+
+    response = parse_search_response(transcripts, page, per_page)
+    # Remember the genomes that matched for this search response
+    remember_match_genomes(info, response["matches"])
+    return response
 
 
 async def fetch_product(
@@ -326,8 +331,8 @@ async def fetch_product(
     }
 
     try:
-        await set_async_db_conn_for_uuid(info, genome_id)
-        connection_db = get_db_conn(info, genome_id)
+        conn = await set_db_conn_for_uuid(info, genome_id)
+        connection_db = conn["db_conn"]
         matches = await connection_db["protein"].find(query).to_list(length=None)
         return sorted(matches, key=lambda product: product["stable_id"])
     except GenomeNotFoundError:
@@ -354,9 +359,12 @@ async def resolve_protein_search(
     ]
     results = await asyncio.gather(*tasks)
     products = [product for genome_matches in results for product in genome_matches]
-    return parse_search_response(
+    response = parse_search_response(
         products, search_payload["page"], search_payload["per_page"]
     )
+    # Remember the genomes that matched for this search response
+    remember_match_genomes(info, response["matches"])
+    return response
 
 
 @QUERY_TYPE.field("version")
@@ -393,7 +401,7 @@ async def resolve_gene_transcripts(gene: Dict, info: GraphQLResolveInfo) -> List
 
 
 @GENE_TYPE.field("transcript_count")
-def resolve_gene_transcript_count(gene: Dict, info: GraphQLResolveInfo) -> int:
+async def resolve_gene_transcript_count(gene: Dict, info: GraphQLResolveInfo) -> int:
     "Count transcripts for the parent gene"
     query = {
         "type": "Transcript",
@@ -407,7 +415,7 @@ def resolve_gene_transcript_count(gene: Dict, info: GraphQLResolveInfo) -> int:
         connection_db.name,
     )
 
-    return transcript_collection.count_documents(query)
+    return await transcript_collection.count_documents(query)
 
 
 @GENE_TYPE.field("transcripts_page")
@@ -441,7 +449,7 @@ async def resolve_transcripts_page_transcripts(
         connection_db.name,
     )
 
-    all_transcripts = list(transcript_collection.find(query))
+    all_transcripts = await transcript_collection.find(query).to_list(length=None)
     # Sort transcripts based on either rank (for human and mouse) or default sort (see `_transcript_value`)
     # We are sorting all transcripts first before slicing/paginating
     sorted_all = transcript_order.sort_gene_transcripts(all_transcripts)
@@ -466,7 +474,7 @@ async def resolve_transcripts_page_metadata(
     )
 
     return {
-        "total_count": transcript_collection.count_documents(query),
+        "total_count": await transcript_collection.count_documents(query),
         "page": transcripts_page["page"],
         "per_page": transcripts_page["per_page"],
     }
@@ -493,16 +501,11 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
     connection_db = get_db_conn(info, genome_id)
     gene_collection = connection_db["gene"]
 
-    request_context = get_request_context(info, genome_id)
-    is_async_connection = request_context["is_async_connection"]
     logger.info(
         "[resolve_transcript_gene] Getting Gene from DB: '%s'", connection_db.name
     )
 
-    if is_async_connection:
-        gene = await gene_collection.find_one(query)
-    else:
-        gene = gene_collection.find_one(query)
+    gene = await gene_collection.find_one(query)
 
     if not gene:
         raise GeneNotFoundError(
@@ -515,7 +518,7 @@ async def resolve_transcript_gene(transcript: Dict, info: GraphQLResolveInfo) ->
 
 
 @QUERY_TYPE.field("overlap_region")
-def resolve_overlap(
+async def resolve_overlap(
     _,
     info: GraphQLResolveInfo,
     genomeId: Optional[str] = None,  # pylint: disable=invalid-name
@@ -549,15 +552,16 @@ def resolve_overlap(
     chromosomal_region_id = "_".join([genome_id, region_name, "chromosome"])
     primary_assembly_region_id = "_".join([genome_id, region_name, "primary_assembly"])
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     logger.info(
         "[resolve_overlap] Getting Gene and Transcript Overlap from DB: '%s'",
         connection_db.name,
     )
 
-    return {
-        "genes": overlap_region(
+    # Query both genes and transcripts overlapping the specified region concurrently
+    genes, transcripts = await asyncio.gather(
+        overlap_region(
             connection_db,
             genome_id,
             chromosomal_region_id,
@@ -566,7 +570,7 @@ def resolve_overlap(
             end,
             "Gene",
         ),
-        "transcripts": overlap_region(
+        overlap_region(
             connection_db,
             genome_id,
             chromosomal_region_id,
@@ -575,11 +579,15 @@ def resolve_overlap(
             end,
             "Transcript",
         ),
+    )
+    return {
+        "genes": genes,
+        "transcripts": transcripts,
     }
 
 
-def overlap_region(
-    connection: Database,
+async def overlap_region(
+    connection: AsyncDatabase,
     genome_id: str,
     chromosomal_region_id: str,
     primary_assembly_region_id: str,
@@ -607,10 +615,14 @@ def overlap_region(
     }
     max_results_size = 1000
     feature_type_collection = connection[feature_type.lower()]
-    print(
+    logger.info(
         f"[INFO] Getting Overlap Region from DB: '{connection.name}', Collection: '{feature_type.lower()}'"
     )
-    results = list(feature_type_collection.find(query).limit(max_results_size))
+    results = (
+        await feature_type_collection.find(query)
+        .limit(max_results_size)
+        .to_list(length=max_results_size)
+    )
     if len(results) == max_results_size:
         raise SliceLimitExceededError(max_results_size)
     return results
@@ -629,7 +641,7 @@ def resolve_utr(pgc: Dict, _: GraphQLResolveInfo) -> Optional[Dict]:
 
 
 @QUERY_TYPE.field("product")
-def resolve_product_by_id(
+async def resolve_product_by_id(
     _,
     info: GraphQLResolveInfo,
     genome_id: Optional[str] = None,
@@ -657,7 +669,7 @@ def resolve_product_by_id(
         "type": {"$in": ["Protein", "MatureRNA"]},
     }
 
-    set_db_conn_for_uuid(info, genome_id)
+    await set_db_conn_for_uuid(info, genome_id)
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(
@@ -668,7 +680,7 @@ def resolve_product_by_id(
     # 1. Keep it collection per type: collection for 'Protein' and another one for 'MatureRNA'
     #    and changing the code logic
     # 2. Put all products in one collection
-    result = protein_collection.find_one(query)
+    result = await protein_collection.find_one(query)
 
     if not result:
         raise ProductNotFoundError(stable_id, genome_id)
@@ -676,7 +688,9 @@ def resolve_product_by_id(
 
 
 @PRODUCT_TYPE.field("product_generating_context")
-def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional[Dict]:
+async def resolve_pgc_for_product(
+    product: Dict, info: GraphQLResolveInfo
+) -> Optional[Dict]:
     pipeline = [
         {
             "$match": {
@@ -696,14 +710,16 @@ def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional
     ]
 
     # get db connection
-    set_db_conn_for_uuid(info, product.get("genome_id"))
     connection_db = get_db_conn(info)
     protein_collection = connection_db["protein"]
     logger.info(
         "[resolve_pgc_for_product] Getting Protein from DB: '%s'", connection_db.name
     )
 
-    results = list(protein_collection.aggregate(pipeline))
+    results = await (await protein_collection.aggregate(pipeline)).to_list(length=None)
+
+    if not results:
+        return None
 
     result = results[0]
 
@@ -719,7 +735,7 @@ def resolve_pgc_for_product(product: Dict, info: GraphQLResolveInfo) -> Optional
         if pgc.get("product_foreign_key") == product.get("product_primary_key")
     ]
 
-    if pgc[0]:
+    if pgc and pgc[0]:
         return pgc[0]
 
     return None
@@ -784,7 +800,7 @@ async def resolve_assembly_from_region(
         "[resolve_assembly_from_region] Getting Assembly from DB: '%s'",
         connection_db.name,
     )
-    assembly = assembly_collection.find_one(query)
+    assembly = await assembly_collection.find_one(query)
 
     if not assembly:
         raise AssemblyNotFoundError(assembly_id)
@@ -872,19 +888,19 @@ async def resolve_region(_, info: GraphQLResolveInfo, by_name: Dict[str, str]) -
         "name": by_name["name"],
     }
 
-    set_db_conn_for_uuid(info, by_name["genome_id"])
+    await set_db_conn_for_uuid(info, by_name["genome_id"])
     connection_db = get_db_conn(info)
     region_collection = connection_db["region"]
     logger.info("[resolve_region] Getting Region from DB: '%s'", connection_db.name)
 
-    result = region_collection.find_one(query)
+    result = await region_collection.find_one(query)
     if not result:
         raise RegionNotFoundError(genome_id=by_name["genome_id"], name=by_name["name"])
     return result
 
 
 @QUERY_TYPE.field("genomes")
-def resolve_genomes(
+async def resolve_genomes(
     _, info: GraphQLResolveInfo, by_keyword: Optional[Dict[str, str]] = None
 ) -> List:
     """
@@ -918,82 +934,96 @@ def resolve_genomes(
     # gRPC metadata service is the source of truth for genome records.
     grpc_model = info.context["grpc_model"]
 
-    if by_keyword:
-        for key in [
-            "tolid",
-            "assembly_accession_id",
-            "assembly_name",
-            "ensembl_name",
-            "common_name",
-            "scientific_name",
-            "scientific_parlance_name",
-            "species_taxonomy_id",
-            "release_version",
-        ]:
-            # if one of the keys is provided
-            if by_keyword.get(key):
-                if by_keyword.get("release_version"):
-                    result = grpc_model.get_genome_by_release_version(
-                        release_version=by_keyword.get("release_version"),
+    # Keyword fields accepted by `genomes(by_keyword: ...)`, in lookup order
+    GENOME_KEYWORD_FIELDS = (
+        "tolid",
+        "assembly_accession_id",
+        "assembly_name",
+        "ensembl_name",
+        "common_name",
+        "scientific_name",
+        "scientific_parlance_name",
+        "species_taxonomy_id",
+        "release_version",
+    )
+
+    # Upper bound on genomes processed at once by `genomes`
+    MAX_CONCURRENT_GENOME_LOOKUPS = 20
+
+    # gRPC metadata service is the source of truth for genome records.
+    grpc_model = info.context["grpc_model"]
+
+    # Exactly one keyword is set (checked above); find which one it is.
+    key = next(
+        (key for key in GENOME_KEYWORD_FIELDS if by_keyword.get(key)),
+        None,
+    )
+    if key is None:
+        return []
+
+    release_version = by_keyword.get("release_version")
+    if release_version:
+        genomes = await grpc_model.get_genome_by_release_version(
+            release_version=release_version,
+        )
+    else:
+        genomes = await grpc_model.get_genome_by_specific_keyword(
+            **{key: by_keyword[key]},
+        )
+
+    if not genomes:
+        raise GenomeNotFoundError(by_keyword)
+
+    # Only fetch assembly/dataset if the client asked for them.
+    # This avoids extra DB/gRPC calls on small queries.
+    is_assembly_present, is_dataset_present = utils.check_requested_fields(
+        info, ["assembly", "dataset"]
+    )
+
+    # Bound concurrency: a release_version query can return thousands of genomes.
+    # Use a semaphore to limit the number of concurrent genome lookups.
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_GENOME_LOOKUPS)
+
+    async def build_response(genome) -> Dict:
+        async with semaphore:
+            # Use the returned conn: concurrent calls overwrite the shared context key.
+            conn = await set_db_conn_for_uuid(
+                info, genome.genome_uuid, release_version=release_version
+            )
+            # Assembly is stored in MongoDB, dataset lives in metadata (gRPC).
+            assembly_data, dataset_data = await asyncio.gather(
+                (
+                    fetch_assembly_data(
+                        conn["db_conn"]["assembly"], genome.assembly.assembly_uuid
                     )
-                else:
-                    # Fetch genomes data from metadata using gRPC
-                    result = grpc_model.get_genome_by_specific_keyword(
-                        **{key: by_keyword.get(key)},
-                    )
+                    if is_assembly_present
+                    else none_result()
+                ),
+                (
+                    fetch_dataset_data(grpc_model, genome.genome_uuid)
+                    if is_dataset_present
+                    else none_result()
+                ),
+            )
+        return create_genome_response(genome, dataset_data, assembly_data)
 
-                genomes = list(result)
-                if not genomes:
-                    raise GenomeNotFoundError(by_keyword)
+    # gather keeps the gRPC response order
+    return list(await asyncio.gather(*(build_response(g) for g in genomes)))
 
-                # Only fetch assembly/dataset if the client asked for them.
-                # This avoids extra DB/gRPC calls on small queries.
-                fields_to_check = ["assembly", "dataset"]
-                is_assembly_present, is_dataset_present = utils.check_requested_fields(
-                    info, fields_to_check
-                )
 
-                combined_results = []
-                for genome in genomes:
-                    set_db_conn_for_uuid(
-                        info,
-                        genome.genome_uuid,
-                        release_version=by_keyword.get("release_version"),
-                    )
-                    connection_db = get_db_conn(info)
-                    # logging.debug("Collections in the database:", connection_db.list_collection_names())
-                    assembly_collection = connection_db["assembly"]
-                    # logging.debug("assembly_collection.name:", assembly_collection.name)
-
-                    # Assembly is stored in MongoDB, dataset lives in metadata (gRPC).
-                    assembly_data = (
-                        fetch_assembly_data(
-                            assembly_collection, genome.assembly.assembly_uuid
-                        )
-                        if is_assembly_present
-                        else None
-                    )
-                    dataset_data = (
-                        fetch_dataset_data(grpc_model, genome.genome_uuid)
-                        if is_dataset_present
-                        else None
-                    )
-
-                    combined_results.append(
-                        create_genome_response(genome, dataset_data, assembly_data)
-                    )
-
-                return combined_results
-
-    return []
+async def none_result() -> None:
+    # Placeholder for a fetch the client didn't request, so asyncio gather keeps its shape
+    return None
 
 
 @QUERY_TYPE.field("genome")
-def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) -> Dict:
+async def resolve_genome(
+    _, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]
+) -> Dict:
     grpc_model = info.context["grpc_model"]
 
     # gRPC fetch first; Mongo access only if assembly is requested.
-    genome = grpc_model.get_genome_by_genome_uuid(
+    genome = await grpc_model.get_genome_by_genome_uuid(
         by_genome_id.get("genome_id"), by_genome_id.get("release_version")
     )
     if not genome.genome_uuid:
@@ -1005,22 +1035,25 @@ def resolve_genome(_, info: GraphQLResolveInfo, by_genome_id: Dict[str, str]) ->
         info, fields_to_check
     )
 
-    set_db_conn_for_uuid(info, genome.genome_uuid)
+    await set_db_conn_for_uuid(info, genome.genome_uuid)
     connection_db = get_db_conn(info)
     # logging.debug("Collections in the database:", connection_db.list_collection_names())
     assembly_collection = connection_db["assembly"]
     # logging.debug("assembly_collection.name:", assembly_collection.name)
 
-    assembly_data = (
-        fetch_assembly_data(assembly_collection, genome.assembly.assembly_uuid)
-        if is_assembly_present
-        else None
+    assembly_data, dataset_data = await asyncio.gather(
+        (
+            fetch_assembly_data(assembly_collection, genome.assembly.assembly_uuid)
+            if is_assembly_present
+            else none_result()
+        ),
+        (
+            fetch_dataset_data(grpc_model, genome.genome_uuid)
+            if is_dataset_present
+            else none_result()
+        ),
     )
-    dataset_data = (
-        fetch_dataset_data(grpc_model, genome.genome_uuid)
-        if is_dataset_present
-        else None
-    )
+
     genome = create_genome_response(genome, dataset_data, assembly_data)
 
     return genome
@@ -1076,7 +1109,9 @@ def create_genome_response(
     return response
 
 
-def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Mapping:
+async def fetch_assembly_data(
+    assembly_collection: AsyncCollection, assembly_id: str
+) -> Mapping:
     """
     Fetch assembly data from a collection using the assembly ID.
 
@@ -1093,7 +1128,7 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     """
     query = {"assembly_id": assembly_id}
     try:
-        assembly = assembly_collection.find_one(query)
+        assembly = await assembly_collection.find_one(query)
     except Exception as coll_exp:
         logging.error("Exception: %s", coll_exp)
         raise (
@@ -1105,7 +1140,7 @@ def fetch_assembly_data(assembly_collection: Collection, assembly_id: str) -> Ma
     return assembly
 
 
-def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
+async def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
     """
     Fetch dataset data using a gRPC model based on the genome UUID.
 
@@ -1116,7 +1151,7 @@ def fetch_dataset_data(grpc_model: GRPC_MODEL, genome_uuid: str) -> List:
     Returns:
         List: A list of datasets associated with the given genome UUID.
     """
-    result = grpc_model.get_datasets_list_by_uuid(genome_uuid)
+    result = await grpc_model.get_datasets_list_by_uuid(genome_uuid)
     datasets = list(result.datasets)
     return datasets
 
@@ -1151,21 +1186,7 @@ def get_version_details() -> Dict[str, str]:
     return {"major": "0", "minor": "1", "patch": "0-beta"}
 
 
-async def set_async_db_conn_for_uuid(info, uuid):
-    db_conn = await info.context["mongo_db_client"].get_async_database_conn(uuid)
-    conn = {
-        "db_conn": db_conn,
-        "data_loader": BatchLoaders(db_conn, info.context["mongo_db_client"]),
-        "is_async_connection": True,
-    }
-
-    parent_key = get_path_parent_key(info)
-    info.context[parent_key] = conn
-    # Additional context for querying with multiple ids in a single query
-    info.context[parent_key + uuid] = conn
-
-
-def set_db_conn_for_uuid(info, uuid, release_version=None):
+async def set_db_conn_for_uuid(info, uuid, release_version=None):
     # IMPORTANT:
     # This function must be called from all the root level(@QUERY_TYPE) resolvers.
     #
@@ -1193,7 +1214,9 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
     # See: https://ariadnegraphql.org/docs/types-reference#dynamic-context-value
 
     # Resolve the release database from the genome mapping or explicit version.
-    db_conn = info.context["mongo_db_client"].get_database_conn(uuid, release_version)
+    db_conn = await info.context["mongo_db_client"].get_database_conn(
+        uuid, release_version
+    )
 
     conn = {
         "db_conn": db_conn,
@@ -1205,25 +1228,57 @@ def set_db_conn_for_uuid(info, uuid, release_version=None):
     info.context[parent_key] = conn
     # Additional context for querying with multiple ids in a single query
     info.context[parent_key + uuid] = conn
+    # this allows gather/loop callers access conn directly and avoid shared key race
+    return conn
 
 
-def get_db_conn(info, uuid=None):
-    parent_key = get_path_parent_key(info)
-    if uuid:
-        return info.context[parent_key + uuid]["db_conn"]
-    return info.context[parent_key]["db_conn"]
+# Context key suffix for the per-match genome list kept by search root fields
+MATCH_GENOMES_SUFFIX = ":match_genome_ids"
 
 
-def get_request_context(info, uuid=None):
-    parent_key = get_path_parent_key(info)
+# Fixes trascript and protein search bugs which arise from concurrent genome loading and shared context keys
+# The last genome loaded will overwrite the shared context key, so we need to remember the match genomes separately
+def remember_match_genomes(info, matches: list[Any]) -> None:
+    """
+    Record which genome each returned search match belongs to, in response order.
+
+    Search root fields load several genomes concurrently, and each one overwrites
+    the root field's shared context key, so that key ends up holding whichever
+    genome finished last. get_conn_for_field() uses this list instead for
+    anything nested under a match.
+    """
+    info.context[get_path_parent_key(info) + MATCH_GENOMES_SUFFIX] = [
+        match["genome_id"] for match in matches
+    ]
+
+
+def get_conn_for_field(info, uuid=None) -> Dict:
+    """
+    Return the {db_conn, data_loader} for the field being resolved.
+
+    For fields under a search match (transcript or protein search), the path looks like
+    ["transcript_search", "matches", 3, "slice", "region"]: the integer is the
+    match's position, which tells us its genome.
+    """
+    path = info.path.as_list()
+    parent_key = path[0]
+    # Check if this field is under a search match and determine the genome UUID accordingly
+    # The genome UUID for this field is determined by the match's position gotten from the response list.
+    match_genome_ids = info.context.get(parent_key + MATCH_GENOMES_SUFFIX)
+    if match_genome_ids and len(path) > 2 and isinstance(path[2], int):
+        uuid = match_genome_ids[path[2]]
+
     if uuid:
         return info.context[parent_key + uuid]
     return info.context[parent_key]
 
 
-def get_data_loader(info):
-    parent_key = get_path_parent_key(info)
-    return info.context[parent_key]["data_loader"]
+def get_db_conn(info, uuid=None):
+    return get_conn_for_field(info, uuid)["db_conn"]
+
+
+def get_data_loader(info, uuid=None):
+    return get_conn_for_field(info, uuid)["data_loader"]
 
 
 def get_path_parent_key(info):

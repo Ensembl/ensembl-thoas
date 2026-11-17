@@ -8,7 +8,7 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         self.grpc_stub = grpc_stub
         self.reflector = grpc_reflector
 
-    def get_genome_by_genome_uuid(self, genome_uuid, release_version=None):
+    async def get_genome_by_genome_uuid(self, genome_uuid, release_version=None):
         logger.debug(
             "Received RPC for GetGenomeByUUID with genome_uuid: '%s', release: %s",
             genome_uuid,
@@ -21,11 +21,10 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
-        response = self.grpc_stub.GetGenomeByUUID(request)
-
+        response = await self.grpc_stub.GetGenomeByUUID(request)
         return response
 
-    def get_genome_by_specific_keyword(
+    async def get_genome_by_specific_keyword(
         self,
         tolid=None,
         assembly_accession_id=None,
@@ -67,10 +66,11 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
             species_taxonomy_id=species_taxonomy_id,
             release_version=release_version,
         )
-        response = self.grpc_stub.GetGenomesBySpecificKeyword(request)
-        return response
+        # Server-streaming RPC: an aio call is an async iterator, not awaitable
+        call = self.grpc_stub.GetGenomesBySpecificKeyword(request)
+        return [genome async for genome in call]
 
-    def get_genome_by_release_version(
+    async def get_genome_by_release_version(
         self,
         release_version=None,
     ):
@@ -84,10 +84,10 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         )
 
         request = request_class(release_version=release_version)
-        response = self.grpc_stub.GetGenomesByReleaseVersion(request)
-        return response
+        call = self.grpc_stub.GetGenomesByReleaseVersion(request)
+        return [genome async for genome in call]
 
-    def get_datasets_list_by_uuid(self, genome_uuid, release_version=None):
+    async def get_datasets_list_by_uuid(self, genome_uuid, release_version=None):
         logger.debug(
             "Received RPC for GetDatasetsListByUUID with genome_uuid: '%s', release: %s",
             genome_uuid,
@@ -98,14 +98,15 @@ class GRPC_MODEL:  # pylint: disable=invalid-name
         request = request_class(
             genome_uuid=genome_uuid, release_version=release_version
         )
-        response = self.grpc_stub.GetDatasetsListByUUID(request)
+        response = await self.grpc_stub.GetDatasetsListByUUID(request)
         return response
 
-    def get_release_by_genome_uuid(self, genome_uuid):
+    # I believe this method is no longer in use, but keeping it for now in case it's needed for legacy support.
+    async def get_release_by_genome_uuid(self, genome_uuid):
         request_class = self.reflector.message_class(
             "ensembl_metadata.ReleaseVersionRequest"
         )
 
         request = request_class(genome_uuid=genome_uuid)
-        response = self.grpc_stub.GetReleaseVersionByUUID(request)
+        response = await self.grpc_stub.GetReleaseVersionByUUID(request)
         return response
