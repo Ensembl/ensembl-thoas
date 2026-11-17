@@ -252,7 +252,7 @@ class MongoDbClient:
 
         if self.mongo_client:
             try:
-                await self.mongo_client.aclose()
+                await self.mongo_client.close()
             except Exception as exc:
                 logger.warning("Failed to close mongo client: %s", exc)
 
