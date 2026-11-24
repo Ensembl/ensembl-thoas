@@ -57,13 +57,20 @@ def load_all_graphql_queries(directory):
 ALL_QUERIES = load_all_graphql_queries(QUERIES_DIR)
 
 
+@pytest.fixture(name="client", scope="module")
+def fixture_client():
+    # `with` runs the app's lifespan, which creates the Mongo, gRPC and
+    # XrefResolver clients. Module scope runs it once rather than per query.
+    with TestClient(APP) as test_client:
+        yield test_client
+
+
 @pytest.mark.parametrize("filename, query_string", ALL_QUERIES)
-def test_each_graphql_file_returns_no_errors(filename, query_string):
+def test_each_graphql_file_returns_no_errors(client, filename, query_string):
     """
     For each .graphql file, post the string as a GraphQL request
     and assert that there are no errors in the response JSON.
     """
-    client = TestClient(APP)
 
     # Build the GraphQL payload
     payload = {"query": query_string}

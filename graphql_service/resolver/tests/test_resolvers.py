@@ -289,27 +289,28 @@ def fixture_genome_data():
     return mongo_client
 
 
-def test_resolve_gene(basic_data):
+@pytest.mark.asyncio
+async def test_resolve_gene(basic_data):
     "Test the querying of Mongo by gene symbol"
 
     info = create_graphql_resolve_info(basic_data)
 
     # Check we can resolve using byId camelCase
-    result = model.resolve_gene(
+    result = await model.resolve_gene(
         None, info, byId={"stable_id": "ENSG001.1", "genome_id": "1"}
     )
     assert result["symbol"] == "banana"
     result = None
 
     # Check we can resolve using by_id snake_case
-    result = model.resolve_gene(
+    result = await model.resolve_gene(
         None, info, by_id={"stable_id": "ENSG001.1", "genome_id": "1"}
     )
     assert result["symbol"] == "banana"
     result = None
 
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
-        result = model.resolve_gene(
+        result = await model.resolve_gene(
             None, info, byId={"stable_id": "BROKEN BROKEN BROKEN", "genome_id": "1"}
         )
     assert not result
@@ -323,20 +324,21 @@ def test_resolve_gene(basic_data):
     gene_not_found_error = None
 
     # Check unversioned query resolves as well
-    result = model.resolve_gene(
+    result = await model.resolve_gene(
         None, info, byId={"stable_id": "ENSG001", "genome_id": "1"}
     )
 
     assert result["symbol"] == "banana"
 
 
-def test_resolve_gene_by_symbol(basic_data):
+@pytest.mark.asyncio
+async def test_resolve_gene_by_symbol(basic_data):
     "Test querying by gene symbol which can be ambiguous"
 
     info = create_graphql_resolve_info(basic_data)
 
     # Check we can resolve using by_symbol
-    result = model.resolve_genes(
+    result = await model.resolve_genes(
         None, info, by_symbol={"symbol": "banana", "genome_id": "1"}
     )
     assert isinstance(result, list)
@@ -344,7 +346,7 @@ def test_resolve_gene_by_symbol(basic_data):
     result = None
 
     with pytest.raises(model.GeneNotFoundError) as gene_not_found_error:
-        result = model.resolve_genes(
+        result = await model.resolve_genes(
             None, info, by_symbol={"symbol": "very not here", "genome_id": "1"}
         )
     assert not result
@@ -357,11 +359,12 @@ def test_resolve_gene_by_symbol(basic_data):
     assert gene_not_found_error.value.extensions["genome_id"] == "1"
 
 
-def test_resolve_transcript_by_id(transcript_data):
+@pytest.mark.asyncio
+async def test_resolve_transcript_by_id(transcript_data):
     "Test fetching of transcripts by stable ID"
 
     info = create_graphql_resolve_info(transcript_data)
-    result = model.resolve_transcript(
+    result = await model.resolve_transcript(
         None, info, byId={"stable_id": "ENST001.1", "genome_id": "1"}
     )
 
@@ -369,11 +372,12 @@ def test_resolve_transcript_by_id(transcript_data):
     assert result["stable_id"] == "ENST001.1"
 
 
-def test_resolve_transcript_by_id_not_found(transcript_data):
+@pytest.mark.asyncio
+async def test_resolve_transcript_by_id_not_found(transcript_data):
     result = None
     info = create_graphql_resolve_info(transcript_data)
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
-        result = model.resolve_transcript(
+        result = await model.resolve_transcript(
             None, info, byId={"stable_id": "FAKEYFAKEYFAKEY", "genome_id": "1"}
         )
     assert not result
@@ -386,20 +390,22 @@ def test_resolve_transcript_by_id_not_found(transcript_data):
     assert transcript_not_found_error.value.extensions["genome_id"] == "1"
 
 
-def test_resolve_transcript_by_symbol(transcript_data):
+@pytest.mark.asyncio
+async def test_resolve_transcript_by_symbol(transcript_data):
     "Test fetching of transcripts by symbol"
 
     info = create_graphql_resolve_info(transcript_data)
-    result = model.resolve_transcript(
+    result = await model.resolve_transcript(
         None, info, bySymbol={"symbol": "kumquat", "genome_id": "1"}
     )
     assert result["stable_id"] == "ENST001.1"
 
 
-def test_resolve_transcript_by_symbol_not_found(transcript_data):
+@pytest.mark.asyncio
+async def test_resolve_transcript_by_symbol_not_found(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
     with pytest.raises(model.TranscriptNotFoundError) as transcript_not_found_error:
-        model.resolve_transcript(
+        await model.resolve_transcript(
             None,
             info,
             bySymbol={"symbol": "some not existing symbol", "genome_id": "1"},
@@ -423,7 +429,7 @@ async def test_resolve_gene_transcripts(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_gene_transcripts(
         {"stable_id": "ENSG001.1", "genome_id": "1", "gene_primary_key": "1_ENSG001.1"},
@@ -435,15 +441,16 @@ async def test_resolve_gene_transcripts(transcript_data):
         assert hit["symbol"] in ["kumquat", "grape"]
 
 
-def test_resolve_gene_transcript_count(transcript_data):
+@pytest.mark.asyncio
+async def test_resolve_gene_transcript_count(transcript_data):
     "Check transcript count for a gene"
 
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
-    result = model.resolve_gene_transcript_count(
+    result = await model.resolve_gene_transcript_count(
         {"stable_id": "ENSG001.1", "genome_id": "1", "gene_primary_key": "1_ENSG001.1"},
         info,
     )
@@ -458,7 +465,7 @@ async def test_resolve_gene_from_transcript(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_transcript_gene(
         {"gene": "ENSG001.1", "genome_id": "1"}, info
@@ -469,15 +476,16 @@ async def test_resolve_gene_from_transcript(transcript_data):
     assert result["symbol"] == "banana"
 
 
-def test_resolve_overlap(slice_data):
+@pytest.mark.asyncio
+async def test_resolve_overlap(slice_data):
     "Check features can be found via coordinates"
 
     info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "test_genome_id")
+    await model.set_db_conn_for_uuid(info, "test_genome_id")
 
-    result = model.resolve_overlap(
+    result = await model.resolve_overlap(
         None,
         info,
         genomeId="test_genome_id",
@@ -506,15 +514,16 @@ query_region_expectations = [
 
 
 @pytest.mark.parametrize("start,end,expected_ids", query_region_expectations)
-def test_overlap_region(start, end, expected_ids, slice_data):
+@pytest.mark.asyncio
+async def test_overlap_region(start, end, expected_ids, slice_data):
 
     info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "test_genome_id")
+    await model.set_db_conn_for_uuid(info, "test_genome_id")
     connection = model.get_db_conn(info)
 
-    result = model.overlap_region(
+    result = await model.overlap_region(
         connection=connection,
         genome_id="test_genome_id",
         chromosomal_region_id="test_genome_id_chr1_chromosome",
@@ -526,17 +535,18 @@ def test_overlap_region(start, end, expected_ids, slice_data):
     assert {hit["stable_id"] for hit in result} == expected_ids
 
 
-def test_overlap_region_too_many_results(slice_data):
+@pytest.mark.asyncio
+async def test_overlap_region_too_many_results(slice_data):
 
     info = create_graphql_resolve_info(slice_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "test_genome_id")
+    await model.set_db_conn_for_uuid(info, "test_genome_id")
     connection = model.get_db_conn(info)
 
     result = None
     with pytest.raises(model.SliceLimitExceededError) as slice_limit_exceeded_error:
-        result = model.overlap_region(
+        result = await model.overlap_region(
             connection=connection,
             genome_id="test_genome_id",
             chromosomal_region_id="test_genome_id_chr1_chromosome",
@@ -566,7 +576,7 @@ async def test_resolve_region_happy_case(region_data):
     info = create_graphql_resolve_info(region_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
+    await model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
 
     result = await model.resolve_region_from_slice(slc, info)
     assert result["region_id"] == "plasmodium_falciparum_GCA_000002765_2_13"
@@ -578,7 +588,7 @@ async def test_resolve_region_region_not_exist(region_data):
     slc = {
         "region_id": "some_non_existing_region_id",
     }
-    model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
+    await model.set_db_conn_for_uuid(info, "plasmodium_falciparum_GCA_000002765_2")
 
     result = None
     with pytest.raises(model.RegionFromSliceNotFoundError) as region_error:
@@ -626,7 +636,7 @@ async def test_resolve_transcript_products(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     result = await model.resolve_product_by_pgc(
         {
@@ -651,7 +661,7 @@ async def test_resolve_transcript_products_product_not_exists(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     result = None
     with pytest.raises(model.FieldNotFoundError) as field_not_found_error:
@@ -665,7 +675,7 @@ async def test_resolve_nested_products(transcript_data):
     "Test products inside transcripts inside the gene"
 
     info = create_graphql_resolve_info(transcript_data)
-    gene_result = model.resolve_gene(
+    gene_result = await model.resolve_gene(
         None, info, byId={"genome_id": "1", "stable_id": "ENSG001.1"}
     )
     assert gene_result
@@ -684,7 +694,7 @@ async def test_resolve_assembly_from_region(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     region = {
         "type": "Region",
@@ -704,7 +714,7 @@ async def test_resolve_assembly_from_region_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     region = {
         "type": "Region",
@@ -725,7 +735,7 @@ async def test_resolve_regions_from_assembly(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     assembly = {
         "type": "Assembly",
@@ -754,7 +764,7 @@ async def test_resolve_regions_from_assembly_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     assembly = {
         "type": "Assembly",
@@ -773,7 +783,7 @@ async def test_resolve_organism_from_assembly(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     assembly = {"type": "Assembly", "organism_foreign_key": "test_organism_id_1"}
 
@@ -793,7 +803,7 @@ async def test_resolve_organism_from_assembly_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     assembly = {"type": "Assembly", "organism_foreign_key": "blah blah"}
 
@@ -809,7 +819,7 @@ async def test_resolve_assemblies_from_organism(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -840,7 +850,7 @@ async def test_resolve_assemblies_from_organism(genome_data):
 async def test_resolve_assemblies_from_organism_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -862,7 +872,7 @@ async def test_resolve_species_from_organism(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -885,7 +895,7 @@ async def test_resolve_species_from_organism_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     organism = {
         "type": "Organism",
@@ -905,7 +915,7 @@ async def test_resolve_organisms_from_species(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     species = {
         "type": "Species",
@@ -936,7 +946,7 @@ async def test_resolve_organisms_from_species_not_exists(genome_data):
     info = create_graphql_resolve_info(genome_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     species = {
         "type": "Species",
@@ -1003,7 +1013,7 @@ async def test_resolve_transcripts_page_transcripts(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
@@ -1026,7 +1036,7 @@ async def test_resolve_transcripts_page_transcripts_no_transcripts(transcript_da
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 3, "per_page": 1}
     result = await model.resolve_transcripts_page_transcripts(transcripts_page, info)
@@ -1038,7 +1048,7 @@ async def test_resolve_transcripts_page_metadata(transcript_data):
     info = create_graphql_resolve_info(transcript_data)
 
     # Finding the collection here as we are not using the base resolver
-    model.set_db_conn_for_uuid(info, "1")
+    await model.set_db_conn_for_uuid(info, "1")
 
     transcripts_page = {"gene_primary_key": "1_ENSG001.1", "page": 2, "per_page": 1}
     result = await model.resolve_transcripts_page_metadata(transcripts_page, info)

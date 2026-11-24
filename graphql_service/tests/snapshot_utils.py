@@ -13,7 +13,7 @@
 """
 
 from common.crossrefs import XrefResolver
-
+import asyncio
 from graphql_service.ariadne_app import prepare_executable_schema
 from graphql_service.tests.fixtures.human_brca2 import (
     build_gene,
@@ -25,7 +25,7 @@ from graphql_service.tests.fixtures.human_brca2 import (
     build_species,
 )
 from graphql_service.tests.fixtures.wheat import build_wheat_genes
-from common.db import FakeMongoDbClient
+from graphql_service.tests.test_db_client import FakeMongoDbClient
 
 
 def prepare_mongo_instance():
@@ -77,7 +77,13 @@ def setup_test():
     executable_schema = prepare_executable_schema()
 
     mongo_client = prepare_mongo_instance()
-    xref = XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
+    # Fetch the identifiers.org data asynchronously and build the XrefResolver instance
+    # the httpx client opens and closes inside that asyncio.run
+    xref = asyncio.run(
+        XrefResolver.from_identifiers_org(
+            internal_mapping_file="docs/xref_LOD_mapping.json"
+        )
+    )
     grpc_model = "fake_grpc_model"  # TODO: find a way to test/mock gRPC
     context = prepare_context_provider(mongo_client, xref, grpc_model)
 

@@ -18,7 +18,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
@@ -39,7 +39,7 @@ from graphql import FieldNode, GraphQLError, get_operation_ast, parse, print_sch
 
 from dotenv import load_dotenv
 from common import crossrefs, db, extensions, utils, logger
-from grpc_service import grpc_model, async_grpc_model
+from grpc_service import grpc_model
 from graphql_service.ariadne_app import (
     prepare_executable_schema,
     prepare_context_provider,
@@ -102,19 +102,9 @@ if DEBUG_MODE:
 
 
 utils.check_config_validity(os.environ)
-MONGO_DB_CLIENT = db.MongoDbClient(os.environ)
-
-GRPC_SERVER = db.GRPCServiceClient(os.environ)
-GRPC_STUB = GRPC_SERVER.get_grpc_stub()
-GRPC_REFLECTOR = GRPC_SERVER.get_grpc_reflector()
-GRPC_MODEL = grpc_model.GRPC_MODEL(GRPC_STUB, GRPC_REFLECTOR)
-
-ASYNC_GRPC_CLIENT = db.AsyncGRPCServiceClient(os.environ)
-ASYNC_GRPC_STUB = ASYNC_GRPC_CLIENT.get_grpc_stub()
-ASYNC_GRPC_REFLECTOR = ASYNC_GRPC_CLIENT.get_grpc_reflector()
-ASYNC_GRPC_MODEL = async_grpc_model.AsyncGrpcModel(
-    ASYNC_GRPC_STUB, ASYNC_GRPC_REFLECTOR
-)
+# Shared clients (Mongo/Redis, gRPC, XrefResolver) are created in `lifespan`,
+# on the server's event loop, and stored here. Nothing connects at import time.
+SHARED_CONTEXT: Dict[str, Any] = {}
 
 EXECUTABLE_SCHEMA = prepare_executable_schema()
 ROOT_FIELD_NAMES = frozenset(
@@ -128,16 +118,7 @@ ROOT_FIELD_NAMES = frozenset(
     for field_name in root_type.fields
 )
 
-RESOLVER = crossrefs.XrefResolver(internal_mapping_file="docs/xref_LOD_mapping.json")
-
-CONTEXT_PROVIDER = prepare_context_provider(
-    {
-        "mongo_db_client": MONGO_DB_CLIENT,
-        "XrefResolver": RESOLVER,
-        "grpc_model": GRPC_MODEL,
-        "async_grpc_model": ASYNC_GRPC_MODEL,
-    }
-)
+CONTEXT_PROVIDER = prepare_context_provider(SHARED_CONTEXT)
 
 starlette_middleware: List[Middleware] = [
     # Enables Cross-Origin Resource Sharing (CORS) for all origins and allows GET and POST methods.
@@ -304,12 +285,35 @@ class PrometheusGraphQLHTTPHandler(GraphQLHTTPHandler):
 # https://starlette.dev/lifespan/
 @asynccontextmanager
 async def lifespan(_app):
+    """
+    Create the shared clients on startup and close them on shutdown.
+
+    Async clients bind to the event loop they are first used on, so they must
+    be created here (on the server's loop) rather than at import time.
+    """
+    mongo_db_client = db.MongoDbClient(os.environ)
+    grpc_client = None
     try:
+        await mongo_db_client.connect()
+        grpc_client = await db.GRPCServiceClient.create(os.environ)
+        xref_resolver = await crossrefs.XrefResolver.from_identifiers_org(
+            internal_mapping_file="docs/xref_LOD_mapping.json"
+        )
+        SHARED_CONTEXT.update(
+            {
+                "mongo_db_client": mongo_db_client,
+                "grpc_model": grpc_model.GRPC_MODEL(
+                    grpc_client.get_grpc_stub(), grpc_client.get_grpc_reflector()
+                ),
+                "XrefResolver": xref_resolver,
+            }
+        )
         yield
     finally:
-        await MONGO_DB_CLIENT.close()
-        await ASYNC_GRPC_CLIENT.close()
-        GRPC_SERVER.close()
+        SHARED_CONTEXT.clear()
+        if grpc_client is not None:
+            await grpc_client.close()
+        await mongo_db_client.close()
 
 
 APP = applications.Starlette(

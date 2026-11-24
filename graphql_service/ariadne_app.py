@@ -70,16 +70,12 @@ def prepare_context_provider(context: Dict) -> Callable[[Request, Dict], Dict]:
     def context_provider(request: Request, _data: Dict) -> Dict:
         """We must return a new object with every request,
         otherwise the requests will pollute each other's state"""
-        mongo_db_client = context["mongo_db_client"]
-        xref_resolver = context["XrefResolver"]
-        grpc_model = context["grpc_model"]
-        async_grpc_model = context["async_grpc_model"]
-        return {
-            "request": request,
-            "mongo_db_client": mongo_db_client,
-            "XrefResolver": xref_resolver,
-            "grpc_model": grpc_model,
-            "async_grpc_model": async_grpc_model,
-        }
+        if not context:
+            # The server fills `context` in its lifespan; an empty dict means
+            # it never ran (e.g. a TestClient used without `with`).
+            raise RuntimeError(
+                "Shared clients are not initialised; lifespan has not run"
+            )
+        return {"request": request, **context}
 
     return context_provider
